@@ -98,23 +98,23 @@ export function CurriculumFormDialog({
         return (
           <>
             <div className="space-y-1">
-              <Label htmlFor="topic">Topic</Label>
+              <Label htmlFor="topic">Topik/Materi Pembelajaran</Label>
               <Input id="topic" name="topic" value={lessonPlanData.topic || ''} onChange={handleChange} required />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="learningObjectives">Learning Objectives (one per line)</Label>
-              <Textarea id="learningObjectives" name="learningObjectives" value={lessonPlanData.learningObjectives?.join('\n') || ''} onChange={(e) => handleArrayChange('learningObjectives', e.target.value)} placeholder="Objective 1&#10;Objective 2" />
+              <Label htmlFor="learningObjectives">Tujuan Pembelajaran (satu per baris)</Label>
+              <Textarea id="learningObjectives" name="learningObjectives" value={lessonPlanData.learningObjectives?.join('\n') || ''} onChange={(e) => handleArrayChange('learningObjectives', e.target.value)} placeholder="Tujuan 1&#10;Tujuan 2" />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="activities">Activities (one per line)</Label>
-              <Textarea id="activities" name="activities" value={lessonPlanData.activities?.join('\n') || ''} onChange={(e) => handleArrayChange('activities', e.target.value)} placeholder="Activity 1&#10;Activity 2" />
+              <Label htmlFor="activities">Kegiatan Pembelajaran (satu per baris)</Label>
+              <Textarea id="activities" name="activities" value={lessonPlanData.activities?.join('\n') || ''} onChange={(e) => handleArrayChange('activities', e.target.value)} placeholder="Kegiatan 1&#10;Kegiatan 2" />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="assessment">Assessment</Label>
+              <Label htmlFor="assessment">Asesmen/Penilaian</Label>
               <Textarea id="assessment" name="assessment" value={lessonPlanData.assessment || ''} onChange={handleChange} />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="materials">Materials (optional)</Label>
+              <Label htmlFor="materials">Media/Sumber Belajar (opsional)</Label>
               <Input id="materials" name="materials" value={lessonPlanData.materials || ''} onChange={handleChange} />
             </div>
           </>
@@ -124,15 +124,15 @@ export function CurriculumFormDialog({
         return (
           <>
             <div className="space-y-1">
-              <Label htmlFor="year">Academic Year</Label>
-              <Input id="year" name="year" value={annualProgramData.year || ''} onChange={handleChange} placeholder="e.g., 2023/2024" required />
+              <Label htmlFor="year">Tahun Ajaran</Label>
+              <Input id="year" name="year" value={annualProgramData.year || ''} onChange={handleChange} placeholder="cth., 2023/2024" required />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="semester1Topics">Semester 1 Topics (one per line)</Label>
+              <Label htmlFor="semester1Topics">Topik Semester 1 (satu per baris)</Label>
               <Textarea id="semester1Topics" name="semester1Topics" value={annualProgramData.semester1Topics?.join('\n') || ''} onChange={(e) => handleArrayChange('semester1Topics', e.target.value)} />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="semester2Topics">Semester 2 Topics (one per line)</Label>
+              <Label htmlFor="semester2Topics">Topik Semester 2 (satu per baris)</Label>
               <Textarea id="semester2Topics" name="semester2Topics" value={annualProgramData.semester2Topics?.join('\n') || ''} onChange={(e) => handleArrayChange('semester2Topics', e.target.value)} />
             </div>
           </>
@@ -145,28 +145,28 @@ export function CurriculumFormDialog({
               <Label htmlFor="semester">Semester</Label>
                <Select name="semester" value={semesterProgramData.semester || '1'} onValueChange={(value) => handleSelectChange('semester', value)}>
                 <SelectTrigger id="semester">
-                  <SelectValue placeholder="Select semester" />
+                  <SelectValue placeholder="Pilih semester" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">1</SelectItem>
-                  <SelectItem value="2">2</SelectItem>
+                  <SelectItem value="1">Ganjil</SelectItem>
+                  <SelectItem value="2">Genap</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1">
-              <Label htmlFor="year">Academic Year</Label>
-              <Input id="year" name="year" value={semesterProgramData.year || ''} onChange={handleChange} placeholder="e.g., 2023/2024" required />
+              <Label htmlFor="year">Tahun Ajaran</Label>
+              <Input id="year" name="year" value={semesterProgramData.year || ''} onChange={handleChange} placeholder="cth., 2023/2024" required />
             </div>
             {/* Weekly breakdown is complex for a simple form, could be a separate component or simplified */}
             <div className="space-y-1">
-                <Label htmlFor="weeklyBreakdown">Weekly Breakdown (Simplified: Topic for Week 1)</Label>
+                <Label htmlFor="weeklyBreakdown">Rincian Mingguan (Sederhana: Topik Minggu ke-1)</Label>
                 <Input id="weeklyBreakdown" name="weeklyBreakdown" 
                  value={semesterProgramData.weeklyBreakdown?.[0]?.topic || ''} 
                  onChange={(e) => {
-                    const newBreakdown = [{ week: 1, topic: e.target.value, activities: 'To be detailed' }];
+                    const newBreakdown = [{ week: 1, topic: e.target.value, activities: 'Akan dirinci' }];
                     setFormData(prev => ({ ...prev, weeklyBreakdown: newBreakdown }));
                  }}
-                 placeholder="Topic for Week 1" 
+                 placeholder="Topik untuk Minggu ke-1" 
                 />
             </div>
           </>
@@ -191,17 +191,32 @@ export function CurriculumFormDialog({
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="space-y-1">
-              <Label htmlFor="title">Title</Label>
+              <Label htmlFor="title">Judul</Label>
               <Input id="title" name="title" value={formData.title || ''} onChange={handleChange} required />
             </div>
             <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                <Label htmlFor="subject">Subject</Label>
+                <Label htmlFor="subject">Mata Pelajaran</Label>
                 <Input id="subject" name="subject" value={formData.subject || ''} onChange={handleChange} required />
                 </div>
                 <div className="space-y-1">
-                <Label htmlFor="gradeLevel">Grade Level</Label>
-                <Input id="gradeLevel" name="gradeLevel" value={formData.gradeLevel || ''} onChange={handleChange} required />
+                  <Label htmlFor="gradeLevel">Jenjang/Fase/Kelas</Label>
+                  <Select value={formData.gradeLevel || ''} onValueChange={(value) => handleSelectChange('gradeLevel', value)}>
+                    <SelectTrigger id="gradeLevel">
+                      <SelectValue placeholder="Pilih Jenjang/Fase/Kelas" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="PAUD">PAUD</SelectItem>
+                      <SelectItem value="Fase A (Kelas 1-2 SD)">Fase A (Kelas 1-2 SD)</SelectItem>
+                      <SelectItem value="Fase B (Kelas 3-4 SD)">Fase B (Kelas 3-4 SD)</SelectItem>
+                      <SelectItem value="Fase C (Kelas 5-6 SD)">Fase C (Kelas 5-6 SD)</SelectItem>
+                      <SelectItem value="Fase D (Kelas 7-9 SMP)">Fase D (Kelas 7-9 SMP)</SelectItem>
+                      <SelectItem value="Fase E (Kelas 10 SMA/SMK)">Fase E (Kelas 10 SMA/SMK)</SelectItem>
+                      <SelectItem value="Fase F (Kelas 11-12 SMA/SMK)">Fase F (Kelas 11-12 SMA/SMK)</SelectItem>
+                      <SelectItem value="SLB">SLB (disesuaikan)</SelectItem>
+                      <SelectItem value="Pendidikan Kesetaraan">Pendidikan Kesetaraan</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
             </div>
             
@@ -210,11 +225,11 @@ export function CurriculumFormDialog({
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="outline">
-                Cancel
+                Batal
               </Button>
             </DialogClose>
             <Button type="submit" className="bg-primary hover:bg-primary/90 text-primary-foreground">
-              <Save className="mr-2 h-4 w-4" /> Save Changes
+              <Save className="mr-2 h-4 w-4" /> Simpan Perubahan
             </Button>
           </DialogFooter>
         </form>

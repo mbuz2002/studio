@@ -27,24 +27,24 @@ export function UserProfile() {
               </AvatarFallback>
             </Avatar>
             <div className="hidden group-data-[state=expanded]:md:flex flex-col items-start">
-              <span className="text-sm font-medium">Teacher Name</span>
-              <span className="text-xs text-sidebar-foreground/70">teacher@example.com</span>
+              <span className="text-sm font-medium">Nama Guru</span>
+              <span className="text-xs text-sidebar-foreground/70">guru@contoh.com</span>
             </div>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent side="top" align="start" className="w-56 mb-2 ml-2">
-          <DropdownMenuLabel>My Account</DropdownMenuLabel>
+          <DropdownMenuLabel>Akun Saya</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
             <Link href="/settings">
               <Settings className="mr-2 h-4 w-4" />
-              <span>Settings</span>
+              <span>Pengaturan</span>
             </Link>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
             <LogOut className="mr-2 h-4 w-4" />
-            <span>Log out</span>
+            <span>Keluar</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

@@ -2,26 +2,28 @@
 'use server';
 
 /**
- * @fileOverview Generates a draft lesson plan from a given topic and grade level.
+ * @fileOverview Membuat draf rencana pembelajaran dari topik dan jenjang/fase/kelas yang diberikan, sesuai Kurikulum Merdeka.
  *
- * - generateLessonPlanFromTopic - A function that generates a lesson plan.
- * - GenerateLessonPlanInput - The input type for the generateLessonPlanFromTopic function.
- * - GenerateLessonPlanOutput - The return type for the generateLessonPlanFromTopic function.
+ * - generateLessonPlanFromTopic - Fungsi yang membuat rencana pembelajaran.
+ * - GenerateLessonPlanInput - Tipe input untuk fungsi generateLessonPlanFromTopic.
+ * - GenerateLessonPlanOutput - Tipe return untuk fungsi generateLessonPlanFromTopic.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const GenerateLessonPlanInputSchema = z.object({
-  topic: z.string().describe('The topic of the lesson plan.'),
-  gradeLevel: z.string().describe('The grade level for the lesson plan.'),
+  topic: z.string().describe('Topik atau materi pembelajaran.'),
+  jenjangFaseKelas: z.string().describe('Jenjang, fase, atau kelas sasaran (misalnya, "Fase D (Kelas 7 SMP)", "PAUD", "Kelas 10 SMAK").'),
 });
 export type GenerateLessonPlanInput = z.infer<typeof GenerateLessonPlanInputSchema>;
 
 const GenerateLessonPlanOutputSchema = z.object({
-  title: z.string().describe('The title of the lesson plan.'),
-  learningObjectives: z.array(z.string()).describe('The learning objectives for the lesson plan.'),
-  suggestedActivities: z.array(z.string()).describe('The suggested activities for the lesson plan.'),
+  title: z.string().describe('Judul rencana pembelajaran yang menarik dan relevan.'),
+  learningObjectives: z.array(z.string()).describe('Tujuan pembelajaran atau Capaian Pembelajaran (CP) yang ingin dicapai, dirumuskan dengan jelas dan terukur.'),
+  suggestedActivities: z.array(z.string()).describe('Saran kegiatan pembelajaran yang variatif, menarik, dan berpusat pada peserta didik, sesuai dengan prinsip Kurikulum Merdeka (misalnya, proyek, diskusi, eksplorasi).'),
+  assessmentIdeas: z.array(z.string()).describe('Ide-ide asesmen formatif dan sumatif yang relevan dengan tujuan pembelajaran dan kegiatan, mendukung pembelajaran berdiferensiasi.'),
+  differentiationStrategies: z.array(z.string()).describe('Strategi diferensiasi untuk mengakomodasi kebutuhan belajar peserta didik yang beragam.'),
 });
 export type GenerateLessonPlanOutput = z.infer<typeof GenerateLessonPlanOutputSchema>;
 
@@ -33,12 +35,20 @@ const prompt = ai.definePrompt({
   name: 'generateLessonPlanFromTopicPrompt',
   input: {schema: GenerateLessonPlanInputSchema},
   output: {schema: GenerateLessonPlanOutputSchema},
-  prompt: `You are an experienced teacher. Generate a lesson plan for the following topic and grade level:
+  prompt: `Anda adalah seorang guru berpengalaman yang ahli dalam menyusun Rencana Pelaksanaan Pembelajaran (RPP) atau Modul Ajar sesuai dengan prinsip-prinsip Kurikulum Merdeka di Indonesia.
+Buatlah draf rencana pembelajaran untuk topik dan jenjang/fase/kelas berikut:
 
-Topic: {{{topic}}}
-Grade Level: {{{gradeLevel}}}
+Topik: {{{topic}}}
+Jenjang/Fase/Kelas: {{{jenjangFaseKelas}}}
 
-The lesson plan should include a title, learning objectives, and suggested activities. Make sure the output matches the schema.
+Rencana pembelajaran harus mencakup:
+1.  Judul yang menarik dan relevan dengan topik.
+2.  Tujuan Pembelajaran atau Capaian Pembelajaran (CP) yang jelas, spesifik, terukur, dapat dicapai, relevan, dan berbatas waktu (SMART), jika memungkinkan. Fokus pada kompetensi yang ingin dikembangkan.
+3.  Saran Kegiatan Pembelajaran yang inovatif, interaktif, kolaboratif, dan berpusat pada peserta didik. Integrasikan elemen Profil Pelajar Pancasila jika relevan. Pertimbangkan pembelajaran berdiferensiasi.
+4.  Ide Asesmen/Penilaian yang beragam (formatif dan sumatif) untuk mengukur ketercapaian Tujuan Pembelajaran. Sertakan contoh instrumen atau teknik penilaian.
+5.  Strategi Diferensiasi untuk mendukung peserta didik dengan berbagai kebutuhan belajar (misalnya, konten, proses, produk).
+
+Pastikan output yang dihasilkan sesuai dengan skema JSON yang diharapkan dan menggunakan Bahasa Indonesia yang baik dan benar.
 `,
 });
 
@@ -50,6 +60,13 @@ const generateLessonPlanFromTopicFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await prompt(input);
-    return output!;
+    // Rename input field for the prompt
+    const adaptedInput = {
+      topic: input.topic,
+      gradeLevel: input.jenjangFaseKelas, // Map to the field name expected by original prompt if necessary (now it's jenjangFaseKelas)
+    };
+    // If the prompt was expecting 'gradeLevel' before, this mapping is no longer needed as prompt now expects 'jenjangFaseKelas'
+    const {output: promptOutput} = await prompt(input); // Use original input as prompt now expects jenjangFaseKelas
+    return promptOutput!;
   }
 );

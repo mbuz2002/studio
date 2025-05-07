@@ -13,24 +13,24 @@ const initialAnnualPrograms: AnnualProgram[] = [
   {
     id: "prota1",
     type: "PROTA",
-    title: "Mathematics Program 2023/2024",
-    subject: "Mathematics",
-    gradeLevel: "Grade 7",
+    title: "Program Matematika 2023/2024",
+    subject: "Matematika",
+    gradeLevel: "Fase D (Kelas 7-9 SMP)",
     year: "2023/2024",
-    semester1Topics: ["Algebra Basics", "Geometry Fundamentals"],
-    semester2Topics: ["Statistics", "Advanced Algebra"],
+    semester1Topics: ["Dasar-Dasar Aljabar", "Fundamental Geometri"],
+    semester2Topics: ["Statistika", "Aljabar Lanjutan"],
     createdAt: new Date("2023-08-15T00:00:00Z").toISOString(),
     updatedAt: new Date("2023-08-20T00:00:00Z").toISOString(),
   },
   {
     id: "prota2",
     type: "PROTA",
-    title: "Science Curriculum Grade 8",
-    subject: "Science",
-    gradeLevel: "Grade 8",
+    title: "Kurikulum IPA Fase D",
+    subject: "IPA",
+    gradeLevel: "Fase D (Kelas 7-9 SMP)",
     year: "2023/2024",
-    semester1Topics: ["Physics: Motion & Forces", "Chemistry: Elements & Compounds"],
-    semester2Topics: ["Biology: Ecosystems", "Earth Science: Plate Tectonics"],
+    semester1Topics: ["Fisika: Gerak & Gaya", "Kimia: Unsur & Senyawa"],
+    semester2Topics: ["Biologi: Ekosistem", "Ilmu Bumi: Lempeng Tektonik"],
     createdAt: new Date("2023-08-10T00:00:00Z").toISOString(),
     updatedAt: new Date("2023-08-18T00:00:00Z").toISOString(),
   },
@@ -56,13 +56,13 @@ export default function AnnualProgramsPage() {
   };
 
   const handleDelete = (itemToDelete: AnyCurriculumItem) => {
-     if (window.confirm(`Are you sure you want to delete "${itemToDelete.title}"?`)) {
+     if (window.confirm(`Apakah Anda yakin ingin menghapus "${itemToDelete.title}"?`)) {
       setAnnualPrograms(annualPrograms.filter(ap => ap.id !== itemToDelete.id));
     }
   };
 
   const handleView = (item: AnyCurriculumItem) => {
-    alert(`Viewing: ${item.title}\n\nDetails:\n${JSON.stringify(item, null, 2)}`);
+    alert(`Melihat: ${item.title}\n\nRincian:\n${JSON.stringify(item, null, 2)}`);
   };
 
   const filteredAnnualPrograms = annualPrograms.filter(ap =>
@@ -76,8 +76,8 @@ export default function AnnualProgramsPage() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Annual Programs (PROTA)</CardTitle>
-          <CardDescription>Manage your academic year programs. Plan long-term curriculum goals and structures.</CardDescription>
+          <CardTitle className="text-2xl">Program Tahunan (PROTA)</CardTitle>
+          <CardDescription>Kelola program tahun ajaran Anda. Rencanakan tujuan dan struktur kurikulum jangka panjang.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-2 mb-4">
@@ -85,7 +85,7 @@ export default function AnnualProgramsPage() {
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 type="search"
-                placeholder="Search annual programs..."
+                placeholder="Cari program tahunan..."
                 className="pl-8 sm:w-full"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -95,12 +95,12 @@ export default function AnnualProgramsPage() {
               <Filter className="mr-2 h-4 w-4" /> Filter
             </Button>
              <Button variant="outline">
-                <FileUp className="mr-2 h-4 w-4" /> Import Data
+                <FileUp className="mr-2 h-4 w-4" /> Impor Data
             </Button>
             <CurriculumFormDialog
-              triggerButtonText="Create New Annual Program"
-              dialogTitle="Create New Annual Program"
-              dialogDescription="Define the structure for an entire academic year (PROTA)."
+              triggerButtonText="Buat Program Tahunan Baru"
+              dialogTitle="Buat Program Tahunan Baru"
+              dialogDescription="Definisikan struktur untuk seluruh tahun ajaran (PROTA)."
               itemType="PROTA"
               onSubmit={handleCreateOrUpdate}
               initialData={editingItem}
@@ -120,9 +120,9 @@ export default function AnnualProgramsPage() {
       {editingItem && (
          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
             <CurriculumFormDialog
-                triggerButtonText="Hidden Edit Trigger"
-                dialogTitle={`Edit Annual Program: ${editingItem.title}`}
-                dialogDescription="Update the details for this annual program."
+                triggerButtonText="Pemicu Edit Tersembunyi"
+                dialogTitle={`Edit Program Tahunan: ${editingItem.title}`}
+                dialogDescription="Perbarui rincian untuk program tahunan ini."
                 itemType="PROTA"
                 initialData={editingItem}
                 onSubmit={handleCreateOrUpdate}

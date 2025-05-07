@@ -8,39 +8,39 @@ export default function SettingsPage() {
         <CardHeader>
           <div className="flex items-center gap-3">
               <Cog className="h-8 w-8 text-primary" />
-              <CardTitle className="text-3xl font-bold">Settings</CardTitle>
+              <CardTitle className="text-3xl font-bold">Pengaturan</CardTitle>
           </div>
           <CardDescription className="text-lg">
-            Manage your application preferences and account settings.
+            Kelola preferensi aplikasi dan pengaturan akun Anda.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>Profile Information</CardTitle>
-                <CardDescription>Update your personal details.</CardDescription>
+                <CardTitle>Informasi Profil</CardTitle>
+                <CardDescription>Perbarui rincian pribadi Anda.</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">Profile settings form will be here.</p>
+                <p className="text-muted-foreground">Formulir pengaturan profil akan ada di sini.</p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle>Application Preferences</CardTitle>
-                <CardDescription>Customize your EduAI Planner experience.</CardDescription>
+                <CardTitle>Preferensi Aplikasi</CardTitle>
+                <CardDescription>Sesuaikan pengalaman EduAI Planner Anda.</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">Theme, notifications, and other preferences will be managed here.</p>
+                <p className="text-muted-foreground">Tema, notifikasi, dan preferensi lainnya akan dikelola di sini.</p>
               </CardContent>
             </Card>
              <Card>
               <CardHeader>
-                <CardTitle>Export/Import Data</CardTitle>
-                <CardDescription>Manage your curriculum data.</CardDescription>
+                <CardTitle>Ekspor/Impor Data</CardTitle>
+                <CardDescription>Kelola data kurikulum Anda.</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">Options to export all data or import from supported formats will be here.</p>
+                <p className="text-muted-foreground">Opsi untuk mengekspor semua data atau mengimpor dari format yang didukung akan ada di sini.</p>
               </CardContent>
             </Card>
           </div>

@@ -7,12 +7,12 @@ import Link from 'next/link';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/lesson-plans", label: "Lesson Plans (RPP)", icon: BookOpenText },
-  { href: "/annual-programs", label: "Annual Programs (PROTA)", icon: CalendarDays },
-  { href: "/semester-programs", label: "Semester Programs (Promes)", icon: CalendarClock },
-  { href: "/ai-assistant", label: "AI Assistant", icon: Sparkles },
-  { href: "/settings", label: "Settings", icon: SettingsIcon },
+  { href: "/dashboard", label: "Dasbor", icon: LayoutDashboard },
+  { href: "/lesson-plans", label: "Rencana Pembelajaran (RPP)", icon: BookOpenText },
+  { href: "/annual-programs", label: "Program Tahunan (PROTA)", icon: CalendarDays },
+  { href: "/semester-programs", label: "Program Semester (Promes)", icon: CalendarClock },
+  { href: "/ai-assistant", label: "Asisten AI", icon: Sparkles },
+  { href: "/settings", label: "Pengaturan", icon: SettingsIcon },
 ];
 
 export default function AppLayout({ children }: PropsWithChildren) {

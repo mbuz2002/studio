@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BookMarked, LogIn } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation"; // Corrected import
+import { useRouter } from "next/navigation"; 
 import type { FormEvent } from 'react';
 
 export default function LoginPage() {
@@ -26,33 +26,33 @@ export default function LoginPage() {
           <BookMarked size={48} strokeWidth={1.5} />
         </div>
         <CardTitle className="text-3xl font-bold">EduAI Planner</CardTitle>
-        <CardDescription>Welcome back! Please login to your account.</CardDescription>
+        <CardDescription>Selamat datang kembali! Silakan masuk ke akun Anda.</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="email">Email Address</Label>
-            <Input id="email" type="email" placeholder="you@example.com" required />
+            <Label htmlFor="email">Alamat Email</Label>
+            <Input id="email" type="email" placeholder="anda@contoh.com" required />
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">Kata Sandi</Label>
               <Link href="#" className="text-sm text-primary hover:underline">
-                Forgot password?
+                Lupa kata sandi?
               </Link>
             </div>
             <Input id="password" type="password" required placeholder="••••••••" />
           </div>
           <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
-            <LogIn className="mr-2 h-5 w-5" /> Login
+            <LogIn className="mr-2 h-5 w-5" /> Masuk
           </Button>
         </form>
       </CardContent>
       <CardFooter className="flex flex-col items-center space-y-2">
         <p className="text-sm text-muted-foreground">
-          Don&apos;t have an account?{" "}
+          Belum punya akun?{" "}
           <Link href="#" className="font-medium text-primary hover:underline">
-            Sign up
+            Daftar
           </Link>
         </p>
       </CardFooter>
