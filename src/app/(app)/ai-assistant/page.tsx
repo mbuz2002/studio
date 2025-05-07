@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -19,12 +20,13 @@ export default function AIAssistantPage() {
   
   // State for Lesson Plan Generation
   const [topic, setTopic] = useState("");
-  const [gradeLevel, setGradeLevel] = useState("");
+  const [gradeLevel, setGradeLevel] = useState(""); // This state holds the value from the Select component
   const [generatedPlan, setGeneratedPlan] = useState<GenerateLessonPlanOutput | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
   // State for Improvement Suggestions
   const [draftPlan, setDraftPlan] = useState("");
+  const [improvementGradeLevel, setImprovementGradeLevel] = useState(""); // State for grade level in improvement tab
   const [suggestedImprovements, setSuggestedImprovements] = useState<SuggestLessonPlanImprovementsOutput | null>(null);
   const [isSuggesting, setIsSuggesting] = useState(false);
 
@@ -37,7 +39,8 @@ export default function AIAssistantPage() {
     setIsGenerating(true);
     setGeneratedPlan(null);
     try {
-      const input: GenerateLessonPlanInput = { topic, gradeLevel };
+      // Ensure the input matches the GenerateLessonPlanInput schema, specifically using 'jenjangFaseKelas'
+      const input: GenerateLessonPlanInput = { topic, jenjangFaseKelas: gradeLevel };
       const result = await generateLessonPlanFromTopic(input);
       setGeneratedPlan(result);
       toast({ title: "Rencana Pembelajaran Dihasilkan!", description: "AI telah membuat draf rencana pembelajaran untuk Anda." });
@@ -58,7 +61,10 @@ export default function AIAssistantPage() {
     setIsSuggesting(true);
     setSuggestedImprovements(null);
     try {
-      const input: SuggestLessonPlanImprovementsInput = { lessonPlan: draftPlan };
+      const input: SuggestLessonPlanImprovementsInput = { 
+        lessonPlan: draftPlan,
+        jenjangFaseKelas: improvementGradeLevel || undefined // Pass grade level if selected
+      };
       const result = await suggestLessonPlanImprovements(input);
       setSuggestedImprovements(result);
       toast({ title: "Saran Siap!", description: "AI telah memberikan saran perbaikan." });
@@ -93,18 +99,18 @@ export default function AIAssistantPage() {
           <Card>
             <CardHeader>
               <CardTitle>Buat Rencana Pembelajaran</CardTitle>
-              <CardDescription>Berikan topik dan jenjang/fase untuk membuat draf rencana pembelajaran.</CardDescription>
+              <CardDescription>Berikan topik dan jenjang/fase untuk membuat draf rencana pembelajaran (RPP/Modul Ajar).</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleGeneratePlan} className="space-y-4">
                 <div>
-                  <Label htmlFor="topic">Topik</Label>
-                  <Input id="topic" value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="cth., Tata Surya" />
+                  <Label htmlFor="topic-generate">Topik Pembelajaran</Label>
+                  <Input id="topic-generate" value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="cth., Tata Surya dan Sistem Planet" />
                 </div>
                 <div>
-                  <Label htmlFor="gradeLevel-ai">Jenjang/Fase/Kelas</Label>
+                  <Label htmlFor="gradeLevel-generate">Jenjang/Fase/Kelas</Label>
                   <Select value={gradeLevel} onValueChange={setGradeLevel}>
-                    <SelectTrigger id="gradeLevel-ai">
+                    <SelectTrigger id="gradeLevel-generate">
                       <SelectValue placeholder="Pilih Jenjang/Fase/Kelas" />
                     </SelectTrigger>
                     <SelectContent>
@@ -116,32 +122,48 @@ export default function AIAssistantPage() {
                       <SelectItem value="Fase E (Kelas 10 SMA/SMK)">Fase E (Kelas 10 SMA/SMK)</SelectItem>
                       <SelectItem value="Fase F (Kelas 11-12 SMA/SMK)">Fase F (Kelas 11-12 SMA/SMK)</SelectItem>
                        <SelectItem value="SLB">SLB (disesuaikan)</SelectItem>
-                       <SelectItem value="Pendidikan Kesetaraan">Pendidikan Kesetaraan</SelectItem>
-                       <SelectItem value="Perguruan Tinggi">Perguruan Tinggi</SelectItem>
+                       <SelectItem value="Pendidikan Kesetaraan">Pendidikan Kesetaraan (Paket A/B/C)</SelectItem>
+                       {/* <SelectItem value="Perguruan Tinggi">Perguruan Tinggi</SelectItem>  Potentially remove if not primary focus */}
                     </SelectContent>
                   </Select>
                 </div>
                 <Button type="submit" disabled={isGenerating} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
                   {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
-                  Buat Rencana
+                  Buat Draf Rencana
                 </Button>
               </form>
               {generatedPlan && (
-                <div className="mt-6 space-y-4 rounded-md border p-4 bg-secondary/50">
-                  <h3 className="text-xl font-semibold text-primary">{generatedPlan.title}</h3>
-                  <div>
-                    <h4 className="font-semibold">Tujuan Pembelajaran:</h4>
-                    <ul className="list-disc pl-5 text-sm">
-                      {generatedPlan.learningObjectives.map((obj, i) => <li key={i}>{obj}</li>)}
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold">Saran Kegiatan:</h4>
-                    <ul className="list-disc pl-5 text-sm">
-                      {generatedPlan.suggestedActivities.map((act, i) => <li key={i}>{act}</li>)}
-                    </ul>
-                  </div>
-                </div>
+                <Card className="mt-6 shadow-md">
+                  <CardHeader>
+                    <CardTitle className="text-xl text-primary">{generatedPlan.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div>
+                      <h4 className="font-semibold text-base">Tujuan Pembelajaran:</h4>
+                      <ul className="list-disc pl-5 text-sm space-y-1">
+                        {generatedPlan.learningObjectives.map((obj, i) => <li key={`obj-${i}`}>{obj}</li>)}
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-base">Saran Kegiatan Pembelajaran:</h4>
+                      <ul className="list-disc pl-5 text-sm space-y-1">
+                        {generatedPlan.suggestedActivities.map((act, i) => <li key={`act-${i}`}>{act}</li>)}
+                      </ul>
+                    </div>
+                     <div>
+                      <h4 className="font-semibold text-base">Ide Asesmen:</h4>
+                      <ul className="list-disc pl-5 text-sm space-y-1">
+                        {generatedPlan.assessmentIdeas.map((idea, i) => <li key={`assess-${i}`}>{idea}</li>)}
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-base">Strategi Diferensiasi:</h4>
+                      <ul className="list-disc pl-5 text-sm space-y-1">
+                        {generatedPlan.differentiationStrategies.map((strat, i) => <li key={`diff-${i}`}>{strat}</li>)}
+                      </ul>
+                    </div>
+                  </CardContent>
+                </Card>
               )}
             </CardContent>
           </Card>
@@ -149,42 +171,80 @@ export default function AIAssistantPage() {
         <TabsContent value="improve">
           <Card>
             <CardHeader>
-              <CardTitle>Saran Perbaikan</CardTitle>
-              <CardDescription>Tempel draf rencana pembelajaran Anda di bawah untuk mendapatkan saran berbasis AI.</CardDescription>
+              <CardTitle>Saran Perbaikan Rencana Pembelajaran</CardTitle>
+              <CardDescription>Tempel draf rencana pembelajaran (RPP/Modul Ajar) Anda di bawah untuk mendapatkan saran berbasis AI sesuai Kurikulum Merdeka.</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSuggestImprovements} className="space-y-4">
                 <div>
-                  <Label htmlFor="draftPlan">Konten Draf Rencana Pembelajaran</Label>
+                  <Label htmlFor="draftPlan-improve">Konten Draf Rencana Pembelajaran</Label>
                   <Textarea
-                    id="draftPlan"
+                    id="draftPlan-improve"
                     value={draftPlan}
                     onChange={(e) => setDraftPlan(e.target.value)}
                     placeholder="Tempel teks rencana pembelajaran Anda di sini..."
                     rows={10}
+                    className="text-sm"
                   />
+                </div>
+                 <div>
+                  <Label htmlFor="gradeLevel-improve">Jenjang/Fase/Kelas (Opsional)</Label>
+                  <Select value={improvementGradeLevel} onValueChange={setImprovementGradeLevel}>
+                    <SelectTrigger id="gradeLevel-improve">
+                      <SelectValue placeholder="Pilih Jenjang/Fase/Kelas (jika spesifik)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Tidak Ada (Umum)</SelectItem>
+                      <SelectItem value="PAUD">PAUD</SelectItem>
+                      <SelectItem value="Fase A (Kelas 1-2 SD)">Fase A (Kelas 1-2 SD)</SelectItem>
+                      <SelectItem value="Fase B (Kelas 3-4 SD)">Fase B (Kelas 3-4 SD)</SelectItem>
+                      <SelectItem value="Fase C (Kelas 5-6 SD)">Fase C (Kelas 5-6 SD)</SelectItem>
+                      <SelectItem value="Fase D (Kelas 7-9 SMP)">Fase D (Kelas 7-9 SMP)</SelectItem>
+                      <SelectItem value="Fase E (Kelas 10 SMA/SMK)">Fase E (Kelas 10 SMA/SMK)</SelectItem>
+                      <SelectItem value="Fase F (Kelas 11-12 SMA/SMK)">Fase F (Kelas 11-12 SMA/SMK)</SelectItem>
+                       <SelectItem value="SLB">SLB (disesuaikan)</SelectItem>
+                       <SelectItem value="Pendidikan Kesetaraan">Pendidikan Kesetaraan (Paket A/B/C)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">Memberikan jenjang akan membantu AI memberikan saran yang lebih kontekstual.</p>
                 </div>
                 <Button type="submit" disabled={isSuggesting} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
                   {isSuggesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                  Dapatkan Saran
+                  Dapatkan Saran Perbaikan
                 </Button>
               </form>
               {suggestedImprovements && (
-                <div className="mt-6 space-y-4 rounded-md border p-4 bg-secondary/50">
-                  <h3 className="text-xl font-semibold text-primary">Saran Perbaikan</h3>
-                  <div>
-                    <h4 className="font-semibold">Tujuan Pembelajaran:</h4>
-                    <p className="text-sm">{suggestedImprovements.learningObjectives}</p>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold">Metode Pengajaran:</h4>
-                    <p className="text-sm">{suggestedImprovements.teachingMethods}</p>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold">Materi Terkait:</h4>
-                    <p className="text-sm">{suggestedImprovements.relatedMaterials}</p>
-                  </div>
-                </div>
+                <Card className="mt-6 shadow-md">
+                  <CardHeader>
+                    <CardTitle className="text-xl text-primary">Saran Perbaikan dari AI</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div>
+                      <h4 className="font-semibold text-base">Tujuan Pembelajaran/CP:</h4>
+                      <p className="text-sm whitespace-pre-line">{suggestedImprovements.tujuanPembelajaran}</p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-base">Kegiatan Pembelajaran:</h4>
+                      <p className="text-sm whitespace-pre-line">{suggestedImprovements.kegiatanPembelajaran}</p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-base">Asesmen:</h4>
+                      <p className="text-sm whitespace-pre-line">{suggestedImprovements.asesmen}</p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-base">Pembelajaran Berdiferensiasi:</h4>
+                      <p className="text-sm whitespace-pre-line">{suggestedImprovements.pembelajaranBerdiferensiasi}</p>
+                    </div>
+                     <div>
+                      <h4 className="font-semibold text-base">Integrasi Profil Pelajar Pancasila:</h4>
+                      <p className="text-sm whitespace-pre-line">{suggestedImprovements.integrasiProfilPelajarPancasila}</p>
+                    </div>
+                     <div>
+                      <h4 className="font-semibold text-base">Penggunaan Media/Sumber Belajar:</h4>
+                      <p className="text-sm whitespace-pre-line">{suggestedImprovements.penggunaanMediaSumberBelajar}</p>
+                    </div>
+                  </CardContent>
+                </Card>
               )}
             </CardContent>
           </Card>
@@ -193,3 +253,6 @@ export default function AIAssistantPage() {
     </div>
   );
 }
+
+
+    

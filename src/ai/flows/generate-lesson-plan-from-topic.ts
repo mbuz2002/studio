@@ -58,15 +58,11 @@ const generateLessonPlanFromTopicFlow = ai.defineFlow(
     inputSchema: GenerateLessonPlanInputSchema,
     outputSchema: GenerateLessonPlanOutputSchema,
   },
-  async input => {
+  async (input: GenerateLessonPlanInput) => { // Ensure input is explicitly typed for clarity
     const {output} = await prompt(input);
-    // Rename input field for the prompt
-    const adaptedInput = {
-      topic: input.topic,
-      gradeLevel: input.jenjangFaseKelas, // Map to the field name expected by original prompt if necessary (now it's jenjangFaseKelas)
-    };
-    // If the prompt was expecting 'gradeLevel' before, this mapping is no longer needed as prompt now expects 'jenjangFaseKelas'
-    const {output: promptOutput} = await prompt(input); // Use original input as prompt now expects jenjangFaseKelas
-    return promptOutput!;
+    return output!;
   }
 );
+
+
+    
