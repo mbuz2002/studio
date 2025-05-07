@@ -23,8 +23,8 @@ const LessonPlanSchema = z.object({
   gradeLevel: z.string(),
   topic: z.string(),
   learningObjectives: z.array(z.string()),
-  pemahamanBermakna: z.array(z.string()).optional(),
-  pertanyaanPemantik: z.array(z.string()).optional(),
+  pemahamanBermakna: z.array(z.string()).describe("Pemahaman bermakna yang akan dibangun oleh siswa.").optional(),
+  pertanyaanPemantik: z.array(z.string()).describe("Pertanyaan pemantik untuk diskusi.").optional(),
   langkahPembelajaran: z.object({
     pendahuluan: z.array(z.string()),
     kegiatanInti: z.array(z.string()),
@@ -73,14 +73,14 @@ Berikut adalah data RPP/MA yang perlu diformat:
 - {{{this}}}
 {{/each}}
 
-{{#if pemahamanBermakna}}
+{{#if pemahamanBermakna.length}}
 **B. PEMAHAMAN BERMAKNA**
 {{#each pemahamanBermakna}}
 - {{{this}}}
 {{/each}}
 {{/if}}
 
-{{#if pertanyaanPemantik}}
+{{#if pertanyaanPemantik.length}}
 **C. PERTANYAAN PEMANTIK**
 {{#each pertanyaanPemantik}}
 - {{{this}}}
@@ -113,7 +113,7 @@ Berikut adalah data RPP/MA yang perlu diformat:
 {{/if}}
 
 
-{{#if differentiationStrategies}}
+{{#if differentiationStrategies.length}}
 **F. STRATEGI DIFERENSIASI**
 {{#each differentiationStrategies}}
 - {{{this}}}
@@ -127,7 +127,7 @@ Berikut adalah data RPP/MA yang perlu diformat:
 
 ---
 *Dokumen ini dibuat pada: {{updatedAt}} (Data terakhir diperbarui)*
-Pastikan semua bagian terisi sesuai data yang diberikan. Jika ada data opsional yang tidak ada, jangan tampilkan bagian tersebut.
+Pastikan semua bagian terisi sesuai data yang diberikan. Jika ada data opsional yang tidak ada atau kosong, jangan tampilkan bagian tersebut.
 `,
 });
 
@@ -151,3 +151,4 @@ const exportRppToTextFlow = ai.defineFlow(
     return output!;
   }
 );
+

@@ -23,23 +23,43 @@ export interface LessonPlan extends CurriculumItem {
   materials?: string; // Media / Sumber Belajar (opsional)
 }
 
+export interface AnnualProgramComponent {
+  topic: string;
+  elemenCapaianPembelajaran?: string[]; // Elemen Capaian Pembelajaran, e.g., ["Bilangan", "Aljabar"]
+  alokasiWaktu: string; // e.g., "24 JP" (Jam Pelajaran)
+}
+
 export interface AnnualProgram extends CurriculumItem {
   type: 'PROTA'; // Program Tahunan
   year: string; // Tahun Ajaran, e.g., "2023/2024"
-  semester1Topics: string[]; // Alokasi Waktu atau Topik Semester Ganjil
-  semester2Topics: string[]; // Alokasi Waktu atau Topik Semester Genap
+  semester1Components: AnnualProgramComponent[];
+  semester2Components: AnnualProgramComponent[];
+  profilPelajarPancasilaFocus?: string[]; // Fokus dimensi P5, e.g., ["Gotong Royong", "Kreatif"]
+}
+
+export interface WeeklyUnit {
+  mingguKe: number;
+  bulan?: string; // Optional: e.g., "Juli Minggu ke-3"
+  materiPokokAtauTujuanPembelajaran: string; // Bisa Materi Pokok atau Tujuan Pembelajaran dari ATP
+  alokasiWaktu: string; // e.g., "3 JP x 2 Pertemuan"
+  metodeStrategi?: string[]; // e.g., ["Diskusi Kelompok", "Project Based Learning"]
+  sumberBelajar?: string[]; // e.g., ["Buku Siswa Hal. 10-15", "Video YouTube XYZ"]
+  rencanaAsesmen?: string[]; // e.g., ["Formatif: Observasi Diskusi", "Sumatif: Ulangan Harian Bab 1"]
+  catatanIntegrasiP5?: string; // Catatan bagaimana P5 diintegrasikan, e.g., "Diskusi kelompok menekankan gotong royong."
 }
 
 export interface SemesterProgram extends CurriculumItem {
   type: 'Promes'; // Program Semester
   semester: '1' | '2'; // 1 for Ganjil, 2 for Genap
   year: string; // Tahun Ajaran, e.g. "2023/2024"
-  weeklyBreakdown: { week: number; topic: string; activities: string }[]; // Rincian Mingguan
+  capaianPembelajaranUmum?: string; // Deskripsi CP umum untuk semester tersebut (opsional)
+  alokasiWaktuTotalSemester?: string; // e.g., "18 Minggu Efektif x 6 JP/Minggu = 108 JP"
+  komponenMingguan: WeeklyUnit[];
 }
+
 
 export type AnyCurriculumItem = LessonPlan | AnnualProgram | SemesterProgram;
 
 // For AI flow outputs - already defined in AI flow files, but useful to have centralized if expanded
 export type { GenerateLessonPlanOutput } from '@/ai/flows/generate-lesson-plan-from-topic';
 export type { SuggestLessonPlanImprovementsOutput } from '@/ai/flows/suggest-lesson-plan-improvements';
-
