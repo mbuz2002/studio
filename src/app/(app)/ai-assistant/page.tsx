@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -20,15 +20,22 @@ export default function AIAssistantPage() {
   
   // State for Lesson Plan Generation
   const [topic, setTopic] = useState("");
-  const [gradeLevel, setGradeLevel] = useState(""); // This state holds the value from the Select component
+  const [gradeLevel, setGradeLevel] = useState("");
   const [generatedPlan, setGeneratedPlan] = useState<GenerateLessonPlanOutput | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
   // State for Improvement Suggestions
   const [draftPlan, setDraftPlan] = useState("");
-  const [improvementGradeLevel, setImprovementGradeLevel] = useState(""); // State for grade level in improvement tab
+  const [improvementGradeLevel, setImprovementGradeLevel] = useState("");
   const [suggestedImprovements, setSuggestedImprovements] = useState<SuggestLessonPlanImprovementsOutput | null>(null);
   const [isSuggesting, setIsSuggesting] = useState(false);
+
+  // To prevent hydration errors with Math.random() or new Date() for IDs or other dynamic content
+  const [isClient, setIsClient] = useState(false);
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
 
   const handleGeneratePlan = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +46,6 @@ export default function AIAssistantPage() {
     setIsGenerating(true);
     setGeneratedPlan(null);
     try {
-      // Ensure the input matches the GenerateLessonPlanInput schema, specifically using 'jenjangFaseKelas'
       const input: GenerateLessonPlanInput = { topic, jenjangFaseKelas: gradeLevel };
       const result = await generateLessonPlanFromTopic(input);
       setGeneratedPlan(result);
@@ -63,7 +69,7 @@ export default function AIAssistantPage() {
     try {
       const input: SuggestLessonPlanImprovementsInput = { 
         lessonPlan: draftPlan,
-        jenjangFaseKelas: improvementGradeLevel || undefined // Pass grade level if selected
+        jenjangFaseKelas: improvementGradeLevel || undefined 
       };
       const result = await suggestLessonPlanImprovements(input);
       setSuggestedImprovements(result);
@@ -76,36 +82,42 @@ export default function AIAssistantPage() {
     }
   };
 
+  if (!isClient) {
+    return null; // Or a loading spinner
+  }
+
   return (
-    <div className="space-y-8 py-8">
+    <div className="space-y-8 py-4 md:py-8">
       <Card className="shadow-lg">
         <CardHeader>
-          <div className="flex items-center gap-3">
-            <Sparkles className="h-8 w-8 text-primary" />
-            <CardTitle className="text-3xl font-bold">Asisten AI</CardTitle>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <Sparkles className="h-8 w-8 text-primary flex-shrink-0" />
+            <div>
+              <CardTitle className="text-2xl md:text-3xl font-bold">Asisten AI Kurikulum Merdeka</CardTitle>
+              <CardDescription className="text-base md:text-lg">
+                Manfaatkan AI untuk membuat atau menyempurnakan Modul Ajar Anda.
+              </CardDescription>
+            </div>
           </div>
-          <CardDescription className="text-lg">
-            Manfaatkan AI untuk memulai perencanaan pembelajaran Anda atau meningkatkan materi yang sudah ada.
-          </CardDescription>
         </CardHeader>
       </Card>
 
       <Tabs defaultValue="generate" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="generate"><Wand2 className="mr-2 h-4 w-4 inline-block" />Buat Rencana Baru</TabsTrigger>
-          <TabsTrigger value="improve"><Sparkles className="mr-2 h-4 w-4 inline-block" />Perbaiki Rencana Yang Ada</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2">
+          <TabsTrigger value="generate"><Wand2 className="mr-2 h-4 w-4 inline-block" />Buat Modul Ajar Baru</TabsTrigger>
+          <TabsTrigger value="improve"><Sparkles className="mr-2 h-4 w-4 inline-block" />Perbaiki Modul Ajar</TabsTrigger>
         </TabsList>
         <TabsContent value="generate">
           <Card>
             <CardHeader>
-              <CardTitle>Buat Rencana Pembelajaran</CardTitle>
-              <CardDescription>Berikan topik dan jenjang/fase untuk membuat draf rencana pembelajaran (RPP/Modul Ajar).</CardDescription>
+              <CardTitle>Buat Draf Modul Ajar (RPP Plus)</CardTitle>
+              <CardDescription>Masukkan topik dan jenjang/fase untuk membuat draf Modul Ajar sesuai Kurikulum Merdeka.</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleGeneratePlan} className="space-y-4">
                 <div>
                   <Label htmlFor="topic-generate">Topik Pembelajaran</Label>
-                  <Input id="topic-generate" value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="cth., Tata Surya dan Sistem Planet" />
+                  <Input id="topic-generate" value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="cth., Perubahan Iklim dan Dampaknya" />
                 </div>
                 <div>
                   <Label htmlFor="gradeLevel-generate">Jenjang/Fase/Kelas</Label>
@@ -123,13 +135,12 @@ export default function AIAssistantPage() {
                       <SelectItem value="Fase F (Kelas 11-12 SMA/SMK)">Fase F (Kelas 11-12 SMA/SMK)</SelectItem>
                        <SelectItem value="SLB">SLB (disesuaikan)</SelectItem>
                        <SelectItem value="Pendidikan Kesetaraan">Pendidikan Kesetaraan (Paket A/B/C)</SelectItem>
-                       {/* <SelectItem value="Perguruan Tinggi">Perguruan Tinggi</SelectItem>  Potentially remove if not primary focus */}
                     </SelectContent>
                   </Select>
                 </div>
                 <Button type="submit" disabled={isGenerating} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
                   {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
-                  Buat Draf Rencana
+                  Buat Draf Modul Ajar
                 </Button>
               </form>
               {generatedPlan && (
@@ -137,23 +148,52 @@ export default function AIAssistantPage() {
                   <CardHeader>
                     <CardTitle className="text-xl text-primary">{generatedPlan.title}</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3">
+                  <CardContent className="space-y-4">
                     <div>
                       <h4 className="font-semibold text-base">Tujuan Pembelajaran:</h4>
                       <ul className="list-disc pl-5 text-sm space-y-1">
                         {generatedPlan.learningObjectives.map((obj, i) => <li key={`obj-${i}`}>{obj}</li>)}
                       </ul>
                     </div>
-                    <div>
-                      <h4 className="font-semibold text-base">Saran Kegiatan Pembelajaran:</h4>
+                     <div>
+                      <h4 className="font-semibold text-base">Pemahaman Bermakna:</h4>
                       <ul className="list-disc pl-5 text-sm space-y-1">
-                        {generatedPlan.suggestedActivities.map((act, i) => <li key={`act-${i}`}>{act}</li>)}
+                        {generatedPlan.pemahamanBermakna.map((pm, i) => <li key={`pm-${i}`}>{pm}</li>)}
                       </ul>
                     </div>
                      <div>
-                      <h4 className="font-semibold text-base">Ide Asesmen:</h4>
+                      <h4 className="font-semibold text-base">Pertanyaan Pemantik:</h4>
                       <ul className="list-disc pl-5 text-sm space-y-1">
-                        {generatedPlan.assessmentIdeas.map((idea, i) => <li key={`assess-${i}`}>{idea}</li>)}
+                        {generatedPlan.pertanyaanPemantik.map((pp, i) => <li key={`pp-${i}`}>{pp}</li>)}
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-base">Langkah-langkah Pembelajaran:</h4>
+                      <div className="pl-5 space-y-2 text-sm">
+                        <div>
+                          <h5 className="font-medium">Pendahuluan:</h5>
+                          <ul className="list-disc pl-5 space-y-1">
+                            {generatedPlan.langkahPembelajaran.pendahuluan.map((act, i) => <li key={`pend-${i}`}>{act}</li>)}
+                          </ul>
+                        </div>
+                        <div>
+                          <h5 className="font-medium">Kegiatan Inti:</h5>
+                          <ul className="list-disc pl-5 space-y-1">
+                            {generatedPlan.langkahPembelajaran.kegiatanInti.map((act, i) => <li key={`inti-${i}`}>{act}</li>)}
+                          </ul>
+                        </div>
+                        <div>
+                          <h5 className="font-medium">Penutup:</h5>
+                          <ul className="list-disc pl-5 space-y-1">
+                            {generatedPlan.langkahPembelajaran.penutup.map((act, i) => <li key={`penutup-${i}`}>{act}</li>)}
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                     <div>
+                      <h4 className="font-semibold text-base">Strategi Asesmen:</h4>
+                      <ul className="list-disc pl-5 text-sm space-y-1">
+                        {generatedPlan.assessmentStrategies.map((idea, i) => <li key={`assess-${i}`}>{idea}</li>)}
                       </ul>
                     </div>
                     <div>
@@ -171,18 +211,18 @@ export default function AIAssistantPage() {
         <TabsContent value="improve">
           <Card>
             <CardHeader>
-              <CardTitle>Saran Perbaikan Rencana Pembelajaran</CardTitle>
-              <CardDescription>Tempel draf rencana pembelajaran (RPP/Modul Ajar) Anda di bawah untuk mendapatkan saran berbasis AI sesuai Kurikulum Merdeka.</CardDescription>
+              <CardTitle>Saran Perbaikan Modul Ajar</CardTitle>
+              <CardDescription>Tempel draf Modul Ajar Anda di bawah untuk mendapatkan saran perbaikan berbasis AI sesuai Kurikulum Merdeka.</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSuggestImprovements} className="space-y-4">
                 <div>
-                  <Label htmlFor="draftPlan-improve">Konten Draf Rencana Pembelajaran</Label>
+                  <Label htmlFor="draftPlan-improve">Konten Draf Modul Ajar</Label>
                   <Textarea
                     id="draftPlan-improve"
                     value={draftPlan}
                     onChange={(e) => setDraftPlan(e.target.value)}
-                    placeholder="Tempel teks rencana pembelajaran Anda di sini..."
+                    placeholder="Tempel teks Modul Ajar Anda di sini..."
                     rows={10}
                     className="text-sm"
                   />
@@ -253,6 +293,3 @@ export default function AIAssistantPage() {
     </div>
   );
 }
-
-
-    

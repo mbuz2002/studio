@@ -11,9 +11,16 @@ export interface LessonPlan extends CurriculumItem {
   type: 'RPP'; // Rencana Pelaksanaan Pembelajaran
   topic: string; // Topik atau Materi Pembelajaran
   learningObjectives: string[]; // Tujuan Pembelajaran / Capaian Pembelajaran
-  activities: string[]; // Kegiatan Pembelajaran
-  assessment: string; // Asesmen / Penilaian
-  materials?: string; // Media / Sumber Belajar
+  pemahamanBermakna: string[]; // Pemahaman Bermakna yang akan dibangun
+  pertanyaanPemantik: string[]; // Pertanyaan Pemantik untuk memantik rasa ingin tahu
+  langkahPembelajaran: { // Menggantikan suggestedActivities
+    pendahuluan: string[]; // Kegiatan pendahuluan
+    kegiatanInti: string[]; // Kegiatan inti pembelajaran
+    penutup: string[]; // Kegiatan penutup
+  };
+  assessment: string; // Asesmen / Penilaian (bisa diubah jadi array jika perlu rincian)
+  differentiationStrategies?: string[]; // Strategi Diferensiasi (opsional)
+  materials?: string; // Media / Sumber Belajar (opsional)
 }
 
 export interface AnnualProgram extends CurriculumItem {
@@ -35,3 +42,4 @@ export type AnyCurriculumItem = LessonPlan | AnnualProgram | SemesterProgram;
 // For AI flow outputs - already defined in AI flow files, but useful to have centralized if expanded
 export type { GenerateLessonPlanOutput } from '@/ai/flows/generate-lesson-plan-from-topic';
 export type { SuggestLessonPlanImprovementsOutput } from '@/ai/flows/suggest-lesson-plan-improvements';
+

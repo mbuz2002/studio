@@ -30,7 +30,14 @@ interface CurriculumFormDialogProps {
 }
 
 const defaultLessonPlan: Omit<LessonPlan, 'id' | 'createdAt' | 'updatedAt'> = {
-  type: 'RPP', title: '', subject: '', gradeLevel: '', topic: '', learningObjectives: [], activities: [], assessment: '',
+  type: 'RPP', title: '', subject: '', gradeLevel: '', topic: '', 
+  learningObjectives: [], 
+  pemahamanBermakna: [],
+  pertanyaanPemantik: [],
+  langkahPembelajaran: { pendahuluan: [], kegiatanInti: [], penutup: [] },
+  assessment: '',
+  differentiationStrategies: [],
+  materials: '',
 };
 const defaultAnnualProgram: Omit<AnnualProgram, 'id' | 'createdAt' | 'updatedAt'> = {
   type: 'PROTA', title: '', subject: '', gradeLevel: '', year: '', semester1Topics: [], semester2Topics: [],
@@ -54,7 +61,29 @@ export function CurriculumFormDialog({
   useEffect(() => {
     if (isOpen) {
       if (initialData) {
-        setFormData(initialData);
+        // Ensure Langkah Pembelajaran exists for older RPP data
+        if (itemType === "RPP" && !initialData.langkahPembelajaran && (initialData as LessonPlan).activities) {
+          setFormData({
+            ...initialData,
+            langkahPembelajaran: { 
+              pendahuluan: [], 
+              kegiatanInti: (initialData as LessonPlan).activities || [], 
+              penutup: [] 
+            },
+            pemahamanBermakna: (initialData as LessonPlan).pemahamanBermakna || [],
+            pertanyaanPemantik: (initialData as LessonPlan).pertanyaanPemantik || [],
+          });
+        } else if (itemType === "RPP") {
+           setFormData({
+            ...initialData,
+            pemahamanBermakna: (initialData as LessonPlan).pemahamanBermakna || [],
+            pertanyaanPemantik: (initialData as LessonPlan).pertanyaanPemantik || [],
+            langkahPembelajaran: (initialData as LessonPlan).langkahPembelajaran || { pendahuluan: [], kegiatanInti: [], penutup: [] },
+          });
+        }
+        else {
+          setFormData(initialData);
+        }
       } else {
         if (itemType === "RPP") setFormData(defaultLessonPlan);
         else if (itemType === "PROTA") setFormData(defaultAnnualProgram);
@@ -77,15 +106,42 @@ export function CurriculumFormDialog({
     setFormData(prev => ({ ...prev, [name]: valuesArray }));
   };
 
+  const handleLangkahPembelajaranChange = (part: 'pendahuluan' | 'kegiatanInti' | 'penutup', value: string) => {
+    const valuesArray = value.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+    setFormData(prev => {
+      const currentLangkah = (prev as Partial<LessonPlan>).langkahPembelajaran || { pendahuluan: [], kegiatanInti: [], penutup: [] };
+      return {
+        ...prev,
+        langkahPembelajaran: {
+          ...currentLangkah,
+          [part]: valuesArray,
+        }
+      };
+    });
+  };
+
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
+    
+    let finalFormData = { ...formData };
+    if (itemType === "RPP") {
+      finalFormData = {
+        ...defaultLessonPlan, // Start with defaults to ensure all fields are present
+        ...formData,
+        pemahamanBermakna: (formData as Partial<LessonPlan>).pemahamanBermakna || [],
+        pertanyaanPemantik: (formData as Partial<LessonPlan>).pertanyaanPemantik || [],
+        langkahPembelajaran: (formData as Partial<LessonPlan>).langkahPembelajaran || { pendahuluan: [], kegiatanInti: [], penutup: [] },
+      };
+    }
+
+
     const completeFormData: AnyCurriculumItem = {
-      id: initialData?.id || new Date().toISOString(), // Simplistic ID generation
+      id: initialData?.id || new Date().toISOString() + Math.random().toString(36).substring(2,9), // Better unique ID
       createdAt: initialData?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      ...formData,
-      type: itemType, // Ensure type is set correctly
-    } as AnyCurriculumItem; // Cast to ensure all required fields are present for the specific type
+      ...finalFormData,
+      type: itemType, 
+    } as AnyCurriculumItem; 
     
     onSubmit(completeFormData);
     setIsOpen(false);
@@ -106,12 +162,37 @@ export function CurriculumFormDialog({
               <Textarea id="learningObjectives" name="learningObjectives" value={lessonPlanData.learningObjectives?.join('\n') || ''} onChange={(e) => handleArrayChange('learningObjectives', e.target.value)} placeholder="Tujuan 1&#10;Tujuan 2" />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="activities">Kegiatan Pembelajaran (satu per baris)</Label>
-              <Textarea id="activities" name="activities" value={lessonPlanData.activities?.join('\n') || ''} onChange={(e) => handleArrayChange('activities', e.target.value)} placeholder="Kegiatan 1&#10;Kegiatan 2" />
+              <Label htmlFor="pemahamanBermakna">Pemahaman Bermakna (satu per baris)</Label>
+              <Textarea id="pemahamanBermakna" name="pemahamanBermakna" value={lessonPlanData.pemahamanBermakna?.join('\n') || ''} onChange={(e) => handleArrayChange('pemahamanBermakna' as any, e.target.value)} placeholder="Pemahaman 1&#10;Pemahaman 2" />
             </div>
             <div className="space-y-1">
+              <Label htmlFor="pertanyaanPemantik">Pertanyaan Pemantik (satu per baris)</Label>
+              <Textarea id="pertanyaanPemantik" name="pertanyaanPemantik" value={lessonPlanData.pertanyaanPemantik?.join('\n') || ''} onChange={(e) => handleArrayChange('pertanyaanPemantik' as any, e.target.value)} placeholder="Pertanyaan 1&#10;Pertanyaan 2" />
+            </div>
+
+            <Label>Langkah-langkah Pembelajaran (satu per baris untuk tiap bagian)</Label>
+            <div className="space-y-2 rounded-md border p-4">
+                <div className="space-y-1">
+                <Label htmlFor="langkahPendahuluan" className="text-sm font-medium">Pendahuluan</Label>
+                <Textarea id="langkahPendahuluan" value={lessonPlanData.langkahPembelajaran?.pendahuluan?.join('\n') || ''} onChange={(e) => handleLangkahPembelajaranChange('pendahuluan', e.target.value)} placeholder="Kegiatan pendahuluan 1&#10;Kegiatan pendahuluan 2" />
+                </div>
+                <div className="space-y-1">
+                <Label htmlFor="langkahInti" className="text-sm font-medium">Kegiatan Inti</Label>
+                <Textarea id="langkahInti" value={lessonPlanData.langkahPembelajaran?.kegiatanInti?.join('\n') || ''} onChange={(e) => handleLangkahPembelajaranChange('kegiatanInti', e.target.value)} placeholder="Kegiatan inti 1&#10;Kegiatan inti 2" />
+                </div>
+                <div className="space-y-1">
+                <Label htmlFor="langkahPenutup" className="text-sm font-medium">Penutup</Label>
+                <Textarea id="langkahPenutup" value={lessonPlanData.langkahPembelajaran?.penutup?.join('\n') || ''} onChange={(e) => handleLangkahPembelajaranChange('penutup', e.target.value)} placeholder="Kegiatan penutup 1&#10;Kegiatan penutup 2" />
+                </div>
+            </div>
+            
+            <div className="space-y-1">
               <Label htmlFor="assessment">Asesmen/Penilaian</Label>
-              <Textarea id="assessment" name="assessment" value={lessonPlanData.assessment || ''} onChange={handleChange} />
+              <Textarea id="assessment" name="assessment" value={lessonPlanData.assessment || ''} onChange={handleChange} placeholder="Jelaskan strategi dan bentuk asesmen" />
+            </div>
+             <div className="space-y-1">
+              <Label htmlFor="differentiationStrategies">Strategi Diferensiasi (satu per baris, opsional)</Label>
+              <Textarea id="differentiationStrategies" name="differentiationStrategies" value={lessonPlanData.differentiationStrategies?.join('\n') || ''} onChange={(e) => handleArrayChange('differentiationStrategies' as any, e.target.value)} placeholder="Strategi 1&#10;Strategi 2" />
             </div>
             <div className="space-y-1">
               <Label htmlFor="materials">Media/Sumber Belajar (opsional)</Label>
@@ -179,11 +260,11 @@ export function CurriculumFormDialog({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-accent hover:bg-accent/90 text-accent-foreground">
+        <Button className="bg-accent hover:bg-accent/90 text-accent-foreground w-full sm:w-auto">
           <PlusCircle className="mr-2 h-5 w-5" /> {triggerButtonText}
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-lg md:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{dialogTitle}</DialogTitle>
           <DialogDescription>{dialogDescription}</DialogDescription>
@@ -194,7 +275,7 @@ export function CurriculumFormDialog({
               <Label htmlFor="title">Judul</Label>
               <Input id="title" name="title" value={formData.title || ''} onChange={handleChange} required />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
                 <Label htmlFor="subject">Mata Pelajaran</Label>
                 <Input id="subject" name="subject" value={formData.subject || ''} onChange={handleChange} required />
@@ -222,13 +303,13 @@ export function CurriculumFormDialog({
             
             {renderSpecificFields()}
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 mt-4">
             <DialogClose asChild>
-              <Button type="button" variant="outline">
+              <Button type="button" variant="outline" className="w-full sm:w-auto">
                 Batal
               </Button>
             </DialogClose>
-            <Button type="submit" className="bg-primary hover:bg-primary/90 text-primary-foreground">
+            <Button type="submit" className="bg-primary hover:bg-primary/90 text-primary-foreground w-full sm:w-auto">
               <Save className="mr-2 h-4 w-4" /> Simpan Perubahan
             </Button>
           </DialogFooter>
