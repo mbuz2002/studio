@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -28,6 +27,7 @@ import { generateSemesterProgram, type GenerateSemesterProgramInput, type Genera
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLog } from "@/contexts/LogContext"; // Import useLog
 
 
 interface CurriculumFormDialogProps {
@@ -99,6 +99,7 @@ export function CurriculumFormDialog({
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+  const { addLog } = useLog(); // Use LogContext
 
   useEffect(() => {
     if (forceOpen !== undefined) {
@@ -298,23 +299,27 @@ export function CurriculumFormDialog({
   }
 
   const handleGenerateWithAI = async () => {
-    if (!formData.gradeLevel) {
+    const source = `CurriculumFormDialog-AI-${itemType}`;
+    let missingInfo = "";
+    if (!formData.gradeLevel) missingInfo += "Jenjang/Fase/Kelas, ";
+    if (itemType === "RPP" && !formData.topic) missingInfo += "Topik, ";
+    if (itemType === "PROTA" && (!formData.subject || !formData.year)) missingInfo += "Mata Pelajaran, Tahun Ajaran, ";
+    if (itemType === "Promes" && (!formData.subject || !formData.year || !formData.semester)) missingInfo += "Mata Pelajaran, Tahun Ajaran, Semester, ";
+    
+    if (missingInfo) {
          toast({
             title: "Informasi Kurang",
-            description: "Harap isi Jenjang/Fase/Kelas terlebih dahulu untuk menggunakan AI.",
+            description: `Harap isi ${missingInfo.slice(0, -2)} terlebih dahulu untuk menggunakan AI.`,
             variant: "destructive",
          });
+         addLog("WARN", `Gagal membuat draf ${itemType} dengan AI: Informasi kurang (${missingInfo.slice(0, -2)}).`, source);
          return;
     }
 
     setIsGeneratingAI(true);
+    addLog("INFO", `Memulai pembuatan draf ${itemType} dengan AI. Jenjang: "${formData.gradeLevel}". ${itemType === 'RPP' ? `Topik: "${formData.topic}"` : `Mapel: "${formData.subject}", Tahun: "${formData.year}"`}`, source);
     try {
       if (itemType === "RPP") {
-        if (!formData.topic) {
-           toast({ title: "Informasi Kurang", description: "Harap isi Topik untuk RPP.", variant: "destructive" });
-           setIsGeneratingAI(false);
-           return;
-        }
         const aiInput: GenerateLessonPlanInput = {
           topic: formData.topic as string,
           jenjangFaseKelas: formData.gradeLevel as string,
@@ -332,13 +337,9 @@ export function CurriculumFormDialog({
             differentiationStrategies: result.differentiationStrategies,
         }));
         toast({ title: "Konten RPP Dihasilkan!", description: "AI telah membuat draf konten. Silakan tinjau." });
+        addLog("INFO", `Konten RPP berhasil dibuat AI. Judul: "${result.title}".`, source);
 
       } else if (itemType === "PROTA") {
-        if (!formData.subject || !formData.year) {
-           toast({ title: "Informasi Kurang", description: "Harap isi Mata Pelajaran dan Tahun Ajaran untuk PROTA.", variant: "destructive" });
-           setIsGeneratingAI(false);
-           return;
-        }
         const aiInput: GenerateAnnualProgramInput = {
           subject: formData.subject as string,
           jenjangFaseKelas: formData.gradeLevel as string,
@@ -358,13 +359,9 @@ export function CurriculumFormDialog({
             semester2_allocations_textarea: result.semester2Components?.map(c => c.alokasiWaktu).join('\n') || '',
         }));
         toast({ title: "Konten PROTA Dihasilkan!", description: "AI telah membuat draf konten. Silakan tinjau." });
+        addLog("INFO", `Konten PROTA berhasil dibuat AI. Judul: "${result.title}".`, source);
 
       } else if (itemType === "Promes") {
-        if (!formData.subject || !formData.year || !formData.semester) {
-           toast({ title: "Informasi Kurang", description: "Harap isi Mata Pelajaran, Tahun Ajaran, dan Semester untuk Promes.", variant: "destructive" });
-           setIsGeneratingAI(false);
-           return;
-        }
         const aiInput: GenerateSemesterProgramInput = {
           subject: formData.subject as string,
           jenjangFaseKelas: formData.gradeLevel as string,
@@ -382,6 +379,7 @@ export function CurriculumFormDialog({
             komponenMingguan_textarea: formatWeeklyUnitsToString(result.komponenMingguan || []),
         }));
         toast({ title: "Konten Promes Dihasilkan!", description: "AI telah membuat draf konten. Silakan tinjau." });
+        addLog("INFO", `Konten Promes berhasil dibuat AI. Judul: "${result.title}".`, source);
       }
     } catch (error) {
       console.error(`Error generating ${itemType} with AI:`, error);
@@ -390,6 +388,7 @@ export function CurriculumFormDialog({
         description: "Tidak dapat menghasilkan konten. Silakan coba lagi.",
         variant: "destructive",
       });
+      addLog("ERROR", `Gagal membuat draf ${itemType} dengan AI. Kesalahan: ${error instanceof Error ? error.message : String(error)}`, source);
     } finally {
       setIsGeneratingAI(false);
     }
@@ -659,5 +658,3 @@ Minggu ke: 2
     </Dialog>
   );
 }
-
-    

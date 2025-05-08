@@ -11,6 +11,8 @@ import { MoreHorizontal, Edit2, Trash2, Users, UserPlus } from "lucide-react";
 import type { User, UserRole } from "@/types";
 import { AddUserDialog } from "./AddUserDialog";
 import { useToast } from "@/hooks/use-toast";
+import { useLog } from "@/contexts/LogContext"; // Import useLog
+import { useAuth } from "@/contexts/AuthContext"; // Import useAuth for current admin user
 
 const initialUsers: User[] = [
   { id: "user-1", name: "Admin User", email: "admin@sekolah.id", role: "Admin", avatarUrl: "https://picsum.photos/seed/admin/100/100" },
@@ -24,40 +26,70 @@ const initialUsers: User[] = [
 export function UserManagementSection() {
   const [users, setUsers] = useState<User[]>(initialUsers);
   const { toast } = useToast();
+  const { addLog } = useLog();
+  const { user: adminUser } = useAuth();
+  const logSource = "UserManagement";
 
   // Simulate fetching users
   useEffect(() => {
     const storedUsers = localStorage.getItem("appUsers");
     if (storedUsers) {
-      setUsers(JSON.parse(storedUsers));
+      try {
+        setUsers(JSON.parse(storedUsers));
+        addLog("INFO", "Daftar pengguna dimuat dari penyimpanan lokal.", logSource);
+      } catch(e) {
+        addLog("ERROR", `Gagal memuat daftar pengguna dari penyimpanan lokal: ${e instanceof Error ? e.message : String(e)}. Menggunakan data awal.`, logSource);
+        localStorage.setItem("appUsers", JSON.stringify(initialUsers));
+      }
     } else {
       localStorage.setItem("appUsers", JSON.stringify(initialUsers)); // Initialize if not present
+      addLog("INFO", "Tidak ada daftar pengguna di penyimpanan lokal, menggunakan data awal.", logSource);
     }
-  }, []);
+  }, [addLog]);
 
   const handleAddUser = (newUser: User) => {
     const updatedUsers = [...users, newUser];
     setUsers(updatedUsers);
     localStorage.setItem("appUsers", JSON.stringify(updatedUsers));
+    addLog("INFO", `Pengguna baru '${newUser.email}' (Peran: ${newUser.role}) ditambahkan oleh ${adminUser?.email}.`, logSource);
   };
 
   const handleDeleteUser = (userId: string) => {
+    const userToDelete = users.find(u => u.id === userId);
+    if (!userToDelete) return;
+
     if (users.length <= 1) {
         toast({ title: "Aksi Ditolak", description: "Tidak dapat menghapus pengguna terakhir.", variant: "destructive"});
+        addLog("WARN", `Gagal menghapus pengguna ${userToDelete.email}: Pengguna terakhir tidak dapat dihapus. Oleh: ${adminUser?.email}.`, logSource);
         return;
     }
-    if (window.confirm("Apakah Anda yakin ingin menghapus pengguna ini? Aksi ini tidak dapat diurungkan.")) {
+    if (userToDelete.id === adminUser?.id) {
+        toast({ title: "Aksi Ditolak", description: "Anda tidak dapat menghapus akun Anda sendiri.", variant: "destructive"});
+        addLog("WARN", `Gagal menghapus pengguna ${userToDelete.email}: Admin mencoba menghapus akun sendiri. Oleh: ${adminUser?.email}.`, logSource);
+        return;
+    }
+
+    if (window.confirm(`Apakah Anda yakin ingin menghapus pengguna "${userToDelete.name}" (${userToDelete.email})? Aksi ini tidak dapat diurungkan.`)) {
       const updatedUsers = users.filter(user => user.id !== userId);
       setUsers(updatedUsers);
       localStorage.setItem("appUsers", JSON.stringify(updatedUsers));
-      toast({ title: "Pengguna Dihapus", description: "Pengguna telah berhasil dihapus." });
+      toast({ title: "Pengguna Dihapus", description: `Pengguna "${userToDelete.name}" telah berhasil dihapus.` });
+      addLog("WARN", `Pengguna ${userToDelete.email} (Peran: ${userToDelete.role}) dihapus oleh ${adminUser?.email}.`, logSource);
+    } else {
+       addLog("INFO", `Penghapusan pengguna ${userToDelete.email} dibatalkan oleh ${adminUser?.email}.`, logSource);
     }
   };
   
   const handleEditUser = (userId: string) => {
     // For demo, just show a toast. In a real app, this would open an edit dialog.
-    const user = users.find(u => u.id === userId);
-    toast({ title: "Fitur Edit", description: `Fitur untuk mengedit pengguna ${user?.name} belum diimplementasikan.` });
+    const userToEdit = users.find(u => u.id === userId);
+    toast({ title: "Fitur Edit Pengguna", description: `Dialog untuk mengedit pengguna ${userToEdit?.name} akan terbuka di sini. Fitur ini sedang dikembangkan.` });
+    addLog("INFO", `Admin ${adminUser?.email} mencoba mengedit pengguna ${userToEdit?.email}. (Fitur edit dialog belum terimplementasi penuh).`, logSource);
+     // TODO: Implement opening the EditUserDialog here, similar to SettingsPage
+     // For now, to make it work like in SettingsPage, you'd need to lift state up or use a global modal state.
+     // Example:
+     // setSelectedUserToEdit(userToEdit); 
+     // setIsEditUserDialogOpen(true);
   };
 
 
@@ -113,7 +145,11 @@ export function UserManagementSection() {
                         <DropdownMenuItem onClick={() => handleEditUser(user.id)}>
                           <Edit2 className="mr-2 h-4 w-4" /> Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleDeleteUser(user.id)} className="text-destructive focus:bg-destructive/10 focus:text-destructive" disabled={users.length <=1}>
+                        <DropdownMenuItem 
+                            onClick={() => handleDeleteUser(user.id)} 
+                            className="text-destructive focus:bg-destructive/10 focus:text-destructive" 
+                            disabled={users.length <=1 || user.id === adminUser?.id}
+                        >
                           <Trash2 className="mr-2 h-4 w-4" /> Hapus
                         </DropdownMenuItem>
                       </DropdownMenuContent>

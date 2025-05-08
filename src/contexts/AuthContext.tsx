@@ -5,6 +5,7 @@ import type { PropsWithChildren} from 'react';
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { User, UserRole } from '@/types';
 import { useRouter } from 'next/navigation';
+import { useLog } from './LogContext'; // Import useLog
 
 interface AuthContextType {
   user: User | null;
@@ -30,19 +31,23 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const { addLog } = useLog(); // Get addLog function from LogContext
 
   useEffect(() => {
     try {
       const storedUser = localStorage.getItem('currentUser');
       if (storedUser) {
-        setUser(JSON.parse(storedUser));
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+        // addLog("INFO", `Sesi pengguna ${parsedUser.email} dipulihkan dari penyimpanan lokal.`, "AuthContext");
       }
     } catch (error) {
-      console.error("Failed to parse stored user:", error);
+      console.error("Gagal memulihkan sesi pengguna:", error);
+      addLog("ERROR", `Gagal memulihkan sesi pengguna dari penyimpanan lokal: ${error instanceof Error ? error.message : String(error)}`, "AuthContext");
       localStorage.removeItem('currentUser');
     }
     setLoading(false);
-  }, []);
+  }, [addLog]); // Add addLog to dependency array if it's stable (which it is with useCallback)
 
   const login = (email: string, role: UserRole) => {
     const baseUser = mockUsers[role] || mockUsers.Guru; // Fallback to Guru if role not in mock
@@ -55,10 +60,14 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     };
     setUser(loggedInUser);
     localStorage.setItem('currentUser', JSON.stringify(loggedInUser));
+    addLog("INFO", `Pengguna ${email} (Peran: ${role}) berhasil masuk.`, "AuthContext");
     router.push('/dashboard');
   };
 
   const logout = () => {
+    if (user) {
+      addLog("INFO", `Pengguna ${user.email} keluar.`, "AuthContext");
+    }
     setUser(null);
     localStorage.removeItem('currentUser');
     router.push('/login');
@@ -69,11 +78,12 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       if (currentUser) {
         const newUser = { ...currentUser, ...updatedUserData, updatedAt: new Date().toISOString() };
         localStorage.setItem('currentUser', JSON.stringify(newUser));
+        addLog("INFO", `Profil pengguna ${currentUser.email} diperbarui. Data baru: ${JSON.stringify(updatedUserData)}`, "AuthContext");
         return newUser;
       }
       return null;
     });
-  }, []);
+  }, [addLog]);
 
   return (
     <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, logout, updateUser, loading }}>
@@ -89,4 +99,3 @@ export const useAuth = () => {
   }
   return context;
 };
-

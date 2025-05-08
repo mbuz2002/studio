@@ -14,6 +14,7 @@ import type { User, SchoolProfile, ExportedCurriculumData, LessonPlan, AnnualPro
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useLog } from "@/contexts/LogContext"; // Import useLog
 
 const LESSON_PLANS_STORAGE_KEY = "appLessonPlans";
 const ANNUAL_PROGRAMS_STORAGE_KEY = "appAnnualPrograms";
@@ -25,10 +26,17 @@ const APP_USERS_STORAGE_KEY = "appUsers";
 export default function SettingsPage() {
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
+  const { addLog } = useLog(); // Use LogContext
   const [isEditUserDialogOpen, setIsEditUserDialogOpen] = useState(false);
   const [isAppPreferencesDialogOpen, setIsAppPreferencesDialogOpen] = useState(false); 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+
+  useEffect(() => {
+    if (user) { // Log page access once user is confirmed
+      addLog("INFO", `Pengguna ${user.email} mengakses halaman Pengaturan.`, "SettingsPage");
+    }
+  }, [user, addLog]);
 
   if (!user) {
     return (
@@ -51,7 +59,7 @@ export default function SettingsPage() {
   const canSeeSystemSettings = user.role === "Admin";
 
   const handleUserUpdate = (updatedUserData: Partial<User>) => {
-    updateUser(updatedUserData);
+    updateUser(updatedUserData); // AuthContext handles its own logging for this
     toast({
       title: "Profil Diperbarui",
       description: "Informasi profil Anda telah berhasil diperbarui.",
@@ -60,6 +68,7 @@ export default function SettingsPage() {
   };
 
   const handleExportData = () => {
+    addLog("INFO", `Pengguna ${user?.email} memulai ekspor semua data aplikasi.`, "SettingsPage-DataManagement");
     try {
       const lessonPlansData = JSON.parse(localStorage.getItem(LESSON_PLANS_STORAGE_KEY) || "[]") as LessonPlan[];
       const annualProgramsData = JSON.parse(localStorage.getItem(ANNUAL_PROGRAMS_STORAGE_KEY) || "[]") as AnnualProgram[];
@@ -90,6 +99,7 @@ export default function SettingsPage() {
         title: "Ekspor Data Berhasil",
         description: "Semua data kurikulum, profil sekolah, dan pengguna telah diekspor.",
       });
+      addLog("INFO", `Ekspor semua data aplikasi berhasil oleh pengguna ${user?.email}. File: eduai_planner_backup_${new Date().toISOString().split('T')[0]}.json`, "SettingsPage-DataManagement");
 
     } catch (error) {
       console.error("Error exporting data:", error);
@@ -98,6 +108,7 @@ export default function SettingsPage() {
         description: "Terjadi kesalahan saat mengekspor data. Periksa konsol untuk detail.",
         variant: "destructive",
       });
+      addLog("ERROR", `Ekspor semua data aplikasi gagal. Pengguna: ${user?.email}. Kesalahan: ${error instanceof Error ? error.message : String(error)}`, "SettingsPage-DataManagement");
     }
   };
 
@@ -105,6 +116,7 @@ export default function SettingsPage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    addLog("INFO", `Pengguna ${user?.email} memulai impor data aplikasi dari file: ${file.name}.`, "SettingsPage-DataManagement");
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
@@ -140,6 +152,7 @@ export default function SettingsPage() {
           title: "Impor Data Berhasil",
           description: "Data telah berhasil diimpor. Muat ulang halaman untuk melihat perubahan.",
         });
+        addLog("INFO", `Impor data aplikasi dari file ${file.name} berhasil oleh pengguna ${user?.email}. Halaman perlu dimuat ulang.`, "SettingsPage-DataManagement");
         // Optionally, trigger a state update or page reload to reflect changes immediately
         // window.location.reload(); // Or use Next.js router to refresh data if using server-side state management
 
@@ -154,6 +167,7 @@ export default function SettingsPage() {
           description: errorMessage + " Pastikan file JSON valid dan sesuai format.",
           variant: "destructive",
         });
+        addLog("ERROR", `Impor data aplikasi dari file ${file.name} gagal. Pengguna: ${user?.email}. Kesalahan: ${errorMessage}`, "SettingsPage-DataManagement");
       } finally {
         // Reset file input
         if (fileInputRef.current) {

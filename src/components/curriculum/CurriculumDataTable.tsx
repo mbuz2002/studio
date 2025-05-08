@@ -14,6 +14,8 @@ import { useState, useEffect } from "react";
 import { exportRppToText, type ExportRppToTextInput } from "@/ai/flows/export-rpp-to-text";
 import { useToast } from "@/hooks/use-toast";
 import { PrintOptionsDialog } from "./PrintOptionsDialog";
+import { useLog } from "@/contexts/LogContext"; // Import useLog
+import { useAuth } from "@/contexts/AuthContext"; // Import useAuth for user info
 
 interface CurriculumDataTableProps {
   items: AnyCurriculumItem[];
@@ -29,6 +31,8 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
   const [isClient, setIsClient] = useState(false);
   const [isExporting, setIsExporting] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
+  const { addLog } = useLog();
+  const { user: currentUser } = useAuth();
   const [schoolProfile, setSchoolProfile] = useState<SchoolProfile | null>(null);
   const [appUsers, setAppUsers] = useState<User[]>([]);
 
@@ -64,6 +68,9 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
  const generatePrintableHtml = (item: AnyCurriculumItem, options: PrintOptions): string => {
     const creatorUser = appUsers.find(u => u.id === item.createdByUserId);
     const creatorName = creatorUser ? creatorUser.name : item.createdByUserId || 'Tidak diketahui';
+    const logSource = `CurriculumPrint-${item.type}`;
+    addLog("INFO", `Mempersiapkan pratinjau cetak untuk ${item.type} "${item.title}" (ID: ${item.id}) oleh ${currentUser?.email}. Opsi: ${JSON.stringify(options)}`, logSource);
+
 
     let contentHtml = ``;
 
@@ -83,6 +90,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
         </div>
       `;
     } else if (options.showKopSurat) {
+        addLog("WARN", `Kop surat diminta untuk ${item.type} "${item.title}" tapi profil sekolah tidak lengkap/tidak ada.`, logSource);
         contentHtml += `
         <div class="kop-surat">
           <div class="logo-placeholder">Logo Sekolah</div>
@@ -286,15 +294,19 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
     setItemToPrint(item);
     setCurrentPrintOptions(defaultPrintOptions); // Reset to defaults each time
     setIsPrintOptionsOpen(true);
+    // Logging is done in generatePrintableHtml when options are confirmed
   };
   
   const handleFinalizePrint = (options: PrintOptions) => {
     if (!itemToPrint) return;
-    const printableHtml = generatePrintableHtml(itemToPrint, options);
+    const logSource = `CurriculumPrint-${itemToPrint.type}`; // For this specific log
+    const printableHtml = generatePrintableHtml(itemToPrint, options); // This already logs preparation
+    
     const printWindow = window.open('', '_blank', 'width=1000,height=700,scrollbars=yes,resizable=yes');
     if (printWindow) {
       printWindow.document.write(printableHtml);
       printWindow.document.close();
+      addLog("INFO", `Jendela cetak dibuka untuk ${itemToPrint.type} "${itemToPrint.title}".`, logSource);
       // Adding a slight delay for content to render before print dialog
       setTimeout(() => {
           if (printWindow && !printWindow.closed) { // Check if window is still open
@@ -303,6 +315,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
       }, 500);
     } else {
       toast({ title: "Gagal Membuka Jendela Cetak", description: "Pastikan pop-up diizinkan untuk situs ini.", variant: "destructive" });
+      addLog("ERROR", `Gagal membuka jendela cetak untuk ${itemToPrint.type} "${itemToPrint.title}". Kemungkinan pop-up diblokir.`, logSource);
     }
     setIsPrintOptionsOpen(false);
     setItemToPrint(null);
@@ -311,6 +324,8 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
 
   const handleExportToText = async (item: AnyCurriculumItem) => {
     if (!isClient) return;
+    const logSource = `CurriculumExport-${item.type}`;
+    addLog("INFO", `Memulai ekspor ke teks untuk ${item.type} "${item.title}" (ID: ${item.id}) oleh ${currentUser?.email}.`, logSource);
     
     setIsExporting(prev => ({ ...prev, [item.id]: true }));
 
@@ -320,21 +335,20 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
 
       if (item.type === 'RPP') {
         const rppInput = item as LessonPlan;
-        // Prepare input for the Genkit flow, ensuring all optional fields are at least empty arrays/strings
-        // so the Handlebars template doesn't break.
         const inputForFlow: ExportRppToTextInput = {
           ...rppInput,
-          // Ensure all potentially undefined arrays are initialized for the prompt
           learningObjectives: rppInput.learningObjectives || [],
           pemahamanBermakna: rppInput.pemahamanBermakna || [],
           pertanyaanPemantik: rppInput.pertanyaanPemantik || [],
           langkahPembelajaran: rppInput.langkahPembelajaran || { pendahuluan: [], kegiatanInti: [], penutup: [] },
           assessment: rppInput.assessment || "Belum dirinci",
           differentiationStrategies: rppInput.differentiationStrategies || [],
-          materials: rppInput.materials || "", // Align with flow's expectation for empty string
+          materials: rppInput.materials || "", 
         };
+        addLog("INFO", `Memanggil alur Genkit 'exportRppToText' untuk RPP "${item.title}".`, logSource);
         const result = await exportRppToText(inputForFlow);
         documentContent = result.documentContent;
+        addLog("INFO", `Konten teks berhasil dibuat oleh Genkit untuk RPP "${item.title}".`, logSource);
       } else if (item.type === 'PROTA') {
         const prota = item as AnnualProgram;
         let protaText = `**PROGRAM TAHUNAN (PROTA)**\n\n`;
@@ -363,6 +377,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
         });
         protaText += `\n\n*Dokumen ini terakhir diperbarui pada: ${format(new Date(prota.updatedAt), "PPpp", { locale: indonesianLocale })}*`;
         documentContent = protaText;
+        addLog("INFO", `Konten teks berhasil dibuat secara manual untuk PROTA "${item.title}".`, logSource);
 
       } else if (item.type === 'Promes') {
         const promes = item as SemesterProgram;
@@ -399,6 +414,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
         });
         promesText += `\n\n*Dokumen ini terakhir diperbarui pada: ${format(new Date(promes.updatedAt), "PPpp", { locale: indonesianLocale })}*`;
         documentContent = promesText;
+        addLog("INFO", `Konten teks berhasil dibuat secara manual untuk Promes "${item.title}".`, logSource);
       }
        else {
         documentContent = `Rincian untuk ${item.type}: ${item.title}\n\n(Fungsi ekspor detail untuk jenis ini belum diimplementasikan.)\n\n${JSON.stringify(item, null, 2)}`;
@@ -406,6 +422,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
           title: "Fitur Dalam Pengembangan",
           description: `Ekspor detail untuk ${item.type} belum tersedia. Unduhan berisi data JSON dasar.`,
         });
+        addLog("WARN", `Ekspor detail untuk ${item.type} "${item.title}" belum diimplementasikan. Mengekspor data JSON mentah.`, logSource);
       }
 
       const blob = new Blob([documentContent], { type: 'text/plain;charset=utf-8' });
@@ -417,12 +434,19 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
       document.body.removeChild(link);
       URL.revokeObjectURL(link.href);
       toast({ title: "Ekspor Berhasil", description: `${item.title} telah diekspor sebagai ${fileName}` });
+      addLog("INFO", `Ekspor ${item.type} "${item.title}" ke file ${fileName} berhasil.`, logSource);
     } catch (error) {
       console.error("Error exporting item:", error);
       toast({ title: "Ekspor Gagal", description: "Tidak dapat mengekspor item. Silakan coba lagi.", variant: "destructive" });
+      addLog("ERROR", `Gagal mengekspor ${item.type} "${item.title}". Kesalahan: ${error instanceof Error ? error.message : String(error)}`, logSource);
     } finally {
       setIsExporting(prev => ({ ...prev, [item.id]: false }));
     }
+  };
+  
+  const handleViewDetails = (item: AnyCurriculumItem) => {
+    addLog("INFO", `Pengguna ${currentUser?.email} melihat detail ${item.type} "${item.title}" (ID: ${item.id}).`, `CurriculumView-${item.type}`);
+    onView(item);
   };
 
 
@@ -468,7 +492,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => onView(item)}>
+                      <DropdownMenuItem onClick={() => handleViewDetails(item)}>
                         <Eye className="mr-2 h-4 w-4" /> Lihat Detail
                       </DropdownMenuItem>
                       {canEdit(item) && onEdit && (
@@ -509,5 +533,3 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
     </>
   );
 }
-
-

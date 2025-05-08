@@ -17,6 +17,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Palette, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme, type Theme } from "@/contexts/ThemeContext"; // Import Theme type
+import { useLog } from "@/contexts/LogContext"; // Import useLog
+import { useAuth } from "@/contexts/AuthContext"; // Import useAuth for user info
 
 interface AppPreferencesDialogProps {
   isOpen: boolean;
@@ -27,6 +29,9 @@ export function AppPreferencesDialog({ isOpen, onOpenChange }: AppPreferencesDia
   const { theme: currentTheme, setTheme, availableThemes } = useTheme();
   const [selectedTheme, setSelectedTheme] = useState<Theme>(currentTheme);
   const { toast } = useToast();
+  const { addLog } = useLog();
+  const { user } = useAuth();
+
 
   useEffect(() => {
     if (isOpen) {
@@ -45,6 +50,7 @@ export function AppPreferencesDialog({ isOpen, onOpenChange }: AppPreferencesDia
       title: "Preferensi Disimpan",
       description: `Tema tampilan telah diatur ke ${selectedThemeLabel}.`,
     });
+    addLog("INFO", `Pengguna ${user?.email || 'tidak dikenal'} mengubah tema aplikasi menjadi: ${selectedThemeLabel}.`, "AppPreferences");
     onOpenChange(false);
   };
 

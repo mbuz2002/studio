@@ -19,6 +19,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { User, UserRole } from "@/types";
 import { PlusCircle, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useLog } from "@/contexts/LogContext"; // Import useLog
+import { useAuth } from "@/contexts/AuthContext"; // Import useAuth for current admin user
+
 
 interface AddUserDialogProps {
   onUserAdded: (newUser: User) => void;
@@ -40,6 +43,9 @@ export function AddUserDialog({ onUserAdded }: AddUserDialogProps) {
   const [password, setPassword] = useState(""); // Dummy password
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { addLog } = useLog();
+  const { user: adminUser } = useAuth();
+  const logSource = "AddUserDialog";
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -48,11 +54,13 @@ export function AddUserDialog({ onUserAdded }: AddUserDialogProps) {
     // Basic validation
     if (!name || !email || !role || !password) {
       toast({ title: "Data Tidak Lengkap", description: "Harap isi semua kolom.", variant: "destructive" });
+      addLog("WARN", `Gagal menambahkan pengguna baru: Data tidak lengkap. Nama: ${name}, Email: ${email}, Peran: ${role}. Oleh: ${adminUser?.email}.`, logSource);
       setIsLoading(false);
       return;
     }
     
     // Simulate API call
+    addLog("INFO", `Memulai penambahan pengguna baru. Nama: ${name}, Email: ${email}, Peran: ${role}. Oleh: ${adminUser?.email}.`, logSource);
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     const newUser: User = {
@@ -63,7 +71,7 @@ export function AddUserDialog({ onUserAdded }: AddUserDialogProps) {
       avatarUrl: `https://picsum.photos/seed/${email}/100/100`, // Generate avatar based on email/name
     };
 
-    onUserAdded(newUser);
+    onUserAdded(newUser); // This will be logged by UserManagementSection
     setIsLoading(false);
     setIsOpen(false);
     // Reset form
@@ -72,6 +80,7 @@ export function AddUserDialog({ onUserAdded }: AddUserDialogProps) {
     setRole("Guru");
     setPassword("");
     toast({ title: "Pengguna Ditambahkan", description: `${name} telah berhasil ditambahkan.` });
+    // No need for separate addLog here as UserManagementSection handles it after onUserAdded.
   };
 
   return (

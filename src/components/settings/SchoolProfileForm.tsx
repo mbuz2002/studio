@@ -10,6 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import type { SchoolProfile } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { Building, Save } from "lucide-react";
+import { useLog } from "@/contexts/LogContext"; // Import useLog
+import { useAuth } from "@/contexts/AuthContext"; // Import useAuth
 
 const initialProfile: SchoolProfile = {
   id: "school-profile-1",
@@ -27,21 +29,28 @@ export function SchoolProfileForm() {
   const [profile, setProfile] = useState<SchoolProfile>(initialProfile);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { addLog } = useLog();
+  const { user } = useAuth();
 
   // Simulate fetching existing profile data
   useEffect(() => {
+    const source = "SchoolProfileForm-Init";
     // In a real app, fetch this from a backend
     const fetchedProfile = localStorage.getItem("schoolProfile");
     if (fetchedProfile) {
       try {
         setProfile(JSON.parse(fetchedProfile));
+        addLog("INFO", "Profil sekolah dimuat dari penyimpanan lokal.", source);
       } catch (error) {
         console.error("Failed to parse school profile from localStorage", error);
+        addLog("ERROR", `Gagal memuat profil sekolah dari penyimpanan lokal: ${error instanceof Error ? error.message : String(error)}`, source);
         // Optionally, clear the corrupted item or handle error
         localStorage.removeItem("schoolProfile");
       }
+    } else {
+       addLog("INFO", "Tidak ada profil sekolah di penyimpanan lokal, menggunakan data awal.", source);
     }
-  }, []);
+  }, [addLog]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setProfile({ ...profile, [e.target.name]: e.target.value });
@@ -50,6 +59,8 @@ export function SchoolProfileForm() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    const source = "SchoolProfileForm-Submit";
+    addLog("INFO", `Pengguna ${user?.email} memulai pembaruan profil sekolah. Data: ${JSON.stringify(profile)}`, source);
     // Simulate saving data
     await new Promise(resolve => setTimeout(resolve, 1000));
     const updatedProfile = { ...profile, updatedAt: new Date().toISOString() };
@@ -60,6 +71,7 @@ export function SchoolProfileForm() {
       title: "Profil Sekolah Diperbarui",
       description: "Informasi profil sekolah berhasil disimpan.",
     });
+    addLog("INFO", `Profil sekolah berhasil diperbarui oleh ${user?.email}.`, source);
   };
 
   return (
@@ -121,4 +133,3 @@ export function SchoolProfileForm() {
     </Card>
   );
 }
-

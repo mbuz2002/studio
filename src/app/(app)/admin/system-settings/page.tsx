@@ -12,12 +12,15 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useRouter } from "next/navigation";
+import { useLog } from "@/contexts/LogContext";
+
 
 export default function AdminSystemSettingsPage() {
   const { user, loading } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
+  const { addLog } = useLog();
 
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [apiKey, setApiKey] = useState("********************");
@@ -35,10 +38,15 @@ export default function AdminSystemSettingsPage() {
           description: "Anda tidak memiliki izin untuk mengakses halaman ini.",
           variant: "destructive",
         });
+        if (user) {
+             addLog("WARN", `Pengguna ${user.email} (Peran: ${user.role}) mencoba mengakses Pengaturan Sistem tanpa izin.`, "AdminSystemSettings");
+        }
         router.push("/dashboard");
+      } else {
+         addLog("INFO", `Admin ${user.email} mengakses halaman Pengaturan Sistem.`, "AdminSystemSettings");
       }
     }
-  }, [user, loading, isClient, router, toast]);
+  }, [user, loading, isClient, router, toast, addLog]);
 
   if (!isClient || loading || !user || user.role !== "Admin") {
     return (
@@ -50,11 +58,14 @@ export default function AdminSystemSettingsPage() {
   }
 
   const handleToggleMaintenance = () => {
-    setMaintenanceMode(!maintenanceMode);
+    const newMode = !maintenanceMode;
+    setMaintenanceMode(newMode);
+    const message = `Mode Perawatan ${newMode ? "Diaktifkan" : "Dinonaktifkan"} oleh Admin ${user?.email}. (Simulasi)`;
     toast({
-      title: `Mode Perawatan ${!maintenanceMode ? "Diaktifkan" : "Dinonaktifkan"}`,
-      description: `Sistem sekarang dalam mode ${!maintenanceMode ? "perawatan" : "normal"}. (Simulasi)`,
+      title: `Mode Perawatan ${newMode ? "Diaktifkan" : "Dinonaktifkan"}`,
+      description: `Sistem sekarang dalam mode ${newMode ? "perawatan" : "normal"}. (Simulasi)`,
     });
+    addLog(newMode ? "WARN" : "INFO", message, "AdminSystemSettings");
   };
 
   const handleRevealApiKey = () => {
@@ -64,6 +75,7 @@ export default function AdminSystemSettingsPage() {
         setApiKey("genkit_gcp_mock_key_xxxxxxxxxxxx");
         setShowApiKey(true);
         toast({ title: "Kunci API Ditampilkan", description: "Hanya untuk tujuan demonstrasi."});
+        addLog("WARN", `Kunci API Google AI (Genkit) ditampilkan oleh Admin ${user?.email}.`, "AdminSystemSettings");
       }, 500);
     } else {
       setApiKey("********************");
@@ -76,9 +88,11 @@ export default function AdminSystemSettingsPage() {
       title: "Cache Aplikasi Dibersihkan",
       description: "Semua cache aplikasi telah berhasil dibersihkan. (Simulasi)",
     });
+    addLog("INFO", `Cache aplikasi dibersihkan oleh Admin ${user?.email}. (Simulasi)`, "AdminSystemSettings");
   };
 
   const handleViewLogs = () => {
+    addLog("INFO", `Admin ${user?.email} membuka halaman Log Sistem dari Pengaturan Sistem.`, "AdminSystemSettings");
     router.push('/admin/system-logs');
   };
   
@@ -89,6 +103,7 @@ export default function AdminSystemSettingsPage() {
       title: "Membuka Dasbor Genkit",
       description: "Membuka dasbor pengembangan Genkit di tab baru.",
     });
+    addLog("INFO", `Admin ${user?.email} mencoba membuka dasbor Genkit (Dev).`, "AdminSystemSettings");
   }
 
   return (

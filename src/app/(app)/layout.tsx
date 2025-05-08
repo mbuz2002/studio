@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
 import type { UserRole } from '@/types';
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
+import { LogProvider } from '@/contexts/LogContext'; // Import LogProvider
 
 interface NavItem {
   href: string;
@@ -88,41 +89,43 @@ export default function AppLayout({ children }: PropsWithChildren) {
   }
   
   return (
-    <SidebarProvider defaultOpen={true}>
-      <Sidebar collapsible="icon" variant="sidebar" side="left" className="border-r">
-        <SidebarHeader className="border-b p-3">
-          <AppLogo />
-        </SidebarHeader>
-        <ScrollArea className="flex-1">
-        <SidebarContent className="p-2">
-          <SidebarMenu>
-            {filteredNavItems.map((item) => (
-              <SidebarMenuItem key={item.href}>
-                <Link href={item.href} legacyBehavior passHref>
-                  <SidebarMenuButton 
-                    className="w-full" 
-                    tooltip={{children: item.label, className: "ml-1"}}
-                    isActive={pathname.startsWith(item.href)}
-                  >
-                    <item.icon className="h-5 w-5" />
-                    <span className="group-data-[state=expanded]:md:inline hidden">{item.label}</span>
-                  </SidebarMenuButton>
-                </Link>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </SidebarContent>
-        </ScrollArea>
-        <SidebarFooter className="border-t p-3 mt-auto">
-          <UserProfile />
-        </SidebarFooter>
-      </Sidebar>
-      <SidebarInset>
-        <MobileBottomNav />
-        <main className="flex-1 overflow-auto p-4 sm:p-6 pb-20 sm:pb-6"> {/* Adjusted padding */}
-          {children}
-        </main>
-      </SidebarInset>
-    </SidebarProvider>
+    <LogProvider> {/* Wrap with LogProvider */}
+      <SidebarProvider defaultOpen={true}>
+        <Sidebar collapsible="icon" variant="sidebar" side="left" className="border-r">
+          <SidebarHeader className="border-b p-3">
+            <AppLogo />
+          </SidebarHeader>
+          <ScrollArea className="flex-1">
+          <SidebarContent className="p-2">
+            <SidebarMenu>
+              {filteredNavItems.map((item) => (
+                <SidebarMenuItem key={item.href}>
+                  <Link href={item.href} legacyBehavior passHref>
+                    <SidebarMenuButton 
+                      className="w-full" 
+                      tooltip={{children: item.label, className: "ml-1"}}
+                      isActive={pathname.startsWith(item.href)}
+                    >
+                      <item.icon className="h-5 w-5" />
+                      <span className="group-data-[state=expanded]:md:inline hidden">{item.label}</span>
+                    </SidebarMenuButton>
+                  </Link>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarContent>
+          </ScrollArea>
+          <SidebarFooter className="border-t p-3 mt-auto">
+            <UserProfile />
+          </SidebarFooter>
+        </Sidebar>
+        <SidebarInset>
+          <MobileBottomNav />
+          <main className="flex-1 overflow-auto p-4 sm:p-6 pb-20 sm:pb-6"> {/* Adjusted padding */}
+            {children}
+          </main>
+        </SidebarInset>
+      </SidebarProvider>
+    </LogProvider>
   );
 }

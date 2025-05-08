@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, type FormEvent } from "react";
@@ -19,35 +20,40 @@ import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useLog } from "@/contexts/LogContext"; // Import useLog
+import { useAuth } from "@/contexts/AuthContext"; // For current admin user
 
 interface EditUserDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  user: User;
+  user: User; // The user being edited
   onUserUpdated: (updatedUserData: Partial<User>) => void;
 }
 
-export function EditUserDialog({ isOpen, onOpenChange, user, onUserUpdated }: EditUserDialogProps) {
-  const [name, setName] = useState(user.name);
-  const [email, setEmail] = useState(user.email);
-  const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl || "");
+export function EditUserDialog({ isOpen, onOpenChange, user: userToEdit, onUserUpdated }: EditUserDialogProps) {
+  const [name, setName] = useState(userToEdit.name);
+  const [email, setEmail] = useState(userToEdit.email);
+  const [avatarUrl, setAvatarUrl] = useState(userToEdit.avatarUrl || "");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { addLog } = useLog();
+  const { user: adminUser } = useAuth(); // The admin performing the action (if applicable)
+
 
   useEffect(() => {
     if (isOpen) {
-      setName(user.name);
-      setEmail(user.email);
-      setAvatarUrl(user.avatarUrl || "");
+      setName(userToEdit.name);
+      setEmail(userToEdit.email);
+      setAvatarUrl(userToEdit.avatarUrl || "");
       // Reset password fields when dialog opens
       setCurrentPassword("");
       setNewPassword("");
       setConfirmNewPassword("");
     }
-  }, [isOpen, user]);
+  }, [isOpen, userToEdit]);
 
   const getInitials = (nameStr: string) => {
     return nameStr.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
@@ -56,55 +62,63 @@ export function EditUserDialog({ isOpen, onOpenChange, user, onUserUpdated }: Ed
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    const logSource = "EditUserDialog";
 
     if (!name || !email) {
       toast({ title: "Data Profil Tidak Lengkap", description: "Nama dan email tidak boleh kosong.", variant: "destructive" });
+      addLog("WARN", `Gagal memperbarui profil pengguna ${userToEdit.email}: Nama atau email kosong. Diedit oleh: ${adminUser?.email || 'sistem'}.`, logSource);
       setIsLoading(false);
       return;
     }
     
     // Profile update part
-    const updatedUserData: Partial<User> = {
-      name,
-      email,
-      avatarUrl: avatarUrl || `https://picsum.photos/seed/${email}/100/100`,
-    };
-    onUserUpdated(updatedUserData); // This will show "Profil Diperbarui" toast via SettingsPage
+    const updatedUserData: Partial<User> = {};
+    let profileChanged = false;
+    if (name !== userToEdit.name) { updatedUserData.name = name; profileChanged = true; }
+    if (email !== userToEdit.email) { updatedUserData.email = email; profileChanged = true; }
+    const newAvatar = avatarUrl || `https://picsum.photos/seed/${email}/100/100`;
+    if (newAvatar !== userToEdit.avatarUrl) { updatedUserData.avatarUrl = newAvatar; profileChanged = true; }
+
+    if (profileChanged) {
+      onUserUpdated(updatedUserData); // This will show "Profil Diperbarui" toast via SettingsPage / AuthContext
+      addLog("INFO", `Profil pengguna ${userToEdit.email} diperbarui oleh ${adminUser?.email || 'sistem'}. Perubahan: ${JSON.stringify(updatedUserData)}`, logSource);
+    }
 
     // Password change part (simulated)
     if (newPassword || confirmNewPassword || currentPassword) { // Only process if any password field is touched
       if (newPassword !== confirmNewPassword) {
         toast({ title: "Gagal Mengganti Kata Sandi", description: "Kata sandi baru dan konfirmasi kata sandi tidak cocok.", variant: "destructive" });
+        addLog("WARN", `Gagal mengganti kata sandi untuk ${userToEdit.email}: Kata sandi baru tidak cocok. Diedit oleh: ${adminUser?.email || 'sistem'}.`, logSource);
         setIsLoading(false);
         return;
       }
       if (newPassword.length < 6 && newPassword.length > 0) { // Simple length check for demo
         toast({ title: "Gagal Mengganti Kata Sandi", description: "Kata sandi baru minimal 6 karakter.", variant: "destructive" });
+        addLog("WARN", `Gagal mengganti kata sandi untuk ${userToEdit.email}: Kata sandi baru kurang dari 6 karakter. Diedit oleh: ${adminUser?.email || 'sistem'}.`, logSource);
         setIsLoading(false);
         return;
       }
       if (newPassword.length >= 6) {
           // Simulate password change success
-          // In a real app, you'd call an API here to change the password
-          // For this demo, we just show a success message
           toast({
-          title: "Kata Sandi Diperbarui",
-          description: "Kata sandi Anda telah berhasil diperbarui (simulasi).",
+            title: "Kata Sandi Diperbarui",
+            description: `Kata sandi untuk ${userToEdit.email} telah berhasil diperbarui (simulasi).`,
           });
+          addLog("INFO", `Kata sandi untuk pengguna ${userToEdit.email} diperbarui oleh ${adminUser?.email || 'sistem'} (simulasi).`, logSource);
           // Clear password fields after successful "change"
           setCurrentPassword("");
           setNewPassword("");
           setConfirmNewPassword("");
       } else if (!newPassword && (currentPassword || confirmNewPassword)) {
-        // If new password is empty but other password fields were touched
          toast({ title: "Informasi Kata Sandi Tidak Lengkap", description: "Harap isi kata sandi baru jika ingin mengubahnya.", variant: "destructive" });
+         addLog("WARN", `Percobaan mengubah kata sandi untuk ${userToEdit.email} gagal: Kata sandi baru kosong. Diedit oleh: ${adminUser?.email || 'sistem'}.`, logSource);
       }
     }
     
     setIsLoading(false);
-    // Dialog will be closed by parent if onUserUpdated is successful.
-    // If only password fields were touched and no profile update, we might need to close explicitly.
-    // However, onUserUpdated always runs, so parent handles closure.
+    if (profileChanged || (newPassword.length >=6 && newPassword === confirmNewPassword)) {
+        onOpenChange(false); // Close dialog if changes were made and successful
+    }
   };
 
   return (
@@ -113,9 +127,9 @@ export function EditUserDialog({ isOpen, onOpenChange, user, onUserUpdated }: Ed
         <DialogHeader className="px-6 pt-6">
           <DialogTitle className="flex items-center gap-2">
             <UserCircle2 className="h-6 w-6 text-primary" />
-            Edit Profil Pengguna
+            Edit Profil Pengguna: {userToEdit.name}
           </DialogTitle>
-          <DialogDescription>Perbarui informasi profil Anda. Perubahan akan diterapkan setelah disimpan.</DialogDescription>
+          <DialogDescription>Perbarui informasi profil pengguna. Perubahan akan diterapkan setelah disimpan.</DialogDescription>
         </DialogHeader>
         <ScrollArea className="flex-grow overflow-y-auto px-6">
           <form onSubmit={handleSubmit} className="grid gap-4 py-4">
@@ -141,7 +155,7 @@ export function EditUserDialog({ isOpen, onOpenChange, user, onUserUpdated }: Ed
             </div>
             <div className="space-y-1">
               <Label htmlFor="role-edit">Peran</Label>
-              <Input id="role-edit" value={user.role} disabled className="bg-muted/50 cursor-not-allowed" />
+              <Input id="role-edit" value={userToEdit.role} disabled className="bg-muted/50 cursor-not-allowed" />
               <p className="text-xs text-muted-foreground">Peran tidak dapat diubah melalui halaman ini.</p>
             </div>
 

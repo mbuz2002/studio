@@ -14,12 +14,14 @@ import { suggestLessonPlanImprovements, type SuggestLessonPlanImprovementsOutput
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLog } from "@/contexts/LogContext"; // Import useLog
 
 const NO_GRADE_LEVEL_VALUE = "__none__";
 
 export default function AIAssistantPage() {
   const { toast } = useToast();
-  const { user } = useAuth(); // Access user for any potential role-specific UI tweaks if needed later
+  const { user } = useAuth(); 
+  const { addLog } = useLog(); // Use LogContext
   
   // State for Lesson Plan Generation
   const [topic, setTopic] = useState("");
@@ -29,32 +31,39 @@ export default function AIAssistantPage() {
 
   // State for Improvement Suggestions
   const [draftPlan, setDraftPlan] = useState("");
-  const [improvementGradeLevel, setImprovementGradeLevel] = useState(""); // Initialize as empty string for placeholder to show
+  const [improvementGradeLevel, setImprovementGradeLevel] = useState(""); 
   const [suggestedImprovements, setSuggestedImprovements] = useState<SuggestLessonPlanImprovementsOutput | null>(null);
   const [isSuggesting, setIsSuggesting] = useState(false);
 
   const [isClient, setIsClient] = useState(false);
   useEffect(() => {
     setIsClient(true);
-  }, []);
+    if(user) { // Log page access once client and user are confirmed
+        addLog("INFO", `Pengguna ${user.email} mengakses halaman Asisten AI.`, "AIAssistantPage");
+    }
+  }, [user, addLog]); // Add addLog and user to dependencies
 
 
   const handleGeneratePlan = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!topic || !gradeLevel) {
       toast({ title: "Informasi Kurang", description: "Harap berikan topik dan jenjang/fase.", variant: "destructive" });
+      addLog("WARN", `Gagal membuat Modul Ajar: Topik atau Jenjang tidak diisi. Topik: '${topic}', Jenjang: '${gradeLevel}'.`, "AIAssistantPage");
       return;
     }
     setIsGenerating(true);
     setGeneratedPlan(null);
+    addLog("INFO", `Memulai pembuatan Modul Ajar dengan AI. Topik: "${topic}", Jenjang: "${gradeLevel}".`, "AIAssistantPage");
     try {
       const input: GenerateLessonPlanInput = { topic, jenjangFaseKelas: gradeLevel };
       const result = await generateLessonPlanFromTopic(input);
       setGeneratedPlan(result);
       toast({ title: "Rencana Pembelajaran Dihasilkan!", description: "AI telah membuat draf rencana pembelajaran untuk Anda." });
+      addLog("INFO", `Modul Ajar berhasil dibuat oleh AI untuk topik: "${topic}". Judul: "${result.title}".`, "AIAssistantPage");
     } catch (error) {
       console.error("Error generating lesson plan:", error);
       toast({ title: "Pembuatan Gagal", description: "Tidak dapat membuat rencana pembelajaran. Silakan coba lagi.", variant: "destructive" });
+      addLog("ERROR", `Gagal membuat Modul Ajar dengan AI untuk topik: "${topic}". Kesalahan: ${error instanceof Error ? error.message : String(error)}`, "AIAssistantPage");
     } finally {
       setIsGenerating(false);
     }
@@ -64,10 +73,12 @@ export default function AIAssistantPage() {
     e.preventDefault();
     if (!draftPlan) {
       toast({ title: "Informasi Kurang", description: "Harap berikan draf rencana pembelajaran.", variant: "destructive" });
+      addLog("WARN", `Gagal memberi saran perbaikan: Draf Modul Ajar tidak diisi. Jenjang: '${improvementGradeLevel}'.`, "AIAssistantPage");
       return;
     }
     setIsSuggesting(true);
     setSuggestedImprovements(null);
+    addLog("INFO", `Memulai pemberian saran perbaikan Modul Ajar dengan AI. Jenjang: "${improvementGradeLevel === NO_GRADE_LEVEL_VALUE ? 'Umum' : improvementGradeLevel}". Draf: ${draftPlan.substring(0,50)}...`, "AIAssistantPage");
     try {
       const input: SuggestLessonPlanImprovementsInput = { 
         lessonPlan: draftPlan,
@@ -76,15 +87,17 @@ export default function AIAssistantPage() {
       const result = await suggestLessonPlanImprovements(input);
       setSuggestedImprovements(result);
       toast({ title: "Saran Siap!", description: "AI telah memberikan saran perbaikan." });
+      addLog("INFO", `Saran perbaikan Modul Ajar berhasil diberikan oleh AI. Jenjang: "${improvementGradeLevel === NO_GRADE_LEVEL_VALUE ? 'Umum' : improvementGradeLevel}".`, "AIAssistantPage");
     } catch (error) {
       console.error("Error suggesting improvements:", error);
       toast({ title: "Pemberian Saran Gagal", description: "Tidak dapat memperoleh saran. Silakan coba lagi.", variant: "destructive" });
+      addLog("ERROR", `Gagal memberi saran perbaikan Modul Ajar dengan AI. Jenjang: "${improvementGradeLevel === NO_GRADE_LEVEL_VALUE ? 'Umum' : improvementGradeLevel}". Kesalahan: ${error instanceof Error ? error.message : String(error)}`, "AIAssistantPage");
     } finally {
       setIsSuggesting(false);
     }
   };
 
-  if (!isClient || !user) { // Also ensure user is loaded
+  if (!isClient || !user) { 
     return (
          <div className="space-y-6 py-8">
             <Card>
@@ -92,7 +105,8 @@ export default function AIAssistantPage() {
                 <CardTitle className="text-2xl">Memuat Asisten AI...</CardTitle>
             </CardHeader>
             <CardContent>
-                <p>Silakan tunggu...</p>
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="ml-2 inline-block">Silakan tunggu...</p>
             </CardContent>
             </Card>
         </div>

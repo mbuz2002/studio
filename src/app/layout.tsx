@@ -31,6 +31,7 @@ export default function RootLayout({
         <ThemeProvider>
           <QueryClientProvider>
             <AuthProvider>
+              {/* LogProvider is now in (app)/layout.tsx to have access to AuthContext for logging user info */}
               {children}
               <Toaster />
             </AuthProvider>
