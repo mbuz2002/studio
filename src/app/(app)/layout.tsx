@@ -2,7 +2,7 @@
 "use client";
 import type { PropsWithChildren } from 'react';
 import { useEffect, useMemo } from 'react';
-import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarTrigger, SidebarInset } from '@/components/ui/sidebar';
+import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset } from '@/components/ui/sidebar'; // SidebarTrigger removed as it's implicitly handled by MobileBottomNav or a dedicated "More" item if added
 import { AppLogo } from '@/components/layout/AppLogo';
 import { UserProfile } from '@/components/layout/UserProfile';
 import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, ShieldCheck } from 'lucide-react';
@@ -11,6 +11,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
 import type { UserRole } from '@/types';
+import { MobileBottomNav } from '@/components/layout/MobileBottomNav'; // Import MobileBottomNav
 
 interface NavItem {
   href: string;
@@ -107,11 +108,8 @@ export default function AppLayout({ children }: PropsWithChildren) {
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
-        {/* Mobile-only sticky bottom bar for sidebar trigger */}
-        <header className="fixed bottom-0 left-0 right-0 z-50 flex h-16 items-center justify-center border-t border-border bg-background shadow-t-lg sm:hidden">
-          <SidebarTrigger /> {/* This SidebarTrigger is for mobile sidebar */}
-        </header>
-        <main className="flex-1 overflow-auto p-4 pb-20 sm:px-6 sm:pb-4"> {/* Adjusted padding-bottom for mobile */}
+        <MobileBottomNav /> {/* Added mobile bottom navigation */}
+        <main className="flex-1 overflow-auto p-4 pb-20 sm:px-6 sm:pb-4"> {/* pb-20 for mobile bottom nav clearance, sm:pb-4 for desktop */}
           {children}
         </main>
       </SidebarInset>
