@@ -12,7 +12,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
 import type { UserRole } from '@/types';
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
-import { LogProvider } from '@/contexts/LogContext'; // Import LogProvider
 
 interface NavItem {
   href: string;
@@ -89,7 +88,6 @@ export default function AppLayout({ children }: PropsWithChildren) {
   }
   
   return (
-    <LogProvider> {/* Wrap with LogProvider */}
       <SidebarProvider defaultOpen={true}>
         <Sidebar collapsible="icon" variant="sidebar" side="left" className="border-r">
           <SidebarHeader className="border-b p-3">
@@ -126,6 +124,6 @@ export default function AppLayout({ children }: PropsWithChildren) {
           </main>
         </SidebarInset>
       </SidebarProvider>
-    </LogProvider>
   );
 }
+

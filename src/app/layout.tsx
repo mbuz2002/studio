@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { QueryClientProvider } from '@/lib/query-provider';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import { LogProvider } from '@/contexts/LogContext'; // Import LogProvider
 
 // Instantiate Plus Jakarta Sans
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -30,14 +31,16 @@ export default function RootLayout({
       <body className={`${plusJakartaSans.variable} antialiased`}>
         <ThemeProvider>
           <QueryClientProvider>
-            <AuthProvider>
-              {/* LogProvider is now in (app)/layout.tsx to have access to AuthContext for logging user info */}
-              {children}
-              <Toaster />
-            </AuthProvider>
+            <LogProvider> {/* LogProvider now wraps AuthProvider */}
+              <AuthProvider>
+                {children}
+                <Toaster />
+              </AuthProvider>
+            </LogProvider>
           </QueryClientProvider>
         </ThemeProvider>
       </body>
     </html>
   );
 }
+
