@@ -700,13 +700,13 @@ Minggu ke: 2
         </DialogTrigger>
       )}
      
-      <DialogContent className="sm:max-w-lg md:max-w-2xl max-h-[90vh]">
-        <DialogHeader>
+      <DialogContent className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-2xl max-h-[95vh] flex flex-col rounded-lg">
+        <DialogHeader className="px-4 pt-4 sm:px-6 sm:pt-6">
           <DialogTitle>{actualDialogTitle}</DialogTitle>
           <DialogDescription>{dialogDescription}</DialogDescription>
         </DialogHeader>
-        <ScrollArea className="max-h-[calc(90vh-10rem)]"> 
-          <form onSubmit={handleSubmit} className="pr-6 py-2"> 
+        <ScrollArea className="flex-grow overflow-y-auto px-1 sm:px-2"> 
+          <form onSubmit={handleSubmit} className="px-3 py-2 sm:px-4 sm:py-4"> 
             <div className="grid gap-4 py-4">
               <div className="space-y-1">
                 <Label htmlFor="title">Judul</Label>
@@ -730,7 +730,7 @@ Minggu ke: 2
                   <Label htmlFor="subject">Mata Pelajaran</Label>
                   <Input id="subject" name="subject" value={formData.subject || ''} onChange={handleChange} required />
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-1 md:col-span-2"> {/* Make gradeLevel full width on small screens */}
                   <Label htmlFor="gradeLevel">Jenjang/Fase/Kelas</Label>
                   <Select value={formData.gradeLevel || ''} onValueChange={(value) => handleSelectChange('gradeLevel', value)}>
                     <SelectTrigger id="gradeLevel">
@@ -753,7 +753,7 @@ Minggu ke: 2
 
               {renderSpecificFields()}
             </div>
-            <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 mt-4 sticky bottom-0 bg-background py-4 border-t">
+            <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 mt-4 sticky bottom-0 bg-background py-4 border-t px-4 sm:px-6">
               <DialogClose asChild>
                 <Button type="button" variant="outline" className="w-full sm:w-auto">
                   Batal
@@ -769,3 +769,4 @@ Minggu ke: 2
     </Dialog>
   );
 }
+
