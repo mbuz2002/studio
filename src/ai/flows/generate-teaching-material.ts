@@ -24,13 +24,13 @@ const SuggestedSourceSchema = z.object({
     type: z.enum(['buku', 'jurnal', 'artikel online', 'video', 'website edukasi', 'lainnya']).describe('Jenis sumber referensi.'),
     title: z.string().describe('Judul sumber referensi (misal, judul buku, artikel, atau video).'),
     authorOrPublisher: z.string().optional().describe('Penulis atau penerbit sumber (jika ada).'),
-    url: z.string().optional().describe('URL jika sumber online (misal, link ke artikel atau video). Harap pastikan ini adalah URL yang valid jika memungkinkan.'),
+    url: z.string().optional().describe('URL jika sumber online (misal, link ke artikel atau video).'),
     description: z.string().optional().describe('Deskripsi singkat mengapa sumber ini relevan atau bagaimana menggunakannya.'),
 });
 
 const GenerateTeachingMaterialOutputSchema = z.object({
   materialTitle: z.string().describe('Judul materi pembelajaran yang menarik dan relevan dengan topik.'),
-  materialContent: z.string().describe('Konten materi pembelajaran yang terstruktur dengan baik, menggunakan format markdown sederhana (misal, heading, list, bold). Konten harus sesuai dengan topik, jenjang, dan tingkat kedetailan yang diminta.'),
+  materialContent: z.string().describe('Konten materi pembelajaran yang terstruktur dengan baik, menggunakan format markdown. Konten harus sesuai dengan topik, jenjang, dan tingkat kedetailan yang diminta. Jika ada teks Arab, sertakan dengan harakat lengkap. Jika ada data tabular, gunakan sintaks tabel Markdown.'),
   suggestedSources: z.array(SuggestedSourceSchema).describe('Daftar sumber referensi yang relevan dan kredibel untuk mendukung materi pembelajaran yang dibuat. Sertakan minimal 2-3 sumber.'),
 });
 export type GenerateTeachingMaterialOutput = z.infer<typeof GenerateTeachingMaterialOutputSchema>;
@@ -54,7 +54,12 @@ Materi pembelajaran harus:
 1.  **Judul Materi**: Buat judul yang menarik dan sesuai dengan topik.
 2.  **Konten Materi**:
     *   Sajikan konten yang terstruktur dengan baik, mudah dipahami, dan relevan dengan topik serta jenjang yang diberikan.
-    *   Gunakan format markdown sederhana (misalnya, heading ## atau ###, daftar *, -, atau 1., **teks tebal**).
+    *   Gunakan format markdown yang kaya, termasuk:
+        *   Heading (##, ###)
+        *   Daftar (*, -, atau 1.)
+        *   Teks tebal (**teks tebal**) dan miring (*teks miring*)
+        *   Tabel (gunakan sintaks Markdown untuk tabel jika data bersifat tabular, contoh: | Header 1 | Header 2 | \\n | -------- | -------- | \\n | Isi 1    | Isi 2    | )
+        *   Jika topik melibatkan Bahasa Arab (misalnya kutipan ayat Al-Quran, Hadits, pelajaran Bahasa Arab), tuliskan teks Arab dengan harakat (tanda baca) yang lengkap dan jelas. Jika memungkinkan, bungkus blok teks Arab yang panjang dalam format yang mendukung tampilan Right-to-Left (RTL), misalnya: \`\`\`html\n<div dir="rtl">\nTEKS ARAB DI SINI\n</div>\n\`\`\` jika outputnya memungkinkan HTML, atau berikan catatan bahwa teks Arab sebaiknya ditampilkan RTL.
     *   Pastikan kedalaman materi sesuai dengan tingkat kedetailan yang diminta (ringkas, standar, atau mendalam).
     *   Fokus pada konsep-konsep kunci dan relevansinya dalam Kurikulum Merdeka.
 
@@ -62,7 +67,6 @@ Materi pembelajaran harus:
     *   Sediakan minimal 2-3 sumber referensi yang kredibel dan relevan.
     *   Untuk setiap sumber, sebutkan jenisnya (buku, artikel online, video, dll.), judul, penulis/penerbit (jika ada), URL (jika online), dan deskripsi singkat mengapa sumber tersebut berguna.
     *   Prioritaskan sumber-sumber yang mudah diakses oleh guru atau siswa di Indonesia (misalnya, situs Kemdikbud, platform edukasi lokal, buku teks yang umum).
-    *   Jika URL disediakan, pastikan itu adalah URL yang berfungsi dan valid.
 
 Pastikan output yang dihasilkan sesuai dengan skema JSON yang diharapkan dan menggunakan Bahasa Indonesia yang baik dan benar.
 `,
@@ -81,4 +85,5 @@ const generateTeachingMaterialFlow = ai.defineFlow(
 );
 
     
+
 
