@@ -4,21 +4,22 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Cog, UserCircle, ShieldCheck, Database, Palette } from "lucide-react"; // Added Palette icon
+import { Cog, UserCircle, ShieldCheck, Database, Palette } from "lucide-react"; 
 import { useAuth } from "@/contexts/AuthContext";
 import { SchoolProfileForm } from "@/components/settings/SchoolProfileForm";
 import { UserManagementSection } from "@/components/settings/UserManagementSection";
 import { EditUserDialog } from "@/components/settings/EditUserDialog";
-import { AppPreferencesDialog } from "@/components/settings/AppPreferencesDialog"; // Import AppPreferencesDialog
+import { AppPreferencesDialog } from "@/components/settings/AppPreferencesDialog"; 
 import type { User } from "@/types";
 import { useToast } from "@/hooks/use-toast";
+import Link from "next/link"; // Import Link
 
 
 export default function SettingsPage() {
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
   const [isEditUserDialogOpen, setIsEditUserDialogOpen] = useState(false);
-  const [isAppPreferencesDialogOpen, setIsAppPreferencesDialogOpen] = useState(false); // State for AppPreferencesDialog
+  const [isAppPreferencesDialogOpen, setIsAppPreferencesDialogOpen] = useState(false); 
 
 
   if (!user) {
@@ -40,7 +41,7 @@ export default function SettingsPage() {
   const canManageUsers = ["Admin", "TataUsaha"].includes(user.role);
   
   const canSeeDataManagement = ["Admin", "WakaKurikulum"].includes(user.role);
-  const canSeeSystemSettings = user.role === "Admin";
+  const canSeeSystemSettings = user.role === "Admin"; // This card is for link navigation
 
   const handleUserUpdate = (updatedUserData: Partial<User>) => {
     updateUser(updatedUserData);
@@ -60,7 +61,7 @@ export default function SettingsPage() {
               <CardTitle className="text-3xl font-bold">Pengaturan</CardTitle>
           </div>
           <CardDescription className="text-lg">
-            Kelola preferensi aplikasi, profil sekolah, pengguna, dan pengaturan akun Anda.
+            Kelola preferensi aplikasi, profil sekolah (jika berwenang), pengguna (jika berwenang), dan pengaturan akun Anda.
           </CardDescription>
         </CardHeader>
       </Card>
@@ -82,7 +83,7 @@ export default function SettingsPage() {
             <CardTitle className="text-xl">Pengaturan Umum & Akun</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {canSeeProfileSettings && (
               <Card>
                 <CardHeader>
@@ -107,10 +108,10 @@ export default function SettingsPage() {
               <Card>
                 <CardHeader>
                  <div className="flex items-center gap-2">
-                    <Palette className="h-6 w-6 text-primary" /> {/* Changed icon */}
+                    <Palette className="h-6 w-6 text-primary" /> 
                     <CardTitle>Preferensi Aplikasi</CardTitle>
                   </div>
-                  <CardDescription>Sesuaikan tema tampilan aplikasi Anda.</CardDescription> {/* Updated description */}
+                  <CardDescription>Sesuaikan tema tampilan aplikasi Anda.</CardDescription> 
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">Atur tema visual aplikasi (Terang, Gelap, atau Sistem).</p>
@@ -138,18 +139,20 @@ export default function SettingsPage() {
               </Card>
             )}
 
-            {canSeeSystemSettings && (
+            {canSeeSystemSettings && ( // This check remains to show the card itself
                 <Card>
                 <CardHeader>
                     <div className="flex items-center gap-2">
                         <ShieldCheck className="h-6 w-6 text-primary" />
-                        <CardTitle>Pengaturan Sistem (Khusus Admin)</CardTitle>
+                        <CardTitle>Pengaturan Sistem</CardTitle>
                     </div>
-                    <CardDescription>Konfigurasi tingkat lanjut untuk aplikasi.</CardDescription>
+                    <CardDescription>Konfigurasi tingkat lanjut untuk aplikasi (Khusus Admin).</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-muted-foreground">Pengaturan integrasi, log audit, dan konfigurasi sistem lainnya.</p>
-                    <Button className="mt-2" onClick={() => alert("Panel Admin belum diimplementasikan.")}>Akses Panel Admin (Contoh)</Button>
+                    <p className="text-muted-foreground">Akses panel pengaturan sistem untuk konfigurasi inti aplikasi.</p>
+                    <Button asChild className="mt-2">
+                        <Link href="/admin/system-settings">Buka Pengaturan Sistem</Link>
+                    </Button>
                 </CardContent>
                 </Card>
             )}
@@ -170,7 +173,7 @@ export default function SettingsPage() {
             onUserUpdated={handleUserUpdate}
           />
       )}
-      {/* Add AppPreferencesDialog instance */}
+      
       <AppPreferencesDialog
         isOpen={isAppPreferencesDialogOpen}
         onOpenChange={setIsAppPreferencesDialogOpen}

@@ -5,7 +5,7 @@ import { useEffect, useMemo } from 'react';
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarTrigger, SidebarInset } from '@/components/ui/sidebar';
 import { AppLogo } from '@/components/layout/AppLogo';
 import { UserProfile } from '@/components/layout/UserProfile';
-import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, Users, FileText, Printer } from 'lucide-react';
+import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, Users, FileText, ShieldCheck } from 'lucide-react'; // Updated SettingsIcon import
 import Link from 'next/link';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,6 +17,7 @@ interface NavItem {
   label: string;
   icon: React.ElementType;
   roles: UserRole[]; // Roles that can see this nav item
+  isSystemSetting?: boolean; // Flag for special admin settings
 }
 
 const allNavItems: NavItem[] = [
@@ -25,10 +26,8 @@ const allNavItems: NavItem[] = [
   { href: "/annual-programs", label: "Program Tahunan", icon: CalendarDays, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/semester-programs", label: "Program Semester", icon: CalendarClock, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/ai-assistant", label: "Asisten AI", icon: Sparkles, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"] },
-  // Example of Admin-specific pages (conceptual)
-  // { href: "/admin/user-management", label: "Manajemen Pengguna", icon: Users, roles: ["Admin"] },
-  // { href: "/admin/reports", label: "Laporan Sekolah", icon: FileText, roles: ["Admin", "KepalaSekolah"] },
-  { href: "/settings", label: "Pengaturan", icon: SettingsIcon, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+  { href: "/settings", label: "Pengaturan Akun", icon: SettingsIcon, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+  { href: "/admin/system-settings", label: "Pengaturan Sistem", icon: ShieldCheck, roles: ["Admin"], isSystemSetting: true }, // New Admin System Settings
 ];
 
 export default function AppLayout({ children }: PropsWithChildren) {
@@ -47,30 +46,32 @@ export default function AppLayout({ children }: PropsWithChildren) {
     return allNavItems.filter(item => item.roles.includes(user.role));
   }, [user]);
 
-  // Redirect if user tries to access a page they don't have nav access to
    useEffect(() => {
     if (!loading && isAuthenticated && user) {
       const currentNavItem = allNavItems.find(item => pathname.startsWith(item.href));
-      if (currentNavItem && !currentNavItem.roles.includes(user.role)) {
-        // If on a restricted page, redirect to dashboard or logout
+      // Allow access to /settings general page, sub-routes of settings will be handled by components inside
+      if (pathname.startsWith('/settings')) {
+        const settingsBaseAccess = allNavItems.find(item => item.href === "/settings" && item.roles.includes(user.role));
+        if (!settingsBaseAccess) {
+            router.push("/dashboard"); // Or logout
+        }
+      // Check for specific admin pages like /admin/system-settings
+      } else if (currentNavItem && currentNavItem.isSystemSetting && user.role !== 'Admin') {
+         router.push("/dashboard"); // Redirect non-admins from admin pages
+      } else if (currentNavItem && !currentNavItem.roles.includes(user.role)) {
+        // If on a restricted page (not settings, not specific admin page already handled)
         const dashboardAccess = allNavItems.find(item => item.href === "/dashboard" && item.roles.includes(user.role));
         if (dashboardAccess) {
           router.push("/dashboard");
         } else {
-          logout(); // Or a generic "access denied" page
+          logout(); 
         }
-      } else if (!currentNavItem && pathname !== '/dashboard' && !pathname.startsWith('/settings') ) { 
-        // Allow /settings as it's not always a direct nav item for all sub-routes
-        // Potentially trying to access a sub-route of something not in nav, or a non-existent page.
-        // For simplicity, if not dashboard and not explicitly allowed, consider redirecting.
-        // This is a basic check; more robust routing protection might be needed.
       }
     }
   }, [loading, isAuthenticated, user, pathname, router, logout]);
 
 
-  if (loading || !isAuthenticated) {
-    // You can return a loading spinner or null
+  if (loading || !isAuthenticated || !user) { // Added !user check
     return (
       <div className="flex h-screen items-center justify-center">
         <p>Memuat sesi pengguna...</p>
