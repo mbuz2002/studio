@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -148,11 +147,8 @@ const SidebarProvider = React.forwardRef<
       [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar]
     )
     
-    if (!initialOpenStateDetermined && typeof window !== "undefined") {
-      // Avoid rendering until the cookie state is determined on the client, prevents flash of incorrect state
-      return null; 
-    }
-
+    // Removed the conditional `return null;` to ensure children (like MobileBottomNav) always render on mobile.
+    // This might cause a brief flicker on desktop if cookie state mismatches defaultOpen.
 
     return (
       <SidebarContext.Provider value={contextValue}>
@@ -785,4 +781,3 @@ export {
   SidebarTrigger,
   useSidebar,
 }
-
