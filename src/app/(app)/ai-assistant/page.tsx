@@ -13,10 +13,12 @@ import { generateLessonPlanFromTopic, type GenerateLessonPlanOutput, type Genera
 import { suggestLessonPlanImprovements, type SuggestLessonPlanImprovementsOutput, type SuggestLessonPlanImprovementsInput } from "@/ai/flows/suggest-lesson-plan-improvements";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/contexts/AuthContext";
 
 
 export default function AIAssistantPage() {
   const { toast } = useToast();
+  const { user } = useAuth(); // Access user for any potential role-specific UI tweaks if needed later
   
   // State for Lesson Plan Generation
   const [topic, setTopic] = useState("");
@@ -30,7 +32,6 @@ export default function AIAssistantPage() {
   const [suggestedImprovements, setSuggestedImprovements] = useState<SuggestLessonPlanImprovementsOutput | null>(null);
   const [isSuggesting, setIsSuggesting] = useState(false);
 
-  // To prevent hydration errors with Math.random() or new Date() for IDs or other dynamic content
   const [isClient, setIsClient] = useState(false);
   useEffect(() => {
     setIsClient(true);
@@ -82,8 +83,19 @@ export default function AIAssistantPage() {
     }
   };
 
-  if (!isClient) {
-    return null; // Or a loading spinner
+  if (!isClient || !user) { // Also ensure user is loaded
+    return (
+         <div className="space-y-6 py-8">
+            <Card>
+            <CardHeader>
+                <CardTitle className="text-2xl">Memuat Asisten AI...</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <p>Silakan tunggu...</p>
+            </CardContent>
+            </Card>
+        </div>
+    );
   }
 
   return (
@@ -104,8 +116,8 @@ export default function AIAssistantPage() {
 
       <Tabs defaultValue="generate" className="w-full">
         <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2">
-          <TabsTrigger value="generate"><Wand2 className="mr-2 h-4 w-4 inline-block" />Buat Modul Ajar Baru</TabsTrigger>
-          <TabsTrigger value="improve"><Sparkles className="mr-2 h-4 w-4 inline-block" />Perbaiki Modul Ajar</TabsTrigger>
+          <TabsTrigger value="generate" className="text-xs sm:text-sm"><Wand2 className="mr-1 sm:mr-2 h-4 w-4 inline-block" />Buat Modul Ajar Baru</TabsTrigger>
+          <TabsTrigger value="improve" className="text-xs sm:text-sm"><Sparkles className="mr-1 sm:mr-2 h-4 w-4 inline-block" />Perbaiki Modul Ajar</TabsTrigger>
         </TabsList>
         <TabsContent value="generate">
           <Card>

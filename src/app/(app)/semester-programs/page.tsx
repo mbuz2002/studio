@@ -8,7 +8,8 @@ import type { SemesterProgram, AnyCurriculumItem } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { FileUp, Filter, Search } from "lucide-react";
+import { FileUp, Filter, Search, PlusCircle } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const initialSemesterPrograms: SemesterProgram[] = [
   {
@@ -49,6 +50,7 @@ const initialSemesterPrograms: SemesterProgram[] = [
 ];
 
 export default function SemesterProgramsPage() {
+  const { user } = useAuth();
   const [semesterPrograms, setSemesterPrograms] = useState<SemesterProgram[]>(initialSemesterPrograms);
   const [editingItem, setEditingItem] = useState<SemesterProgram | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -58,7 +60,22 @@ export default function SemesterProgramsPage() {
     setIsClient(true);
   }, []);
 
+  // Role-based permissions
+  const canCreate = user && (user.role === "Admin" || user.role === "WakaKurikulum");
+  const canEdit = user && (user.role === "Admin" || user.role === "WakaKurikulum");
+  const canDelete = user && (user.role === "Admin" || user.role === "WakaKurikulum");
+  const canImport = user && (user.role === "Admin" || user.role === "WakaKurikulum");
+
+
   const handleCreateOrUpdate = (itemData: AnyCurriculumItem) => {
+     if (!canCreate && !editingItem) {
+        alert("Anda tidak memiliki izin untuk membuat item baru.");
+        return;
+    }
+    if (!canEdit && editingItem) {
+        alert("Anda tidak memiliki izin untuk mengedit item ini.");
+        return;
+    }
     const newItem = itemData as SemesterProgram;
     if (editingItem) {
       setSemesterPrograms(semesterPrograms.map(sp => sp.id === newItem.id ? newItem : sp));
@@ -69,19 +86,26 @@ export default function SemesterProgramsPage() {
   };
 
   const handleEdit = (item: AnyCurriculumItem) => {
+    if (!canEdit) {
+        alert("Anda tidak memiliki izin untuk mengedit item ini.");
+        return;
+    }
     setEditingItem(item as SemesterProgram);
   };
 
   const handleDelete = (itemToDelete: AnyCurriculumItem) => {
+     if (!canDelete) {
+        alert("Anda tidak memiliki izin untuk menghapus item ini.");
+        return;
+    }
     if (window.confirm(`Apakah Anda yakin ingin menghapus "${itemToDelete.title}"?`)) {
       setSemesterPrograms(semesterPrograms.filter(sp => sp.id !== itemToDelete.id));
     }
   };
 
   const handleView = (item: AnyCurriculumItem) => {
-    // Replace alert with a modal or a dedicated view component for better UX
     const prettyPrintJson = JSON.stringify(item, null, 2);
-    const newWindow = window.open();
+    const newWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
     newWindow?.document.write(`<pre>${prettyPrintJson}</pre>`);
     newWindow?.document.close();
   };
@@ -93,7 +117,7 @@ export default function SemesterProgramsPage() {
   ) : [];
 
 
-  if (!isClient) {
+  if (!isClient || !user) {
     return (
       <div className="space-y-6 py-8">
         <Card>
@@ -131,45 +155,51 @@ export default function SemesterProgramsPage() {
                 <Button variant="outline" className="flex-1 sm:flex-none">
                     <Filter className="mr-2 h-4 w-4" /> Filter
                 </Button>
-                <Button variant="outline" className="flex-1 sm:flex-none">
-                    <FileUp className="mr-2 h-4 w-4" /> Impor
-                </Button>
+                 {canImport && (
+                  <Button variant="outline" className="flex-1 sm:flex-none" onClick={() => alert("Fitur impor belum diimplementasikan.")}>
+                      <FileUp className="mr-2 h-4 w-4" /> Impor
+                  </Button>
+                 )}
               </div>
-              <div className="w-full sm:w-auto mt-2 sm:mt-0">
-                <CurriculumFormDialog
-                triggerButtonText="Buat Program Baru"
-                dialogTitle="Buat Program Semester Baru (Promes)"
-                dialogDescription="Rancang kurikulum Anda untuk semester tertentu sesuai Kurikulum Merdeka."
-                itemType="Promes"
-                onSubmit={handleCreateOrUpdate}
-                initialData={null}
-                />
-            </div>
+              {canCreate && (
+                <div className="w-full sm:w-auto mt-2 sm:mt-0">
+                  <CurriculumFormDialog
+                  triggerButtonText="Buat Program Baru"
+                  dialogTitle="Buat Program Semester Baru (Promes)"
+                  dialogDescription="Rancang kurikulum Anda untuk semester tertentu sesuai Kurikulum Merdeka."
+                  itemType="Promes"
+                  onSubmit={handleCreateOrUpdate}
+                  initialData={null}
+                  />
+                </div>
+              )}
           </div>
           <CurriculumDataTable
             items={filteredSemesterPrograms}
             onView={handleView}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
+            onEdit={canEdit ? handleEdit : undefined}
+            onDelete={canDelete ? handleDelete : undefined}
+            canEdit={!!canEdit}
+            canDelete={!!canDelete}
+            itemTypeForExport="Promes"
           />
         </CardContent>
       </Card>
-      {editingItem && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40" onClick={() => setEditingItem(null)} />
-      )}
-      {editingItem && (
-         <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-[90vw] max-w-2xl">
-            <CurriculumFormDialog
-                triggerButtonText="Pemicu Edit Tersembunyi" // This instance is programmatically opened
-                dialogTitle={`Edit Program Semester: ${editingItem.title}`}
-                dialogDescription="Perbarui rincian untuk program semester ini."
-                itemType="Promes"
-                initialData={editingItem}
-                onSubmit={handleCreateOrUpdate}
-            />
-         </div>
+      {editingItem && canEdit && (
+        <>
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40" onClick={() => setEditingItem(null)} />
+          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-[90vw] max-w-2xl">
+              <CurriculumFormDialog
+                  triggerButtonText="Pemicu Edit Tersembunyi"
+                  dialogTitle={`Edit Program Semester: ${editingItem.title}`}
+                  dialogDescription="Perbarui rincian untuk program semester ini."
+                  itemType="Promes"
+                  initialData={editingItem}
+                  onSubmit={handleCreateOrUpdate}
+              />
+          </div>
+        </>
       )}
     </div>
   );
 }
-

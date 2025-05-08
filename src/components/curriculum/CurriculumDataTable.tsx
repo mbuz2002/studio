@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { AnyCurriculumItem, LessonPlan, AnnualProgram, SemesterProgram } from "@/types";
@@ -15,11 +16,15 @@ import { useToast } from "@/hooks/use-toast";
 interface CurriculumDataTableProps {
   items: AnyCurriculumItem[];
   onView: (item: AnyCurriculumItem) => void;
-  onEdit: (item: AnyCurriculumItem) => void;
-  onDelete: (item: AnyCurriculumItem) => void;
+  onEdit?: (item: AnyCurriculumItem) => void; // Made optional
+  onDelete?: (item: AnyCurriculumItem) => void; // Made optional
+  canCreate?: boolean; // To control general create/import actions, though handled by parent
+  canEdit: boolean;
+  canDelete: boolean;
+  itemTypeForExport?: 'RPP' | 'PROTA' | 'Promes'; // To guide export logic
 }
 
-export function CurriculumDataTable({ items, onView, onEdit, onDelete }: CurriculumDataTableProps) {
+export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, canDelete, itemTypeForExport }: CurriculumDataTableProps) {
   const [isClient, setIsClient] = useState(false);
   const [isExporting, setIsExporting] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
@@ -35,12 +40,10 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete }: Curricu
 
     try {
       let documentContent = "";
-      let fileName = `${item.title.replace(/\s+/g, '_')}_${item.type}.txt`;
+      let fileName = `${item.title.replace(/[\\/:*?"<>|]/g, '_').replace(/\s+/g, '_')}_${item.type}.txt`;
 
       if (item.type === 'RPP') {
-        // Ensure the RPP item matches the expected structure for the export flow
         const rppInput = item as LessonPlan;
-        // The flow expects specific fields, ensure they exist even if empty from older data
         const inputForFlow: ExportRppToTextInput = {
           ...rppInput,
           pemahamanBermakna: rppInput.pemahamanBermakna || [],
@@ -52,8 +55,40 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete }: Curricu
         };
         const result = await exportRppToText(inputForFlow);
         documentContent = result.documentContent;
-      } else {
-        // Placeholder for other types or implement specific export flows
+      } else if (item.type === 'PROTA' || item.type === 'Promes') {
+        // Generic export for PROTA and Promes, can be improved with specific flows
+        let details = `Judul: ${item.title}\nMata Pelajaran: ${item.subject}\nJenjang/Kelas: ${item.gradeLevel}\n`;
+        if (item.type === 'PROTA') {
+          const prota = item as AnnualProgram;
+          details += `Tahun Ajaran: ${prota.year}\n`;
+          details += `\nSemester 1:\n`;
+          prota.semester1Components.forEach(c => {
+            details += `- Topik: ${c.topic}\n  Elemen CP: ${c.elemenCapaianPembelajaran?.join(', ') || '-'}\n  Alokasi Waktu: ${c.alokasiWaktu}\n`;
+          });
+          details += `\nSemester 2:\n`;
+          prota.semester2Components.forEach(c => {
+            details += `- Topik: ${c.topic}\n  Elemen CP: ${c.elemenCapaianPembelajaran?.join(', ') || '-'}\n  Alokasi Waktu: ${c.alokasiWaktu}\n`;
+          });
+          details += `\nFokus P5: ${prota.profilPelajarPancasilaFocus?.join(', ') || '-'}\n`;
+        } else if (item.type === 'Promes') {
+          const promes = item as SemesterProgram;
+          details += `Tahun Ajaran: ${promes.year}\nSemester: ${promes.semester === '1' ? 'Ganjil' : 'Genap'}\n`;
+          details += `CP Umum: ${promes.capaianPembelajaranUmum || '-'}\nAlokasi Total: ${promes.alokasiWaktuTotalSemester || '-'}\n`;
+          details += `\nKomponen Mingguan:\n`;
+          promes.komponenMingguan.forEach(w => {
+            details += `Minggu ke-${w.mingguKe} (${w.bulan || ''}):\n`;
+            details += `  Materi/TP: ${w.materiPokokAtauTujuanPembelajaran}\n  Alokasi: ${w.alokasiWaktu}\n`;
+            details += `  Metode: ${w.metodeStrategi?.join(', ') || '-'}\n  Sumber: ${w.sumberBelajar?.join(', ') || '-'}\n`;
+            details += `  Asesmen: ${w.rencanaAsesmen?.join(', ') || '-'}\n  P5: ${w.catatanIntegrasiP5 || '-'}\n\n`;
+          });
+        }
+        documentContent = `Rincian untuk ${item.type}: ${item.title}\n\n${details}\n\n(Data diperbarui: ${format(new Date(item.updatedAt), "PPpp", { locale: indonesianLocale })})`;
+         toast({
+          title: "Ekspor Dasar Berhasil",
+          description: `Ekspor detail untuk ${item.type} berupa teks. Untuk format lebih lanjut, fitur sedang dikembangkan.`,
+        });
+      }
+       else {
         documentContent = `Rincian untuk ${item.type}: ${item.title}\n\n(Fungsi ekspor detail untuk jenis ini belum diimplementasikan.)\n\n${JSON.stringify(item, null, 2)}`;
         toast({
           title: "Fitur Dalam Pengembangan",
@@ -84,12 +119,12 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete }: Curricu
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="min-w-[200px]">Judul</TableHead>
+            <TableHead className="min-w-[200px] w-2/5">Judul</TableHead>
             <TableHead>Jenis</TableHead>
-            <TableHead>Mata Pelajaran</TableHead>
-            <TableHead>Jenjang/Kelas</TableHead>
-            <TableHead className="min-w-[150px]">Terakhir Diperbarui</TableHead>
-            <TableHead className="text-right">Aksi</TableHead>
+            <TableHead className="min-w-[150px]">Mata Pelajaran</TableHead>
+            <TableHead className="min-w-[150px]">Jenjang/Kelas</TableHead>
+            <TableHead className="min-w-[180px]">Terakhir Diperbarui</TableHead>
+            <TableHead className="text-right min-w-[100px]">Aksi</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -110,7 +145,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete }: Curricu
               </TableCell>
               <TableCell>{item.subject}</TableCell>
               <TableCell>{item.gradeLevel}</TableCell>
-              <TableCell>{format(new Date(item.updatedAt), "PPp", { locale: indonesianLocale })}</TableCell>
+              <TableCell>{isClient ? format(new Date(item.updatedAt), "PPp", { locale: indonesianLocale }) : item.updatedAt}</TableCell>
               <TableCell className="text-right">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -123,21 +158,20 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete }: Curricu
                     <DropdownMenuItem onClick={() => onView(item)}>
                       <Eye className="mr-2 h-4 w-4" /> Lihat
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onEdit(item)}>
-                      <FilePenLine className="mr-2 h-4 w-4" /> Edit
-                    </DropdownMenuItem>
+                    {canEdit && onEdit && (
+                      <DropdownMenuItem onClick={() => onEdit(item)}>
+                        <FilePenLine className="mr-2 h-4 w-4" /> Edit
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem onClick={() => handleExportToText(item)} disabled={isExporting[item.id] || !isClient}>
                       {isExporting[item.id] ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />} 
                       Ekspor ke Teks
                     </DropdownMenuItem>
-                    {/* Example: Keep other specific export options or remove if not needed
-                    <DropdownMenuItem onClick={() => alert('Ekspor PDF diklik untuk ' + item.title)}>
-                      <Download className="mr-2 h-4 w-4" /> Ekspor PDF
-                    </DropdownMenuItem>
-                    */}
-                    <DropdownMenuItem onClick={() => onDelete(item)} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
-                      <Trash2 className="mr-2 h-4 w-4" /> Hapus
-                    </DropdownMenuItem>
+                    {canDelete && onDelete && (
+                      <DropdownMenuItem onClick={() => onDelete(item)} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                        <Trash2 className="mr-2 h-4 w-4" /> Hapus
+                      </DropdownMenuItem>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>

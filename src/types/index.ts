@@ -1,3 +1,13 @@
+export type UserRole = "Admin" | "KepalaSekolah" | "WakaKurikulum" | "TataUsaha" | "Guru";
+
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: UserRole;
+  avatarUrl?: string;
+}
+
 export interface CurriculumItem {
   id: string;
   title: string;
