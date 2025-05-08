@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -85,56 +84,58 @@ export function UserManagementSection() {
     const userToEdit = users.find(u => u.id === userId);
     toast({ title: "Fitur Edit Pengguna", description: `Dialog untuk mengedit pengguna ${userToEdit?.name} akan terbuka di sini. Fitur ini sedang dikembangkan.` });
     addLog("INFO", `Admin ${adminUser?.email} mencoba mengedit pengguna ${userToEdit?.email}. (Fitur edit dialog belum terimplementasi penuh).`, logSource);
-     // TODO: Implement opening the EditUserDialog here, similar to SettingsPage
-     // For now, to make it work like in SettingsPage, you'd need to lift state up or use a global modal state.
-     // Example:
-     // setSelectedUserToEdit(userToEdit); 
-     // setIsEditUserDialogOpen(true);
   };
 
 
   return (
     <Card className="rounded-lg">
-      <CardHeader className="flex flex-row items-center justify-between rounded-t-lg bg-gradient-to-r from-secondary to-muted text-foreground">
-        <div>
+      <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-t-lg bg-gradient-to-r from-secondary to-muted text-foreground p-4 sm:p-6">
+        <div className="flex-grow">
             <div className="flex items-center gap-2">
                 <Users className="h-6 w-6 text-primary drop-shadow" />
-                <CardTitle>Manajemen Pengguna</CardTitle>
+                <CardTitle className="text-xl sm:text-2xl">Manajemen Pengguna</CardTitle>
             </div>
-            <CardDescription className="text-muted-foreground">Kelola akun pengguna yang memiliki akses ke sistem.</CardDescription>
+            <CardDescription className="text-sm sm:text-base text-muted-foreground mt-1">Kelola akun pengguna yang memiliki akses ke sistem.</CardDescription>
         </div>
-        <AddUserDialog onUserAdded={handleAddUser} />
+        <div className="w-full sm:w-auto">
+          <AddUserDialog onUserAdded={handleAddUser} />
+        </div>
       </CardHeader>
-      <CardContent className="pt-4">
+      <CardContent className="pt-4 p-2 sm:p-6">
         <div className="rounded-lg border shadow-sm overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="min-w-[150px]">Nama</TableHead>
-                <TableHead className="min-w-[200px]">Email</TableHead>
-                <TableHead>Peran</TableHead>
-                <TableHead className="text-right">Aksi</TableHead>
+                <TableHead className="min-w-[150px] px-3 sm:px-4 py-3 text-sm">Nama</TableHead>
+                <TableHead className="min-w-[180px] px-3 sm:px-4 py-3 text-sm hidden md:table-cell">Email</TableHead>
+                <TableHead className="px-3 sm:px-4 py-3 text-sm">Peran</TableHead>
+                <TableHead className="text-right px-3 sm:px-4 py-3 text-sm">Aksi</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {users.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center h-24 text-muted-foreground">
+                  <TableCell colSpan={4} className="text-center h-24 text-muted-foreground px-3 sm:px-4 py-3 text-base">
                     Tidak ada pengguna ditemukan.
                   </TableCell>
                 </TableRow>
               )}
               {users.map((user) => (
                 <TableRow key={user.id}>
-                  <TableCell className="font-medium flex items-center gap-2">
-                     <img src={user.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`} alt={user.name} className="h-8 w-8 rounded-full" data-ai-hint="user avatar" />
-                    {user.name}
+                  <TableCell className="font-medium px-3 sm:px-4 py-2 sm:py-3 align-top">
+                    <div className="flex items-center gap-2">
+                       <img src={user.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`} alt={user.name} className="h-8 w-8 rounded-full" data-ai-hint="user avatar" />
+                       <div className="flex flex-col">
+                          <span className="text-sm">{user.name}</span>
+                          <span className="text-xs text-muted-foreground md:hidden">{user.email}</span>
+                       </div>
+                    </div>
                   </TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>
-                    <Badge variant={user.role === 'Admin' ? 'destructive' : 'secondary'}>{user.role}</Badge>
+                  <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top text-sm hidden md:table-cell">{user.email}</TableCell>
+                  <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top">
+                    <Badge variant={user.role === 'Admin' ? 'destructive' : 'secondary'} className="text-xs">{user.role}</Badge>
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right px-3 sm:px-4 py-2 sm:py-3 align-top">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -142,12 +143,12 @@ export function UserManagementSection() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleEditUser(user.id)}>
+                        <DropdownMenuItem onClick={() => handleEditUser(user.id)} className="text-sm">
                           <Edit2 className="mr-2 h-4 w-4" /> Edit
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                             onClick={() => handleDeleteUser(user.id)} 
-                            className="text-destructive focus:bg-destructive/10 focus:text-destructive" 
+                            className="text-destructive focus:bg-destructive/10 focus:text-destructive text-sm" 
                             disabled={users.length <=1 || user.id === adminUser?.id}
                         >
                           <Trash2 className="mr-2 h-4 w-4" /> Hapus
@@ -164,3 +165,4 @@ export function UserManagementSection() {
     </Card>
   );
 }
+

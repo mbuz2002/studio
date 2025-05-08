@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -61,12 +60,12 @@ export default function UserManagementPage() {
   return (
     <div className="space-y-6 py-4 md:py-8">
       <Card className="shadow-xl rounded-lg overflow-hidden">
-        <CardHeader className="p-6 rounded-t-lg bg-gradient-to-br from-primary via-accent to-secondary text-primary-foreground">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <Users className="h-10 w-10 text-primary-foreground drop-shadow-lg flex-shrink-0" />
+        <CardHeader className="p-4 sm:p-6 rounded-t-lg bg-gradient-to-br from-primary via-accent to-secondary text-primary-foreground">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+            <Users className="h-8 w-8 sm:h-10 sm:w-10 text-primary-foreground drop-shadow-lg flex-shrink-0" />
             <div>
-                <CardTitle className="text-3xl md:text-4xl font-bold">Manajemen Pengguna</CardTitle>
-                <CardDescription className="text-lg md:text-xl text-primary-foreground/90 mt-1">
+                <CardTitle className="text-2xl sm:text-3xl md:text-4xl font-bold">Manajemen Pengguna</CardTitle>
+                <CardDescription className="text-base sm:text-lg md:text-xl text-primary-foreground/90 mt-1">
                     Kelola akun pengguna, peran, dan akses mereka ke sistem EduAI Planner.
                 </CardDescription>
             </div>
@@ -79,3 +78,4 @@ export default function UserManagementPage() {
     </div>
   );
 }
+

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -198,7 +197,7 @@ export default function SemesterProgramsPage() {
           </div>
         </CardHeader>
         <CardContent className="p-4 sm:p-6">
-          <div className="flex flex-col md:flex-row gap-3 mb-6 items-stretch md:items-center">
+          <div className="flex flex-col md:flex-row gap-3 mb-6 md:items-center">
             <div className="flex-grow relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input
@@ -272,3 +271,4 @@ export default function SemesterProgramsPage() {
     </div>
   );
 }
+

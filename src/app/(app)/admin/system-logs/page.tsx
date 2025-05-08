@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -74,13 +73,13 @@ export default function SystemLogsPage() {
   const getLogLevelIcon = (level: LogLevel) => {
     switch (level) {
       case "INFO":
-        return <Info className="h-5 w-5 text-blue-500" />;
+        return <Info className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />;
       case "WARN":
-        return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
+        return <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500" />;
       case "ERROR":
-        return <ShieldAlert className="h-5 w-5 text-red-500" />;
+        return <ShieldAlert className="h-4 w-4 sm:h-5 sm:w-5 text-red-500" />;
       default:
-        return <Activity className="h-5 w-5" />; // Fallback icon
+        return <Activity className="h-4 w-4 sm:h-5 sm:w-5" />; // Fallback icon
     }
   };
   
@@ -116,14 +115,14 @@ export default function SystemLogsPage() {
 
 
   return (
-    <div className="space-y-8 py-4 md:py-8">
+    <div className="space-y-6 sm:space-y-8 py-4 md:py-8">
       <Card className="shadow-lg rounded-lg">
-        <CardHeader className="p-6 rounded-t-lg bg-gradient-to-br from-primary to-accent text-primary-foreground">
-          <div className="flex items-center gap-4">
-            <Activity className="h-10 w-10 text-primary-foreground drop-shadow-lg flex-shrink-0" />
+        <CardHeader className="p-4 sm:p-6 rounded-t-lg bg-gradient-to-br from-primary to-accent text-primary-foreground">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+            <Activity className="h-8 w-8 sm:h-10 sm:w-10 text-primary-foreground drop-shadow-lg flex-shrink-0" />
             <div>
-                <CardTitle className="text-3xl md:text-4xl font-bold">Log Sistem Aplikasi</CardTitle>
-                <CardDescription className="text-lg md:text-xl text-primary-foreground/90 mt-1">
+                <CardTitle className="text-2xl sm:text-3xl md:text-4xl font-bold">Log Sistem Aplikasi</CardTitle>
+                <CardDescription className="text-base sm:text-lg md:text-xl text-primary-foreground/90 mt-1">
                     Tinjau aktivitas, kesalahan, dan peristiwa penting dalam sistem secara real-time.
                 </CardDescription>
             </div>
@@ -132,22 +131,22 @@ export default function SystemLogsPage() {
       </Card>
 
       <Card className="shadow-md rounded-md">
-        <CardHeader className="p-6">
+        <CardHeader className="p-4 sm:p-6">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <CardTitle className="text-2xl font-semibold">Entri Log ({filteredLogs.length} / {contextLogs.length})</CardTitle>
+            <CardTitle className="text-xl sm:text-2xl font-semibold">Entri Log ({filteredLogs.length} / {contextLogs.length})</CardTitle>
             <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
               <div className="relative flex-grow sm:flex-grow-0">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                 <Input
                   type="search"
                   placeholder="Cari log..."
-                  className="pl-10 w-full sm:w-[220px] lg:w-[280px] text-base"
+                  className="pl-10 w-full sm:w-[200px] lg:w-[280px] text-sm sm:text-base h-10"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
               <Select value={levelFilter} onValueChange={(value) => setLevelFilter(value as LogLevel | "ALL")}>
-                <SelectTrigger className="w-full sm:w-auto min-w-[150px] text-base">
+                <SelectTrigger className="w-full sm:w-auto min-w-[140px] sm:min-w-[150px] text-sm sm:text-base h-10">
                   <SelectValue placeholder="Filter Level" />
                 </SelectTrigger>
                 <SelectContent>
@@ -157,28 +156,28 @@ export default function SystemLogsPage() {
                   <SelectItem value="ERROR">KESALAHAN</SelectItem>
                 </SelectContent>
               </Select>
-              <Button onClick={handleRefreshLogs} variant="outline" className="w-full sm:w-auto text-base">
-                <RotateCw className="mr-2 h-5 w-5" />
+              <Button onClick={handleRefreshLogs} variant="outline" className="w-full sm:w-auto text-sm sm:text-base h-10">
+                <RotateCw className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                 Segarkan
               </Button>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-6 pt-0">
+        <CardContent className="p-4 sm:p-6 pt-0">
           <div className="rounded-md border shadow-sm overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[200px] min-w-[190px] text-sm px-4 py-3">Waktu</TableHead>
-                  <TableHead className="w-[140px] min-w-[130px] text-sm px-4 py-3">Level</TableHead>
-                  <TableHead className="min-w-[350px] text-sm px-4 py-3">Pesan</TableHead>
-                  <TableHead className="w-[200px] min-w-[170px] text-sm px-4 py-3">Sumber</TableHead>
+                  <TableHead className="w-[170px] min-w-[160px] sm:w-[200px] sm:min-w-[190px] text-xs sm:text-sm px-3 sm:px-4 py-2 sm:py-3">Waktu</TableHead>
+                  <TableHead className="w-[120px] min-w-[110px] sm:w-[140px] sm:min-w-[130px] text-xs sm:text-sm px-3 sm:px-4 py-2 sm:py-3">Level</TableHead>
+                  <TableHead className="min-w-[300px] sm:min-w-[350px] text-xs sm:text-sm px-3 sm:px-4 py-2 sm:py-3">Pesan</TableHead>
+                  <TableHead className="w-[150px] min-w-[140px] sm:w-[200px] sm:min-w-[170px] text-xs sm:text-sm px-3 sm:px-4 py-2 sm:py-3">Sumber</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredLogs.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="h-32 text-center text-lg text-muted-foreground px-4 py-3">
+                    <TableCell colSpan={4} className="h-32 text-center text-base sm:text-lg text-muted-foreground px-3 sm:px-4 py-2 sm:py-3">
                       {contextLogs.length === 0 ? "Tidak ada log tersedia." : "Tidak ada log yang cocok dengan filter Anda."}
                     </TableCell>
                   </TableRow>
@@ -188,17 +187,17 @@ export default function SystemLogsPage() {
                         log.level === "ERROR" ? "bg-destructive/10 hover:bg-destructive/15" : 
                         log.level === "WARN" ? "bg-yellow-500/10 hover:bg-yellow-500/15" : "hover:bg-muted/50"
                     }>
-                      <TableCell className="text-sm font-roboto px-4 py-3 align-top">
-                        {isClient ? format(log.timestamp, "dd MMM yyyy, HH:mm:ss.SSS", { locale: indonesianLocale }) : log.timestamp.toISOString()}
+                      <TableCell className="text-xs sm:text-sm font-roboto px-3 sm:px-4 py-2 sm:py-3 align-top">
+                        {isClient ? format(log.timestamp, "dd MMM yy, HH:mm:ss", { locale: indonesianLocale }) : log.timestamp.toISOString()}
                       </TableCell>
-                      <TableCell className="px-4 py-3 align-top">
-                        <Badge variant={getLogLevelBadgeVariant(log.level)} className="flex items-center gap-2 whitespace-nowrap text-sm py-1 px-2.5">
+                      <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top">
+                        <Badge variant={getLogLevelBadgeVariant(log.level)} className="flex items-center gap-1.5 sm:gap-2 whitespace-nowrap text-xs sm:text-sm py-0.5 sm:py-1 px-2 sm:px-2.5">
                           {getLogLevelIcon(log.level)}
                           {log.level}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-sm break-words whitespace-pre-wrap px-4 py-3 align-top">{log.message}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground px-4 py-3 align-top">{log.source || "-"}</TableCell>
+                      <TableCell className="text-xs sm:text-sm break-words whitespace-pre-wrap px-3 sm:px-4 py-2 sm:py-3 align-top">{log.message}</TableCell>
+                      <TableCell className="text-xs sm:text-sm text-muted-foreground px-3 sm:px-4 py-2 sm:py-3 align-top">{log.source || "-"}</TableCell>
                     </TableRow>
                   ))
                 )}
@@ -206,21 +205,22 @@ export default function SystemLogsPage() {
             </Table>
           </div>
           {contextLogs.length > 0 && (
-             <div className="mt-6 flex justify-end">
-                <Button onClick={handleClearLogs} variant="destructive" className="text-base">
-                    <Trash2 className="mr-2 h-5 w-5" /> Bersihkan Log Tampilan
+             <div className="mt-4 sm:mt-6 flex justify-end">
+                <Button onClick={handleClearLogs} variant="destructive" className="text-sm sm:text-base h-10">
+                    <Trash2 className="mr-2 h-4 w-4 sm:h-5 sm:w-5" /> Bersihkan Log Tampilan
                 </Button>
              </div>
           )}
         </CardContent>
       </Card>
-        <Alert variant="default" className="mt-8 border-primary/50 shadow-md rounded-md">
-            <Info className="h-6 w-6 text-primary" />
-            <AlertTitle className="text-lg font-semibold">Tentang Log Sistem</AlertTitle>
-            <AlertDescription className="text-base">
+        <Alert variant="default" className="mt-6 sm:mt-8 border-primary/50 shadow-md rounded-md p-4 sm:p-6">
+            <Info className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+            <AlertTitle className="text-base sm:text-lg font-semibold">Tentang Log Sistem</AlertTitle>
+            <AlertDescription className="text-sm sm:text-base">
             Log sistem ini dikelola secara real-time di sisi klien selama sesi berlangsung dan dibatasi hingga {MAX_LOGS} entri terakhir. Membersihkan log hanya akan menghapus log dari tampilan sesi ini. Dalam aplikasi produksi, log penting akan disimpan secara persisten di server.
             </AlertDescription>
       </Alert>
     </div>
   );
 }
+

@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { AnyCurriculumItem, LessonPlan, AnnualProgram, SemesterProgram, User, SchoolProfile, PrintOptions, CurriculumFramework } from "@/types";
@@ -63,8 +62,10 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
             localStorage.removeItem("appUsers"); 
         }
       } else {
+        // Fallback if no users are stored, ensure at least current user is available
+        // This might be more robustly handled by fetching users from a service in a real app
         if (currentUser) {
-          setAppUsers([currentUser]);
+          setAppUsers([currentUser]); 
         }
       }
     }
@@ -367,7 +368,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
       addLog("INFO", `Jendela cetak dibuka untuk ${itemToPrint.type} "${itemToPrint.title}".`, logSource);
       setTimeout(() => {
           if (printWindow && !printWindow.closed) { 
-            // printWindow.print(); 
+            // printWindow.print(); // Commented out to allow user to initiate print from new window
           }
       }, 500);
     } else {
@@ -409,7 +410,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
           metodePembelajaran: rppInput.metodePembelajaran,
         };
         addLog("INFO", `Memanggil alur Genkit 'exportRppToText' untuk RPP "${item.title}" (${item.curriculumType}).`, logSource);
-        const result = await exportRppToText(inputForFlow); // Assuming exportRppToText is updated for new fields
+        const result = await exportRppToText(inputForFlow); 
         documentContent = result.documentContent;
         addLog("INFO", `Konten teks berhasil dibuat oleh Genkit untuk RPP "${item.title}".`, logSource);
       } else if (item.type === 'PROTA') {
@@ -534,53 +535,64 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="min-w-[250px] w-2/5 px-4 py-3">Judul</TableHead>
-              <TableHead className="min-w-[100px] px-4 py-3">Jenis</TableHead>
-              <TableHead className="min-w-[180px] px-4 py-3">Kurikulum</TableHead>
-              <TableHead className="min-w-[150px] px-4 py-3">Mata Pelajaran</TableHead>
-              <TableHead className="min-w-[180px] px-4 py-3">Jenjang/Kelas</TableHead>
-              <TableHead className="min-w-[180px] px-4 py-3">Nama Guru/Pembuat</TableHead>
-              <TableHead className="min-w-[180px] px-4 py-3">Terakhir Diperbarui</TableHead>
-              <TableHead className="text-right min-w-[100px] px-4 py-3">Aksi</TableHead>
+              <TableHead className="min-w-[200px] sm:min-w-[250px] w-2/5 px-3 sm:px-4 py-3 text-sm">Judul</TableHead>
+              <TableHead className="min-w-[80px] px-3 sm:px-4 py-3 text-sm hidden md:table-cell">Jenis</TableHead>
+              <TableHead className="min-w-[150px] sm:min-w-[180px] px-3 sm:px-4 py-3 text-sm">Kurikulum</TableHead>
+              <TableHead className="min-w-[120px] sm:min-w-[150px] px-3 sm:px-4 py-3 text-sm hidden lg:table-cell">Mata Pelajaran</TableHead>
+              <TableHead className="min-w-[150px] sm:min-w-[180px] px-3 sm:px-4 py-3 text-sm hidden md:table-cell">Jenjang/Kelas</TableHead>
+              <TableHead className="min-w-[150px] sm:min-w-[180px] px-3 sm:px-4 py-3 text-sm">Penyusun</TableHead>
+              <TableHead className="min-w-[150px] sm:min-w-[180px] px-3 sm:px-4 py-3 text-sm hidden lg:table-cell">Terakhir Diperbarui</TableHead>
+              <TableHead className="text-right min-w-[80px] sm:min-w-[100px] px-3 sm:px-4 py-3 text-sm">Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {items.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} className="text-center h-24 text-muted-foreground px-4 py-3">
+                <TableCell colSpan={8} className="text-center h-24 text-muted-foreground px-3 sm:px-4 py-3 text-base">
                   Tidak ada item ditemukan.
                 </TableCell>
               </TableRow>
             )}
             {items.map((item) => (
               <TableRow key={item.id} className="hover:bg-muted/50">
-                <TableCell className="font-medium px-4 py-3 align-top">{item.title}</TableCell>
-                <TableCell className="px-4 py-3 align-top">
+                <TableCell className="font-medium px-3 sm:px-4 py-2 sm:py-3 align-top text-sm">
+                  {item.title}
+                  <div className="md:hidden text-xs text-muted-foreground mt-1">
+                    {item.type} - {item.gradeLevel}
+                  </div>
+                   <div className="lg:hidden text-xs text-muted-foreground mt-1">
+                    Mapel: {item.subject}
+                  </div>
+                  <div className="lg:hidden text-xs text-muted-foreground mt-0.5">
+                     Diperbarui: {isClient ? format(new Date(item.updatedAt), "dd/MM/yy", { locale: indonesianLocale }) : item.updatedAt.substring(0,10)}
+                  </div>
+                </TableCell>
+                <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top hidden md:table-cell">
                   <Badge variant={item.type === 'RPP' ? 'default' : item.type === 'PROTA' ? 'secondary' : 'outline'} className="text-xs">
                     {item.type}
                   </Badge>
                 </TableCell>
-                <TableCell className="px-4 py-3 align-top">
-                  <Badge variant={getCurriculumBadgeVariant(item.curriculumType)} className="whitespace-nowrap text-xs">
-                    <BookCopy className="mr-1.5 h-3 w-3"/>
+                <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top">
+                  <Badge variant={getCurriculumBadgeVariant(item.curriculumType)} className="whitespace-nowrap text-xs py-1 px-2">
+                    <BookCopy className="mr-1 h-3 w-3 hidden sm:inline-block"/>
                     {item.curriculumType}
                   </Badge>
                 </TableCell>
-                <TableCell className="px-4 py-3 align-top">{item.subject}</TableCell>
-                <TableCell className="px-4 py-3 align-top">{item.gradeLevel}</TableCell>
-                <TableCell className="px-4 py-3 align-top">
-                  <div className="flex items-center gap-2">
+                <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top text-sm hidden lg:table-cell">{item.subject}</TableCell>
+                <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top text-sm hidden md:table-cell">{item.gradeLevel}</TableCell>
+                <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top">
+                  <div className="flex items-center gap-1.5 sm:gap-2">
                     <Avatar className="h-7 w-7 flex-shrink-0">
                         <AvatarImage src={getCreatorAvatar(item.createdByUserId)} alt={getCreatorName(item.createdByUserId)} data-ai-hint="user avatar" />
                         <AvatarFallback className="text-xs">
                             {getInitials(getCreatorName(item.createdByUserId))}
                         </AvatarFallback>
                     </Avatar>
-                    <span className="truncate text-sm max-w-[120px]">{getCreatorName(item.createdByUserId)}</span>
+                    <span className="truncate text-xs sm:text-sm max-w-[100px] sm:max-w-[120px]">{getCreatorName(item.createdByUserId)}</span>
                   </div>
                 </TableCell>
-                <TableCell className="px-4 py-3 align-top text-xs">{isClient ? format(new Date(item.updatedAt), "PPp", { locale: indonesianLocale }) : item.updatedAt}</TableCell>
-                <TableCell className="text-right px-4 py-3 align-top">
+                <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top text-xs hidden lg:table-cell">{isClient ? format(new Date(item.updatedAt), "PPp", { locale: indonesianLocale }) : item.updatedAt}</TableCell>
+                <TableCell className="text-right px-3 sm:px-4 py-2 sm:py-3 align-top">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -589,23 +601,23 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleViewDetails(item)}>
+                      <DropdownMenuItem onClick={() => handleViewDetails(item)} className="text-sm">
                         <Eye className="mr-2 h-4 w-4" /> Lihat Detail
                       </DropdownMenuItem>
                       {canEdit(item) && onEdit && (
-                        <DropdownMenuItem onClick={() => onEdit(item)}>
+                        <DropdownMenuItem onClick={() => onEdit(item)} className="text-sm">
                           <FilePenLine className="mr-2 h-4 w-4" /> Edit
                         </DropdownMenuItem>
                       )}
-                      <DropdownMenuItem onClick={() => handlePreparePrint(item)} disabled={!isClient}>
+                      <DropdownMenuItem onClick={() => handlePreparePrint(item)} disabled={!isClient} className="text-sm">
                         <Printer className="mr-2 h-4 w-4" /> Cetak / PDF
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleExportToText(item)} disabled={isExporting[item.id] || !isClient}>
+                      <DropdownMenuItem onClick={() => handleExportToText(item)} disabled={isExporting[item.id] || !isClient} className="text-sm">
                         {isExporting[item.id] ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />} 
                         Ekspor ke Teks
                       </DropdownMenuItem>
                       {canDelete(item) && onDelete && (
-                        <DropdownMenuItem onClick={() => onDelete(item)} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                        <DropdownMenuItem onClick={() => onDelete(item)} className="text-destructive focus:bg-destructive/10 focus:text-destructive text-sm">
                           <Trash2 className="mr-2 h-4 w-4" /> Hapus
                         </DropdownMenuItem>
                       )}
@@ -622,7 +634,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
             isOpen={isPrintOptionsOpen}
             onOpenChange={setIsPrintOptionsOpen}
             itemType={itemToPrint.type}
-            itemCurriculumType={itemToPrint.curriculumType} // Pass curriculum type of item
+            itemCurriculumType={itemToPrint.curriculumType} 
             defaultOptions={currentPrintOptions}
             onSubmit={handleFinalizePrint}
             hasSchoolProfile={!!schoolProfile} 
@@ -631,3 +643,4 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
     </>
   );
 }
+

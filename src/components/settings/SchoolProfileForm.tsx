@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, type FormEvent, useRef } from "react";
@@ -162,7 +161,7 @@ export function SchoolProfileForm() {
           <div className="space-y-2">
             <Label>Logo Sekolah (Untuk Kop Surat)</Label>
             <Tabs value={logoInputMethod} onValueChange={(value) => setLogoInputMethod(value as 'url' | 'upload')} className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2">
                 <TabsTrigger value="url"><Link2 className="mr-2 h-4 w-4" /> Masukkan URL</TabsTrigger>
                 <TabsTrigger value="upload"><UploadCloud className="mr-2 h-4 w-4" /> Unggah File</TabsTrigger>
               </TabsList>
@@ -206,8 +205,6 @@ export function SchoolProfileForm() {
                             style={{objectFit:"contain"}}
                             className="rounded"
                             onError={() => {
-                              // If URL fails to load (e.g. invalid URL), clear preview
-                              // For data URIs, this is less likely but good practice
                               if (logoPreview?.startsWith('http')) setLogoPreview(null);
                             }}
                             data-ai-hint="school logo"
@@ -226,3 +223,4 @@ export function SchoolProfileForm() {
     </Card>
   );
 }
+
