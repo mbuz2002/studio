@@ -109,7 +109,9 @@ export function PrintOptionsDialog({
     <>
       <div className="flex items-center space-x-2">
         <Checkbox id="showRPPLearningObjectives" checked={options.showRPPLearningObjectives} onCheckedChange={() => handleCheckboxChange("showRPPLearningObjectives")} />
-        <Label htmlFor="showRPPLearningObjectives">Tujuan Pembelajaran</Label>
+        <Label htmlFor="showRPPLearningObjectives">
+            {itemCurriculumType === "Kurikulum Merdeka" ? "Alur Tujuan Pembelajaran (ATP)" : "Tujuan Pembelajaran"}
+        </Label>
       </div>
       <div className="flex items-center space-x-2">
         <Checkbox id="showRPPAlokasiWaktu" checked={options.showRPPAlokasiWaktu} onCheckedChange={() => handleCheckboxChange("showRPPAlokasiWaktu")} />

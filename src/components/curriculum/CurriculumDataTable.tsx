@@ -131,11 +131,12 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
     }
     
     contentHtml += `<div class="doc-info">
-        <h2>${item.title} (${item.type})</h2>
+        <h2>${item.title} (${item.type === 'RPP' && item.curriculumType === 'Kurikulum Merdeka' ? 'Modul Ajar' : item.type})</h2>
         <table class="info-table">
             <tr><td>Kurikulum</td><td>: ${item.curriculumType}</td></tr>
             <tr><td>Mata Pelajaran</td><td>: ${item.subject}</td></tr>
             <tr><td>Jenjang/Fase/Kelas</td><td>: ${item.gradeLevel}</td></tr>
+             ${item.type === 'RPP' && (item as LessonPlan).alokasiWaktuJP && options.showRPPAlokasiWaktu ? `<tr><td>Alokasi Waktu</td><td>: ${(item as LessonPlan).alokasiWaktuJP}</td></tr>` : ''}
             <tr><td>Penyusun</td><td>: ${creatorName}</td></tr>
             <tr><td>Terakhir Diperbarui</td><td>: ${isClient ? format(new Date(item.updatedAt), "dd MMMM yyyy, HH:mm", { locale: indonesianLocale }) : item.updatedAt}</td></tr>
         </table>
@@ -145,53 +146,62 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
 
     if (item.type === 'RPP') {
         const rpp = item as LessonPlan;
+        let sectionCounter = 0;
+        const nextLetter = () => String.fromCharCode(65 + sectionCounter++);
+
+        if (rpp.curriculumType === "Kurikulum Merdeka" && options.showRPPCapaianPembelajaran && rpp.capaianPembelajaran && rpp.capaianPembelajaran.length > 0) {
+            contentHtml += `<h3>${nextLetter()}. Capaian Pembelajaran (CP)</h3><ul>`;
+            rpp.capaianPembelajaran.forEach(cp => contentHtml += `<li>${cp}</li>`);
+            contentHtml += `</ul>`;
+        }
+        
         if (options.showRPPLearningObjectives) {
-            contentHtml += `<h3>A. Tujuan Pembelajaran</h3><ul>`;
+            const heading = rpp.curriculumType === "Kurikulum Merdeka" ? "Alur Tujuan Pembelajaran (ATP) / Tujuan Pembelajaran (TP)" : "Tujuan Pembelajaran";
+            contentHtml += `<h3>${nextLetter()}. ${heading}</h3><ul>`;
             rpp.learningObjectives.forEach(obj => contentHtml += `<li>${obj}</li>`);
             contentHtml += `</ul>`;
         }
 
         if (rpp.curriculumType === "Kurikulum Merdeka") {
             if (options.showRPPPemahamanBermakna && rpp.pemahamanBermakna && rpp.pemahamanBermakna.length > 0) {
-                contentHtml += `<h3>B. Pemahaman Bermakna</h3><ul>`;
+                contentHtml += `<h3>${nextLetter()}. Pemahaman Bermakna</h3><ul>`;
                 rpp.pemahamanBermakna.forEach(pm => contentHtml += `<li>${pm}</li>`);
                 contentHtml += `</ul>`;
             }
             if (options.showRPPPertanyaanPemantik && rpp.pertanyaanPemantik && rpp.pertanyaanPemantik.length > 0) {
-                contentHtml += `<h3>C. Pertanyaan Pemantik</h3><ul>`;
+                contentHtml += `<h3>${nextLetter()}. Pertanyaan Pemantik</h3><ul>`;
                 rpp.pertanyaanPemantik.forEach(pp => contentHtml += `<li>${pp}</li>`);
                 contentHtml += `</ul>`;
             }
         } else { // KTSP or K-13
             if (options.showRPPSK && rpp.standarKompetensi && rpp.standarKompetensi.length > 0 && rpp.curriculumType === "KTSP 2006") {
-                contentHtml += `<h3>B. Standar Kompetensi</h3><ul>`;
+                contentHtml += `<h3>${nextLetter()}. Standar Kompetensi</h3><ul>`;
                 rpp.standarKompetensi.forEach(sk => contentHtml += `<li>${sk}</li>`);
                 contentHtml += `</ul>`;
             }
             if (options.showRPPKI && rpp.kompetensiInti && rpp.kompetensiInti.length > 0 && rpp.curriculumType === "K-13") {
-                 contentHtml += `<h3>B. Kompetensi Inti</h3><ul>`;
+                 contentHtml += `<h3>${nextLetter()}. Kompetensi Inti</h3><ul>`;
                  rpp.kompetensiInti.forEach(ki => contentHtml += `<li>${ki}</li>`);
                  contentHtml += `</ul>`;
             }
             if (options.showRPPKD && rpp.kompetensiDasar && rpp.kompetensiDasar.length > 0) {
-                 contentHtml += `<h3>C. Kompetensi Dasar</h3><ul>`;
+                 contentHtml += `<h3>${nextLetter()}. Kompetensi Dasar</h3><ul>`;
                  rpp.kompetensiDasar.forEach(kd => contentHtml += `<li>${kd}</li>`);
                  contentHtml += `</ul>`;
             }
             if (options.showRPPIPK && rpp.indikatorPencapaianKompetensi && rpp.indikatorPencapaianKompetensi.length > 0) {
-                contentHtml += `<h3>D. Indikator Pencapaian Kompetensi</h3><ul>`;
+                contentHtml += `<h3>${nextLetter()}. Indikator Pencapaian Kompetensi</h3><ul>`;
                 rpp.indikatorPencapaianKompetensi.forEach(ipk => contentHtml += `<li>${ipk}</li>`);
                 contentHtml += `</ul>`;
             }
              if (options.showRPPMetodePembelajaran && rpp.metodePembelajaran && rpp.metodePembelajaran.length > 0) {
-                contentHtml += `<h3>E. Metode Pembelajaran</h3><ul>`;
+                contentHtml += `<h3>${nextLetter()}. Metode Pembelajaran</h3><ul>`;
                 rpp.metodePembelajaran.forEach(metode => contentHtml += `<li>${metode}</li>`);
                 contentHtml += `</ul>`;
             }
         }
         
-        const langkahHeading = rpp.curriculumType === "Kurikulum Merdeka" ? "D" : "F";
-        contentHtml += `<h3>${langkahHeading}. Langkah-langkah Pembelajaran</h3>`;
+        contentHtml += `<h3>${nextLetter()}. Langkah-langkah Pembelajaran</h3>`;
         if (options.showRPPLangkahPendahuluan) {
             contentHtml += `<h4>1. Pendahuluan:</h4><ul>`;
             rpp.langkahPembelajaran.pendahuluan.forEach(act => contentHtml += `<li>${act}</li>`);
@@ -208,24 +218,27 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
             contentHtml += `</ul>`;
         }
         
-        const asesmenHeading = rpp.curriculumType === "Kurikulum Merdeka" ? "E" : "G";
         if (options.showRPPAssessment) {
-            contentHtml += `<h3>${asesmenHeading}. Asesmen/Penilaian</h3><p>${rpp.assessment}</p>`;
+            contentHtml += `<h3>${nextLetter()}. Asesmen/Penilaian</h3><p>${rpp.assessment}</p>`;
         }
 
         if (rpp.curriculumType === "Kurikulum Merdeka" && options.showRPPDifferentiationStrategies && rpp.differentiationStrategies && rpp.differentiationStrategies.length > 0) {
-            contentHtml += `<h3>F. Strategi Diferensiasi</h3><ul>`;
+            contentHtml += `<h3>${nextLetter()}. Strategi Diferensiasi</h3><ul>`;
             rpp.differentiationStrategies.forEach(strat => contentHtml += `<li>${strat}</li>`);
             contentHtml += `</ul>`;
         }
 
-        const mediaHeading = rpp.curriculumType === "Kurikulum Merdeka" ? "G" : "H";
         if (options.showRPPMaterials && rpp.materials) {
-            contentHtml += `<h3>${mediaHeading}. Media/Sumber Belajar</h3><p>${rpp.materials}</p>`;
+            contentHtml += `<h3>${nextLetter()}. Media/Sumber Belajar</h3><p>${rpp.materials}</p>`;
         }
     } else if (item.type === 'PROTA') {
         const prota = item as AnnualProgram;
         contentHtml += `<p><strong>Tahun Ajaran:</strong> ${prota.year}</p>`;
+        if (prota.curriculumType === "Kurikulum Merdeka" && options.showPROTACapaianPembelajaran && prota.capaianPembelajaran && prota.capaianPembelajaran.length > 0) {
+             contentHtml += `<p><strong>Capaian Pembelajaran Umum Tahunan:</strong></p><ul>`;
+             prota.capaianPembelajaran.forEach(cp => contentHtml += `<li>${cp}</li>`);
+             contentHtml += `</ul>`;
+        }
         if (prota.curriculumType === "Kurikulum Merdeka" && options.showPROTAFokusP5 && prota.profilPelajarPancasilaFocus && prota.profilPelajarPancasilaFocus.length > 0) {
             contentHtml += `<p><strong>Fokus Profil Pelajar Pancasila:</strong> ${prota.profilPelajarPancasilaFocus.join(', ')}</p>`;
         }
@@ -399,6 +412,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
         const inputForFlow: ExportRppToTextInput = {
           ...rppInput,
           learningObjectives: rppInput.learningObjectives || [],
+          capaianPembelajaran: rppInput.capaianPembelajaran || [],
           pemahamanBermakna: rppInput.pemahamanBermakna || [],
           pertanyaanPemantik: rppInput.pertanyaanPemantik || [],
           langkahPembelajaran: rppInput.langkahPembelajaran || { pendahuluan: [], kegiatanInti: [], penutup: [] },
@@ -410,6 +424,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
           kompetensiDasar: rppInput.kompetensiDasar,
           indikatorPencapaianKompetensi: rppInput.indikatorPencapaianKompetensi,
           metodePembelajaran: rppInput.metodePembelajaran,
+          alokasiWaktuJP: rppInput.alokasiWaktuJP
         };
         addLog("INFO", `Memanggil alur Genkit 'exportRppToText' untuk RPP "${item.title}" (${item.curriculumType}).`, logSource);
         const result = await exportRppToText(inputForFlow); 
@@ -423,6 +438,10 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
         protaText += `**Mata Pelajaran:** ${prota.subject}\n`;
         protaText += `**Jenjang/Fase/Kelas:** ${prota.gradeLevel}\n`;
         protaText += `**Tahun Ajaran:** ${prota.year}\n`;
+        if (prota.curriculumType === "Kurikulum Merdeka" && prota.capaianPembelajaran && prota.capaianPembelajaran.length > 0) {
+            protaText += `**Capaian Pembelajaran Umum Tahunan:**\n`;
+            prota.capaianPembelajaran.forEach(cp => protaText += `- ${cp}\n`);
+        }
         if (prota.curriculumType === "Kurikulum Merdeka" && prota.profilPelajarPancasilaFocus && prota.profilPelajarPancasilaFocus.length > 0) {
             protaText += `**Fokus Profil Pelajar Pancasila:** ${prota.profilPelajarPancasilaFocus.join(', ')}\n`;
         }

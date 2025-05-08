@@ -4,6 +4,7 @@
 
 /**
  * @fileOverview Mengekspor Rencana Pelaksanaan Pembelajaran (RPP) / Modul Ajar ke format teks terstruktur.
+ * Jika Kurikulum Merdeka, Tujuan Pembelajaran akan diformat sebagai Alur Tujuan Pembelajaran (ATP).
  *
  * - exportRppToText - Fungsi yang menghasilkan konten teks RPP.
  * - ExportRppToTextInput - Tipe input untuk fungsi exportRppToText.
@@ -26,17 +27,22 @@ const LessonPlanSchema = z.object({
   gradeLevel: z.string(),
   curriculumType: z.enum(["Kurikulum Merdeka", "K-13", "KTSP 2006"]), 
   topic: z.string(),
-  learningObjectives: z.array(z.string()),
+  learningObjectives: z.array(z.string()).describe("Untuk Kurikulum Merdeka: Daftar Tujuan Pembelajaran (TP) yang membentuk Alur Tujuan Pembelajaran (ATP). Untuk K-13/KTSP: Daftar Tujuan Pembelajaran yang diturunkan dari IPK."),
+  alokasiWaktuJP: z.string().optional(),
+  
   // Kurikulum Merdeka specific
+  capaianPembelajaran: z.array(z.string()).optional().describe("Capaian Pembelajaran (CP) yang relevan."),
   pemahamanBermakna: z.array(z.string()).describe("Pemahaman bermakna yang akan dibangun oleh siswa.").optional(),
   pertanyaanPemantik: z.array(z.string()).describe("Pertanyaan pemantik untuk diskusi.").optional(),
   differentiationStrategies: z.array(z.string()).optional(),
+  
   // KTSP / K-13 specific
   standarKompetensi: z.array(z.string()).optional(),
   kompetensiInti: z.array(z.string()).optional(),
   kompetensiDasar: z.array(z.string()).optional(),
   indikatorPencapaianKompetensi: z.array(z.string()).optional(),
   metodePembelajaran: z.array(z.string()).optional(),
+  
   // Common
   langkahPembelajaran: z.object({
     pendahuluan: z.array(z.string()),
@@ -86,24 +92,38 @@ Berikut adalah data RPP/MA yang perlu diformat:
 **Mata Pelajaran:** {{{subject}}}
 **Jenjang/Fase/Kelas:** {{{gradeLevel}}}
 **Topik/Materi Pembelajaran:** {{{topic}}}
+{{#if alokasiWaktuJP}}
+**Alokasi Waktu:** {{{alokasiWaktuJP}}}
+{{/if}}
 
 ---
 
-**A. TUJUAN PEMBELAJARAN**
+{{#if isKurikulumMerdeka}}
+  {{#if capaianPembelajaran.length}}
+  **A. CAPAIAN PEMBELAJARAN (CP)**
+  {{#each capaianPembelajaran}}
+  - {{{this}}}
+  {{/each}}
+  {{/if}}
+
+  **{{#if capaianPembelajaran.length}}B{{else}}A{{/if}}. ALUR TUJUAN PEMBELAJARAN (ATP) / TUJUAN PEMBELAJARAN (TP)**
+{{else}}
+  **A. TUJUAN PEMBELAJARAN**
+{{/if}}
 {{#each learningObjectives}}
 - {{{this}}}
 {{/each}}
 
 {{#if isKurikulumMerdeka}}
     {{#if pemahamanBermakna.length}}
-    **B. PEMAHAMAN BERMAKNA**
+    **{{#if capaianPembelajaran.length}}C{{else}}B{{/if}}. PEMAHAMAN BERMAKNA**
     {{#each pemahamanBermakna}}
     - {{{this}}}
     {{/each}}
     {{/if}}
 
     {{#if pertanyaanPemantik.length}}
-    **C. PERTANYAAN PEMANTIK**
+    **{{#if capaianPembelajaran.length}}{{#if pemahamanBermakna.length}}D{{else}}C{{/if}}{{else}}{{#if pemahamanBermakna.length}}C{{else}}B{{/if}}{{/if}}. PERTANYAAN PEMANTIK**
     {{#each pertanyaanPemantik}}
     - {{{this}}}
     {{/each}}
@@ -148,7 +168,7 @@ Berikut adalah data RPP/MA yang perlu diformat:
     {{/if}}
 {{/if}}
 
-**{{#if isKurikulumMerdeka}}D{{else}}F{{/if}}. LANGKAH-LANGKAH PEMBELAJARAN**
+**{{#if isKurikulumMerdeka}}{{#if capaianPembelajaran.length}}{{#if pemahamanBermakna.length}}{{#if pertanyaanPemantik.length}}E{{else}}D{{/if}}{{else}}{{#if pertanyaanPemantik.length}}D{{else}}C{{/if}}{{/if}}{{else}}{{#if pemahamanBermakna.length}}{{#if pertanyaanPemantik.length}}D{{else}}C{{/if}}{{else}}{{#if pertanyaanPemantik.length}}C{{else}}B{{/if}}{{/if}}{{/if}}{{else}}F{{/if}}. LANGKAH-LANGKAH PEMBELAJARAN**
 
   **1. Pendahuluan:**
   {{#each langkahPembelajaran.pendahuluan}}
@@ -165,12 +185,12 @@ Berikut adalah data RPP/MA yang perlu diformat:
     - {{{this}}}
   {{/each}}
 
-**{{#if isKurikulumMerdeka}}E{{else}}G{{/if}}. ASESMEN/PENILAIAN**
+**{{#if isKurikulumMerdeka}}{{#if capaianPembelajaran.length}}{{#if pemahamanBermakna.length}}{{#if pertanyaanPemantik.length}}F{{else}}E{{/if}}{{else}}{{#if pertanyaanPemantik.length}}E{{else}}D{{/if}}{{/if}}{{else}}{{#if pemahamanBermakna.length}}{{#if pertanyaanPemantik.length}}E{{else}}D{{/if}}{{else}}{{#if pertanyaanPemantik.length}}D{{else}}C{{/if}}{{/if}}{{/if}}{{else}}G{{/if}}. ASESMEN/PENILAIAN**
 {{{assessment}}}
 
 {{#if isKurikulumMerdeka}}
     {{#if differentiationStrategies.length}}
-    **F. STRATEGI DIFERENSIASI**
+    **{{#if capaianPembelajaran.length}}{{#if pemahamanBermakna.length}}{{#if pertanyaanPemantik.length}}G{{else}}F{{/if}}{{else}}{{#if pertanyaanPemantik.length}}F{{else}}E{{/if}}{{/if}}{{else}}{{#if pemahamanBermakna.length}}{{#if pertanyaanPemantik.length}}F{{else}}E{{/if}}{{else}}{{#if pertanyaanPemantik.length}}E{{else}}D{{/if}}{{/if}}{{/if}}. STRATEGI DIFERENSIASI**
     {{#each differentiationStrategies}}
     - {{{this}}}
     {{/each}}
@@ -178,7 +198,7 @@ Berikut adalah data RPP/MA yang perlu diformat:
 {{/if}}
 
 {{#if materials}}
-**{{#if isKurikulumMerdeka}}G{{else}}H{{/if}}. MEDIA/SUMBER BELAJAR**
+**{{#if isKurikulumMerdeka}}{{#if capaianPembelajaran.length}}{{#if pemahamanBermakna.length}}{{#if pertanyaanPemantik.length}}{{#if differentiationStrategies.length}}H{{else}}G{{/if}}{{else}}{{#if differentiationStrategies.length}}G{{else}}F{{/if}}{{/if}}{{else}}{{#if pertanyaanPemantik.length}}{{#if differentiationStrategies.length}}G{{else}}F{{/if}}{{else}}{{#if differentiationStrategies.length}}F{{else}}E{{/if}}{{/if}}{{/if}}{{else}}{{#if pemahamanBermakna.length}}{{#if pertanyaanPemantik.length}}{{#if differentiationStrategies.length}}G{{else}}F{{/if}}{{else}}{{#if differentiationStrategies.length}}F{{else}}E{{/if}}{{/if}}{{else}}{{#if pertanyaanPemantik.length}}{{#if differentiationStrategies.length}}F{{else}}E{{/if}}{{else}}{{#if differentiationStrategies.length}}E{{else}}D{{/if}}{{/if}}{{/if}}{{/if}}{{else}}H{{/if}}. MEDIA/SUMBER BELAJAR**
 - {{{materials}}}
 {{/if}}
 
@@ -199,6 +219,7 @@ const exportRppToTextFlow = ai.defineFlow(
   async (input: ExportRppToTextInput) => {
     const preparedInput = {
       ...input,
+      capaianPembelajaran: input.capaianPembelajaran || [],
       pemahamanBermakna: input.pemahamanBermakna || [],
       pertanyaanPemantik: input.pertanyaanPemantik || [],
       standarKompetensi: input.standarKompetensi || [],

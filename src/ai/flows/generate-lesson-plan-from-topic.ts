@@ -4,6 +4,7 @@
 
 /**
  * @fileOverview Membuat draf rencana pembelajaran (Modul Ajar/RPP) dari topik, jenjang, dan jenis kurikulum yang diberikan.
+ * Jika Kurikulum Merdeka dipilih, akan menghasilkan Alur Tujuan Pembelajaran (ATP) yang terintegrasi.
  *
  * - generateLessonPlanFromTopic - Fungsi yang membuat rencana pembelajaran.
  * - GenerateLessonPlanInput - Tipe input untuk fungsi generateLessonPlanFromTopic.
@@ -18,7 +19,7 @@ const GenerateLessonPlanInputSchema = z.object({
   topic: z.string().describe('Topik atau materi pembelajaran.'),
   jenjangFaseKelas: z.string().describe('Jenjang, fase, atau kelas sasaran (misalnya, "Fase D (Kelas 7 SMP)", "PAUD", "Kelas 10 SMAK").'),
   curriculumType: z.enum(["Kurikulum Merdeka", "K-13", "KTSP 2006"]).describe("Jenis kurikulum yang digunakan sebagai acuan (Kurikulum Merdeka, K-13, KTSP 2006)."),
-  capaianPembelajaran: z.array(z.string()).optional().describe("Capaian Pembelajaran (CP) yang relevan dengan topik, khusus untuk Kurikulum Merdeka. Akan digunakan AI untuk menghasilkan Tujuan Pembelajaran yang lebih selaras jika disediakan.")
+  capaianPembelajaran: z.array(z.string()).optional().describe("Capaian Pembelajaran (CP) yang relevan dengan topik. Untuk Kurikulum Merdeka, ini akan digunakan sebagai dasar utama untuk merumuskan Alur Tujuan Pembelajaran (ATP). Untuk kurikulum lain, ini dapat diabaikan atau digunakan sebagai konteks tambahan jika relevan.")
 });
 export type GenerateLessonPlanInput = z.infer<typeof GenerateLessonPlanInputSchema>;
 
@@ -33,8 +34,8 @@ const PromptInputSchema = GenerateLessonPlanInputSchema.extend({
 
 const GenerateLessonPlanOutputSchema = z.object({
   title: z.string().describe('Judul modul ajar/RPP yang menarik dan relevan.'),
-  learningObjectives: z.array(z.string()).describe('Tujuan pembelajaran (atau Capaian Pembelajaran/TP untuk Kurikulum Merdeka, Tujuan Pembelajaran berbasis IPK untuk K-13/KTSP) yang ingin dicapai.'),
-  alokasiWaktuJP: z.string().optional().describe("Estimasi alokasi waktu total untuk RPP ini dalam Jam Pelajaran, contoh: '2 JP' atau '3 x 40 menit'."),
+  learningObjectives: z.array(z.string()).describe('Untuk Kurikulum Merdeka: Daftar Tujuan Pembelajaran (TP) yang membentuk Alur Tujuan Pembelajaran (ATP). Untuk K-13/KTSP: Daftar Tujuan Pembelajaran yang diturunkan dari IPK.'),
+  alokasiWaktuJP: z.string().optional().describe("Estimasi alokasi waktu total untuk RPP/Modul Ajar ini dalam Jam Pelajaran, contoh: '2 JP' atau '3 x 40 menit'."),
   
   // Kurikulum Merdeka specific
   pemahamanBermakna: z.array(z.string()).optional().describe('Deskripsi pemahaman bermakna (Kurikulum Merdeka).'),
@@ -65,11 +66,10 @@ export async function generateLessonPlanFromTopic(input: GenerateLessonPlanInput
     isKTSP2006: input.curriculumType === "KTSP 2006",
     isK13OrKTSP: input.curriculumType === "K-13" || input.curriculumType === "KTSP 2006",
   };
-  // Ensure capaianPembelajaran is an array for the prompt, even if undefined in input
   const promptInputWithFlags = { 
     ...input, 
     ...curriculumFlags,
-    capaianPembelajaran: input.capaianPembelajaran || [], // Ensure it's an array
+    capaianPembelajaran: input.capaianPembelajaran || [], 
   };
   return generateLessonPlanFromTopicFlow(promptInputWithFlags);
 }
@@ -78,28 +78,26 @@ const prompt = ai.definePrompt({
   name: 'generateLessonPlanFromTopicPrompt',
   input: {schema: PromptInputSchema}, 
   output: {schema: GenerateLessonPlanOutputSchema},
-  prompt: `Anda adalah seorang guru berpengalaman yang ahli dalam menyusun Modul Ajar (MA) atau Rencana Pelaksanaan Pembelajaran (RPP) Plus.
+  prompt: `Anda adalah seorang guru berpengalaman yang ahli dalam menyusun Modul Ajar (MA) untuk Kurikulum Merdeka atau Rencana Pelaksanaan Pembelajaran (RPP) Plus untuk K-13/KTSP.
 Buatlah draf Modul Ajar/RPP untuk:
 
 Topik: {{{topic}}}
 Jenjang/Fase/Kelas: {{{jenjangFaseKelas}}}
 Kurikulum Acuan: {{{curriculumType}}}
-{{#if isKurikulumMerdeka}}
 {{#if capaianPembelajaran.length}}
-Capaian Pembelajaran (CP) yang diberikan (gunakan sebagai acuan utama untuk Tujuan Pembelajaran):
+Capaian Pembelajaran (CP) yang diberikan (gunakan sebagai acuan utama):
 {{#each capaianPembelajaran}}
 - {{{this}}}
 {{/each}}
-{{/if}}
 {{/if}}
 
 Modul Ajar/RPP harus mencakup komponen inti berikut, disesuaikan dengan kurikulum yang dipilih:
 
 1.  **Judul Modul Ajar/RPP**: Judul yang menarik, jelas, dan relevan.
-2.  **Tujuan Pembelajaran**: 
-    *   Untuk Kurikulum Merdeka: Rumuskan Tujuan Pembelajaran (TP) yang merupakan turunan dari Capaian Pembelajaran (CP) atau Alur Tujuan Pembelajaran (ATP). {{#if capaianPembelajaran.length}}Gunakan CP yang diberikan di atas sebagai dasar utama.{{else}}Jika tidak ada CP spesifik yang diberikan, buatlah TP yang relevan dengan topik dan jenjang.{{/if}}
-    *   Untuk K-13/KTSP: Rumuskan tujuan pembelajaran berdasarkan Indikator Pencapaian Kompetensi (IPK) yang diturunkan dari Kompetensi Dasar (KD).
-3.  **Alokasi Waktu (JP)**: Berikan estimasi alokasi waktu total untuk RPP ini dalam Jam Pelajaran (JP), contoh: "2 JP" atau "3 x 45 menit".
+2.  **{{#if isKurikulumMerdeka}}Alur Tujuan Pembelajaran (ATP){{else}}Tujuan Pembelajaran{{/if}}**: 
+    *   Untuk Kurikulum Merdeka: Rumuskan Alur Tujuan Pembelajaran (ATP) yang terdiri dari serangkaian Tujuan Pembelajaran (TP). TP ini harus merupakan turunan dari Capaian Pembelajaran (CP) yang diberikan. Jika CP tidak diberikan, buatlah TP yang relevan dengan topik dan jenjang. Sajikan TP ini sebagai daftar dalam field 'learningObjectives'.
+    *   Untuk K-13/KTSP: Rumuskan tujuan pembelajaran berdasarkan Indikator Pencapaian Kompetensi (IPK) yang diturunkan dari Kompetensi Dasar (KD). Sajikan tujuan ini sebagai daftar dalam field 'learningObjectives'.
+3.  **Alokasi Waktu (JP)**: Berikan estimasi alokasi waktu total untuk RPP/Modul Ajar ini dalam Jam Pelajaran (JP), contoh: "2 JP" atau "3 x 45 menit".
 4.  {{#if isKurikulumMerdeka}}
     **Pemahaman Bermakna**: Jelaskan manfaat atau pemahaman penting yang akan diperoleh peserta didik.
     **Pertanyaan Pemantik**: Susun beberapa pertanyaan yang dapat memantik rasa ingin tahu.
@@ -123,20 +121,20 @@ Modul Ajar/RPP harus mencakup komponen inti berikut, disesuaikan dengan kurikulu
     {{/if}}
 
 Pastikan output yang dihasilkan sesuai dengan skema JSON yang diharapkan, menggunakan Bahasa Indonesia yang baik dan benar, serta istilah-istilah yang lazim dalam kurikulum yang dipilih. Kosongkan field opsional jika tidak relevan dengan kurikulum atau tidak dapat dihasilkan.
-Misalnya, 'pemahamanBermakna' hanya untuk 'Kurikulum Merdeka'. 'standarKompetensi' hanya untuk 'KTSP 2006'. 'kompetensiInti' hanya untuk 'K-13'. 'capaianPembelajaran' hanya relevan jika Kurikulum Merdeka.
+Contoh: 'pemahamanBermakna' hanya untuk 'Kurikulum Merdeka'. 'standarKompetensi' hanya untuk 'KTSP 2006'. 'kompetensiInti' hanya untuk 'K-13'.
+Field 'learningObjectives' harus berisi daftar Tujuan Pembelajaran (TP) jika Kurikulum Merdeka, atau daftar Tujuan Pembelajaran reguler jika K-13/KTSP.
 `,
 });
 
 const generateLessonPlanFromTopicFlow = ai.defineFlow(
   {
     name: 'generateLessonPlanFromTopicFlow',
-    inputSchema: PromptInputSchema, // Flow input is the extended schema with flags
+    inputSchema: PromptInputSchema, 
     outputSchema: GenerateLessonPlanOutputSchema,
   },
-  async (promptInputWithFlags: z.infer<typeof PromptInputSchema>) => { // Use the correct input type
+  async (promptInputWithFlags: z.infer<typeof PromptInputSchema>) => { 
     const {output} = await prompt(promptInputWithFlags);
     
-    // Clean up optional fields not relevant to the curriculum type AFTER getting output
     if (output) {
         if (promptInputWithFlags.curriculumType !== "Kurikulum Merdeka") {
             delete output.pemahamanBermakna;

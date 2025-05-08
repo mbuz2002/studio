@@ -163,16 +163,39 @@ export function LessonPlanFormFields({
       {selectedCurriculum === "Kurikulum Merdeka" && (
         <div className="space-y-1">
           <Label htmlFor="capaianPembelajaran">Capaian Pembelajaran (CP) (satu per baris)</Label>
-          <Textarea id="capaianPembelajaran" name="capaianPembelajaran" value={formData.capaianPembelajaran?.join('\n') || ''} onChange={(e) => handleArrayChange('capaianPembelajaran', e.target.value)} placeholder="CP Elemen 1...&#10;CP Elemen 2..." />
-          <p className="text-xs text-muted-foreground">Masukkan CP yang relevan dengan topik ini. Akan digunakan AI untuk merumuskan Tujuan Pembelajaran.</p>
+          <Textarea 
+            id="capaianPembelajaran" 
+            name="capaianPembelajaran" 
+            value={formData.capaianPembelajaran?.join('\n') || ''} 
+            onChange={(e) => handleArrayChange('capaianPembelajaran', e.target.value)} 
+            placeholder="Contoh: Peserta didik mampu memahami konsep X dan Y dari elemen Z." 
+          />
+          <p className="text-xs text-muted-foreground">Masukkan CP yang relevan dengan topik ini. AI akan menggunakan CP ini untuk merumuskan Alur Tujuan Pembelajaran (ATP).</p>
         </div>
       )}
       
       {commonAIButton}
 
       <div className="space-y-1">
-        <Label htmlFor="learningObjectives">Tujuan Pembelajaran (satu per baris)</Label>
-        <Textarea id="learningObjectives" name="learningObjectives" value={formData.learningObjectives?.join('\n') || ''} onChange={(e) => handleArrayChange('learningObjectives', e.target.value)} placeholder="Tujuan 1&#10;Tujuan 2" />
+        <Label htmlFor="learningObjectives">
+          {selectedCurriculum === "Kurikulum Merdeka" 
+            ? "Tujuan Pembelajaran (TP) - Alur Tujuan Pembelajaran (ATP) (satu TP per baris)" 
+            : "Tujuan Pembelajaran (satu per baris)"}
+        </Label>
+        <Textarea 
+          id="learningObjectives" 
+          name="learningObjectives" 
+          value={formData.learningObjectives?.join('\n') || ''} 
+          onChange={(e) => handleArrayChange('learningObjectives', e.target.value)} 
+          placeholder={
+            selectedCurriculum === "Kurikulum Merdeka"
+            ? "TP 1: Peserta didik dapat menjelaskan...\nTP 2: Peserta didik dapat mengidentifikasi...\nTP 3: Peserta didik dapat menerapkan..."
+            : "Tujuan 1: Setelah pembelajaran, siswa dapat...\nTujuan 2: Siswa mampu..."
+          } 
+        />
+         {selectedCurriculum === "Kurikulum Merdeka" && (
+            <p className="text-xs text-muted-foreground">Masukkan Tujuan Pembelajaran (TP) secara berurutan untuk membentuk Alur Tujuan Pembelajaran (ATP). AI akan membantu menyusunnya dari CP yang diberikan.</p>
+         )}
       </div>
 
       {selectedCurriculum === "Kurikulum Merdeka" && (
@@ -248,3 +271,4 @@ export function LessonPlanFormFields({
     </>
   );
 }
+
