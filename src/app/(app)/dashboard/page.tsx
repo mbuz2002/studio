@@ -65,28 +65,28 @@ export default function DashboardPage() {
 
   return (
     <div className="container mx-auto py-6 md:py-8">
-      <Card className="mb-8 shadow-lg">
-        <CardHeader className="p-6 md:p-8">
+      <Card className="mb-8 shadow-lg rounded-lg">
+        <CardHeader className="p-6 md:p-8 bg-gradient-to-br from-primary to-accent text-primary-foreground rounded-t-lg">
            <div className="flex items-start gap-4 mb-2">
-            <LayoutDashboard className="h-10 w-10 text-primary flex-shrink-0 mt-1" />
+            <LayoutDashboard className="h-10 w-10 text-primary-foreground flex-shrink-0 mt-1" />
             <div>
               <CardTitle className="text-3xl md:text-4xl font-bold">Selamat Datang di EduAI Planner!</CardTitle>
-              <CardDescription className="text-lg md:text-xl text-muted-foreground mt-1">
+              <CardDescription className="text-lg md:text-xl text-primary-foreground/90 mt-1">
                 Asisten cerdas Anda untuk perencanaan dan manajemen kurikulum yang efisien.
               </CardDescription>
             </div>
           </div>
-          <p className="text-base text-muted-foreground">
-            Peran Anda saat ini: <span className="font-semibold text-primary">{user?.role}</span>
+          <p className="text-base text-primary-foreground/90">
+            Peran Anda saat ini: <span className="font-semibold">{user?.role}</span>
           </p>
         </CardHeader>
-        <CardContent className="p-6 md:p-8 pt-0">
+        <CardContent className="p-6 md:p-8 pt-4">
           <p className="mb-6 text-base">
             Buat, atur, dan tingkatkan Rencana Pelaksanaan Pembelajaran (RPP), Program Tahunan (PROTA), dan Program Semester (Promes) Anda secara efisien dengan kekuatan AI. 
             Mulai dengan menjelajahi fitur di bawah atau buat item kurikulum baru.
           </p>
           {canCreateNewPlan && (
-            <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground text-base">
+            <Button asChild size="lg" className="bg-gradient-to-r from-accent to-primary hover:from-accent/90 hover:to-primary/90 text-accent-foreground text-base shadow-md hover:shadow-lg transition-shadow">
               <Link href="/lesson-plans"> 
                 <PlusCircle className="mr-2 h-5 w-5" /> Buat Rencana Baru
               </Link>

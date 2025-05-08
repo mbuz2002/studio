@@ -195,19 +195,19 @@ export default function LessonPlansPage() {
 
   return (
     <div className="space-y-6 py-4 md:py-8">
-      <Card className="shadow-lg">
-        <CardHeader className="p-6">
+      <Card className="shadow-lg rounded-lg">
+        <CardHeader className="p-6 rounded-t-lg bg-gradient-to-br from-primary to-accent text-primary-foreground">
            <div className="flex items-center gap-3">
-            <BookOpenText className="h-8 w-8 text-primary" />
+            <BookOpenText className="h-8 w-8 text-primary-foreground drop-shadow-lg" />
             <CardTitle className="text-2xl md:text-3xl font-bold">Rencana Pembelajaran (RPP/Modul Ajar)</CardTitle>
           </div>
-          <CardDescription className="text-base md:text-lg text-muted-foreground mt-2">
+          <CardDescription className="text-base md:text-lg text-primary-foreground/90 mt-2">
             Kelola rencana pembelajaran Anda. 
             {user.role === "KepalaSekolah" || user.role === "WakaKurikulum" || user.role === "TataUsaha" ? " Anda dapat melihat semua RPP yang dibuat." : ""}
             {user.role === "Guru" ? " Buat baru, edit, atau lihat rincian RPP Anda." : ""}
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-6 pt-0">
+        <CardContent className="p-6 pt-4">
           <div className="flex flex-col sm:flex-row gap-3 mb-6 items-center">
             <div className="flex-grow w-full relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />

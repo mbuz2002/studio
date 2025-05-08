@@ -94,18 +94,18 @@ export function UserManagementSection() {
 
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+    <Card className="rounded-lg">
+      <CardHeader className="flex flex-row items-center justify-between rounded-t-lg bg-gradient-to-r from-secondary to-muted text-foreground">
         <div>
             <div className="flex items-center gap-2">
-                <Users className="h-6 w-6 text-primary" />
+                <Users className="h-6 w-6 text-primary drop-shadow" />
                 <CardTitle>Manajemen Pengguna</CardTitle>
             </div>
-            <CardDescription>Kelola akun pengguna yang memiliki akses ke sistem.</CardDescription>
+            <CardDescription className="text-muted-foreground">Kelola akun pengguna yang memiliki akses ke sistem.</CardDescription>
         </div>
         <AddUserDialog onUserAdded={handleAddUser} />
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-4">
         <div className="rounded-lg border shadow-sm overflow-x-auto">
           <Table>
             <TableHeader>

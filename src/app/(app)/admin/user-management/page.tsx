@@ -60,13 +60,13 @@ export default function UserManagementPage() {
 
   return (
     <div className="space-y-8 py-4 md:py-8">
-      <Card className="shadow-lg">
-        <CardHeader className="p-6">
+      <Card className="shadow-lg rounded-lg">
+        <CardHeader className="p-6 rounded-t-lg bg-gradient-to-br from-primary to-accent text-primary-foreground">
           <div className="flex items-center gap-4">
-            <Users className="h-10 w-10 text-primary flex-shrink-0" />
+            <Users className="h-10 w-10 text-primary-foreground drop-shadow-lg flex-shrink-0" />
             <div>
                 <CardTitle className="text-3xl md:text-4xl font-bold">Manajemen Pengguna</CardTitle>
-                <CardDescription className="text-lg md:text-xl text-muted-foreground mt-1">
+                <CardDescription className="text-lg md:text-xl text-primary-foreground/90 mt-1">
                     Kelola akun pengguna, peran, dan akses mereka ke sistem EduAI Planner.
                 </CardDescription>
             </div>

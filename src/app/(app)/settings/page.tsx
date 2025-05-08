@@ -40,8 +40,10 @@ export default function SettingsPage() {
   if (!user) {
     return (
        <div className="space-y-6 py-8">
-        <Card className="shadow-lg">
-          <CardHeader className="p-6"><CardTitle className="text-2xl md:text-3xl font-bold">Memuat Pengaturan...</CardTitle></CardHeader>
+        <Card className="shadow-lg rounded-lg">
+          <CardHeader className="p-6 rounded-t-lg bg-gradient-to-br from-primary to-accent text-primary-foreground">
+            <CardTitle className="text-2xl md:text-3xl font-bold">Memuat Pengaturan...</CardTitle>
+          </CardHeader>
           <CardContent className="p-6 pt-0"><p className="text-lg">Silakan tunggu...</p></CardContent>
         </Card>
       </div>
@@ -174,13 +176,13 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-8 py-4 md:py-8">
-      <Card className="shadow-lg">
-        <CardHeader className="p-6">
+      <Card className="shadow-lg rounded-lg">
+        <CardHeader className="p-6 rounded-t-lg bg-gradient-to-br from-primary to-accent text-primary-foreground">
           <div className="flex items-center gap-4">
-              <Cog className="h-10 w-10 text-primary flex-shrink-0" />
+              <Cog className="h-10 w-10 text-primary-foreground drop-shadow-lg flex-shrink-0" />
               <div>
                 <CardTitle className="text-3xl md:text-4xl font-bold">Pengaturan Akun</CardTitle>
-                <CardDescription className="text-lg md:text-xl text-muted-foreground mt-1">
+                <CardDescription className="text-lg md:text-xl text-primary-foreground/90 mt-1">
                     Kelola preferensi aplikasi dan pengaturan akun Anda.
                 </CardDescription>
               </div>
@@ -194,14 +196,14 @@ export default function SettingsPage() {
         </div>
       )}
       
-      <Card className="mt-6 shadow-md">
+      <Card className="mt-6 shadow-md rounded-lg">
         <CardHeader className="p-6">
             <CardTitle className="text-2xl font-semibold">Pengaturan Umum & Akun</CardTitle>
         </CardHeader>
         <CardContent className="p-6 pt-0">
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {canSeeProfileSettings && (
-              <Card className="shadow-sm">
+              <Card className="shadow-sm rounded-md">
                 <CardHeader className="p-5">
                   <div className="flex items-center gap-3">
                     <UserCircle className="h-7 w-7 text-primary" />
@@ -221,7 +223,7 @@ export default function SettingsPage() {
             )}
 
             {canSeeAppSettings && (
-              <Card className="shadow-sm">
+              <Card className="shadow-sm rounded-md">
                 <CardHeader className="p-5">
                  <div className="flex items-center gap-3">
                     <Palette className="h-7 w-7 text-primary" /> 
@@ -237,7 +239,7 @@ export default function SettingsPage() {
             )}
 
             {canManageData && (
-              <Card className="shadow-sm">
+              <Card className="shadow-sm rounded-md">
                 <CardHeader className="p-5">
                   <div className="flex items-center gap-3">
                     <Database className="h-7 w-7 text-primary" />
@@ -246,7 +248,7 @@ export default function SettingsPage() {
                   <CardDescription className="text-base text-muted-foreground">Ekspor atau impor semua data aplikasi.</CardDescription>
                 </CardHeader>
                 <CardContent className="p-5 pt-0">
-                  <Alert variant="destructive" className="mb-4 shadow-inner">
+                  <Alert variant="destructive" className="mb-4 shadow-inner rounded-md">
                     <FileText className="h-5 w-5"/>
                     <AlertTitle className="font-semibold">Penting!</AlertTitle>
                     <AlertDescription className="text-sm">
@@ -273,7 +275,7 @@ export default function SettingsPage() {
               </Card>
             )}
              {canManageUsers && (
-                <Card className="shadow-sm">
+                <Card className="shadow-sm rounded-md">
                 <CardHeader className="p-5">
                     <div className="flex items-center gap-3">
                         <Users className="h-7 w-7 text-primary" />
@@ -292,7 +294,7 @@ export default function SettingsPage() {
 
 
             {canSeeSystemSettings && (
-                <Card className="shadow-sm">
+                <Card className="shadow-sm rounded-md">
                 <CardHeader className="p-5">
                     <div className="flex items-center gap-3">
                         <ShieldCheck className="h-7 w-7 text-primary" />

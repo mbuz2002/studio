@@ -86,8 +86,8 @@ export default function AIAssistantPage() {
   if (!isClient || !user) {
     return (
       <div className="space-y-6 py-8">
-        <Card className="shadow-lg">
-          <CardHeader className="p-6">
+        <Card className="shadow-lg rounded-lg">
+          <CardHeader className="p-6 rounded-t-lg bg-gradient-to-br from-primary to-accent text-primary-foreground">
             <CardTitle className="text-2xl md:text-3xl font-bold">Memuat Asisten AI...</CardTitle>
           </CardHeader>
           <CardContent className="p-6 pt-0 flex items-center">
@@ -102,10 +102,10 @@ export default function AIAssistantPage() {
   return (
     <div className="container mx-auto py-6 md:py-8">
       <header className="mb-8">
-        <Card className="shadow-xl overflow-hidden">
-          <CardHeader className="bg-gradient-to-r from-primary to-accent p-6 md:p-8 text-primary-foreground">
+        <Card className="shadow-xl overflow-hidden rounded-lg">
+          <CardHeader className="bg-gradient-to-br from-primary via-accent to-secondary p-6 md:p-8 text-primary-foreground rounded-t-lg">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-              <Sparkles className="h-12 w-12 flex-shrink-0 text-background" />
+              <Sparkles className="h-12 w-12 flex-shrink-0 text-background drop-shadow-lg" />
               <div>
                 <CardTitle className="text-3xl md:text-4xl font-bold">Asisten AI Pembuatan Materi</CardTitle>
                 <CardDescription className="text-lg md:text-xl mt-1 text-primary-foreground/90">
@@ -119,7 +119,7 @@ export default function AIAssistantPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-1">
-          <Card className="shadow-lg sticky top-6">
+          <Card className="shadow-lg sticky top-6 rounded-lg">
             <CardHeader className="p-6">
               <CardTitle className="text-xl font-semibold">Parameter Materi Ajar</CardTitle>
               <CardDescription className="text-base text-muted-foreground">
@@ -165,7 +165,7 @@ export default function AIAssistantPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <Button type="submit" disabled={isGeneratingMaterial || !materialTopic || !materialGradeLevel} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground text-lg py-3 mt-4">
+                <Button type="submit" disabled={isGeneratingMaterial || !materialTopic || !materialGradeLevel} className="w-full bg-gradient-to-r from-accent to-primary hover:from-accent/90 hover:to-primary/90 text-accent-foreground text-lg py-3 mt-4 shadow-md hover:shadow-lg transition-shadow">
                   {isGeneratingMaterial ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <BookOpenCheck className="mr-2 h-5 w-5" />}
                   Buat Materi Ajar
                 </Button>
@@ -176,8 +176,8 @@ export default function AIAssistantPage() {
 
         <div className="lg:col-span-2">
           {isGeneratingMaterial && (
-            <Card className="shadow-lg animate-pulse">
-              <CardHeader className="p-6">
+            <Card className="shadow-lg animate-pulse rounded-lg">
+              <CardHeader className="p-6 rounded-t-lg">
                 <CardTitle className="text-2xl font-semibold text-muted-foreground">AI sedang meracik materi...</CardTitle>
                 <CardDescription className="text-base text-muted-foreground">Mohon tunggu sejenak.</CardDescription>
               </CardHeader>
@@ -191,8 +191,8 @@ export default function AIAssistantPage() {
           )}
 
           {generatedMaterial && !isGeneratingMaterial && (
-            <Card className="shadow-xl">
-              <CardHeader className="p-6 bg-muted/30 border-b">
+            <Card className="shadow-xl rounded-lg">
+              <CardHeader className="p-6 bg-muted/30 border-b rounded-t-lg">
                 <CardTitle className="text-2xl md:text-3xl text-primary font-bold">{generatedMaterial.materialTitle}</CardTitle>
                 <CardDescription className="text-base text-muted-foreground pt-1">
                   Berikut adalah draf materi ajar yang dihasilkan oleh AI. Silakan tinjau dan sesuaikan.
@@ -227,7 +227,7 @@ export default function AIAssistantPage() {
                             return !inline && match ? (
                               <pre className="bg-muted p-3 rounded-md overflow-x-auto my-4 text-sm"><code className={className} {...props}>{children}</code></pre>
                             ) : (
-                              <code className="bg-muted/70 px-1 py-0.5 rounded text-sm font-mono" {...props}>{children}</code>
+                              <code className="bg-muted/70 px-1 py-0.5 rounded text-sm font-roboto" {...props}>{children}</code>
                             )
                           }
                         }}
@@ -249,7 +249,7 @@ export default function AIAssistantPage() {
                       {generatedMaterial.suggestedSources.map((source, index) => {
                         const IconComponent = sourceIcons[source.type] || FileText;
                         return (
-                            <Card key={index} className="p-4 bg-card shadow-md hover:shadow-lg transition-shadow duration-200">
+                            <Card key={index} className="p-4 bg-card shadow-md hover:shadow-lg transition-shadow duration-200 rounded-md">
                                 <div className="flex items-start gap-4">
                                     <IconComponent className="h-7 w-7 text-accent flex-shrink-0 mt-1" />
                                     <div className="flex-grow">
@@ -276,7 +276,7 @@ export default function AIAssistantPage() {
                 </div>
               </CardContent>
               <CardFooter className="p-6 border-t">
-                 <Alert variant="default" className="border-primary/50 shadow-sm">
+                 <Alert variant="default" className="border-primary/50 shadow-sm rounded-md">
                     <Search className="h-5 w-5 text-primary" />
                     <AlertTitle className="font-semibold text-primary">Verifikasi & Sesuaikan</AlertTitle>
                     <AlertDescription className="text-base">
@@ -289,7 +289,7 @@ export default function AIAssistantPage() {
           )}
           
           {!generatedMaterial && !isGeneratingMaterial && (
-            <Card className="shadow-lg h-full flex flex-col items-center justify-center text-center p-8 bg-muted/20 border-2 border-dashed">
+            <Card className="shadow-lg h-full flex flex-col items-center justify-center text-center p-8 bg-muted/20 border-2 border-dashed rounded-lg">
                 <Sparkles className="h-16 w-16 text-muted-foreground/50 mb-4" />
                 <CardTitle className="text-2xl font-semibold text-muted-foreground">Hasil Materi Akan Muncul di Sini</CardTitle>
                 <CardDescription className="text-base text-muted-foreground mt-2 max-w-md">
@@ -328,4 +328,3 @@ if (typeof window !== 'undefined') {
   styleSheet.innerText = style;
   document.head.appendChild(styleSheet);
 }
-

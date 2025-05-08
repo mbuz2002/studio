@@ -117,13 +117,13 @@ export default function SystemLogsPage() {
 
   return (
     <div className="space-y-8 py-4 md:py-8">
-      <Card className="shadow-lg">
-        <CardHeader className="p-6">
+      <Card className="shadow-lg rounded-lg">
+        <CardHeader className="p-6 rounded-t-lg bg-gradient-to-br from-primary to-accent text-primary-foreground">
           <div className="flex items-center gap-4">
-            <Activity className="h-10 w-10 text-primary flex-shrink-0" />
+            <Activity className="h-10 w-10 text-primary-foreground drop-shadow-lg flex-shrink-0" />
             <div>
                 <CardTitle className="text-3xl md:text-4xl font-bold">Log Sistem Aplikasi</CardTitle>
-                <CardDescription className="text-lg md:text-xl text-muted-foreground mt-1">
+                <CardDescription className="text-lg md:text-xl text-primary-foreground/90 mt-1">
                     Tinjau aktivitas, kesalahan, dan peristiwa penting dalam sistem secara real-time.
                 </CardDescription>
             </div>
@@ -131,7 +131,7 @@ export default function SystemLogsPage() {
         </CardHeader>
       </Card>
 
-      <Card className="shadow-md">
+      <Card className="shadow-md rounded-md">
         <CardHeader className="p-6">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <CardTitle className="text-2xl font-semibold">Entri Log ({filteredLogs.length} / {contextLogs.length})</CardTitle>
@@ -188,7 +188,7 @@ export default function SystemLogsPage() {
                         log.level === "ERROR" ? "bg-destructive/10 hover:bg-destructive/15" : 
                         log.level === "WARN" ? "bg-yellow-500/10 hover:bg-yellow-500/15" : "hover:bg-muted/50"
                     }>
-                      <TableCell className="text-sm font-mono">
+                      <TableCell className="text-sm font-roboto">
                         {isClient ? format(log.timestamp, "dd MMM yyyy, HH:mm:ss.SSS", { locale: indonesianLocale }) : log.timestamp.toISOString()}
                       </TableCell>
                       <TableCell>
@@ -214,7 +214,7 @@ export default function SystemLogsPage() {
           )}
         </CardContent>
       </Card>
-        <Alert variant="default" className="mt-8 border-primary/50 shadow-md">
+        <Alert variant="default" className="mt-8 border-primary/50 shadow-md rounded-md">
             <Info className="h-6 w-6 text-primary" />
             <AlertTitle className="text-lg font-semibold">Tentang Log Sistem</AlertTitle>
             <AlertDescription className="text-base">

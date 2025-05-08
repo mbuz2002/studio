@@ -106,13 +106,13 @@ export default function AdminSystemSettingsPage() {
 
   return (
     <div className="space-y-8 py-4 md:py-8">
-      <Card className="shadow-lg">
-        <CardHeader className="p-6">
+      <Card className="shadow-lg rounded-lg">
+        <CardHeader className="p-6 rounded-t-lg bg-gradient-to-br from-primary to-accent text-primary-foreground">
           <div className="flex items-center gap-4">
-            <ShieldCheck className="h-10 w-10 text-primary flex-shrink-0" />
+            <ShieldCheck className="h-10 w-10 text-primary-foreground drop-shadow-lg flex-shrink-0" />
             <div>
                 <CardTitle className="text-3xl md:text-4xl font-bold">Pengaturan Sistem</CardTitle>
-                <CardDescription className="text-lg md:text-xl text-muted-foreground mt-1">
+                <CardDescription className="text-lg md:text-xl text-primary-foreground/90 mt-1">
                     Kelola konfigurasi inti dan pengaturan operasional aplikasi (Khusus Admin).
                 </CardDescription>
             </div>
@@ -121,7 +121,7 @@ export default function AdminSystemSettingsPage() {
       </Card>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <Card className="shadow-md">
+        <Card className="shadow-md rounded-md">
           <CardHeader className="p-5">
             <CardTitle className="text-xl font-semibold">Mode Perawatan</CardTitle>
             <CardDescription className="text-base text-muted-foreground">Aktifkan mode perawatan untuk menonaktifkan akses publik sementara.</CardDescription>
@@ -144,7 +144,7 @@ export default function AdminSystemSettingsPage() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-md">
+        <Card className="shadow-md rounded-md">
           <CardHeader className="p-5">
             <CardTitle className="text-xl font-semibold">Manajemen Kunci API</CardTitle>
             <CardDescription className="text-base text-muted-foreground">Kelola kunci API untuk integrasi layanan eksternal (misalnya, Genkit/Google AI).</CardDescription>
@@ -166,7 +166,7 @@ export default function AdminSystemSettingsPage() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-md">
+        <Card className="shadow-md rounded-md">
           <CardHeader className="p-5">
             <CardTitle className="text-xl font-semibold">Manajemen Cache</CardTitle>
             <CardDescription className="text-base text-muted-foreground">Kontrol cache aplikasi untuk memastikan data terbaru ditampilkan.</CardDescription>
@@ -181,7 +181,7 @@ export default function AdminSystemSettingsPage() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-md">
+        <Card className="shadow-md rounded-md">
           <CardHeader className="p-5">
             <CardTitle className="text-xl font-semibold">Log Sistem</CardTitle>
             <CardDescription className="text-base text-muted-foreground">Tinjau log aktivitas dan kesalahan sistem untuk pemecahan masalah.</CardDescription>
@@ -197,7 +197,7 @@ export default function AdminSystemSettingsPage() {
         </Card>
       </div>
 
-      <Alert variant="destructive" className="mt-8 shadow-md">
+      <Alert variant="destructive" className="mt-8 shadow-md rounded-md">
         <ShieldCheck className="h-6 w-6" />
         <AlertTitle className="text-lg font-semibold">Perhatian Keamanan</AlertTitle>
         <AlertDescription className="text-base">

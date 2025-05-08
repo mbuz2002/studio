@@ -118,17 +118,17 @@ export function SchoolProfileForm() {
   };
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="rounded-lg">
+      <CardHeader className="rounded-t-lg bg-gradient-to-r from-secondary to-muted text-foreground">
         <div className="flex items-center gap-2">
-          <Building className="h-6 w-6 text-primary" />
+          <Building className="h-6 w-6 text-primary drop-shadow" />
           <CardTitle>Profil Sekolah dan Pengaturan Kop Surat</CardTitle>
         </div>
-        <CardDescription>
+        <CardDescription className="text-muted-foreground">
           Kelola informasi umum mengenai sekolah Anda. Informasi ini juga akan digunakan untuk Kop Surat (Letterhead) pada dokumen yang dicetak.
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-4">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-1">
@@ -217,7 +217,7 @@ export function SchoolProfileForm() {
             )}
           </div>
 
-          <Button type="submit" disabled={isLoading} className="w-full sm:w-auto mt-6">
+          <Button type="submit" disabled={isLoading} className="w-full sm:w-auto mt-6 bg-gradient-to-r from-accent to-primary hover:from-accent/90 hover:to-primary/90 text-accent-foreground shadow-md hover:shadow-lg transition-shadow">
             <Save className="mr-2 h-4 w-4" />
             {isLoading ? "Menyimpan..." : "Simpan Perubahan Profil Sekolah"}
           </Button>
