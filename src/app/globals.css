@@ -100,47 +100,47 @@
   }
 
   .theme-ocean-breeze {
-    --background: 180 10% 96%; /* Very light cool gray */
-    --foreground: 210 29% 30%; /* Dark Slate Blue */
+    --background: 195 30% 96%; /* Lighter, slightly cyan-tinted off-white */
+    --foreground: 210 35% 35%; /* Slightly softer dark blue */
 
     --card: 0 0% 100%; /* White */
-    --card-foreground: 210 29% 30%;
+    --card-foreground: 210 35% 35%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 210 29% 30%;
+    --popover-foreground: 210 35% 35%;
 
-    --primary: 206 67% 62%; /* Lighter Blue */
+    --primary: 185 60% 50%;  /* Clear, medium aquamarine/cyan */
     --primary-foreground: 0 0% 100%; /* White */
 
-    --secondary: 206 44% 75%; /* Soft Blue-Gray */
-    --secondary-foreground: 210 29% 30%;
+    --secondary: 190 30% 88%; /* Softer, lighter cyan-gray */
+    --secondary-foreground: 185 50% 25%; /* Darker cyan for text on secondary */
 
-    --muted: 206 44% 85%; /* Lighter Soft Blue-Gray */
-    --muted-foreground: 210 29% 40%;
+    --muted: 190 30% 92%;    /* Very light cyan-gray */
+    --muted-foreground: 190 25% 50%; /* Muted cyan-gray text */
 
-    --accent: 168 50% 55%; /* Turquoise */
+    --accent: 170 65% 45%;   /* Deeper seafoam green/turquoise */
     --accent-foreground: 0 0% 100%; /* White */
 
     --destructive: 0 72% 51%; 
     --destructive-foreground: 0 0% 100%;
 
-    --border: 206 44% 80%; /* Border for soft blue-gray */
+    --border: 190 25% 85%;
     --input: 0 0% 100%; /* White input */
-    --ring: 206 67% 62%; /* Lighter Blue for rings */
+    --ring: 185 60% 50%; /* Match primary */
 
     /* Sidebar for Ocean Breeze */
-    --sidebar-background: 206 44% 90%; /* Light Soft Blue-Gray */
-    --sidebar-foreground: 210 29% 30%;
-    --sidebar-primary: 206 67% 62%;
+    --sidebar-background: 190 35% 92%; /* Very light cyan-gray */
+    --sidebar-foreground: 210 35% 35%;
+    --sidebar-primary: 185 60% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 206 44% 82%;
-    --sidebar-accent-foreground: 206 67% 62%;
-    --sidebar-border: 206 44% 78%;
-    --sidebar-ring: 206 67% 62%;
+    --sidebar-accent: 190 35% 85%;
+    --sidebar-accent-foreground: 185 60% 50%;
+    --sidebar-border: 190 30% 80%;
+    --sidebar-ring: 185 60% 50%;
 
-    --chart-1: 206 67% 62%; 
-    --chart-2: 168 50% 55%; 
-    --chart-3: 39 90% 51%;  
+    --chart-1: 185 60% 50%; 
+    --chart-2: 170 65% 45%; 
+    --chart-3: 45 85% 60%;  /* Sandy yellow/gold */
     --chart-4: 270 70% 65%; 
     --chart-5: 0 72% 51%;
   }
