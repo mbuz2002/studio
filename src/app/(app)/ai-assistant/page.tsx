@@ -204,35 +204,37 @@ export default function AIAssistantPage() {
                     <Book className="mr-2 h-5 w-5 text-primary" /> Konten Materi Ajar
                   </h3>
                   <Separator className="my-4" />
-                  <ScrollArea className="h-auto max-h-[70vh] rounded-md border p-4 shadow-inner bg-background">
-                    <ReactMarkdown
-                      className="markdown-content"
-                      remarkPlugins={[remarkGfm]}
-                      components={{
-                        table: ({node, ...props}) => <div className="overflow-x-auto"><table className="min-w-full divide-y divide-border my-4 text-sm" {...props} /></div>,
-                        thead: ({node, ...props}) => <thead className="bg-muted/50" {...props} />,
-                        th: ({node, ...props}) => <th className="px-4 py-2 text-left font-semibold text-foreground" {...props} />,
-                        td: ({node, ...props}) => <td className="px-4 py-2 text-foreground border-t border-border" {...props} />,
-                        p: ({node, ...props}) => <p className="mb-4 last:mb-0" {...props} />,
-                        h1: ({node, ...props}) => <h1 className="text-3xl font-bold mt-6 mb-3 pb-1 border-b border-border" {...props} />,
-                        h2: ({node, ...props}) => <h2 className="text-2xl font-semibold mt-5 mb-2 pb-1 border-b border-border" {...props} />,
-                        h3: ({node, ...props}) => <h3 className="text-xl font-semibold mt-4 mb-2" {...props} />,
-                        ul: ({node, ...props}) => <ul className="list-disc pl-6 mb-4 space-y-1" {...props} />,
-                        ol: ({node, ...props}) => <ol className="list-decimal pl-6 mb-4 space-y-1" {...props} />,
-                        li: ({node, ...props}) => <li className="mb-1" {...props} />,
-                        blockquote: ({node, ...props}) => <blockquote className="pl-4 border-l-4 border-accent italic text-muted-foreground my-4" {...props} />,
-                        code: ({node, inline, className, children, ...props}) => {
-                          const match = /language-(\w+)/.exec(className || '')
-                          return !inline && match ? (
-                            <pre className="bg-muted p-3 rounded-md overflow-x-auto my-4 text-sm"><code className={className} {...props}>{children}</code></pre>
-                          ) : (
-                            <code className="bg-muted/70 px-1 py-0.5 rounded text-sm font-mono" {...props}>{children}</code>
-                          )
-                        }
-                      }}
-                    >
-                      {generatedMaterial.materialContent}
-                    </ReactMarkdown>
+                  <ScrollArea className="h-auto max-h-[70vh] rounded-md border shadow-inner bg-background">
+                    <div className="p-4"> {/* Padding moved inside ScrollArea Viewport */}
+                      <ReactMarkdown
+                        className="markdown-content"
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          table: ({node, ...props}) => <div className="overflow-x-auto"><table className="min-w-full divide-y divide-border my-4 text-sm" {...props} /></div>,
+                          thead: ({node, ...props}) => <thead className="bg-muted/50" {...props} />,
+                          th: ({node, ...props}) => <th className="px-4 py-2 text-left font-semibold text-foreground" {...props} />,
+                          td: ({node, ...props}) => <td className="px-4 py-2 text-foreground border-t border-border" {...props} />,
+                          p: ({node, ...props}) => <p className="mb-4 last:mb-0" {...props} />,
+                          h1: ({node, ...props}) => <h1 className="text-3xl font-bold mt-6 mb-3 pb-1 border-b border-border" {...props} />,
+                          h2: ({node, ...props}) => <h2 className="text-2xl font-semibold mt-5 mb-2 pb-1 border-b border-border" {...props} />,
+                          h3: ({node, ...props}) => <h3 className="text-xl font-semibold mt-4 mb-2" {...props} />,
+                          ul: ({node, ...props}) => <ul className="list-disc pl-6 mb-4 space-y-1" {...props} />,
+                          ol: ({node, ...props}) => <ol className="list-decimal pl-6 mb-4 space-y-1" {...props} />,
+                          li: ({node, ...props}) => <li className="mb-1" {...props} />,
+                          blockquote: ({node, ...props}) => <blockquote className="pl-4 border-l-4 border-accent italic text-muted-foreground my-4" {...props} />,
+                          code: ({node, inline, className, children, ...props}) => {
+                            const match = /language-(\w+)/.exec(className || '')
+                            return !inline && match ? (
+                              <pre className="bg-muted p-3 rounded-md overflow-x-auto my-4 text-sm"><code className={className} {...props}>{children}</code></pre>
+                            ) : (
+                              <code className="bg-muted/70 px-1 py-0.5 rounded text-sm font-mono" {...props}>{children}</code>
+                            )
+                          }
+                        }}
+                      >
+                        {generatedMaterial.materialContent}
+                      </ReactMarkdown>
+                    </div>
                   </ScrollArea>
                 </div>
 
