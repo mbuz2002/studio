@@ -1,14 +1,15 @@
 
 "use client";
 
-import { useState, useEffect, type FormEvent } from "react";
+import React, { useState, useEffect, type FormEvent, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Sparkles, BookOpenCheck, ExternalLink, FileText, Video, Book, Newspaper, Globe, Search, TableIcon, Languages, MessageSquareWarning } from "lucide-react";
-import { generateTeachingMaterial, type GenerateTeachingMaterialInput, type GenerateTeachingMaterialOutput, type AISuggestedSource } from "@/ai/flows/generate-teaching-material";
+import { generateTeachingMaterial, type GenerateTeachingMaterialInput, type GenerateTeachingMaterialOutput } from "@/ai/flows/generate-teaching-material"; // AISuggestedSource removed as it is part of GenerateTeachingMaterialOutput
+import type { SuggestedSourceSchema as AISuggestedSource } from "@/ai/flows/generate-teaching-material"; // Keep this for type consistency
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLog } from "@/contexts/LogContext";
@@ -17,6 +18,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
+import type { CurriculumFramework } from "@/types";
 
 
 const detailLevels: { value: NonNullable<GenerateTeachingMaterialInput['detailLevel']>, label: string }[] = [
@@ -33,6 +35,20 @@ const sourceIcons: Record<AISuggestedSource['type'], React.ElementType> = {
     'website edukasi': Globe,
     'lainnya': FileText,
 };
+
+// Using Kurikulum Merdeka grade levels as AI Assistant is primarily focused on it
+const merdekaGradeLevels = [
+  { value: "PAUD (Kurikulum Merdeka)", label: "PAUD (Kurikulum Merdeka)" },
+  { value: "Fase A (Kelas 1-2 SD/MI)", label: "Fase A (Kelas 1-2 SD/MI)" },
+  { value: "Fase B (Kelas 3-4 SD/MI)", label: "Fase B (Kelas 3-4 SD/MI)" },
+  { value: "Fase C (Kelas 5-6 SD/MI)", label: "Fase C (Kelas 5-6 SD/MI)" },
+  { value: "Fase D (Kelas 7-9 SMP/MTs)", label: "Fase D (Kelas 7-9 SMP/MTs)" },
+  { value: "Fase E (Kelas 10 SMA/MA/SMK/MAK)", label: "Fase E (Kelas 10 SMA/MA/SMK/MAK)" },
+  { value: "Fase F (Kelas 11-12 SMA/MA/SMK/MAK)", label: "Fase F (Kelas 11-12 SMA/MA/SMK/MAK)" },
+  { value: "SLB (Fase A-F Disesuaikan)", label: "SLB (Fase A-F Disesuaikan)" },
+  { value: "Pendidikan Kesetaraan (Fase A-F Disesuaikan)", label: "Pendidikan Kesetaraan (Fase A-F Disesuaikan)" },
+];
+
 
 export default function AIAssistantPage() {
   const { toast } = useToast();
@@ -109,7 +125,7 @@ export default function AIAssistantPage() {
               <div>
                 <CardTitle className="text-3xl md:text-4xl font-bold tracking-tight">Asisten AI Pembuatan Materi</CardTitle>
                 <CardDescription className="text-lg md:text-xl mt-1.5 text-primary-foreground/90">
-                  Buat draf materi pembelajaran inovatif lengkap dengan sumber referensi yang disarankan AI.
+                  Buat draf materi pembelajaran inovatif lengkap dengan sumber referensi yang disarankan AI. Materi ini difokuskan untuk Kurikulum Merdeka.
                 </CardDescription>
               </div>
             </div>
@@ -133,22 +149,16 @@ export default function AIAssistantPage() {
                   <Input id="materialTopic" value={materialTopic} onChange={(e) => setMaterialTopic(e.target.value)} placeholder="cth., Revolusi Industri 4.0" className="text-base h-11 rounded-md focus:border-primary" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="materialGradeLevel" className="text-base font-medium">Jenjang/Fase/Kelas</Label>
-                  <Select value={materialGradeLevel} onValueChange={(value) => { if (value !== "placeholder") setMaterialGradeLevel(value); else setMaterialGradeLevel("");}}>
+                  <Label htmlFor="materialGradeLevel" className="text-base font-medium">Jenjang/Fase/Kelas (Kur. Merdeka)</Label>
+                  <Select value={materialGradeLevel} onValueChange={(value) => { if (value !== "placeholder-grade") setMaterialGradeLevel(value); else setMaterialGradeLevel("");}}>
                     <SelectTrigger id="materialGradeLevel" className="text-base h-11 rounded-md focus:border-primary">
                       <SelectValue placeholder="Pilih Jenjang/Fase/Kelas" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="placeholder" disabled>Pilih Jenjang/Fase/Kelas</SelectItem>
-                      <SelectItem value="PAUD">PAUD</SelectItem>
-                      <SelectItem value="Fase A (Kelas 1-2 SD)">Fase A (Kelas 1-2 SD)</SelectItem>
-                      <SelectItem value="Fase B (Kelas 3-4 SD)">Fase B (Kelas 3-4 SD)</SelectItem>
-                      <SelectItem value="Fase C (Kelas 5-6 SD)">Fase C (Kelas 5-6 SD)</SelectItem>
-                      <SelectItem value="Fase D (Kelas 7-9 SMP)">Fase D (Kelas 7-9 SMP)</SelectItem>
-                      <SelectItem value="Fase E (Kelas 10 SMA/SMK)">Fase E (Kelas 10 SMA/SMK)</SelectItem>
-                      <SelectItem value="Fase F (Kelas 11-12 SMA/SMK)">Fase F (Kelas 11-12 SMA/SMK)</SelectItem>
-                      <SelectItem value="SLB">SLB (disesuaikan)</SelectItem>
-                      <SelectItem value="Pendidikan Kesetaraan">Pendidikan Kesetaraan (Paket A/B/C)</SelectItem>
+                      <SelectItem value="placeholder-grade" disabled>Pilih Jenjang/Fase/Kelas</SelectItem>
+                       {merdekaGradeLevels.map(option => (
+                        <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>

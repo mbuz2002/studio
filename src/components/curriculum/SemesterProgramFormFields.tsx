@@ -1,6 +1,7 @@
 
 "use client";
 
+import React, { useEffect, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,6 +24,37 @@ interface SemesterProgramFormFieldsProps {
   handleGenerateWithAI: () => Promise<void>;
 }
 
+const merdekaGradeLevels = [
+  { value: "PAUD (Kurikulum Merdeka)", label: "PAUD (Kurikulum Merdeka)" },
+  { value: "Fase A (Kelas 1-2 SD/MI)", label: "Fase A (Kelas 1-2 SD/MI)" },
+  { value: "Fase B (Kelas 3-4 SD/MI)", label: "Fase B (Kelas 3-4 SD/MI)" },
+  { value: "Fase C (Kelas 5-6 SD/MI)", label: "Fase C (Kelas 5-6 SD/MI)" },
+  { value: "Fase D (Kelas 7-9 SMP/MTs)", label: "Fase D (Kelas 7-9 SMP/MTs)" },
+  { value: "Fase E (Kelas 10 SMA/MA/SMK/MAK)", label: "Fase E (Kelas 10 SMA/MA/SMK/MAK)" },
+  { value: "Fase F (Kelas 11-12 SMA/MA/SMK/MAK)", label: "Fase F (Kelas 11-12 SMA/MA/SMK/MAK)" },
+  { value: "SLB (Fase A-F Disesuaikan)", label: "SLB (Fase A-F Disesuaikan)" },
+  { value: "Pendidikan Kesetaraan (Fase A-F Disesuaikan)", label: "Pendidikan Kesetaraan (Fase A-F Disesuaikan)" },
+];
+
+const k13KtspGradeLevels = [
+  { value: "PAUD (K13/KTSP)", label: "PAUD (K13/KTSP)" },
+  { value: "Kelas I SD/MI", label: "Kelas I SD/MI" },
+  { value: "Kelas II SD/MI", label: "Kelas II SD/MI" },
+  { value: "Kelas III SD/MI", label: "Kelas III SD/MI" },
+  { value: "Kelas IV SD/MI", label: "Kelas IV SD/MI" },
+  { value: "Kelas V SD/MI", label: "Kelas V SD/MI" },
+  { value: "Kelas VI SD/MI", label: "Kelas VI SD/MI" },
+  { value: "Kelas VII SMP/MTs", label: "Kelas VII SMP/MTs" },
+  { value: "Kelas VIII SMP/MTs", label: "Kelas VIII SMP/MTs" },
+  { value: "Kelas IX SMP/MTs", label: "Kelas IX SMP/MTs" },
+  { value: "Kelas X SMA/MA/SMK/MAK", label: "Kelas X SMA/MA/SMK/MAK" },
+  { value: "Kelas XI SMA/MA/SMK/MAK", label: "Kelas XI SMA/MA/SMK/MAK" },
+  { value: "Kelas XII SMA/MA/SMK/MAK", label: "Kelas XII SMA/MA/SMK/MAK" },
+  { value: "SLB (Kelas 1-12 Disesuaikan)", label: "SLB (Kelas 1-12 Disesuaikan)" },
+  { value: "Pendidikan Kesetaraan (Paket A/B/C)", label: "Pendidikan Kesetaraan (Paket A/B/C)" },
+];
+
+
 export function SemesterProgramFormFields({
   formData,
   handleChange,
@@ -32,6 +64,21 @@ export function SemesterProgramFormFields({
   isGeneratingAI,
   handleGenerateWithAI,
 }: SemesterProgramFormFieldsProps) {
+
+  const currentGradeLevelOptions = useMemo(() => {
+    if (selectedCurriculum === "Kurikulum Merdeka") {
+      return merdekaGradeLevels;
+    }
+    return k13KtspGradeLevels;
+  }, [selectedCurriculum]);
+
+  useEffect(() => {
+    // Reset gradeLevel if current selection is not valid for the new curriculum
+    if (formData.gradeLevel && !currentGradeLevelOptions.find(opt => opt.value === formData.gradeLevel)) {
+      handleSelectChange('gradeLevel', ''); // Clear the grade level
+    }
+  }, [selectedCurriculum, currentGradeLevelOptions, formData.gradeLevel, handleSelectChange]);
+
 
    const commonAIButton = (
       <div className="my-4">
@@ -82,20 +129,15 @@ export function SemesterProgramFormFields({
        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-1">
             <Label htmlFor="gradeLevel">Jenjang/Fase/Kelas</Label>
-            <Select value={formData.gradeLevel || ''} onValueChange={(value) => handleSelectChange('gradeLevel', value)}>
+             <Select value={formData.gradeLevel || ''} onValueChange={(value) => handleSelectChange('gradeLevel', value === "placeholder-grade" ? "" : value)}>
                 <SelectTrigger id="gradeLevel">
                     <SelectValue placeholder="Pilih Jenjang/Fase/Kelas" />
                 </SelectTrigger>
                 <SelectContent>
-                    <SelectItem value="PAUD">PAUD</SelectItem>
-                    <SelectItem value="Fase A (Kelas 1-2 SD)">Fase A (Kelas 1-2 SD)</SelectItem>
-                    <SelectItem value="Fase B (Kelas 3-4 SD)">Fase B (Kelas 3-4 SD)</SelectItem>
-                    <SelectItem value="Fase C (Kelas 5-6 SD)">Fase C (Kelas 5-6 SD)</SelectItem>
-                    <SelectItem value="Fase D (Kelas 7-9 SMP)">Fase D (Kelas 7-9 SMP)</SelectItem>
-                    <SelectItem value="Fase E (Kelas 10 SMA/SMK)">Fase E (Kelas 10 SMA/SMK)</SelectItem>
-                    <SelectItem value="Fase F (Kelas 11-12 SMA/SMK)">Fase F (Kelas 11-12 SMA/SMK)</SelectItem>
-                    <SelectItem value="SLB">SLB (disesuaikan)</SelectItem>
-                    <SelectItem value="Pendidikan Kesetaraan">Pendidikan Kesetaraan</SelectItem>
+                    <SelectItem value="placeholder-grade" disabled>Pilih Jenjang/Fase/Kelas</SelectItem>
+                    {currentGradeLevelOptions.map(option => (
+                        <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                    ))}
                 </SelectContent>
             </Select>
         </div>
