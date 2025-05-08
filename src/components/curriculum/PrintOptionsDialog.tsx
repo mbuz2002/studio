@@ -23,7 +23,7 @@ interface PrintOptionsDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   itemType: AnyCurriculumItem['type'];
-  itemCurriculumType: CurriculumFramework; // Added prop for item's curriculum type
+  itemCurriculumType: CurriculumFramework; 
   defaultOptions: PrintOptions;
   onSubmit: (options: PrintOptions) => void;
   hasSchoolProfile: boolean; 
@@ -33,7 +33,7 @@ export function PrintOptionsDialog({
   isOpen,
   onOpenChange,
   itemType,
-  itemCurriculumType, // Use item's curriculum type
+  itemCurriculumType, 
   defaultOptions,
   onSubmit,
   hasSchoolProfile, 
@@ -45,8 +45,41 @@ export function PrintOptionsDialog({
     if (!hasSchoolProfile) {
       initialOpts.showKopSurat = false;
     }
+    // Conditionally enable/disable RPP fields based on itemCurriculumType
+    if (itemType === 'RPP') {
+        if (itemCurriculumType === "Kurikulum Merdeka") {
+            initialOpts.showRPPSK = false;
+            initialOpts.showRPPKI = false;
+            initialOpts.showRPPKD = false; // KM typically doesn't use KD in RPP structure
+            initialOpts.showRPPIPK = false;
+            initialOpts.showRPPMetodePembelajaran = false; // Less emphasized in KM structure
+            initialOpts.showRPPPemahamanBermakna = true;
+            initialOpts.showRPPPertanyaanPemantik = true;
+            initialOpts.showRPPDifferentiationStrategies = true;
+        } else if (itemCurriculumType === "K-13") {
+            initialOpts.showRPPSK = false; // K-13 uses KI/KD
+            initialOpts.showRPPPemahamanBermakna = false;
+            initialOpts.showRPPPertanyaanPemantik = false;
+            initialOpts.showRPPDifferentiationStrategies = false;
+            initialOpts.showRPPKI = true;
+            initialOpts.showRPPKD = true;
+            initialOpts.showRPPIPK = true;
+            initialOpts.showRPPMetodePembelajaran = true;
+        } else if (itemCurriculumType === "KTSP 2006") {
+            initialOpts.showRPPKI = false; // KTSP uses SK/KD
+            initialOpts.showRPPPemahamanBermakna = false;
+            initialOpts.showRPPPertanyaanPemantik = false;
+            initialOpts.showRPPDifferentiationStrategies = false;
+            initialOpts.showRPPSK = true;
+            initialOpts.showRPPKD = true;
+            initialOpts.showRPPIPK = true;
+            initialOpts.showRPPMetodePembelajaran = true;
+        }
+    }
+
+
     setOptions(initialOpts);
-  }, [defaultOptions, isOpen, hasSchoolProfile]);
+  }, [defaultOptions, isOpen, hasSchoolProfile, itemType, itemCurriculumType]);
 
   const handleCheckboxChange = (optionKey: keyof PrintOptions) => {
     setOptions((prev) => ({
@@ -220,3 +253,4 @@ export function PrintOptionsDialog({
     </Dialog>
   );
 }
+

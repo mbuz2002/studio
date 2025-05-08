@@ -640,7 +640,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
             isOpen={isPrintOptionsOpen}
             onOpenChange={setIsPrintOptionsOpen}
             itemType={itemToPrint.type}
-            itemCurriculumType={itemToPrint.curriculumType} 
+            itemCurriculumType={itemToPrint.curriculumType} // Pass the specific item's curriculum type
             defaultOptions={currentPrintOptions}
             onSubmit={handleFinalizePrint}
             hasSchoolProfile={!!schoolProfile} 

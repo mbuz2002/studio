@@ -42,52 +42,43 @@ interface CurriculumFormDialogProps {
   onOpenChange?: (open: boolean) => void; 
 }
 
-const defaultLessonPlan: Omit<LessonPlan, 'id' | 'createdAt' | 'updatedAt' | 'createdByUserId'> = {
+// Base default structures for initializing the form for NEW items
+const baseRppData: Omit<LessonPlan, 'id' | 'createdAt' | 'updatedAt' | 'createdByUserId' | 'curriculumType'> = {
   type: 'RPP', title: '', subject: '', gradeLevel: '', topic: '',
   learningObjectives: [],
-  pemahamanBermakna: [],
-  pertanyaanPemantik: [],
   langkahPembelajaran: { pendahuluan: [], kegiatanInti: [], penutup: [] },
   assessment: '',
-  differentiationStrategies: [],
   materials: '',
-  curriculumType: "Kurikulum Merdeka", // Default to Merdeka
-  standarKompetensi: [],
-  kompetensiInti: [],
-  kompetensiDasar: [],
-  indikatorPencapaianKompetensi: [],
-  metodePembelajaran: [],
+  // Curriculum-specific fields will be added/initialized based on selectedCurriculum
 };
 
-const defaultAnnualProgram: Omit<AnnualProgram, 'id' | 'createdAt' | 'updatedAt' | 'createdByUserId'> = {
+const baseProtaData: Omit<AnnualProgram, 'id' | 'createdAt' | 'updatedAt' | 'createdByUserId' | 'curriculumType'> = {
   type: 'PROTA', title: '', subject: '', gradeLevel: '', year: '',
   semester1Components: [],
   semester2Components: [],
-  profilPelajarPancasilaFocus: [],
-  curriculumType: "Kurikulum Merdeka",
+  // profilPelajarPancasilaFocus might be added based on curriculum
 };
 
-const defaultSemesterProgram: Omit<SemesterProgram, 'id' | 'createdAt' | 'updatedAt' | 'createdByUserId'> = {
+const basePromesData: Omit<SemesterProgram, 'id' | 'createdAt' | 'updatedAt' | 'createdByUserId' | 'curriculumType'> = {
   type: 'Promes', title: '', subject: '', gradeLevel: '', semester: '1', year: '',
   capaianPembelajaranUmum: '',
   alokasiWaktuTotalSemester: '',
   komponenMingguan: [],
-  curriculumType: "Kurikulum Merdeka",
 };
 
 
 type ProtaFormState = {
   profilPelajarPancasilaFocus_textarea?: string;
   semester1_topics_textarea?: string;
-  semester1_elements_textarea?: string; // Will hold CP for Merdeka, KD for KTSP/K13
+  semester1_elements_textarea?: string; 
   semester1_allocations_textarea?: string;
   semester2_topics_textarea?: string;
-  semester2_elements_textarea?: string; // Will hold CP for Merdeka, KD for KTSP/K13
+  semester2_elements_textarea?: string; 
   semester2_allocations_textarea?: string;
 };
 
 type PromesFormState = {
-  capaianPembelajaranUmum_textarea?: string; // CP for Merdeka, SK/KD summary for KTSP/K13
+  capaianPembelajaranUmum_textarea?: string; 
   alokasiWaktuTotalSemester_input?: string;
   komponenMingguan_textarea?: string; 
 };
@@ -104,13 +95,14 @@ export function CurriculumFormDialog({
   onOpenChange,
 }: CurriculumFormDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [formData, setFormData] = useState<Partial<AnyCurriculumItem> & ProtaFormState & PromesFormState>({});
+  // formData now holds all possible fields, including curriculum-specific ones and textarea helpers
+  const [formData, setFormData] = useState<Partial<LessonPlan & AnnualProgram & SemesterProgram & ProtaFormState & PromesFormState>>({});
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
   const { addLog } = useLog(); 
   const { defaultCurriculum, availableCurriculums } = useCurriculum();
-  const [selectedCurriculum, setSelectedCurriculum] = useState<CurriculumFramework>(defaultCurriculum);
+  const [selectedCurriculum, setSelectedCurriculum] = useState<CurriculumFramework>(initialData?.curriculumType || defaultCurriculum);
 
 
   useEffect(() => {
@@ -121,56 +113,35 @@ export function CurriculumFormDialog({
 
   useEffect(() => {
     if (isOpen) {
-      let baseData: Partial<AnyCurriculumItem> = {};
-      let protaTextareaData: ProtaFormState = {};
-      let promesTextareaData: PromesFormState = {};
-      
-      const currentCurriculum = initialData?.curriculumType || defaultCurriculum;
-      setSelectedCurriculum(currentCurriculum);
+      let combinedData: Partial<LessonPlan & AnnualProgram & SemesterProgram & ProtaFormState & PromesFormState> = {};
+      const currentCurriculumOnOpen = initialData?.curriculumType || defaultCurriculum;
+      setSelectedCurriculum(currentCurriculumOnOpen);
 
       if (initialData) {
-        baseData = { ...initialData, curriculumType: currentCurriculum };
-        if (itemType === "RPP") {
-          const rpp = initialData as LessonPlan;
-          baseData = {
-            ...rpp,
-            curriculumType: currentCurriculum,
-            pemahamanBermakna: rpp.pemahamanBermakna || [],
-            pertanyaanPemantik: rpp.pertanyaanPemantik || [],
-            langkahPembelajaran: rpp.langkahPembelajaran || { pendahuluan: [], kegiatanInti: [], penutup: [] },
-            standarKompetensi: rpp.standarKompetensi || [],
-            kompetensiInti: rpp.kompetensiInti || [],
-            kompetensiDasar: rpp.kompetensiDasar || [],
-            indikatorPencapaianKompetensi: rpp.indikatorPencapaianKompetensi || [],
-            metodePembelajaran: rpp.metodePembelajaran || [],
-          };
-        } else if (itemType === "PROTA") {
+        combinedData = { ...initialData }; // Start with all fields from initialData
+
+        if (itemType === "PROTA") {
           const prota = initialData as AnnualProgram;
-          protaTextareaData = {
-            profilPelajarPancasilaFocus_textarea: prota.profilPelajarPancasilaFocus?.join('\n') || '',
-            semester1_topics_textarea: prota.semester1Components?.map(c => c.topic).join('\n') || '',
-            semester1_elements_textarea: prota.semester1Components?.map(c => c.elemenCapaianPembelajaran?.join(', ') || '').join('\n') || '',
-            semester1_allocations_textarea: prota.semester1Components?.map(c => c.alokasiWaktu).join('\n') || '',
-            semester2_topics_textarea: prota.semester2Components?.map(c => c.topic).join('\n') || '',
-            semester2_elements_textarea: prota.semester2Components?.map(c => c.elemenCapaianPembelajaran?.join(', ') || '').join('\n') || '',
-            semester2_allocations_textarea: prota.semester2Components?.map(c => c.alokasiWaktu).join('\n') || '',
-          };
+          combinedData.profilPelajarPancasilaFocus_textarea = prota.profilPelajarPancasilaFocus?.join('\n') || '';
+          combinedData.semester1_topics_textarea = prota.semester1Components?.map(c => c.topic).join('\n') || '';
+          combinedData.semester1_elements_textarea = prota.semester1Components?.map(c => c.elemenCapaianPembelajaran?.join(', ') || '').join('\n') || '';
+          combinedData.semester1_allocations_textarea = prota.semester1Components?.map(c => c.alokasiWaktu).join('\n') || '';
+          combinedData.semester2_topics_textarea = prota.semester2Components?.map(c => c.topic).join('\n') || '';
+          combinedData.semester2_elements_textarea = prota.semester2Components?.map(c => c.elemenCapaianPembelajaran?.join(', ') || '').join('\n') || '';
+          combinedData.semester2_allocations_textarea = prota.semester2Components?.map(c => c.alokasiWaktu).join('\n') || '';
         } else if (itemType === "Promes") {
           const promes = initialData as SemesterProgram;
-          promesTextareaData = {
-            capaianPembelajaranUmum_textarea: promes.capaianPembelajaranUmum || '',
-            alokasiWaktuTotalSemester_input: promes.alokasiWaktuTotalSemester || '',
-            komponenMingguan_textarea: promes.komponenMingguan?.map(w => 
-              `Minggu ke: ${w.mingguKe || ''}\nBulan: ${w.bulan || ''}\nMateri/TP: ${w.materiPokokAtauTujuanPembelajaran || ''}\nAlokasi: ${w.alokasiWaktu || ''}\nMetode: ${w.metodeStrategi?.join(', ') || ''}\nSumber: ${w.sumberBelajar?.join(', ') || ''}\nAsesmen: ${w.rencanaAsesmen?.join(', ') || ''}\nP5: ${w.catatanIntegrasiP5 || ''}`
-            ).join('\n\n---\n\n') || '',
-          };
+          combinedData.capaianPembelajaranUmum_textarea = promes.capaianPembelajaranUmum || '';
+          combinedData.alokasiWaktuTotalSemester_input = promes.alokasiWaktuTotalSemester || '';
+          combinedData.komponenMingguan_textarea = formatWeeklyUnitsToString(promes.komponenMingguan || []);
         }
-      } else {
-        if (itemType === "RPP") baseData = { ...defaultLessonPlan, curriculumType: defaultCurriculum };
-        else if (itemType === "PROTA") baseData = { ...defaultAnnualProgram, curriculumType: defaultCurriculum };
-        else if (itemType === "Promes") baseData = { ...defaultSemesterProgram, curriculumType: defaultCurriculum };
+        // RPP fields are directly part of LessonPlan, no special textarea conversion needed here for initial load
+      } else { // New item
+        if (itemType === "RPP") combinedData = { ...baseRppData, curriculumType: currentCurriculumOnOpen };
+        else if (itemType === "PROTA") combinedData = { ...baseProtaData, curriculumType: currentCurriculumOnOpen };
+        else if (itemType === "Promes") combinedData = { ...basePromesData, curriculumType: currentCurriculumOnOpen };
       }
-      setFormData({ ...baseData, ...protaTextareaData, ...promesTextareaData });
+      setFormData(combinedData);
     }
   }, [isOpen, initialData, itemType, defaultCurriculum]);
 
@@ -183,19 +154,22 @@ export function CurriculumFormDialog({
   const handleSelectChange = (name: string, value: string) => {
     if (name === 'curriculumType') {
       setSelectedCurriculum(value as CurriculumFramework);
+      // When curriculum type changes for a new form, we might want to reset curriculum-specific fields
+      // For simplicity, we'll let handleSubmit clean up, but for better UX, fields could be cleared here.
+      // Or, AI generation could be re-prompted.
     }
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleArrayChange = (name: keyof LessonPlan | keyof AnnualProgram, value: string) => {
+  const handleArrayChange = (name: keyof (LessonPlan & AnnualProgram), value: string) => {
     const valuesArray = value.split('\n').map(s => s.trim()).filter(s => s.length > 0);
-    setFormData(prev => ({ ...prev, [name]: valuesArray }));
+    setFormData(prev => ({ ...prev, [name]: valuesArray as any }));
   };
 
   const handleLangkahPembelajaranChange = (part: 'pendahuluan' | 'kegiatanInti' | 'penutup', value: string) => {
     const valuesArray = value.split('\n').map(s => s.trim()).filter(s => s.length > 0);
     setFormData(prev => {
-      const currentLangkah = (prev as Partial<LessonPlan>).langkahPembelajaran || { pendahuluan: [], kegiatanInti: [], penutup: [] };
+      const currentLangkah = prev.langkahPembelajaran || { pendahuluan: [], kegiatanInti: [], penutup: [] };
       return {
         ...prev,
         langkahPembelajaran: {
@@ -254,72 +228,78 @@ export function CurriculumFormDialog({
     ).join('\n\n---\n\n');
   };
 
-
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
 
-    let finalItemData: Partial<AnyCurriculumItem> = { ...formData, curriculumType: selectedCurriculum };
+    // Start with common fields and explicitly set curriculumType
+    let baseSubmitData: Pick<AnyCurriculumItem, 'title' | 'subject' | 'gradeLevel' | 'curriculumType'> = {
+      title: formData.title || '',
+      subject: formData.subject || '',
+      gradeLevel: formData.gradeLevel || '',
+      curriculumType: selectedCurriculum,
+    };
+
+    let specificData: Omit<AnyCurriculumItem, 'id' | 'createdAt' | 'updatedAt' | 'createdByUserId' | 'title' | 'subject' | 'gradeLevel' | 'curriculumType'>;
 
     if (itemType === "RPP") {
-      const rppForm = formData as Partial<LessonPlan>;
-      finalItemData = {
-        ...defaultLessonPlan, // Start with a clean slate for the selected curriculum type
-        ...rppForm, // Apply common fields from form
-        curriculumType: selectedCurriculum,
-        langkahPembelajaran: rppForm.langkahPembelajaran || { pendahuluan: [], kegiatanInti: [], penutup: [] },
+      const rppSpecific: Omit<LessonPlan, 'id' | 'createdAt' | 'updatedAt' | 'createdByUserId' | 'title' | 'subject' | 'gradeLevel' | 'curriculumType'> = {
+        type: 'RPP',
+        topic: formData.topic || '',
+        learningObjectives: (formData.learningObjectives as string[]) || [],
+        langkahPembelajaran: formData.langkahPembelajaran || { pendahuluan: [], kegiatanInti: [], penutup: [] },
+        assessment: formData.assessment || '',
+        materials: formData.materials || '',
+        // Curriculum-specific parts
+        ...(selectedCurriculum === "Kurikulum Merdeka" && {
+          pemahamanBermakna: (formData.pemahamanBermakna as string[]) || [],
+          pertanyaanPemantik: (formData.pertanyaanPemantik as string[]) || [],
+          differentiationStrategies: (formData.differentiationStrategies as string[]) || [],
+        }),
+        ...(selectedCurriculum === "K-13" && {
+          kompetensiInti: (formData.kompetensiInti as string[]) || [],
+          kompetensiDasar: (formData.kompetensiDasar as string[]) || [],
+          indikatorPencapaianKompetensi: (formData.indikatorPencapaianKompetensi as string[]) || [],
+          metodePembelajaran: (formData.metodePembelajaran as string[]) || [],
+        }),
+        ...(selectedCurriculum === "KTSP 2006" && {
+          standarKompetensi: (formData.standarKompetensi as string[]) || [],
+          kompetensiDasar: (formData.kompetensiDasar as string[]) || [],
+          indikatorPencapaianKompetensi: (formData.indikatorPencapaianKompetensi as string[]) || [],
+          metodePembelajaran: (formData.metodePembelajaran as string[]) || [],
+        }),
       };
-      // Conditionally add fields based on curriculum
-      if (selectedCurriculum === "Kurikulum Merdeka") {
-        (finalItemData as LessonPlan).pemahamanBermakna = rppForm.pemahamanBermakna || [];
-        (finalItemData as LessonPlan).pertanyaanPemantik = rppForm.pertanyaanPemantik || [];
-        (finalItemData as LessonPlan).differentiationStrategies = rppForm.differentiationStrategies || [];
-      } else { // KTSP or K-13
-        (finalItemData as LessonPlan).standarKompetensi = rppForm.standarKompetensi || [];
-        (finalItemData as LessonPlan).kompetensiInti = rppForm.kompetensiInti || [];
-        (finalItemData as LessonPlan).kompetensiDasar = rppForm.kompetensiDasar || [];
-        (finalItemData as LessonPlan).indikatorPencapaianKompetensi = rppForm.indikatorPencapaianKompetensi || [];
-        (finalItemData as LessonPlan).metodePembelajaran = rppForm.metodePembelajaran || [];
-      }
-
+      specificData = rppSpecific;
     } else if (itemType === "PROTA") {
-      const protaForm = formData as Partial<AnnualProgram> & ProtaFormState;
-      finalItemData = {
-        ...defaultAnnualProgram,
-        ...formData, 
-        curriculumType: selectedCurriculum,
-        profilPelajarPancasilaFocus: protaForm.profilPelajarPancasilaFocus_textarea?.split('\n').map(s => s.trim()).filter(s => s) || [],
-        semester1Components: parseProtaComponents(protaForm.semester1_topics_textarea, protaForm.semester1_elements_textarea, protaForm.semester1_allocations_textarea),
-        semester2Components: parseProtaComponents(protaForm.semester2_topics_textarea, protaForm.semester2_elements_textarea, protaForm.semester2_allocations_textarea),
+      const protaSpecific: Omit<AnnualProgram, 'id' | 'createdAt' | 'updatedAt' | 'createdByUserId' | 'title' | 'subject' | 'gradeLevel' | 'curriculumType'> = {
+        type: 'PROTA',
+        year: formData.year || '',
+        semester1Components: parseProtaComponents(formData.semester1_topics_textarea, formData.semester1_elements_textarea, formData.semester1_allocations_textarea),
+        semester2Components: parseProtaComponents(formData.semester2_topics_textarea, formData.semester2_elements_textarea, formData.semester2_allocations_textarea),
+        ...(selectedCurriculum === "Kurikulum Merdeka" && {
+          profilPelajarPancasilaFocus: formData.profilPelajarPancasilaFocus_textarea?.split('\n').map(s => s.trim()).filter(s => s) || [],
+        }),
       };
-    } else if (itemType === "Promes") {
-       const promesForm = formData as Partial<SemesterProgram> & PromesFormState;
-      finalItemData = {
-        ...defaultSemesterProgram,
-        ...formData, 
-        curriculumType: selectedCurriculum,
-        capaianPembelajaranUmum: promesForm.capaianPembelajaranUmum_textarea || '',
-        alokasiWaktuTotalSemester: promesForm.alokasiWaktuTotalSemester_input || '',
-        komponenMingguan: parsePromesKomponenMingguan(promesForm.komponenMingguan_textarea),
+      specificData = protaSpecific;
+    } else { // Promes
+      const promesSpecific: Omit<SemesterProgram, 'id' | 'createdAt' | 'updatedAt' | 'createdByUserId' | 'title' | 'subject' | 'gradeLevel' | 'curriculumType'> = {
+        type: 'Promes',
+        semester: formData.semester || '1',
+        year: formData.year || '',
+        capaianPembelajaranUmum: formData.capaianPembelajaranUmum_textarea || '',
+        alokasiWaktuTotalSemester: formData.alokasiWaktuTotalSemester_input || '',
+        komponenMingguan: parsePromesKomponenMingguan(formData.komponenMingguan_textarea),
       };
+      specificData = promesSpecific;
     }
     
-    const fieldsToRemove: (keyof ProtaFormState | keyof PromesFormState)[] = [
-      'profilPelajarPancasilaFocus_textarea',
-      'semester1_topics_textarea', 'semester1_elements_textarea', 'semester1_allocations_textarea',
-      'semester2_topics_textarea', 'semester2_elements_textarea', 'semester2_allocations_textarea',
-      'capaianPembelajaranUmum_textarea', 'alokasiWaktuTotalSemester_input', 'komponenMingguan_textarea'
-    ];
-    fieldsToRemove.forEach(field => delete finalItemData[field as keyof typeof finalItemData]);
-
-
     const completeFormData: AnyCurriculumItem = {
-      id: initialData?.id || new Date().toISOString() + Math.random().toString(36).substring(2, 9),
+      ...baseSubmitData,
+      ...specificData,
+      id: initialData?.id || `item-${Date.now()}`, // Use initialData.id if editing
       createdAt: initialData?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      createdByUserId: initialData?.createdByUserId || user?.id, 
-      ...finalItemData, 
-      type: itemType, 
-    } as AnyCurriculumItem;
+      createdByUserId: initialData?.createdByUserId || user?.id,
+    } as AnyCurriculumItem; // Cast as AnyCurriculumItem because specificData will match one of the types
 
     onSubmit(completeFormData);
     if (onOpenChange) {
@@ -335,8 +315,8 @@ export function CurriculumFormDialog({
     } else {
       setIsOpen(openStatus);
     }
-     if (!openStatus) { // When dialog closes, reset selectedCurriculum to global default
-      setSelectedCurriculum(defaultCurriculum);
+     if (!openStatus) { 
+      setSelectedCurriculum(defaultCurriculum); // Reset to global default when dialog closes
     }
   }
 
@@ -372,19 +352,19 @@ export function CurriculumFormDialog({
         const result: GenerateLessonPlanOutput = await generateLessonPlanFromTopic(aiInput);
         setFormData(prev => ({
             ...prev,
-            type: 'RPP',
             title: result.title || prev.title,
             learningObjectives: result.learningObjectives,
-            pemahamanBermakna: result.pemahamanBermakna,
-            pertanyaanPemantik: result.pertanyaanPemantik,
             langkahPembelajaran: result.langkahPembelajaran,
             assessment: result.assessmentStrategies.join('\n- ') || '',
-            differentiationStrategies: result.differentiationStrategies,
-            standarKompetensi: result.standarKompetensi,
-            kompetensiInti: result.kompetensiInti,
-            kompetensiDasar: result.kompetensiDasar,
-            indikatorPencapaianKompetensi: result.indikatorPencapaianKompetensi,
-            metodePembelajaran: result.metodePembelajaran,
+            // Curriculum-specific fields from AI result
+            pemahamanBermakna: result.pemahamanBermakna || (selectedCurriculum === "Kurikulum Merdeka" ? [] : undefined),
+            pertanyaanPemantik: result.pertanyaanPemantik || (selectedCurriculum === "Kurikulum Merdeka" ? [] : undefined),
+            differentiationStrategies: result.differentiationStrategies || (selectedCurriculum === "Kurikulum Merdeka" ? [] : undefined),
+            standarKompetensi: result.standarKompetensi || (selectedCurriculum === "KTSP 2006" ? [] : undefined),
+            kompetensiInti: result.kompetensiInti || (selectedCurriculum === "K-13" ? [] : undefined),
+            kompetensiDasar: result.kompetensiDasar || (selectedCurriculum !== "Kurikulum Merdeka" ? [] : undefined),
+            indikatorPencapaianKompetensi: result.indikatorPencapaianKompetensi || (selectedCurriculum !== "Kurikulum Merdeka" ? [] : undefined),
+            metodePembelajaran: result.metodePembelajaran || (selectedCurriculum !== "Kurikulum Merdeka" ? [] : undefined),
         }));
         toast({ title: "Konten RPP Dihasilkan!", description: "AI telah membuat draf konten. Silakan tinjau." });
         addLog("INFO", `Konten RPP berhasil dibuat AI. Judul: "${result.title}".`, source);
@@ -399,9 +379,8 @@ export function CurriculumFormDialog({
         const result: GenerateAnnualProgramOutput = await generateAnnualProgram(aiInput);
         setFormData(prev => ({
             ...prev,
-            type: 'PROTA',
             title: result.title || prev.title,
-            profilPelajarPancasilaFocus_textarea: result.profilPelajarPancasilaFocus?.join('\n') || '',
+            profilPelajarPancasilaFocus_textarea: selectedCurriculum === "Kurikulum Merdeka" ? result.profilPelajarPancasilaFocus?.join('\n') || '' : undefined,
             semester1_topics_textarea: result.semester1Components?.map(c => c.topic).join('\n') || '',
             semester1_elements_textarea: result.semester1Components?.map(c => c.elemenCapaianPembelajaran?.join(', ') || '').join('\n') || '',
             semester1_allocations_textarea: result.semester1Components?.map(c => c.alokasiWaktu).join('\n') || '',
@@ -419,12 +398,11 @@ export function CurriculumFormDialog({
           year: formData.year as string,
           semester: formData.semester as '1' | '2',
           curriculumType: selectedCurriculum,
-          capaianPembelajaranUmumInput: (formData as PromesFormState).capaianPembelajaranUmum_textarea || undefined
+          capaianPembelajaranUmumInput: formData.capaianPembelajaranUmum_textarea || undefined
         };
         const result: GenerateSemesterProgramOutput = await generateSemesterProgram(aiInput);
         setFormData(prev => ({
             ...prev,
-            type: 'Promes',
             title: result.title || prev.title,
             capaianPembelajaranUmum_textarea: result.capaianPembelajaranUmum || '',
             alokasiWaktuTotalSemester_input: result.alokasiWaktuTotalSemester || '',
@@ -473,34 +451,33 @@ export function CurriculumFormDialog({
 
     switch (itemType) {
       case "RPP":
-        const lessonPlanData = formData as Partial<LessonPlan>;
         return (
           <>
             <div className="space-y-1">
               <Label htmlFor="topic">Topik/Materi Pembelajaran</Label>
-              <Input id="topic" name="topic" value={lessonPlanData.topic || ''} onChange={handleChange} required />
+              <Input id="topic" name="topic" value={formData.topic || ''} onChange={handleChange} required />
             </div>
             
             {commonAIButton}
 
             <div className="space-y-1">
               <Label htmlFor="learningObjectives">Tujuan Pembelajaran (satu per baris)</Label>
-              <Textarea id="learningObjectives" name="learningObjectives" value={lessonPlanData.learningObjectives?.join('\n') || ''} onChange={(e) => handleArrayChange('learningObjectives', e.target.value)} placeholder="Tujuan 1&#10;Tujuan 2" />
+              <Textarea id="learningObjectives" name="learningObjectives" value={formData.learningObjectives?.join('\n') || ''} onChange={(e) => handleArrayChange('learningObjectives', e.target.value)} placeholder="Tujuan 1&#10;Tujuan 2" />
             </div>
 
             {selectedCurriculum === "Kurikulum Merdeka" && (
               <>
                 <div className="space-y-1">
                   <Label htmlFor="pemahamanBermakna">Pemahaman Bermakna (satu per baris)</Label>
-                  <Textarea id="pemahamanBermakna" name="pemahamanBermakna" value={lessonPlanData.pemahamanBermakna?.join('\n') || ''} onChange={(e) => handleArrayChange('pemahamanBermakna' as any, e.target.value)} placeholder="Pemahaman 1&#10;Pemahaman 2" />
+                  <Textarea id="pemahamanBermakna" name="pemahamanBermakna" value={formData.pemahamanBermakna?.join('\n') || ''} onChange={(e) => handleArrayChange('pemahamanBermakna', e.target.value)} placeholder="Pemahaman 1&#10;Pemahaman 2" />
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="pertanyaanPemantik">Pertanyaan Pemantik (satu per baris)</Label>
-                  <Textarea id="pertanyaanPemantik" name="pertanyaanPemantik" value={lessonPlanData.pertanyaanPemantik?.join('\n') || ''} onChange={(e) => handleArrayChange('pertanyaanPemantik' as any, e.target.value)} placeholder="Pertanyaan 1&#10;Pertanyaan 2" />
+                  <Textarea id="pertanyaanPemantik" name="pertanyaanPemantik" value={formData.pertanyaanPemantik?.join('\n') || ''} onChange={(e) => handleArrayChange('pertanyaanPemantik', e.target.value)} placeholder="Pertanyaan 1&#10;Pertanyaan 2" />
                 </div>
                  <div className="space-y-1">
                   <Label htmlFor="differentiationStrategies">Strategi Diferensiasi (satu per baris, opsional)</Label>
-                  <Textarea id="differentiationStrategies" name="differentiationStrategies" value={lessonPlanData.differentiationStrategies?.join('\n') || ''} onChange={(e) => handleArrayChange('differentiationStrategies' as any, e.target.value)} placeholder="Strategi 1&#10;Strategi 2" />
+                  <Textarea id="differentiationStrategies" name="differentiationStrategies" value={formData.differentiationStrategies?.join('\n') || ''} onChange={(e) => handleArrayChange('differentiationStrategies', e.target.value)} placeholder="Strategi 1&#10;Strategi 2" />
                 </div>
               </>
             )}
@@ -510,26 +487,26 @@ export function CurriculumFormDialog({
                 {selectedCurriculum === "KTSP 2006" && (
                   <div className="space-y-1">
                     <Label htmlFor="standarKompetensi">Standar Kompetensi (SK) (satu per baris)</Label>
-                    <Textarea id="standarKompetensi" name="standarKompetensi" value={lessonPlanData.standarKompetensi?.join('\n') || ''} onChange={(e) => handleArrayChange('standarKompetensi' as any, e.target.value)} placeholder="SK 1&#10;SK 2" />
+                    <Textarea id="standarKompetensi" name="standarKompetensi" value={formData.standarKompetensi?.join('\n') || ''} onChange={(e) => handleArrayChange('standarKompetensi', e.target.value)} placeholder="SK 1&#10;SK 2" />
                   </div>
                 )}
                 {selectedCurriculum === "K-13" && (
                   <div className="space-y-1">
                     <Label htmlFor="kompetensiInti">Kompetensi Inti (KI) (satu per baris, misal KI-1, KI-2)</Label>
-                    <Textarea id="kompetensiInti" name="kompetensiInti" value={lessonPlanData.kompetensiInti?.join('\n') || ''} onChange={(e) => handleArrayChange('kompetensiInti' as any, e.target.value)} placeholder="KI-1: Menghayati...&#10;KI-2: Menunjukkan..." />
+                    <Textarea id="kompetensiInti" name="kompetensiInti" value={formData.kompetensiInti?.join('\n') || ''} onChange={(e) => handleArrayChange('kompetensiInti', e.target.value)} placeholder="KI-1: Menghayati...&#10;KI-2: Menunjukkan..." />
                   </div>
                 )}
                  <div className="space-y-1">
                   <Label htmlFor="kompetensiDasar">Kompetensi Dasar (KD) (satu per baris)</Label>
-                  <Textarea id="kompetensiDasar" name="kompetensiDasar" value={lessonPlanData.kompetensiDasar?.join('\n') || ''} onChange={(e) => handleArrayChange('kompetensiDasar' as any, e.target.value)} placeholder="KD 3.1: ...&#10;KD 4.1: ..." />
+                  <Textarea id="kompetensiDasar" name="kompetensiDasar" value={formData.kompetensiDasar?.join('\n') || ''} onChange={(e) => handleArrayChange('kompetensiDasar', e.target.value)} placeholder="KD 3.1: ...&#10;KD 4.1: ..." />
                 </div>
                  <div className="space-y-1">
                   <Label htmlFor="indikatorPencapaianKompetensi">Indikator Pencapaian Kompetensi (IPK) (satu per baris)</Label>
-                  <Textarea id="indikatorPencapaianKompetensi" name="indikatorPencapaianKompetensi" value={lessonPlanData.indikatorPencapaianKompetensi?.join('\n') || ''} onChange={(e) => handleArrayChange('indikatorPencapaianKompetensi' as any, e.target.value)} placeholder="IPK 3.1.1: ...&#10;IPK 4.1.1: ..." />
+                  <Textarea id="indikatorPencapaianKompetensi" name="indikatorPencapaianKompetensi" value={formData.indikatorPencapaianKompetensi?.join('\n') || ''} onChange={(e) => handleArrayChange('indikatorPencapaianKompetensi', e.target.value)} placeholder="IPK 3.1.1: ...&#10;IPK 4.1.1: ..." />
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="metodePembelajaran">Metode Pembelajaran (satu per baris)</Label>
-                  <Textarea id="metodePembelajaran" name="metodePembelajaran" value={lessonPlanData.metodePembelajaran?.join('\n') || ''} onChange={(e) => handleArrayChange('metodePembelajaran' as any, e.target.value)} placeholder="Ceramah&#10;Diskusi" />
+                  <Textarea id="metodePembelajaran" name="metodePembelajaran" value={formData.metodePembelajaran?.join('\n') || ''} onChange={(e) => handleArrayChange('metodePembelajaran', e.target.value)} placeholder="Ceramah&#10;Diskusi" />
                 </div>
               </>
             )}
@@ -539,35 +516,34 @@ export function CurriculumFormDialog({
             <div className="space-y-2 rounded-md border p-4">
               <div className="space-y-1">
                 <Label htmlFor="langkahPendahuluan" className="text-sm font-medium">Pendahuluan</Label>
-                <Textarea id="langkahPendahuluan" value={lessonPlanData.langkahPembelajaran?.pendahuluan?.join('\n') || ''} onChange={(e) => handleLangkahPembelajaranChange('pendahuluan', e.target.value)} placeholder="Kegiatan pendahuluan 1&#10;Kegiatan pendahuluan 2" />
+                <Textarea id="langkahPendahuluan" value={formData.langkahPembelajaran?.pendahuluan?.join('\n') || ''} onChange={(e) => handleLangkahPembelajaranChange('pendahuluan', e.target.value)} placeholder="Kegiatan pendahuluan 1&#10;Kegiatan pendahuluan 2" />
               </div>
               <div className="space-y-1">
                 <Label htmlFor="langkahInti" className="text-sm font-medium">Kegiatan Inti</Label>
-                <Textarea id="langkahInti" value={lessonPlanData.langkahPembelajaran?.kegiatanInti?.join('\n') || ''} onChange={(e) => handleLangkahPembelajaranChange('kegiatanInti', e.target.value)} placeholder="Kegiatan inti 1&#10;Kegiatan inti 2" />
+                <Textarea id="langkahInti" value={formData.langkahPembelajaran?.kegiatanInti?.join('\n') || ''} onChange={(e) => handleLangkahPembelajaranChange('kegiatanInti', e.target.value)} placeholder="Kegiatan inti 1&#10;Kegiatan inti 2" />
               </div>
               <div className="space-y-1">
                 <Label htmlFor="langkahPenutup" className="text-sm font-medium">Penutup</Label>
-                <Textarea id="langkahPenutup" value={lessonPlanData.langkahPembelajaran?.penutup?.join('\n') || ''} onChange={(e) => handleLangkahPembelajaranChange('penutup', e.target.value)} placeholder="Kegiatan penutup 1&#10;Kegiatan penutup 2" />
+                <Textarea id="langkahPenutup" value={formData.langkahPembelajaran?.penutup?.join('\n') || ''} onChange={(e) => handleLangkahPembelajaranChange('penutup', e.target.value)} placeholder="Kegiatan penutup 1&#10;Kegiatan penutup 2" />
               </div>
             </div>
 
             <div className="space-y-1">
               <Label htmlFor="assessment">Asesmen/Penilaian</Label>
-              <Textarea id="assessment" name="assessment" value={lessonPlanData.assessment || ''} onChange={handleChange} placeholder="Jelaskan strategi dan bentuk asesmen" />
+              <Textarea id="assessment" name="assessment" value={formData.assessment || ''} onChange={handleChange} placeholder="Jelaskan strategi dan bentuk asesmen" />
             </div>
             <div className="space-y-1">
               <Label htmlFor="materials">Media/Sumber Belajar (opsional)</Label>
-              <Input id="materials" name="materials" value={lessonPlanData.materials || ''} onChange={handleChange} />
+              <Input id="materials" name="materials" value={formData.materials || ''} onChange={handleChange} />
             </div>
           </>
         );
       case "PROTA":
-        const protaData = formData as ProtaFormState & Partial<AnnualProgram>;
         return (
           <>
             <div className="space-y-1">
               <Label htmlFor="year">Tahun Ajaran</Label>
-              <Input id="year" name="year" value={protaData.year || ''} onChange={handleChange} placeholder="cth., 2023/2024" required />
+              <Input id="year" name="year" value={formData.year || ''} onChange={handleChange} placeholder="cth., 2023/2024" required />
             </div>
 
             {commonAIButton}
@@ -575,7 +551,7 @@ export function CurriculumFormDialog({
             {selectedCurriculum === "Kurikulum Merdeka" && (
             <div className="space-y-1">
               <Label htmlFor="profilPelajarPancasilaFocus_textarea">Fokus Profil Pelajar Pancasila (satu per baris, opsional)</Label>
-              <Textarea id="profilPelajarPancasilaFocus_textarea" name="profilPelajarPancasilaFocus_textarea" value={protaData.profilPelajarPancasilaFocus_textarea || ''} onChange={handleChange} placeholder="Gotong Royong&#10;Kreatif" />
+              <Textarea id="profilPelajarPancasilaFocus_textarea" name="profilPelajarPancasilaFocus_textarea" value={formData.profilPelajarPancasilaFocus_textarea || ''} onChange={handleChange} placeholder="Gotong Royong&#10;Kreatif" />
             </div>
             )}
             
@@ -583,18 +559,18 @@ export function CurriculumFormDialog({
             <div className="space-y-2 rounded-md border p-3">
               <div className="space-y-1">
                 <Label htmlFor="semester1_topics_textarea">Topik Pembelajaran / Materi Pokok (satu per baris)</Label>
-                <Textarea id="semester1_topics_textarea" name="semester1_topics_textarea" value={protaData.semester1_topics_textarea || ''} onChange={handleChange} placeholder="Topik A&#10;Topik B" />
+                <Textarea id="semester1_topics_textarea" name="semester1_topics_textarea" value={formData.semester1_topics_textarea || ''} onChange={handleChange} placeholder="Topik A&#10;Topik B" />
               </div>
               <div className="space-y-1">
                 <Label htmlFor="semester1_elements_textarea">
                     {selectedCurriculum === "Kurikulum Merdeka" ? "Elemen Capaian Pembelajaran" : "Kompetensi Dasar (KD)"}
                      (satu baris per topik, pisahkan dengan koma jika >1 elemen/KD)
                 </Label>
-                <Textarea id="semester1_elements_textarea" name="semester1_elements_textarea" value={protaData.semester1_elements_textarea || ''} onChange={handleChange} placeholder="Bilangan, Aljabar&#10;Geometri" />
+                <Textarea id="semester1_elements_textarea" name="semester1_elements_textarea" value={formData.semester1_elements_textarea || ''} onChange={handleChange} placeholder="Bilangan, Aljabar&#10;Geometri" />
               </div>
               <div className="space-y-1">
                 <Label htmlFor="semester1_allocations_textarea">Alokasi Waktu (satu per baris, sesuai urutan topik)</Label>
-                <Textarea id="semester1_allocations_textarea" name="semester1_allocations_textarea" value={protaData.semester1_allocations_textarea || ''} onChange={handleChange} placeholder="24 JP&#10;18 JP" />
+                <Textarea id="semester1_allocations_textarea" name="semester1_allocations_textarea" value={formData.semester1_allocations_textarea || ''} onChange={handleChange} placeholder="24 JP&#10;18 JP" />
               </div>
             </div>
 
@@ -602,29 +578,28 @@ export function CurriculumFormDialog({
              <div className="space-y-2 rounded-md border p-3">
               <div className="space-y-1">
                 <Label htmlFor="semester2_topics_textarea">Topik Pembelajaran / Materi Pokok (satu per baris)</Label>
-                <Textarea id="semester2_topics_textarea" name="semester2_topics_textarea" value={protaData.semester2_topics_textarea || ''} onChange={handleChange} placeholder="Topik C&#10;Topik D" />
+                <Textarea id="semester2_topics_textarea" name="semester2_topics_textarea" value={formData.semester2_topics_textarea || ''} onChange={handleChange} placeholder="Topik C&#10;Topik D" />
               </div>
               <div className="space-y-1">
                 <Label htmlFor="semester2_elements_textarea">
                     {selectedCurriculum === "Kurikulum Merdeka" ? "Elemen Capaian Pembelajaran" : "Kompetensi Dasar (KD)"}
                      (satu baris per topik, pisahkan dengan koma jika >1 elemen/KD)
                 </Label>
-                <Textarea id="semester2_elements_textarea" name="semester2_elements_textarea" value={protaData.semester2_elements_textarea || ''} onChange={handleChange} placeholder="Statistika, Peluang&#10;Analisis Data" />
+                <Textarea id="semester2_elements_textarea" name="semester2_elements_textarea" value={formData.semester2_elements_textarea || ''} onChange={handleChange} placeholder="Statistika, Peluang&#10;Analisis Data" />
               </div>
               <div className="space-y-1">
                 <Label htmlFor="semester2_allocations_textarea">Alokasi Waktu (satu per baris, sesuai urutan topik)</Label>
-                <Textarea id="semester2_allocations_textarea" name="semester2_allocations_textarea" value={protaData.semester2_allocations_textarea || ''} onChange={handleChange} placeholder="20 JP&#10;22 JP" />
+                <Textarea id="semester2_allocations_textarea" name="semester2_allocations_textarea" value={formData.semester2_allocations_textarea || ''} onChange={handleChange} placeholder="20 JP&#10;22 JP" />
               </div>
             </div>
           </>
         );
       case "Promes":
-        const promesData = formData as PromesFormState & Partial<SemesterProgram>;
         return (
           <>
             <div className="space-y-1">
               <Label htmlFor="semester">Semester</Label>
-              <Select name="semester" value={promesData.semester || '1'} onValueChange={(value) => handleSelectChange('semester', value)}>
+              <Select name="semester" value={formData.semester || '1'} onValueChange={(value) => handleSelectChange('semester', value)}>
                 <SelectTrigger id="semester">
                   <SelectValue placeholder="Pilih semester" />
                 </SelectTrigger>
@@ -636,7 +611,7 @@ export function CurriculumFormDialog({
             </div>
             <div className="space-y-1">
               <Label htmlFor="year">Tahun Ajaran</Label>
-              <Input id="year" name="year" value={promesData.year || ''} onChange={handleChange} placeholder="cth., 2023/2024" required />
+              <Input id="year" name="year" value={formData.year || ''} onChange={handleChange} placeholder="cth., 2023/2024" required />
             </div>
             
             {commonAIButton}
@@ -646,18 +621,18 @@ export function CurriculumFormDialog({
                 {selectedCurriculum === "Kurikulum Merdeka" ? "Capaian Pembelajaran Umum Semester" : "Rangkuman SK/KD Utama Semester"}
                  (Opsional)
               </Label>
-              <Textarea id="capaianPembelajaranUmum_textarea" name="capaianPembelajaranUmum_textarea" value={promesData.capaianPembelajaranUmum_textarea || ''} onChange={handleChange} placeholder="Deskripsikan CP umum atau SK/KD utama untuk semester ini..." />
+              <Textarea id="capaianPembelajaranUmum_textarea" name="capaianPembelajaranUmum_textarea" value={formData.capaianPembelajaranUmum_textarea || ''} onChange={handleChange} placeholder="Deskripsikan CP umum atau SK/KD utama untuk semester ini..." />
             </div>
             <div className="space-y-1">
               <Label htmlFor="alokasiWaktuTotalSemester_input">Alokasi Waktu Total Semester (Opsional)</Label>
-              <Input id="alokasiWaktuTotalSemester_input" name="alokasiWaktuTotalSemester_input" value={promesData.alokasiWaktuTotalSemester_input || ''} onChange={handleChange} placeholder="cth., 18 Minggu x 6 JP = 108 JP" />
+              <Input id="alokasiWaktuTotalSemester_input" name="alokasiWaktuTotalSemester_input" value={formData.alokasiWaktuTotalSemester_input || ''} onChange={handleChange} placeholder="cth., 18 Minggu x 6 JP = 108 JP" />
             </div>
              <div className="space-y-1">
               <Label htmlFor="komponenMingguan_textarea">Komponen Mingguan</Label>
               <Textarea 
                 id="komponenMingguan_textarea" 
                 name="komponenMingguan_textarea" 
-                value={promesData.komponenMingguan_textarea || ''} 
+                value={formData.komponenMingguan_textarea || ''} 
                 onChange={handleChange} 
                 rows={15}
                 placeholder={
