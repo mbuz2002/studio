@@ -331,7 +331,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
           langkahPembelajaran: rppInput.langkahPembelajaran || { pendahuluan: [], kegiatanInti: [], penutup: [] },
           assessment: rppInput.assessment || "Belum dirinci",
           differentiationStrategies: rppInput.differentiationStrategies || [],
-          materials: rppInput.materials || "Tidak ada sumber belajar spesifik",
+          materials: rppInput.materials || "", // Align with flow's expectation for empty string
         };
         const result = await exportRppToText(inputForFlow);
         documentContent = result.documentContent;
@@ -509,4 +509,5 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
     </>
   );
 }
+
 

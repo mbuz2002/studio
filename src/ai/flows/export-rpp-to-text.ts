@@ -12,7 +12,9 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import type { LessonPlan } from '@/types'; // Assuming LessonPlan type is defined here
+import type { LessonPlan } from '@/types'; 
+import { format } from 'date-fns';
+import { id as indonesianLocale } from 'date-fns/locale';
 
 // Define the Zod schema for LessonPlan if not already centrally available for Genkit
 // This should mirror the structure of your LessonPlan type.
@@ -122,7 +124,7 @@ Berikut adalah data RPP/MA yang perlu diformat:
 {{/if}}
 
 ---
-*Dokumen ini terakhir diperbarui pada: {{updatedAt}}*
+*Dokumen ini terakhir diperbarui pada: {{{formattedUpdatedAt}}}*
 
 Pastikan semua bagian terisi sesuai data yang diberikan. Jika ada data opsional (seperti Pemahaman Bermakna, Pertanyaan Pemantik, Strategi Diferensiasi, Media/Sumber Belajar) yang tidak ada atau kosong, maka jangan tampilkan bagian (heading dan konten) tersebut sama sekali.
 `,
@@ -136,19 +138,18 @@ const exportRppToTextFlow = ai.defineFlow(
     outputSchema: ExportRppToTextOutputSchema,
   },
   async (input: ExportRppToTextInput) => {
-    // Ensure all expected fields by the prompt are present, even if empty arrays/strings for optional ones
-    // This helps the Handlebars template render correctly by having the keys defined.
     const preparedInput = {
       ...input,
       pemahamanBermakna: input.pemahamanBermakna || [],
       pertanyaanPemantik: input.pertanyaanPemantik || [],
       langkahPembelajaran: input.langkahPembelajaran || { pendahuluan: [], kegiatanInti: [], penutup: []},
-      assessment: input.assessment || "Belum dirinci.", // Provide a default if empty
+      assessment: input.assessment || "Belum dirinci.", 
       differentiationStrategies: input.differentiationStrategies || [],
-      materials: input.materials || "", // Prompt expects string, handles empty by not rendering
-      updatedAt: input.updatedAt ? format(new Date(input.updatedAt), "dd MMMM yyyy, HH:mm", { locale: indonesianLocale }) : "Data tidak tersedia"
+      materials: input.materials || "", 
+      formattedUpdatedAt: input.updatedAt ? format(new Date(input.updatedAt), "dd MMMM yyyy, HH:mm", { locale: indonesianLocale }) : "Data tidak tersedia"
     };
     const { output } = await prompt(preparedInput);
     return output!;
   }
 );
+
