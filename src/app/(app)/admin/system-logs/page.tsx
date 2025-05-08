@@ -15,7 +15,8 @@ import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { id as indonesianLocale } from "date-fns/locale";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useLog, type LogEntry, type LogLevel, MAX_LOGS } from "@/contexts/LogContext";
+import { useLog, type LogEntry, type LogLevel } from "@/contexts/LogContext";
+import { MAX_LOGS } from "@/contexts/LogContext"; // Import MAX_LOGS
 
 export default function SystemLogsPage() {
   const { user, loading: authLoading } = useAuth();
@@ -26,7 +27,7 @@ export default function SystemLogsPage() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [levelFilter, setLevelFilter] = useState<LogLevel | "ALL">("ALL");
-  const [pageLoading, setPageLoading] = useState(true); // For initial auth check
+  const [pageLoading, setPageLoading] = useState(true); 
 
   useEffect(() => {
     setIsClient(true);
@@ -40,16 +41,14 @@ export default function SystemLogsPage() {
           description: "Anda tidak memiliki izin untuk mengakses halaman ini.",
           variant: "destructive",
         });
-        // Add log for access denied attempt
-        if(user) { // only log if there's a user trying to access
+        if(user) { 
             addLogToContext("WARN", `Pengguna ${user.email} (Peran: ${user.role}) mencoba mengakses Log Sistem tanpa izin.`, "SystemLogsPage");
         }
         router.push("/dashboard");
       } else {
-        // Admin accessed the page
         addLogToContext("INFO", `Admin ${user.email} mengakses halaman Log Sistem.`, "SystemLogsPage");
       }
-      setPageLoading(false); // Done with auth check
+      setPageLoading(false); 
     }
   }, [user, authLoading, isClient, router, toast, addLogToContext]);
 
@@ -59,7 +58,6 @@ export default function SystemLogsPage() {
     .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
 
   const handleRefreshLogs = () => {
-    // Logs are "live" from context, so refresh is more of a visual cue or for future use
     toast({ title: "Log Diperbarui", description: "Tampilan log telah diperbarui dari sumber data terkini." });
     addLogToContext("INFO", "Log sistem diminta untuk diperbarui secara manual.", "SystemLogsPage");
   };
@@ -67,7 +65,7 @@ export default function SystemLogsPage() {
   const handleClearLogs = () => {
     if (window.confirm("Apakah Anda yakin ingin menghapus semua log dari tampilan saat ini? Ini tidak akan menghapus log dari penyimpanan permanen (jika ada).")) {
       const logCount = contextLogs.length;
-      clearLogs(); // Clears logs in LogContext
+      clearLogs(); 
       toast({ title: "Log Dibersihkan", description: "Semua log sistem telah dihapus dari tampilan ini.", variant: "default" });
       addLogToContext("WARN", `Semua log (${logCount} entri) dibersihkan oleh Admin ${user?.email}.`, "SystemLogsPage");
     }
@@ -76,13 +74,13 @@ export default function SystemLogsPage() {
   const getLogLevelIcon = (level: LogLevel) => {
     switch (level) {
       case "INFO":
-        return <Info className="h-4 w-4 text-blue-500" />;
+        return <Info className="h-5 w-5 text-blue-500" />;
       case "WARN":
-        return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+        return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
       case "ERROR":
-        return <ShieldAlert className="h-4 w-4 text-red-500" />;
+        return <ShieldAlert className="h-5 w-5 text-red-500" />;
       default:
-        return null;
+        return <Activity className="h-5 w-5" />; // Fallback icon
     }
   };
   
@@ -103,52 +101,53 @@ export default function SystemLogsPage() {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="ml-2">Memverifikasi akses dan memuat log...</p>
+        <p className="ml-3 text-lg">Memverifikasi akses dan memuat log...</p>
       </div>
     );
   }
   
   if (!user || user.role !== "Admin") {
-     // This case should ideally be handled by the redirect, but as a fallback:
      return (
       <div className="flex h-screen items-center justify-center">
-        <p className="ml-2">Akses ditolak.</p>
+        <p className="ml-3 text-lg">Akses ditolak.</p>
       </div>
     );
   }
 
 
   return (
-    <div className="space-y-6 py-4 md:py-8">
+    <div className="space-y-8 py-4 md:py-8">
       <Card className="shadow-lg">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <Activity className="h-8 w-8 text-primary" />
-            <CardTitle className="text-3xl font-bold">Log Sistem Aplikasi</CardTitle>
+        <CardHeader className="p-6">
+          <div className="flex items-center gap-4">
+            <Activity className="h-10 w-10 text-primary flex-shrink-0" />
+            <div>
+                <CardTitle className="text-3xl md:text-4xl font-bold">Log Sistem Aplikasi</CardTitle>
+                <CardDescription className="text-lg md:text-xl text-muted-foreground mt-1">
+                    Tinjau aktivitas, kesalahan, dan peristiwa penting dalam sistem secara real-time.
+                </CardDescription>
+            </div>
           </div>
-          <CardDescription className="text-lg">
-            Tinjau aktivitas, kesalahan, dan peristiwa penting dalam sistem secara real-time.
-          </CardDescription>
         </CardHeader>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <CardTitle className="text-xl">Entri Log ({filteredLogs.length} / {contextLogs.length})</CardTitle>
-            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+      <Card className="shadow-md">
+        <CardHeader className="p-6">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <CardTitle className="text-2xl font-semibold">Entri Log ({filteredLogs.length} / {contextLogs.length})</CardTitle>
+            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
               <div className="relative flex-grow sm:flex-grow-0">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input
                   type="search"
                   placeholder="Cari log..."
-                  className="pl-8 w-full sm:w-[200px] lg:w-[250px]"
+                  className="pl-10 w-full sm:w-[220px] lg:w-[280px] text-base"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
               <Select value={levelFilter} onValueChange={(value) => setLevelFilter(value as LogLevel | "ALL")}>
-                <SelectTrigger className="w-full sm:w-auto min-w-[130px]">
+                <SelectTrigger className="w-full sm:w-auto min-w-[150px] text-base">
                   <SelectValue placeholder="Filter Level" />
                 </SelectTrigger>
                 <SelectContent>
@@ -158,48 +157,48 @@ export default function SystemLogsPage() {
                   <SelectItem value="ERROR">KESALAHAN</SelectItem>
                 </SelectContent>
               </Select>
-              <Button onClick={handleRefreshLogs} variant="outline" className="w-full sm:w-auto">
-                <RotateCw className="mr-2 h-4 w-4" />
-                Segarkan Tampilan
+              <Button onClick={handleRefreshLogs} variant="outline" className="w-full sm:w-auto text-base">
+                <RotateCw className="mr-2 h-5 w-5" />
+                Segarkan
               </Button>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="rounded-md border overflow-x-auto">
+        <CardContent className="p-6 pt-0">
+          <div className="rounded-md border shadow-sm overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[180px] min-w-[170px]">Waktu</TableHead>
-                  <TableHead className="w-[120px] min-w-[110px]">Level</TableHead>
-                  <TableHead className="min-w-[300px]">Pesan</TableHead>
-                  <TableHead className="w-[180px] min-w-[150px]">Sumber</TableHead>
+                  <TableHead className="w-[200px] min-w-[190px] text-sm">Waktu</TableHead>
+                  <TableHead className="w-[140px] min-w-[130px] text-sm">Level</TableHead>
+                  <TableHead className="min-w-[350px] text-sm">Pesan</TableHead>
+                  <TableHead className="w-[200px] min-w-[170px] text-sm">Sumber</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredLogs.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
+                    <TableCell colSpan={4} className="h-32 text-center text-lg text-muted-foreground">
                       {contextLogs.length === 0 ? "Tidak ada log tersedia." : "Tidak ada log yang cocok dengan filter Anda."}
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredLogs.map((log) => (
                     <TableRow key={log.id} className={
-                        log.level === "ERROR" ? "bg-destructive/10 hover:bg-destructive/20" : 
-                        log.level === "WARN" ? "bg-yellow-500/10 hover:bg-yellow-500/20" : ""
+                        log.level === "ERROR" ? "bg-destructive/10 hover:bg-destructive/15" : 
+                        log.level === "WARN" ? "bg-yellow-500/10 hover:bg-yellow-500/15" : "hover:bg-muted/50"
                     }>
-                      <TableCell className="text-xs">
+                      <TableCell className="text-sm font-mono">
                         {isClient ? format(log.timestamp, "dd MMM yyyy, HH:mm:ss.SSS", { locale: indonesianLocale }) : log.timestamp.toISOString()}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={getLogLevelBadgeVariant(log.level)} className="flex items-center gap-1.5 whitespace-nowrap">
+                        <Badge variant={getLogLevelBadgeVariant(log.level)} className="flex items-center gap-2 whitespace-nowrap text-sm py-1 px-2.5">
                           {getLogLevelIcon(log.level)}
                           {log.level}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-sm break-words whitespace-pre-wrap">{log.message}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{log.source || "-"}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{log.source || "-"}</TableCell>
                     </TableRow>
                   ))
                 )}
@@ -208,21 +207,20 @@ export default function SystemLogsPage() {
           </div>
           {contextLogs.length > 0 && (
              <div className="mt-6 flex justify-end">
-                <Button onClick={handleClearLogs} variant="destructive" size="sm">
-                    <Trash2 className="mr-2 h-4 w-4" /> Bersihkan Log Tampilan
+                <Button onClick={handleClearLogs} variant="destructive" className="text-base">
+                    <Trash2 className="mr-2 h-5 w-5" /> Bersihkan Log Tampilan
                 </Button>
              </div>
           )}
         </CardContent>
       </Card>
-        <Alert variant="default" className="mt-8">
-            <Info className="h-5 w-5 text-primary" />
-            <AlertTitle>Tentang Log Sistem</AlertTitle>
-            <AlertDescription>
+        <Alert variant="default" className="mt-8 border-primary/50 shadow-md">
+            <Info className="h-6 w-6 text-primary" />
+            <AlertTitle className="text-lg font-semibold">Tentang Log Sistem</AlertTitle>
+            <AlertDescription className="text-base">
             Log sistem ini dikelola secara real-time di sisi klien selama sesi berlangsung dan dibatasi hingga {MAX_LOGS} entri terakhir. Membersihkan log hanya akan menghapus log dari tampilan sesi ini. Dalam aplikasi produksi, log penting akan disimpan secara persisten di server.
             </AlertDescription>
       </Alert>
     </div>
   );
 }
-

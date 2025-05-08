@@ -18,7 +18,7 @@ import ReactMarkdown from 'react-markdown';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 
-const detailLevels: { value: GenerateTeachingMaterialInput['detailLevel'], label: string }[] = [
+const detailLevels: { value: NonNullable<GenerateTeachingMaterialInput['detailLevel']>, label: string }[] = [
   { value: "ringkas", label: "Ringkas" },
   { value: "standar", label: "Standar" },
   { value: "mendalam", label: "Mendalam" },
@@ -38,10 +38,9 @@ export default function AIAssistantPage() {
   const { user } = useAuth();
   const { addLog } = useLog();
 
-  // Teaching Material Generation State
   const [materialTopic, setMaterialTopic] = useState("");
   const [materialGradeLevel, setMaterialGradeLevel] = useState("");
-  const [materialDetailLevel, setMaterialDetailLevel] = useState<GenerateTeachingMaterialInput['detailLevel']>("standar");
+  const [materialDetailLevel, setMaterialDetailLevel] = useState<NonNullable<GenerateTeachingMaterialInput['detailLevel']>>("standar");
   const [generatedMaterial, setGeneratedMaterial] = useState<GenerateTeachingMaterialOutput | null>(null);
   const [isGeneratingMaterial, setIsGeneratingMaterial] = useState(false);
 
@@ -86,13 +85,13 @@ export default function AIAssistantPage() {
   if (!isClient || !user) {
     return (
       <div className="space-y-6 py-8">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">Memuat Asisten AI...</CardTitle>
+        <Card className="shadow-lg">
+          <CardHeader className="p-6">
+            <CardTitle className="text-2xl md:text-3xl font-bold">Memuat Asisten AI...</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6 pt-0 flex items-center">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="ml-2 inline-block">Silakan tunggu...</p>
+            <p className="ml-3 text-lg">Silakan tunggu...</p>
           </CardContent>
         </Card>
       </div>
@@ -102,12 +101,12 @@ export default function AIAssistantPage() {
   return (
     <div className="space-y-8 py-4 md:py-8">
       <Card className="shadow-lg">
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-            <BookOpenCheck className="h-8 w-8 text-primary flex-shrink-0" />
+        <CardHeader className="p-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <BookOpenCheck className="h-10 w-10 text-primary flex-shrink-0" />
             <div>
-              <CardTitle className="text-2xl md:text-3xl font-bold">Asisten AI Pembuatan Materi Ajar</CardTitle>
-              <CardDescription className="text-base md:text-lg">
+              <CardTitle className="text-3xl md:text-4xl font-bold">Asisten AI Pembuatan Materi Ajar</CardTitle>
+              <CardDescription className="text-lg md:text-xl text-muted-foreground mt-1">
                 Buat draf materi pembelajaran lengkap dengan sumber referensi yang disarankan oleh AI.
               </CardDescription>
             </div>
@@ -115,21 +114,21 @@ export default function AIAssistantPage() {
         </CardHeader>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Buat Materi Ajar dengan AI</CardTitle>
-          <CardDescription>Masukkan topik, jenjang, dan tingkat kedetailan untuk membuat draf materi ajar sesuai Kurikulum Merdeka.</CardDescription>
+      <Card className="shadow-md">
+        <CardHeader className="p-6">
+          <CardTitle className="text-xl font-semibold">Buat Materi Ajar dengan AI</CardTitle>
+          <CardDescription className="text-base text-muted-foreground">Masukkan topik, jenjang, dan tingkat kedetailan untuk membuat draf materi ajar sesuai Kurikulum Merdeka.</CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleGenerateMaterial} className="space-y-4">
-            <div>
-              <Label htmlFor="materialTopic">Topik Materi</Label>
-              <Input id="materialTopic" value={materialTopic} onChange={(e) => setMaterialTopic(e.target.value)} placeholder="cth., Ekosistem Hutan Hujan Tropis" />
+        <CardContent className="p-6 pt-0">
+          <form onSubmit={handleGenerateMaterial} className="space-y-6">
+            <div className="space-y-1.5">
+              <Label htmlFor="materialTopic" className="text-base">Topik Materi</Label>
+              <Input id="materialTopic" value={materialTopic} onChange={(e) => setMaterialTopic(e.target.value)} placeholder="cth., Ekosistem Hutan Hujan Tropis" className="text-base" />
             </div>
-            <div>
-              <Label htmlFor="materialGradeLevel">Jenjang/Fase/Kelas</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="materialGradeLevel" className="text-base">Jenjang/Fase/Kelas</Label>
               <Select value={materialGradeLevel} onValueChange={setMaterialGradeLevel}>
-                <SelectTrigger id="materialGradeLevel"><SelectValue placeholder="Pilih Jenjang/Fase/Kelas" /></SelectTrigger>
+                <SelectTrigger id="materialGradeLevel" className="text-base"><SelectValue placeholder="Pilih Jenjang/Fase/Kelas" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="PAUD">PAUD</SelectItem>
                   <SelectItem value="Fase A (Kelas 1-2 SD)">Fase A (Kelas 1-2 SD)</SelectItem>
@@ -143,10 +142,10 @@ export default function AIAssistantPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label htmlFor="materialDetailLevel">Tingkat Kedetailan Materi</Label>
-              <Select value={materialDetailLevel} onValueChange={(value) => setMaterialDetailLevel(value as GenerateTeachingMaterialInput['detailLevel'])}>
-                <SelectTrigger id="materialDetailLevel"><SelectValue placeholder="Pilih tingkat kedetailan" /></SelectTrigger>
+            <div className="space-y-1.5">
+              <Label htmlFor="materialDetailLevel" className="text-base">Tingkat Kedetailan Materi</Label>
+              <Select value={materialDetailLevel} onValueChange={(value) => setMaterialDetailLevel(value as NonNullable<GenerateTeachingMaterialInput['detailLevel']>)}>
+                <SelectTrigger id="materialDetailLevel" className="text-base"><SelectValue placeholder="Pilih tingkat kedetailan" /></SelectTrigger>
                 <SelectContent>
                   {detailLevels.map(level => (
                     <SelectItem key={level.value} value={level.value}>{level.label}</SelectItem>
@@ -154,46 +153,46 @@ export default function AIAssistantPage() {
                 </SelectContent>
               </Select>
             </div>
-            <Button type="submit" disabled={isGeneratingMaterial} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
-              {isGeneratingMaterial ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+            <Button type="submit" disabled={isGeneratingMaterial} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground text-lg py-3">
+              {isGeneratingMaterial ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Sparkles className="mr-2 h-5 w-5" />}
               Buat Materi Ajar
             </Button>
           </form>
           
           {generatedMaterial && (
-            <Card className="mt-6 shadow-md">
-              <CardHeader>
-                <CardTitle className="text-xl text-primary">{generatedMaterial.materialTitle}</CardTitle>
-                <CardDescription>Berikut adalah draf materi ajar yang dihasilkan oleh AI.</CardDescription>
+            <Card className="mt-8 shadow-inner">
+              <CardHeader className="p-6">
+                <CardTitle className="text-2xl text-primary font-semibold">{generatedMaterial.materialTitle}</CardTitle>
+                <CardDescription className="text-base text-muted-foreground">Berikut adalah draf materi ajar yang dihasilkan oleh AI.</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="p-6 pt-0 space-y-6">
                 <div>
-                  <h3 className="text-lg font-semibold mb-2">Konten Materi:</h3>
-                  <ScrollArea className="h-96 rounded-md border p-4 bg-muted/30">
-                    <ReactMarkdown className="prose prose-sm dark:prose-invert max-w-none">
+                  <h3 className="text-xl font-semibold mb-3">Konten Materi:</h3>
+                  <ScrollArea className="h-[500px] rounded-md border p-4 bg-muted/20 shadow-sm">
+                    <ReactMarkdown className="prose prose-base dark:prose-invert max-w-none leading-relaxed">
                       {generatedMaterial.materialContent}
                     </ReactMarkdown>
                   </ScrollArea>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold mb-2">Sumber Referensi yang Disarankan:</h3>
+                  <h3 className="text-xl font-semibold mb-3">Sumber Referensi yang Disarankan:</h3>
                   {generatedMaterial.suggestedSources.length > 0 ? (
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       {generatedMaterial.suggestedSources.map((source, index) => {
                         const IconComponent = sourceIcons[source.type] || FileText;
                         return (
-                            <Card key={index} className="p-4 bg-background">
-                                <div className="flex items-start gap-3">
-                                    <IconComponent className="h-5 w-5 text-primary flex-shrink-0 mt-1" />
+                            <Card key={index} className="p-4 bg-card shadow-sm hover:shadow-md transition-shadow">
+                                <div className="flex items-start gap-4">
+                                    <IconComponent className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
                                     <div className="flex-grow">
-                                    <h4 className="font-medium text-base">{source.title}</h4>
-                                    <p className="text-xs text-muted-foreground">Jenis: {source.type}</p>
-                                    {source.authorOrPublisher && <p className="text-xs text-muted-foreground">Penulis/Penerbit: {source.authorOrPublisher}</p>}
-                                    {source.description && <p className="text-sm mt-1">{source.description}</p>}
+                                    <h4 className="font-semibold text-lg">{source.title}</h4>
+                                    <p className="text-sm text-muted-foreground">Jenis: {source.type}</p>
+                                    {source.authorOrPublisher && <p className="text-sm text-muted-foreground">Penulis/Penerbit: {source.authorOrPublisher}</p>}
+                                    {source.description && <p className="text-base mt-1.5">{source.description}</p>}
                                     {source.url && (
-                                        <Button variant="link" size="sm" asChild className="p-0 h-auto mt-1">
+                                        <Button variant="link" size="sm" asChild className="p-0 h-auto mt-1.5 text-base">
                                         <a href={source.url} target="_blank" rel="noopener noreferrer">
-                                            Kunjungi Sumber <ExternalLink className="ml-1 h-3 w-3" />
+                                            Kunjungi Sumber <ExternalLink className="ml-1.5 h-4 w-4" />
                                         </a>
                                         </Button>
                                     )}
@@ -204,13 +203,13 @@ export default function AIAssistantPage() {
                       })}
                     </div>
                   ) : (
-                    <p className="text-sm text-muted-foreground">AI tidak menyarankan sumber referensi untuk materi ini.</p>
+                    <p className="text-base text-muted-foreground">AI tidak menyarankan sumber referensi untuk materi ini.</p>
                   )}
                 </div>
-                 <Alert>
-                    <Search className="h-4 w-4" />
-                    <AlertTitle>Verifikasi Sumber</AlertTitle>
-                    <AlertDescription>
+                 <Alert variant="default" className="border-primary/50">
+                    <Search className="h-5 w-5 text-primary" />
+                    <AlertTitle className="font-semibold">Verifikasi Sumber</AlertTitle>
+                    <AlertDescription className="text-base">
                         Selalu verifikasi keakuratan dan relevansi sumber yang disarankan AI sebelum digunakan dalam pengajaran.
                     </AlertDescription>
                 </Alert>
@@ -222,4 +221,3 @@ export default function AIAssistantPage() {
     </div>
   );
 }
-

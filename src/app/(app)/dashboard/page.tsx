@@ -3,7 +3,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpenText, CalendarDays, CalendarClock, Sparkles, PlusCircle, Users, FileText } from "lucide-react";
+import { BookOpenText, CalendarDays, CalendarClock, Sparkles, PlusCircle, Users, FileText, LayoutDashboard } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useAuth } from "@/contexts/AuthContext";
@@ -25,7 +25,7 @@ const featureCardsConfig: {
     href: "/lesson-plans",
     image: "https://picsum.photos/seed/lessonplan/600/400",
     aiHint: "kelas buku",
-    roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"]
+    roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"] // TataUsaha can view
   },
   {
     title: "Program Tahunan (PROTA)",
@@ -34,7 +34,7 @@ const featureCardsConfig: {
     href: "/annual-programs",
     image: "https://picsum.photos/seed/annualprogram/600/400",
     aiHint: "kalender perencanaan",
-    roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"]
+    roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"] // TataUsaha can view
   },
   {
     title: "Program Semester (Promes)",
@@ -43,7 +43,7 @@ const featureCardsConfig: {
     href: "/semester-programs",
     image: "https://picsum.photos/seed/semesterprogram/600/400",
     aiHint: "perencana meja",
-    roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"]
+    roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"] // TataUsaha can view
   },
   {
     title: "Asisten AI",
@@ -66,20 +66,27 @@ export default function DashboardPage() {
   return (
     <div className="container mx-auto py-6 md:py-8">
       <Card className="mb-8 shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-2xl md:text-3xl font-bold">Selamat Datang di EduAI Planner!</CardTitle>
-          <CardDescription className="text-md md:text-lg">
-            Asisten cerdas Anda untuk perencanaan dan manajemen kurikulum yang efisien.
-            Peran Anda: <span className="font-semibold text-primary">{user?.role}</span>
-          </CardDescription>
+        <CardHeader className="p-6 md:p-8">
+           <div className="flex items-start gap-4 mb-2">
+            <LayoutDashboard className="h-10 w-10 text-primary flex-shrink-0 mt-1" />
+            <div>
+              <CardTitle className="text-3xl md:text-4xl font-bold">Selamat Datang di EduAI Planner!</CardTitle>
+              <CardDescription className="text-lg md:text-xl text-muted-foreground mt-1">
+                Asisten cerdas Anda untuk perencanaan dan manajemen kurikulum yang efisien.
+              </CardDescription>
+            </div>
+          </div>
+          <p className="text-base text-muted-foreground">
+            Peran Anda saat ini: <span className="font-semibold text-primary">{user?.role}</span>
+          </p>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6 md:p-8 pt-0">
           <p className="mb-6 text-base">
             Buat, atur, dan tingkatkan Rencana Pelaksanaan Pembelajaran (RPP), Program Tahunan (PROTA), dan Program Semester (Promes) Anda secara efisien dengan kekuatan AI. 
             Mulai dengan menjelajahi fitur di bawah atau buat item kurikulum baru.
           </p>
           {canCreateNewPlan && (
-            <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground">
+            <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground text-base">
               <Link href="/lesson-plans"> 
                 <PlusCircle className="mr-2 h-5 w-5" /> Buat Rencana Baru
               </Link>
@@ -88,10 +95,10 @@ export default function DashboardPage() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2 lg:gap-8">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2">
         {visibleFeatureCards.map((feature) => (
           <Card key={feature.title} className="flex flex-col overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300 rounded-lg">
-            <div className="relative h-52 w-full"> {/* Increased height slightly */}
+            <div className="relative h-48 w-full"> 
               <Image 
                 src={feature.image} 
                 alt={feature.title} 
@@ -102,15 +109,15 @@ export default function DashboardPage() {
                 data-ai-hint={feature.aiHint}
               />
             </div>
-            <CardHeader>
-              <div className="flex items-center gap-3 mb-2">
-                <feature.icon className="h-7 w-7 text-primary" /> {/* Slightly larger icon */}
-                <CardTitle className="text-xl md:text-2xl">{feature.title}</CardTitle>
+            <CardHeader className="pb-3 pt-4 px-5">
+              <div className="flex items-center gap-3 mb-1">
+                <feature.icon className="h-6 w-6 text-primary flex-shrink-0" /> 
+                <CardTitle className="text-xl font-semibold">{feature.title}</CardTitle>
               </div>
-              <CardDescription className="text-sm md:text-base">{feature.description}</CardDescription>
+              <CardDescription className="text-sm text-muted-foreground leading-relaxed">{feature.description}</CardDescription>
             </CardHeader>
-            <CardContent className="flex-grow flex items-end mt-auto pt-4"> {/* Added mt-auto and pt-4 for spacing */}
-              <Button asChild variant="outline" className="w-full">
+            <CardContent className="flex-grow flex items-end mt-auto pt-3 pb-5 px-5"> 
+              <Button asChild variant="outline" className="w-full text-base">
                 <Link href={feature.href}>
                   Buka {feature.title}
                 </Link>
@@ -119,7 +126,7 @@ export default function DashboardPage() {
           </Card>
         ))}
          {visibleFeatureCards.length === 0 && (
-           <Card className="rounded-lg">
+           <Card className="rounded-lg col-span-full">
             <CardHeader>
               <CardTitle className="text-xl md:text-2xl">Tidak Ada Fitur Tersedia</CardTitle>
               <CardDescription className="text-sm md:text-base">Saat ini tidak ada fitur yang dapat diakses untuk peran Anda.</CardDescription>

@@ -13,7 +13,7 @@ import type { User, SchoolProfile, ExportedCurriculumData, LessonPlan, AnnualPro
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useLog } from "@/contexts/LogContext"; // Import useLog
+import { useLog } from "@/contexts/LogContext"; 
 
 const LESSON_PLANS_STORAGE_KEY = "appLessonPlans";
 const ANNUAL_PROGRAMS_STORAGE_KEY = "appAnnualPrograms";
@@ -25,14 +25,14 @@ const APP_USERS_STORAGE_KEY = "appUsers";
 export default function SettingsPage() {
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
-  const { addLog } = useLog(); // Use LogContext
+  const { addLog } = useLog(); 
   const [isEditUserDialogOpen, setIsEditUserDialogOpen] = useState(false);
   const [isAppPreferencesDialogOpen, setIsAppPreferencesDialogOpen] = useState(false); 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
 
   useEffect(() => {
-    if (user) { // Log page access once user is confirmed
+    if (user) { 
       addLog("INFO", `Pengguna ${user.email} mengakses halaman Pengaturan Akun.`, "SettingsPage");
     }
   }, [user, addLog]);
@@ -40,9 +40,9 @@ export default function SettingsPage() {
   if (!user) {
     return (
        <div className="space-y-6 py-8">
-        <Card>
-          <CardHeader><CardTitle>Memuat Pengaturan...</CardTitle></CardHeader>
-          <CardContent><p>Silakan tunggu...</p></CardContent>
+        <Card className="shadow-lg">
+          <CardHeader className="p-6"><CardTitle className="text-2xl md:text-3xl font-bold">Memuat Pengaturan...</CardTitle></CardHeader>
+          <CardContent className="p-6 pt-0"><p className="text-lg">Silakan tunggu...</p></CardContent>
         </Card>
       </div>
     );
@@ -52,13 +52,13 @@ export default function SettingsPage() {
   const canSeeAppSettings = ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"].includes(user.role);
   
   const canManageSchoolProfile = ["Admin", "TataUsaha"].includes(user.role);
-  const canManageUsers = ["Admin", "TataUsaha"].includes(user.role); // For link visibility
+  const canManageUsers = ["Admin", "TataUsaha"].includes(user.role); 
   
   const canManageData = ["Admin", "WakaKurikulum"].includes(user.role);
   const canSeeSystemSettings = user.role === "Admin";
 
   const handleUserUpdate = (updatedUserData: Partial<User>) => {
-    updateUser(updatedUserData); // AuthContext handles its own logging for this
+    updateUser(updatedUserData); 
     toast({
       title: "Profil Diperbarui",
       description: "Informasi profil Anda telah berhasil diperbarui.",
@@ -127,20 +127,18 @@ export default function SettingsPage() {
           typeof importedData.lessonPlans === 'undefined' ||
           typeof importedData.annualPrograms === 'undefined' ||
           typeof importedData.semesterPrograms === 'undefined' ||
-          typeof importedData.schoolProfile === 'undefined' || // null is a valid value here
+          typeof importedData.schoolProfile === 'undefined' || 
           typeof importedData.appUsers === 'undefined'
         ) {
           throw new Error("Format file tidak valid atau data tidak lengkap.");
         }
 
-        // Validate array types roughly (more specific validation can be added)
         if (!Array.isArray(importedData.lessonPlans)) throw new Error("Data RPP tidak valid.");
         if (!Array.isArray(importedData.annualPrograms)) throw new Error("Data PROTA tidak valid.");
         if (!Array.isArray(importedData.semesterPrograms)) throw new Error("Data Promes tidak valid.");
         if (importedData.schoolProfile !== null && typeof importedData.schoolProfile !== 'object') throw new Error("Data Profil Sekolah tidak valid.");
         if (!Array.isArray(importedData.appUsers)) throw new Error("Data Pengguna tidak valid.");
 
-        // Store imported data
         localStorage.setItem(LESSON_PLANS_STORAGE_KEY, JSON.stringify(importedData.lessonPlans));
         localStorage.setItem(ANNUAL_PROGRAMS_STORAGE_KEY, JSON.stringify(importedData.annualPrograms));
         localStorage.setItem(SEMESTER_PROGRAMS_STORAGE_KEY, JSON.stringify(importedData.semesterPrograms));
@@ -152,9 +150,7 @@ export default function SettingsPage() {
           description: "Data telah berhasil diimpor. Muat ulang halaman untuk melihat perubahan.",
         });
         addLog("INFO", `Impor data aplikasi dari file ${file.name} berhasil oleh pengguna ${user?.email}. Halaman perlu dimuat ulang.`, "SettingsPage-DataManagement");
-        // Optionally, trigger a state update or page reload to reflect changes immediately
-        // window.location.reload(); // Or use Next.js router to refresh data if using server-side state management
-
+        
       } catch (error) {
         console.error("Error importing data:", error);
         let errorMessage = "Terjadi kesalahan saat mengimpor data.";
@@ -168,7 +164,6 @@ export default function SettingsPage() {
         });
         addLog("ERROR", `Impor data aplikasi dari file ${file.name} gagal. Pengguna: ${user?.email}. Kesalahan: ${errorMessage}`, "SettingsPage-DataManagement");
       } finally {
-        // Reset file input
         if (fileInputRef.current) {
           fileInputRef.current.value = "";
         }
@@ -178,16 +173,18 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="space-y-6 py-4 md:py-8">
+    <div className="space-y-8 py-4 md:py-8">
       <Card className="shadow-lg">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-              <Cog className="h-8 w-8 text-primary" />
-              <CardTitle className="text-3xl font-bold">Pengaturan Akun</CardTitle>
+        <CardHeader className="p-6">
+          <div className="flex items-center gap-4">
+              <Cog className="h-10 w-10 text-primary flex-shrink-0" />
+              <div>
+                <CardTitle className="text-3xl md:text-4xl font-bold">Pengaturan Akun</CardTitle>
+                <CardDescription className="text-lg md:text-xl text-muted-foreground mt-1">
+                    Kelola preferensi aplikasi dan pengaturan akun Anda.
+                </CardDescription>
+              </div>
           </div>
-          <CardDescription className="text-lg">
-            Kelola preferensi aplikasi dan pengaturan akun Anda.
-          </CardDescription>
         </CardHeader>
       </Card>
 
@@ -197,26 +194,26 @@ export default function SettingsPage() {
         </div>
       )}
       
-      <Card className="mt-6">
-        <CardHeader>
-            <CardTitle className="text-xl">Pengaturan Umum & Akun</CardTitle>
+      <Card className="mt-6 shadow-md">
+        <CardHeader className="p-6">
+            <CardTitle className="text-2xl font-semibold">Pengaturan Umum & Akun</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6 pt-0">
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {canSeeProfileSettings && (
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <UserCircle className="h-6 w-6 text-primary" />
-                    <CardTitle>Informasi Profil Pengguna</CardTitle>
+              <Card className="shadow-sm">
+                <CardHeader className="p-5">
+                  <div className="flex items-center gap-3">
+                    <UserCircle className="h-7 w-7 text-primary" />
+                    <CardTitle className="text-xl font-semibold">Informasi Profil</CardTitle>
                   </div>
-                  <CardDescription>Perbarui rincian pribadi Anda.</CardDescription>
+                  <CardDescription className="text-base text-muted-foreground">Perbarui rincian pribadi Anda.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-2">
-                  <p><strong>Nama:</strong> {user.name}</p>
-                  <p><strong>Email:</strong> {user.email}</p>
-                  <p><strong>Peran:</strong> {user.role}</p>
-                  <Button variant="outline" className="mt-2" onClick={() => setIsEditUserDialogOpen(true)}>
+                <CardContent className="space-y-2 p-5 pt-0">
+                  <p className="text-base"><strong>Nama:</strong> {user.name}</p>
+                  <p className="text-base"><strong>Email:</strong> {user.email}</p>
+                  <p className="text-base"><strong>Peran:</strong> {user.role}</p>
+                  <Button variant="outline" className="mt-3 text-base" onClick={() => setIsEditUserDialogOpen(true)}>
                     Edit Profil
                   </Button>
                 </CardContent>
@@ -224,44 +221,44 @@ export default function SettingsPage() {
             )}
 
             {canSeeAppSettings && (
-              <Card>
-                <CardHeader>
-                 <div className="flex items-center gap-2">
-                    <Palette className="h-6 w-6 text-primary" /> 
-                    <CardTitle>Preferensi Aplikasi</CardTitle>
+              <Card className="shadow-sm">
+                <CardHeader className="p-5">
+                 <div className="flex items-center gap-3">
+                    <Palette className="h-7 w-7 text-primary" /> 
+                    <CardTitle className="text-xl font-semibold">Preferensi Aplikasi</CardTitle>
                   </div>
-                  <CardDescription>Sesuaikan tema tampilan aplikasi Anda.</CardDescription> 
+                  <CardDescription className="text-base text-muted-foreground">Sesuaikan tema tampilan aplikasi Anda.</CardDescription> 
                 </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">Atur tema visual aplikasi (Terang, Gelap, atau Sistem).</p>
-                   <Button variant="outline" className="mt-2" onClick={() => setIsAppPreferencesDialogOpen(true)}>Atur Preferensi Tampilan</Button>
+                <CardContent className="p-5 pt-0">
+                  <p className="text-base text-muted-foreground mb-3">Atur tema visual aplikasi (Terang, Gelap, atau Sistem).</p>
+                   <Button variant="outline" className="text-base" onClick={() => setIsAppPreferencesDialogOpen(true)}>Atur Preferensi Tampilan</Button>
                 </CardContent>
               </Card>
             )}
 
             {canManageData && (
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <Database className="h-6 w-6 text-primary" />
-                    <CardTitle>Manajemen Data Aplikasi</CardTitle>
+              <Card className="shadow-sm">
+                <CardHeader className="p-5">
+                  <div className="flex items-center gap-3">
+                    <Database className="h-7 w-7 text-primary" />
+                    <CardTitle className="text-xl font-semibold">Manajemen Data</CardTitle>
                   </div>
-                  <CardDescription>Ekspor atau impor semua data aplikasi termasuk kurikulum, profil sekolah, dan pengguna.</CardDescription>
+                  <CardDescription className="text-base text-muted-foreground">Ekspor atau impor semua data aplikasi.</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <Alert variant="destructive" className="mb-4">
-                    <FileText className="h-4 w-4"/>
-                    <AlertTitle>Penting!</AlertTitle>
-                    <AlertDescription>
-                      Fitur impor akan menimpa SEMUA data yang ada saat ini (RPP, PROTA, Promes, Profil Sekolah, Pengguna) dengan data dari file yang diimpor. Pastikan Anda memiliki cadangan jika diperlukan.
+                <CardContent className="p-5 pt-0">
+                  <Alert variant="destructive" className="mb-4 shadow-inner">
+                    <FileText className="h-5 w-5"/>
+                    <AlertTitle className="font-semibold">Penting!</AlertTitle>
+                    <AlertDescription className="text-sm">
+                      Fitur impor akan menimpa SEMUA data yang ada saat ini. Pastikan Anda memiliki cadangan jika diperlukan.
                     </AlertDescription>
                   </Alert>
-                  <div className="flex flex-col sm:flex-row gap-2 mt-2">
-                    <Button variant="outline" onClick={handleExportData} className="w-full sm:w-auto">
-                      <Download className="mr-2 h-4 w-4" /> Ekspor Semua Data
+                  <div className="flex flex-col sm:flex-row gap-3 mt-2">
+                    <Button variant="outline" onClick={handleExportData} className="w-full sm:w-auto text-base">
+                      <Download className="mr-2 h-5 w-5" /> Ekspor Data
                     </Button>
-                    <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="w-full sm:w-auto">
-                      <Upload className="mr-2 h-4 w-4" /> Impor Semua Data
+                    <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="w-full sm:w-auto text-base">
+                      <Upload className="mr-2 h-5 w-5" /> Impor Data
                     </Button>
                     <input
                         type="file"
@@ -276,17 +273,17 @@ export default function SettingsPage() {
               </Card>
             )}
              {canManageUsers && (
-                <Card>
-                <CardHeader>
-                    <div className="flex items-center gap-2">
-                        <Users className="h-6 w-6 text-primary" />
-                        <CardTitle>Manajemen Pengguna</CardTitle>
+                <Card className="shadow-sm">
+                <CardHeader className="p-5">
+                    <div className="flex items-center gap-3">
+                        <Users className="h-7 w-7 text-primary" />
+                        <CardTitle className="text-xl font-semibold">Manajemen Pengguna</CardTitle>
                     </div>
-                    <CardDescription>Kelola akun pengguna dan peran mereka dalam sistem.</CardDescription>
+                    <CardDescription className="text-base text-muted-foreground">Kelola akun pengguna dan peran mereka.</CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <p className="text-muted-foreground">Akses panel manajemen pengguna untuk menambah, mengedit, atau menghapus pengguna.</p>
-                    <Button asChild className="mt-2">
+                <CardContent className="p-5 pt-0">
+                    <p className="text-base text-muted-foreground mb-3">Akses panel manajemen pengguna untuk menambah, mengedit, atau menghapus pengguna.</p>
+                    <Button asChild className="text-base">
                         <Link href="/admin/user-management">Buka Manajemen Pengguna</Link>
                     </Button>
                 </CardContent>
@@ -295,17 +292,17 @@ export default function SettingsPage() {
 
 
             {canSeeSystemSettings && (
-                <Card>
-                <CardHeader>
-                    <div className="flex items-center gap-2">
-                        <ShieldCheck className="h-6 w-6 text-primary" />
-                        <CardTitle>Pengaturan Sistem</CardTitle>
+                <Card className="shadow-sm">
+                <CardHeader className="p-5">
+                    <div className="flex items-center gap-3">
+                        <ShieldCheck className="h-7 w-7 text-primary" />
+                        <CardTitle className="text-xl font-semibold">Pengaturan Sistem</CardTitle>
                     </div>
-                    <CardDescription>Konfigurasi tingkat lanjut untuk aplikasi (Khusus Admin).</CardDescription>
+                    <CardDescription className="text-base text-muted-foreground">Konfigurasi tingkat lanjut (Khusus Admin).</CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <p className="text-muted-foreground">Akses panel pengaturan sistem untuk konfigurasi inti aplikasi.</p>
-                    <Button asChild className="mt-2">
+                <CardContent className="p-5 pt-0">
+                    <p className="text-base text-muted-foreground mb-3">Akses panel pengaturan sistem untuk konfigurasi inti aplikasi.</p>
+                    <Button asChild className="text-base">
                         <Link href="/admin/system-settings">Buka Pengaturan Sistem</Link>
                     </Button>
                 </CardContent>
@@ -315,7 +312,7 @@ export default function SettingsPage() {
           </div>
            {!(canSeeProfileSettings || canSeeAppSettings || canManageData || canSeeSystemSettings || canManageUsers) && 
             !canManageSchoolProfile && ( 
-              <p className="text-muted-foreground">Tidak ada pengaturan yang tersedia untuk peran Anda saat ini.</p>
+              <p className="text-base text-muted-foreground">Tidak ada pengaturan yang tersedia untuk peran Anda saat ini.</p>
             )}
         </CardContent>
       </Card>

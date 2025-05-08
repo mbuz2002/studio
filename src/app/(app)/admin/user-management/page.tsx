@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserManagementSection } from "@/components/settings/UserManagementSection";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -45,7 +45,7 @@ export default function UserManagementPage() {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="ml-2">Memverifikasi akses...</p>
+        <p className="ml-3 text-lg">Memverifikasi akses...</p>
       </div>
     );
   }
@@ -53,22 +53,24 @@ export default function UserManagementPage() {
   if (!user || (user.role !== "Admin" && user.role !== "TataUsaha")) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <p>Akses ditolak.</p>
+        <p className="text-lg">Akses ditolak.</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 py-4 md:py-8">
+    <div className="space-y-8 py-4 md:py-8">
       <Card className="shadow-lg">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <Users className="h-8 w-8 text-primary" />
-            <CardTitle className="text-3xl font-bold">Manajemen Pengguna</CardTitle>
+        <CardHeader className="p-6">
+          <div className="flex items-center gap-4">
+            <Users className="h-10 w-10 text-primary flex-shrink-0" />
+            <div>
+                <CardTitle className="text-3xl md:text-4xl font-bold">Manajemen Pengguna</CardTitle>
+                <CardDescription className="text-lg md:text-xl text-muted-foreground mt-1">
+                    Kelola akun pengguna, peran, dan akses mereka ke sistem EduAI Planner.
+                </CardDescription>
+            </div>
           </div>
-          <CardDescription className="text-lg">
-            Kelola akun pengguna, peran, dan akses mereka ke sistem EduAI Planner.
-          </CardDescription>
         </CardHeader>
       </Card>
       <UserManagementSection />

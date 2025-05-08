@@ -8,7 +8,7 @@ import type { AnnualProgram, AnyCurriculumItem } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { FileUp, Filter, Search, Loader2 } from "lucide-react";
+import { FileUp, Filter, Search, Loader2, CalendarDays } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
@@ -85,7 +85,7 @@ export default function AnnualProgramsPage() {
         }
       } catch (error) {
         console.error("Failed to access or parse localStorage for annual programs:", error);
-        setAnnualPrograms(initialAnnualProgramsData); // Fallback
+        setAnnualPrograms(initialAnnualProgramsData); 
         toast({
           title: "Gagal Memuat Data Lokal",
           description: "Menggunakan data PROTA standar. Perubahan mungkin tidak tersimpan dengan benar.",
@@ -180,29 +180,32 @@ export default function AnnualProgramsPage() {
 
   return (
     <div className="space-y-6 py-4 md:py-8">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold">Program Tahunan (PROTA)</CardTitle>
-          <CardDescription className="text-base">
+      <Card className="shadow-lg">
+        <CardHeader className="p-6">
+          <div className="flex items-center gap-3">
+            <CalendarDays className="h-8 w-8 text-primary" />
+            <CardTitle className="text-2xl md:text-3xl font-bold">Program Tahunan (PROTA)</CardTitle>
+          </div>
+          <CardDescription className="text-base md:text-lg text-muted-foreground mt-2">
             Kelola program tahun ajaran Anda. 
             {user.role === "KepalaSekolah" || user.role === "WakaKurikulum" || user.role === "TataUsaha" ? " Anda dapat melihat semua PROTA." : ""}
             {user.role === "Guru" ? " Lihat PROTA yang telah disusun." : ""}
             {(user.role === "Admin" || user.role === "WakaKurikulum") && " Anda dapat membuat, mengedit, dan menghapus PROTA."}
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="flex flex-col sm:flex-row gap-2 mb-4 items-center">
+        <CardContent className="p-6 pt-0">
+          <div className="flex flex-col sm:flex-row gap-3 mb-6 items-center">
              <div className="flex-grow w-full relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 type="search"
                 placeholder="Cari program tahunan..."
-                className="pl-8 w-full"
+                className="pl-10 w-full text-base sm:text-sm"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <div className="flex gap-2 w-full sm:w-auto">
+            <div className="flex gap-3 w-full sm:w-auto">
                 <Button variant="outline" className="flex-1 sm:flex-none">
                 <Filter className="mr-2 h-4 w-4" /> Filter
                 </Button>
@@ -213,7 +216,7 @@ export default function AnnualProgramsPage() {
                 )}
             </div>
             {canCreate && (
-              <div className="w-full sm:w-auto mt-2 sm:mt-0">
+              <div className="w-full sm:w-auto">
                   <CurriculumFormDialog
                   triggerButtonText="Buat Program Baru"
                   dialogTitle="Buat Program Tahunan Baru (PROTA)"
@@ -223,7 +226,7 @@ export default function AnnualProgramsPage() {
                   initialData={null}
                   forceOpen={isFormOpen && !editingItem}
                   onOpenChange={(open) => {
-                    if (!open) {
+                    if (!open && editingItem) { // Clear editingItem only if form closed AND it was for editing
                       setEditingItem(null);
                     }
                     setIsFormOpen(open);
@@ -246,7 +249,7 @@ export default function AnnualProgramsPage() {
       {editingItem && canEdit && (
          <CurriculumFormDialog
             triggerButtonText="Pemicu Edit Tersembunyi"
-            dialogTitle={`Edit Program Tahunan: ${editingItem.title}`}
+            dialogTitle={`Edit Program Tahunan`} // Actual title set in form
             dialogDescription="Perbarui rincian untuk program tahunan ini."
             itemType="PROTA"
             initialData={editingItem}
@@ -263,4 +266,3 @@ export default function AnnualProgramsPage() {
     </div>
   );
 }
-
