@@ -59,10 +59,10 @@ export default function UserManagementPage() {
   }
 
   return (
-    <div className="space-y-8 py-4 md:py-8">
-      <Card className="shadow-lg rounded-lg">
-        <CardHeader className="p-6 rounded-t-lg bg-gradient-to-br from-primary to-accent text-primary-foreground">
-          <div className="flex items-center gap-4">
+    <div className="space-y-6 py-4 md:py-8">
+      <Card className="shadow-xl rounded-lg overflow-hidden">
+        <CardHeader className="p-6 rounded-t-lg bg-gradient-to-br from-primary via-accent to-secondary text-primary-foreground">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <Users className="h-10 w-10 text-primary-foreground drop-shadow-lg flex-shrink-0" />
             <div>
                 <CardTitle className="text-3xl md:text-4xl font-bold">Manajemen Pengguna</CardTitle>
@@ -73,7 +73,10 @@ export default function UserManagementPage() {
           </div>
         </CardHeader>
       </Card>
-      <UserManagementSection />
+      <div className="overflow-x-auto">
+        <UserManagementSection />
+      </div>
     </div>
   );
 }
+

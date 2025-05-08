@@ -49,8 +49,8 @@ export default function SettingsPage() {
   if (!user) {
     return (
        <div className="space-y-6 py-8">
-        <Card className="shadow-lg rounded-lg">
-          <CardHeader className="p-6 rounded-t-lg bg-gradient-to-br from-primary to-accent text-primary-foreground">
+        <Card className="shadow-xl rounded-lg overflow-hidden">
+          <CardHeader className="p-6 rounded-t-lg bg-gradient-to-br from-primary via-accent to-secondary text-primary-foreground">
             <CardTitle className="text-2xl md:text-3xl font-bold">Memuat Pengaturan...</CardTitle>
           </CardHeader>
           <CardContent className="p-6 pt-0"><p className="text-lg">Silakan tunggu...</p></CardContent>
@@ -196,10 +196,10 @@ export default function SettingsPage() {
 
 
   return (
-    <div className="space-y-8 py-4 md:py-8">
-      <Card className="shadow-lg rounded-lg">
-        <CardHeader className="p-6 rounded-t-lg bg-gradient-to-br from-primary to-accent text-primary-foreground">
-          <div className="flex items-center gap-4">
+    <div className="space-y-6 py-4 md:py-8">
+      <Card className="shadow-xl rounded-lg overflow-hidden">
+        <CardHeader className="p-6 rounded-t-lg bg-gradient-to-br from-primary via-accent to-secondary text-primary-foreground">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
               <Cog className="h-10 w-10 text-primary-foreground drop-shadow-lg flex-shrink-0" />
               <div>
                 <CardTitle className="text-3xl md:text-4xl font-bold">Pengaturan Aplikasi</CardTitle>
@@ -217,14 +217,14 @@ export default function SettingsPage() {
         </div>
       )}
       
-      <Card className="mt-6 shadow-md rounded-lg">
-        <CardHeader className="p-6">
+      <Card className="mt-6 shadow-lg rounded-lg overflow-hidden">
+        <CardHeader className="p-6 bg-muted/20">
             <CardTitle className="text-2xl font-semibold">Pengaturan Akun & Aplikasi</CardTitle>
         </CardHeader>
-        <CardContent className="p-6 pt-0">
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <CardContent className="p-4 sm:p-6">
+          <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
             {canSeeProfileSettings && (
-              <Card className="shadow-sm rounded-md">
+              <Card className="shadow-md rounded-md">
                 <CardHeader className="p-5">
                   <div className="flex items-center gap-3">
                     <UserCircle className="h-7 w-7 text-primary" />
@@ -236,7 +236,7 @@ export default function SettingsPage() {
                   <p className="text-base"><strong>Nama:</strong> {user.name}</p>
                   <p className="text-base"><strong>Email:</strong> {user.email}</p>
                   <p className="text-base"><strong>Peran:</strong> {user.role}</p>
-                  <Button variant="outline" className="mt-3 text-base" onClick={() => setIsEditUserDialogOpen(true)}>
+                  <Button variant="outline" className="mt-3 text-base w-full sm:w-auto" onClick={() => setIsEditUserDialogOpen(true)}>
                     Edit Profil
                   </Button>
                 </CardContent>
@@ -244,7 +244,7 @@ export default function SettingsPage() {
             )}
 
             {canSeeAppSettings && (
-              <Card className="shadow-sm rounded-md">
+              <Card className="shadow-md rounded-md">
                 <CardHeader className="p-5">
                  <div className="flex items-center gap-3">
                     <Palette className="h-7 w-7 text-primary" /> 
@@ -254,13 +254,13 @@ export default function SettingsPage() {
                 </CardHeader>
                 <CardContent className="p-5 pt-0">
                   <p className="text-base text-muted-foreground mb-3">Atur tema visual (Terang, Gelap, atau Sistem).</p>
-                   <Button variant="outline" className="text-base" onClick={() => setIsAppPreferencesDialogOpen(true)}>Atur Preferensi Tampilan</Button>
+                   <Button variant="outline" className="text-base w-full sm:w-auto" onClick={() => setIsAppPreferencesDialogOpen(true)}>Atur Preferensi Tampilan</Button>
                 </CardContent>
               </Card>
             )}
             
             {canManageCurriculumSettings && (
-              <Card className="shadow-sm rounded-md">
+              <Card className="shadow-md rounded-md">
                 <CardHeader className="p-5">
                   <div className="flex items-center gap-3">
                     <BookCopy className="h-7 w-7 text-primary" />
@@ -291,7 +291,7 @@ export default function SettingsPage() {
 
 
             {canManageData && (
-              <Card className="shadow-sm rounded-md">
+              <Card className="shadow-md rounded-md">
                 <CardHeader className="p-5">
                   <div className="flex items-center gap-3">
                     <Database className="h-7 w-7 text-primary" />
@@ -327,7 +327,7 @@ export default function SettingsPage() {
               </Card>
             )}
              {canManageUsers && (
-                <Card className="shadow-sm rounded-md">
+                <Card className="shadow-md rounded-md">
                 <CardHeader className="p-5">
                     <div className="flex items-center gap-3">
                         <Users className="h-7 w-7 text-primary" />
@@ -337,7 +337,7 @@ export default function SettingsPage() {
                 </CardHeader>
                 <CardContent className="p-5 pt-0">
                     <p className="text-base text-muted-foreground mb-3">Akses panel manajemen pengguna untuk menambah, mengedit, atau menghapus pengguna.</p>
-                    <Button asChild className="text-base">
+                    <Button asChild className="text-base w-full sm:w-auto">
                         <Link href="/admin/user-management">Buka Manajemen Pengguna</Link>
                     </Button>
                 </CardContent>
@@ -346,7 +346,7 @@ export default function SettingsPage() {
 
 
             {canSeeSystemSettings && (
-                <Card className="shadow-sm rounded-md">
+                <Card className="shadow-md rounded-md">
                 <CardHeader className="p-5">
                     <div className="flex items-center gap-3">
                         <ShieldCheck className="h-7 w-7 text-primary" />
@@ -356,7 +356,7 @@ export default function SettingsPage() {
                 </CardHeader>
                 <CardContent className="p-5 pt-0">
                     <p className="text-base text-muted-foreground mb-3">Akses panel pengaturan sistem untuk konfigurasi inti aplikasi.</p>
-                    <Button asChild className="text-base">
+                    <Button asChild className="text-base w-full sm:w-auto">
                         <Link href="/admin/system-settings">Buka Pengaturan Sistem</Link>
                     </Button>
                 </CardContent>
@@ -387,3 +387,4 @@ export default function SettingsPage() {
     </div>
   );
 }
+

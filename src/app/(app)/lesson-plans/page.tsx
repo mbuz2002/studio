@@ -203,36 +203,38 @@ export default function LessonPlansPage() {
 
   return (
     <div className="space-y-6 py-4 md:py-8">
-      <Card className="shadow-lg rounded-lg">
-        <CardHeader className="p-6 rounded-t-lg bg-gradient-to-br from-primary to-accent text-primary-foreground">
-           <div className="flex items-center gap-3">
-            <BookOpenText className="h-8 w-8 text-primary-foreground drop-shadow-lg" />
-            <CardTitle className="text-2xl md:text-3xl font-bold">Rencana Pembelajaran (RPP/Modul Ajar)</CardTitle>
+      <Card className="shadow-xl rounded-lg overflow-hidden">
+        <CardHeader className="p-6 rounded-t-lg bg-gradient-to-br from-primary via-accent to-secondary text-primary-foreground">
+           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <BookOpenText className="h-10 w-10 text-primary-foreground drop-shadow-lg flex-shrink-0" />
+            <div>
+                <CardTitle className="text-2xl md:text-3xl font-bold">Rencana Pembelajaran (RPP/Modul Ajar)</CardTitle>
+                <CardDescription className="text-base md:text-lg text-primary-foreground/90 mt-1">
+                    Kelola rencana pembelajaran Anda. 
+                    {user.role === "KepalaSekolah" || user.role === "WakaKurikulum" || user.role === "TataUsaha" ? " Anda dapat melihat semua RPP yang dibuat." : ""}
+                    {user.role === "Guru" ? " Buat baru, edit, atau lihat rincian RPP Anda." : ""}
+                </CardDescription>
+            </div>
           </div>
-          <CardDescription className="text-base md:text-lg text-primary-foreground/90 mt-2">
-            Kelola rencana pembelajaran Anda. 
-            {user.role === "KepalaSekolah" || user.role === "WakaKurikulum" || user.role === "TataUsaha" ? " Anda dapat melihat semua RPP yang dibuat." : ""}
-            {user.role === "Guru" ? " Buat baru, edit, atau lihat rincian RPP Anda." : ""}
-          </CardDescription>
         </CardHeader>
-        <CardContent className="p-6 pt-4">
-          <div className="flex flex-col sm:flex-row gap-3 mb-6 items-center">
-            <div className="flex-grow w-full relative">
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row gap-3 mb-6 items-stretch sm:items-center">
+            <div className="flex-grow relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 type="search"
                 placeholder="Cari rencana (judul, mapel, jenjang, kurikulum)..."
-                className="pl-10 w-full text-base sm:text-sm"
+                className="pl-10 w-full text-base sm:text-sm h-10"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <div className="flex gap-3 w-full sm:w-auto">
-              <Button variant="outline" className="flex-1 sm:flex-none">
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+              <Button variant="outline" className="w-full sm:w-auto text-base sm:text-sm h-10">
                 <Filter className="mr-2 h-4 w-4" /> Filter
               </Button>
               {canImport && (
-                <Button variant="outline" className="flex-1 sm:flex-none" onClick={() => toast({title: "Fitur Belum Tersedia", description: "Impor RPP akan segera hadir!"})}>
+                <Button variant="outline" className="w-full sm:w-auto text-base sm:text-sm h-10" onClick={() => toast({title: "Fitur Belum Tersedia", description: "Impor RPP akan segera hadir!"})}>
                     <FileUp className="mr-2 h-4 w-4" /> Impor
                 </Button>
               )}
@@ -250,15 +252,17 @@ export default function LessonPlansPage() {
                 </div>
              )}
           </div>
-          <CurriculumDataTable
-            items={filteredLessonPlans}
-            onView={handleView}
-            onEdit={handleEdit} 
-            onDelete={handleDelete} 
-            canEdit={(item) => canEditItem(item as LessonPlan)} 
-            canDelete={(item) => canDeleteItem(item as LessonPlan)} 
-            itemTypeForExport="RPP"
-          />
+          <div className="overflow-x-auto">
+            <CurriculumDataTable
+                items={filteredLessonPlans}
+                onView={handleView}
+                onEdit={handleEdit} 
+                onDelete={handleDelete} 
+                canEdit={(item) => canEditItem(item as LessonPlan)} 
+                canDelete={(item) => canDeleteItem(item as LessonPlan)} 
+                itemTypeForExport="RPP"
+            />
+          </div>
         </CardContent>
       </Card>
       {editingItem && canEditItem(editingItem) && ( 
@@ -279,3 +283,4 @@ export default function LessonPlansPage() {
     </div>
   );
 }
+

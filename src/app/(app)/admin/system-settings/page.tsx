@@ -105,10 +105,10 @@ export default function AdminSystemSettingsPage() {
   }
 
   return (
-    <div className="space-y-8 py-4 md:py-8">
-      <Card className="shadow-lg rounded-lg">
-        <CardHeader className="p-6 rounded-t-lg bg-gradient-to-br from-primary to-accent text-primary-foreground">
-          <div className="flex items-center gap-4">
+    <div className="space-y-6 py-4 md:py-8">
+      <Card className="shadow-xl rounded-lg overflow-hidden">
+        <CardHeader className="p-6 rounded-t-lg bg-gradient-to-br from-primary via-accent to-secondary text-primary-foreground">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <ShieldCheck className="h-10 w-10 text-primary-foreground drop-shadow-lg flex-shrink-0" />
             <div>
                 <CardTitle className="text-3xl md:text-4xl font-bold">Pengaturan Sistem</CardTitle>
@@ -120,7 +120,7 @@ export default function AdminSystemSettingsPage() {
         </CardHeader>
       </Card>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
         <Card className="shadow-md rounded-md">
           <CardHeader className="p-5">
             <CardTitle className="text-xl font-semibold">Mode Perawatan</CardTitle>
@@ -160,7 +160,7 @@ export default function AdminSystemSettingsPage() {
               </div>
                <p className="text-xs text-muted-foreground">Kunci ini digunakan untuk layanan GenAI. Ditampilkan hanya untuk demo.</p>
             </div>
-            <Button variant="secondary" onClick={handleGenkitDashboard} className="text-base">
+            <Button variant="secondary" onClick={handleGenkitDashboard} className="text-base w-full sm:w-auto">
               <ExternalLink className="mr-2 h-5 w-5" /> Buka Dasbor Genkit (Dev)
             </Button>
           </CardContent>
@@ -172,7 +172,7 @@ export default function AdminSystemSettingsPage() {
             <CardDescription className="text-base text-muted-foreground">Kontrol cache aplikasi untuk memastikan data terbaru ditampilkan.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 p-5 pt-0">
-            <Button onClick={handleClearCache} variant="destructive" className="text-base">
+            <Button onClick={handleClearCache} variant="destructive" className="text-base w-full sm:w-auto">
               <Trash2 className="mr-2 h-5 w-5" /> Bersihkan Cache Aplikasi
             </Button>
             <p className="text-sm text-muted-foreground">
@@ -187,7 +187,7 @@ export default function AdminSystemSettingsPage() {
             <CardDescription className="text-base text-muted-foreground">Tinjau log aktivitas dan kesalahan sistem untuk pemecahan masalah.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 p-5 pt-0">
-            <Button onClick={handleViewLogs} variant="outline" className="text-base">
+            <Button onClick={handleViewLogs} variant="outline" className="text-base w-full sm:w-auto">
               <Activity className="mr-2 h-5 w-5" /> Lihat Log Sistem
             </Button>
             <p className="text-sm text-muted-foreground">
@@ -207,3 +207,4 @@ export default function AdminSystemSettingsPage() {
     </div>
   );
 }
+
