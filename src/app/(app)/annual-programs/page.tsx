@@ -30,7 +30,7 @@ const initialAnnualPrograms: AnnualProgram[] = [
     profilPelajarPancasilaFocus: ["Bernalar Kritis", "Kreatif"],
     createdAt: new Date("2024-07-01T00:00:00Z").toISOString(),
     updatedAt: new Date("2024-07-05T00:00:00Z").toISOString(),
-    createdByUserId: "waka-prota1"
+    createdByUserId: "user-3" // Waka Kurikulum
   },
   {
     id: "prota2",
@@ -52,7 +52,7 @@ const initialAnnualPrograms: AnnualProgram[] = [
     profilPelajarPancasilaFocus: ["Gotong Royong", "Mandiri"],
     createdAt: new Date("2024-07-02T00:00:00Z").toISOString(),
     updatedAt: new Date("2024-07-06T00:00:00Z").toISOString(),
-    createdByUserId: "admin-prota2"
+    createdByUserId: "user-1" // Admin
   },
 ];
 
@@ -62,23 +62,15 @@ export default function AnnualProgramsPage() {
   const [editingItem, setEditingItem] = useState<AnnualProgram | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [isClient, setIsClient] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false); // Control dialog visibility
 
   useEffect(() => {
     setIsClient(true);
-    // For KepalaSekolah/WakaKurikulum/TataUsaha/Admin, fetch all. Gurus view only (or their own if applicable).
-     if (user && (user.role === "KepalaSekolah" || user.role === "WakaKurikulum" || user.role === "TataUsaha" || user.role === "Admin")) {
-        setAnnualPrograms(initialAnnualPrograms);
-    } else if (user && user.role === "Guru") {
-        // PROTA/Promes are typically not user-specific to one Guru in the same way RPPs are.
-        // Gurus would typically view PROTA/Promes relevant to their subject/grade.
-        // For demo, they see all.
+     if (user) { // All relevant roles see all PROTA for now
         setAnnualPrograms(initialAnnualPrograms);
     }
   }, [user]);
 
-  // Role-based permissions for PROTA
-  // Create, Edit, Delete: Admin, WakaKurikulum.
-  // View: All roles (Admin, KepalaSekolah, WakaKurikulum, TataUsaha, Guru).
   const canCreate = user && (user.role === "Admin" || user.role === "WakaKurikulum");
   const canEdit = user && (user.role === "Admin" || user.role === "WakaKurikulum");
   const canDelete = user && (user.role === "Admin" || user.role === "WakaKurikulum");
@@ -86,36 +78,44 @@ export default function AnnualProgramsPage() {
 
   const handleCreateOrUpdate = (itemData: AnyCurriculumItem) => {
     const newItem = itemData as AnnualProgram;
-     if (!newItem.createdByUserId && user) { 
+     if (!newItem.id) { // New item
+        newItem.id = `prota-${Date.now()}`;
+        newItem.createdAt = new Date().toISOString();
+    }
+    newItem.updatedAt = new Date().toISOString();
+
+    if (!newItem.createdByUserId && user) { 
         newItem.createdByUserId = user.id;
     }
 
     if (editingItem) {
-      if (!canEdit) { // Checks Admin/Waka permission for PROTA
+      if (!canEdit) { 
         alert("Anda tidak memiliki izin untuk mengedit PROTA.");
         return;
       }
       setAnnualPrograms(annualPrograms.map(ap => ap.id === newItem.id ? newItem : ap));
     } else {
-      if (!canCreate) { // Checks Admin/Waka permission for PROTA
+      if (!canCreate) { 
         alert("Anda tidak memiliki izin untuk membuat PROTA baru.");
         return;
       }
       setAnnualPrograms([newItem, ...annualPrograms]);
     }
     setEditingItem(null);
+    setIsFormOpen(false); // Close dialog
   };
 
   const handleEdit = (item: AnyCurriculumItem) => {
-    if (!canEdit) { // Checks Admin/Waka permission for PROTA
+    if (!canEdit) { 
         alert("Anda tidak memiliki izin untuk mengedit PROTA.");
         return;
     }
     setEditingItem(item as AnnualProgram);
+    setIsFormOpen(true); // Open dialog
   };
 
   const handleDelete = (itemToDelete: AnyCurriculumItem) => {
-    if (!canDelete) { // Checks Admin/Waka permission for PROTA
+    if (!canDelete) { 
         alert("Anda tidak memiliki izin untuk menghapus PROTA.");
         return;
     }
@@ -161,7 +161,7 @@ export default function AnnualProgramsPage() {
             Kelola program tahun ajaran Anda. 
             {user.role === "KepalaSekolah" || user.role === "WakaKurikulum" || user.role === "TataUsaha" ? " Anda dapat melihat semua PROTA." : ""}
             {user.role === "Guru" ? " Lihat PROTA yang telah disusun." : ""}
-            {user.role === "Admin" && " Anda dapat membuat, mengedit, dan menghapus PROTA."}
+            {(user.role === "Admin" || user.role === "WakaKurikulum") && " Anda dapat membuat, mengedit, dan menghapus PROTA."}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -195,6 +195,13 @@ export default function AnnualProgramsPage() {
                   itemType="PROTA"
                   onSubmit={handleCreateOrUpdate}
                   initialData={null}
+                  forceOpen={isFormOpen && !editingItem} // Open for new item
+                  onOpenChange={(open) => {
+                    if (!open) {
+                      setEditingItem(null); // Reset editing item when dialog closes
+                    }
+                    setIsFormOpen(open);
+                  }}
                   />
               </div>
             )}
@@ -202,29 +209,33 @@ export default function AnnualProgramsPage() {
           <CurriculumDataTable
             items={filteredAnnualPrograms}
             onView={handleView}
-            onEdit={canEdit ? handleEdit : undefined} // Pass function or undefined
-            onDelete={canDelete ? handleDelete : undefined} // Pass function or undefined
-            canEdit={() => canEdit} // Pass explicit permission check for PROTA
-            canDelete={() => canDelete} // Pass explicit permission check for PROTA
+            onEdit={canEdit ? handleEdit : undefined} 
+            onDelete={canDelete ? handleDelete : undefined} 
+            canEdit={() => canEdit} 
+            canDelete={() => canDelete} 
             itemTypeForExport="PROTA"
           />
         </CardContent>
       </Card>
       {editingItem && canEdit && (
-        <>
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40" onClick={() => setEditingItem(null)} />
-          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-[90vw] max-w-2xl">
-              <CurriculumFormDialog
-                  triggerButtonText="Pemicu Edit Tersembunyi" 
-                  dialogTitle={`Edit Program Tahunan: ${editingItem.title}`}
-                  dialogDescription="Perbarui rincian untuk program tahunan ini."
-                  itemType="PROTA"
-                  initialData={editingItem}
-                  onSubmit={handleCreateOrUpdate}
-              />
-          </div>
-        </>
+        // The dialog for editing is now controlled by isFormOpen and initialData
+         <CurriculumFormDialog
+            triggerButtonText="Pemicu Edit Tersembunyi" // This button is not actually shown
+            dialogTitle={`Edit Program Tahunan: ${editingItem.title}`}
+            dialogDescription="Perbarui rincian untuk program tahunan ini."
+            itemType="PROTA"
+            initialData={editingItem}
+            onSubmit={handleCreateOrUpdate}
+            forceOpen={isFormOpen && !!editingItem} // Open when editingItem is set
+            onOpenChange={(open) => {
+              if (!open) {
+                setEditingItem(null); // Reset on close
+              }
+              setIsFormOpen(open);
+            }}
+        />
       )}
     </div>
   );
 }
+

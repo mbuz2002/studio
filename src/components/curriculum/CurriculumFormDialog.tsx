@@ -30,6 +30,8 @@ interface CurriculumFormDialogProps {
   itemType: "RPP" | "PROTA" | "Promes";
   initialData?: AnyCurriculumItem | null;
   onSubmit: (data: AnyCurriculumItem) => void;
+  forceOpen?: boolean; // New prop to control dialog externally
+  onOpenChange?: (open: boolean) => void; // New prop to handle open state changes
 }
 
 // Default data structures adhering to new types
@@ -84,10 +86,18 @@ export function CurriculumFormDialog({
   itemType,
   initialData,
   onSubmit,
+  forceOpen,
+  onOpenChange,
 }: CurriculumFormDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   // Combined state for all form data, including specific textarea states for PROTA/Promes
   const [formData, setFormData] = useState<Partial<AnyCurriculumItem> & ProtaFormState & PromesFormState>({});
+
+  useEffect(() => {
+    if (forceOpen !== undefined) {
+      setIsOpen(forceOpen);
+    }
+  }, [forceOpen]);
 
   useEffect(() => {
     if (isOpen) {
@@ -259,8 +269,21 @@ export function CurriculumFormDialog({
     } as AnyCurriculumItem;
 
     onSubmit(completeFormData);
-    setIsOpen(false);
+    if (onOpenChange) {
+      onOpenChange(false);
+    } else {
+      setIsOpen(false);
+    }
   };
+  
+  const handleOpenChange = (openStatus: boolean) => {
+    if (onOpenChange) {
+      onOpenChange(openStatus);
+    } else {
+      setIsOpen(openStatus);
+    }
+  }
+
 
   const renderSpecificFields = () => {
     switch (itemType) {
@@ -423,16 +446,24 @@ Minggu ke: 2
     }
   };
 
+  const isEditMode = !!initialData?.id;
+  const actualDialogTitle = isEditMode ? `Edit ${itemType}: ${formData.title || ''}` : dialogTitle;
+
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button className="bg-accent hover:bg-accent/90 text-accent-foreground w-full sm:w-auto">
-          <PlusCircle className="mr-2 h-5 w-5" /> {triggerButtonText}
-        </Button>
-      </DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      {/* Only render DialogTrigger if not in edit mode or if trigger text is not 'Pemicu Edit Tersembunyi' */}
+      {!isEditMode && triggerButtonText !== "Pemicu Edit Tersembunyi" && (
+         <DialogTrigger asChild>
+            <Button className="bg-accent hover:bg-accent/90 text-accent-foreground w-full sm:w-auto">
+            <PlusCircle className="mr-2 h-5 w-5" /> {triggerButtonText}
+            </Button>
+        </DialogTrigger>
+      )}
+     
       <DialogContent className="sm:max-w-lg md:max-w-2xl max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle>{dialogTitle}</DialogTitle>
+          <DialogTitle>{actualDialogTitle}</DialogTitle>
           <DialogDescription>{dialogDescription}</DialogDescription>
         </DialogHeader>
         <ScrollArea className="max-h-[calc(90vh-10rem)]"> {/* Adjust max-height as needed */}
@@ -486,3 +517,4 @@ Minggu ke: 2
     </Dialog>
   );
 }
+

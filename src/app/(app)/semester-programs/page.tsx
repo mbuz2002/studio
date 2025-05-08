@@ -29,7 +29,7 @@ const initialSemesterPrograms: SemesterProgram[] = [
     ],
     createdAt: new Date("2024-07-10T00:00:00Z").toISOString(),
     updatedAt: new Date("2024-07-12T00:00:00Z").toISOString(),
-    createdByUserId: "waka-promes1"
+    createdByUserId: "user-3" // Waka Kurikulum
   },
   {
     id: "promes2",
@@ -47,7 +47,7 @@ const initialSemesterPrograms: SemesterProgram[] = [
     ],
     createdAt: new Date("2024-07-11T00:00:00Z").toISOString(),
     updatedAt: new Date("2024-07-15T00:00:00Z").toISOString(),
-    createdByUserId: "admin-promes2"
+    createdByUserId: "user-1" // Admin
   },
 ];
 
@@ -57,23 +57,15 @@ export default function SemesterProgramsPage() {
   const [editingItem, setEditingItem] = useState<SemesterProgram | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [isClient, setIsClient] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false); // Control dialog visibility
 
   useEffect(() => {
     setIsClient(true);
-    // For KepalaSekolah/WakaKurikulum/TataUsaha/Admin, fetch all. Gurus view only (or their own if applicable).
-    if (user && (user.role === "KepalaSekolah" || user.role === "WakaKurikulum" || user.role === "TataUsaha" || user.role === "Admin")) {
-        setSemesterPrograms(initialSemesterPrograms);
-    } else if (user && user.role === "Guru") {
-        // PROTA/Promes are typically not user-specific to one Guru in the same way RPPs are.
-        // Gurus would typically view PROTA/Promes relevant to their subject/grade.
-        // For demo, they see all.
+    if (user) { // All relevant roles see all Promes for now
         setSemesterPrograms(initialSemesterPrograms);
     }
   }, [user]);
 
-  // Role-based permissions for Promes
-  // Create, Edit, Delete: Admin, WakaKurikulum.
-  // View: All roles (Admin, KepalaSekolah, WakaKurikulum, TataUsaha, Guru).
   const canCreate = user && (user.role === "Admin" || user.role === "WakaKurikulum");
   const canEdit = user && (user.role === "Admin" || user.role === "WakaKurikulum");
   const canDelete = user && (user.role === "Admin" || user.role === "WakaKurikulum");
@@ -82,36 +74,44 @@ export default function SemesterProgramsPage() {
 
   const handleCreateOrUpdate = (itemData: AnyCurriculumItem) => {
     const newItem = itemData as SemesterProgram;
+    if (!newItem.id) { // New item
+        newItem.id = `promes-${Date.now()}`;
+        newItem.createdAt = new Date().toISOString();
+    }
+    newItem.updatedAt = new Date().toISOString();
+
      if (!newItem.createdByUserId && user) { 
         newItem.createdByUserId = user.id;
     }
 
     if (editingItem) {
-      if (!canEdit) { // Checks Admin/Waka permission for Promes
+      if (!canEdit) { 
         alert("Anda tidak memiliki izin untuk mengedit Promes.");
         return;
       }
       setSemesterPrograms(semesterPrograms.map(sp => sp.id === newItem.id ? newItem : sp));
     } else {
-       if (!canCreate) { // Checks Admin/Waka permission for Promes
+       if (!canCreate) { 
         alert("Anda tidak memiliki izin untuk membuat Promes baru.");
         return;
       }
       setSemesterPrograms([newItem, ...semesterPrograms]);
     }
     setEditingItem(null);
+    setIsFormOpen(false); // Close dialog
   };
 
   const handleEdit = (item: AnyCurriculumItem) => {
-    if (!canEdit) { // Checks Admin/Waka permission for Promes
+    if (!canEdit) { 
         alert("Anda tidak memiliki izin untuk mengedit Promes.");
         return;
     }
     setEditingItem(item as SemesterProgram);
+    setIsFormOpen(true); // Open dialog
   };
 
   const handleDelete = (itemToDelete: AnyCurriculumItem) => {
-     if (!canDelete) { // Checks Admin/Waka permission for Promes
+     if (!canDelete) { 
         alert("Anda tidak memiliki izin untuk menghapus Promes.");
         return;
     }
@@ -158,7 +158,7 @@ export default function SemesterProgramsPage() {
             Rincikan rencana pengajaran Anda untuk setiap semester. 
             {user.role === "KepalaSekolah" || user.role === "WakaKurikulum" || user.role === "TataUsaha" ? " Anda dapat melihat semua Promes." : ""}
             {user.role === "Guru" ? " Lihat Promes yang telah disusun." : ""}
-            {user.role === "Admin" && " Anda dapat membuat, mengedit, dan menghapus Promes."}
+            {(user.role === "Admin" || user.role === "WakaKurikulum") && " Anda dapat membuat, mengedit, dan menghapus Promes."}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -192,6 +192,13 @@ export default function SemesterProgramsPage() {
                   itemType="Promes"
                   onSubmit={handleCreateOrUpdate}
                   initialData={null}
+                  forceOpen={isFormOpen && !editingItem} // Open for new item
+                  onOpenChange={(open) => {
+                     if (!open) {
+                      setEditingItem(null); // Reset editing item when dialog closes
+                    }
+                    setIsFormOpen(open);
+                  }}
                   />
                 </div>
               )}
@@ -199,29 +206,32 @@ export default function SemesterProgramsPage() {
           <CurriculumDataTable
             items={filteredSemesterPrograms}
             onView={handleView}
-            onEdit={canEdit ? handleEdit : undefined} // Pass function or undefined
-            onDelete={canDelete ? handleDelete : undefined} // Pass function or undefined
-            canEdit={() => canEdit} // Pass explicit permission check for Promes
-            canDelete={() => canDelete} // Pass explicit permission check for Promes
+            onEdit={canEdit ? handleEdit : undefined} 
+            onDelete={canDelete ? handleDelete : undefined} 
+            canEdit={() => canEdit} 
+            canDelete={() => canDelete} 
             itemTypeForExport="Promes"
           />
         </CardContent>
       </Card>
       {editingItem && canEdit && (
-        <>
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40" onClick={() => setEditingItem(null)} />
-          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-[90vw] max-w-2xl">
-              <CurriculumFormDialog
-                  triggerButtonText="Pemicu Edit Tersembunyi"
-                  dialogTitle={`Edit Program Semester: ${editingItem.title}`}
-                  dialogDescription="Perbarui rincian untuk program semester ini."
-                  itemType="Promes"
-                  initialData={editingItem}
-                  onSubmit={handleCreateOrUpdate}
-              />
-          </div>
-        </>
+        <CurriculumFormDialog
+            triggerButtonText="Pemicu Edit Tersembunyi" // Not shown
+            dialogTitle={`Edit Program Semester: ${editingItem.title}`}
+            dialogDescription="Perbarui rincian untuk program semester ini."
+            itemType="Promes"
+            initialData={editingItem}
+            onSubmit={handleCreateOrUpdate}
+            forceOpen={isFormOpen && !!editingItem} // Open when editingItem is set
+            onOpenChange={(open) => {
+              if (!open) {
+                setEditingItem(null); // Reset on close
+              }
+              setIsFormOpen(open);
+            }}
+        />
       )}
     </div>
   );
 }
+

@@ -1,7 +1,7 @@
 
 "use client";
 
-import type { AnyCurriculumItem, LessonPlan, AnnualProgram, SemesterProgram } from "@/types";
+import type { AnyCurriculumItem, LessonPlan, AnnualProgram, SemesterProgram, User, SchoolProfile } from "@/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -27,55 +27,89 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
   const [isClient, setIsClient] = useState(false);
   const [isExporting, setIsExporting] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
+  const [schoolProfile, setSchoolProfile] = useState<SchoolProfile | null>(null);
+  const [appUsers, setAppUsers] = useState<User[]>([]);
 
   useEffect(() => {
     setIsClient(true);
+    if (typeof window !== 'undefined') {
+      const storedProfile = localStorage.getItem("schoolProfile");
+      if (storedProfile) {
+        setSchoolProfile(JSON.parse(storedProfile));
+      }
+      const storedUsers = localStorage.getItem("appUsers");
+      if (storedUsers) {
+        setAppUsers(JSON.parse(storedUsers));
+      }
+    }
   }, []);
 
  const generatePrintableHtml = (item: AnyCurriculumItem): string => {
-    let contentHtml = `<h1>${item.title} (${item.type})</h1>`;
-    contentHtml += `<p><strong>Mata Pelajaran:</strong> ${item.subject}</p>`;
-    contentHtml += `<p><strong>Jenjang/Fase/Kelas:</strong> ${item.gradeLevel}</p>`;
-    contentHtml += `<p><strong>Terakhir Diperbarui:</strong> ${isClient ? format(new Date(item.updatedAt), "PPpp", { locale: indonesianLocale }) : item.updatedAt}</p>`;
-    contentHtml += `<hr>`;
+    const creatorUser = appUsers.find(u => u.id === item.createdByUserId);
+    const creatorName = creatorUser ? creatorUser.name : item.createdByUserId || 'Tidak diketahui';
+
+    let contentHtml = `
+      <div class="kop-surat">
+        ${schoolProfile?.logoUrl ? `<img src="${schoolProfile.logoUrl}" alt="Logo Sekolah" class="logo-sekolah" data-ai-hint="school logo">` : '<div class="logo-placeholder">Logo Sekolah</div>'}
+        <div class="kop-text">
+          <h1>${schoolProfile?.namaSekolah || 'Nama Sekolah Belum Diatur'}</h1>
+          <p>${schoolProfile?.alamat || 'Alamat Sekolah Belum Diatur'}</p>
+          <p>NPSN: ${schoolProfile?.npsn || 'N/A'}${schoolProfile?.nomorTelepon ? ` | Telp: ${schoolProfile.nomorTelepon}` : ''} ${schoolProfile?.emailSekolah ? ` | Email: ${schoolProfile.emailSekolah}` : ''}</p>
+        </div>
+      </div>
+      <hr class="kop-hr">
+    `;
+
+    contentHtml += `<div class="doc-info">
+        <h2>${item.title} (${item.type})</h2>
+        <table class="info-table">
+            <tr><td>Mata Pelajaran</td><td>: ${item.subject}</td></tr>
+            <tr><td>Jenjang/Fase/Kelas</td><td>: ${item.gradeLevel}</td></tr>
+            <tr><td>Penyusun</td><td>: ${creatorName}</td></tr>
+            <tr><td>Terakhir Diperbarui</td><td>: ${isClient ? format(new Date(item.updatedAt), "dd MMMM yyyy, HH:mm", { locale: indonesianLocale }) : item.updatedAt}</td></tr>
+        </table>
+    </div>
+    <hr class="content-hr">
+    `;
+
 
     if (item.type === 'RPP') {
         const rpp = item as LessonPlan;
-        contentHtml += `<h2>A. Tujuan Pembelajaran</h2><ul>`;
+        contentHtml += `<h3>A. Tujuan Pembelajaran</h3><ul>`;
         rpp.learningObjectives.forEach(obj => contentHtml += `<li>${obj}</li>`);
         contentHtml += `</ul>`;
 
         if (rpp.pemahamanBermakna && rpp.pemahamanBermakna.length > 0) {
-            contentHtml += `<h2>B. Pemahaman Bermakna</h2><ul>`;
+            contentHtml += `<h3>B. Pemahaman Bermakna</h3><ul>`;
             rpp.pemahamanBermakna.forEach(pm => contentHtml += `<li>${pm}</li>`);
             contentHtml += `</ul>`;
         }
         if (rpp.pertanyaanPemantik && rpp.pertanyaanPemantik.length > 0) {
-            contentHtml += `<h2>C. Pertanyaan Pemantik</h2><ul>`;
+            contentHtml += `<h3>C. Pertanyaan Pemantik</h3><ul>`;
             rpp.pertanyaanPemantik.forEach(pp => contentHtml += `<li>${pp}</li>`);
             contentHtml += `</ul>`;
         }
 
-        contentHtml += `<h2>D. Langkah-langkah Pembelajaran</h2>`;
-        contentHtml += `<h3>1. Pendahuluan</h3><ul>`;
+        contentHtml += `<h3>D. Langkah-langkah Pembelajaran</h3>`;
+        contentHtml += `<h4>1. Pendahuluan:</h4><ul>`;
         rpp.langkahPembelajaran.pendahuluan.forEach(act => contentHtml += `<li>${act}</li>`);
         contentHtml += `</ul>`;
-        contentHtml += `<h3>2. Kegiatan Inti</h3><ul>`;
+        contentHtml += `<h4>2. Kegiatan Inti:</h4><ul>`;
         rpp.langkahPembelajaran.kegiatanInti.forEach(act => contentHtml += `<li>${act}</li>`);
         contentHtml += `</ul>`;
-        contentHtml += `<h3>3. Penutup</h3><ul>`;
+        contentHtml += `<h4>3. Penutup:</h4><ul>`;
         rpp.langkahPembelajaran.penutup.forEach(act => contentHtml += `<li>${act}</li>`);
         contentHtml += `</ul>`;
         
-        contentHtml += `<h2>E. Asesmen/Penilaian</h2><p>${rpp.assessment}</p>`;
+        contentHtml += `<h3>E. Asesmen/Penilaian</h3><p>${rpp.assessment}</p>`;
 
         if (rpp.differentiationStrategies && rpp.differentiationStrategies.length > 0) {
-            contentHtml += `<h2>F. Strategi Diferensiasi</h2><ul>`;
+            contentHtml += `<h3>F. Strategi Diferensiasi</h3><ul>`;
             rpp.differentiationStrategies.forEach(strat => contentHtml += `<li>${strat}</li>`);
             contentHtml += `</ul>`;
         }
         if (rpp.materials) {
-            contentHtml += `<h2>G. Media/Sumber Belajar</h2><p>${rpp.materials}</p>`;
+            contentHtml += `<h3>G. Media/Sumber Belajar</h3><p>${rpp.materials}</p>`;
         }
     } else if (item.type === 'PROTA') {
         const prota = item as AnnualProgram;
@@ -83,22 +117,27 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
         if (prota.profilPelajarPancasilaFocus && prota.profilPelajarPancasilaFocus.length > 0) {
             contentHtml += `<p><strong>Fokus Profil Pelajar Pancasila:</strong> ${prota.profilPelajarPancasilaFocus.join(', ')}</p>`;
         }
-        contentHtml += `<h2>Semester 1</h2>`;
-        prota.semester1Components.forEach(c => {
-            contentHtml += `<div><h4>Topik: ${c.topic}</h4>`;
-            if (c.elemenCapaianPembelajaran && c.elemenCapaianPembelajaran.length > 0) {
-                contentHtml += `<p>Elemen CP: ${c.elemenCapaianPembelajaran.join(', ')}</p>`;
-            }
-            contentHtml += `<p>Alokasi Waktu: ${c.alokasiWaktu}</p></div>`;
-        });
-        contentHtml += `<h2>Semester 2</h2>`;
-        prota.semester2Components.forEach(c => {
-            contentHtml += `<div><h4>Topik: ${c.topic}</h4>`;
-            if (c.elemenCapaianPembelajaran && c.elemenCapaianPembelajaran.length > 0) {
-                contentHtml += `<p>Elemen CP: ${c.elemenCapaianPembelajaran.join(', ')}</p>`;
-            }
-            contentHtml += `<p>Alokasi Waktu: ${c.alokasiWaktu}</p></div>`;
-        });
+        contentHtml += `<h3>Semester 1</h3>`;
+        if (prota.semester1Components.length > 0) {
+            contentHtml += `<table class="component-table"><thead><tr><th>Topik</th><th>Elemen Capaian Pembelajaran</th><th>Alokasi Waktu</th></tr></thead><tbody>`;
+            prota.semester1Components.forEach(c => {
+                contentHtml += `<tr><td>${c.topic}</td><td>${(c.elemenCapaianPembelajaran && c.elemenCapaianPembelajaran.length > 0) ? c.elemenCapaianPembelajaran.join(', ') : '-'}</td><td>${c.alokasiWaktu}</td></tr>`;
+            });
+            contentHtml += `</tbody></table>`;
+        } else {
+            contentHtml += `<p>Tidak ada komponen untuk semester 1.</p>`;
+        }
+        
+        contentHtml += `<h3>Semester 2</h3>`;
+         if (prota.semester2Components.length > 0) {
+            contentHtml += `<table class="component-table"><thead><tr><th>Topik</th><th>Elemen Capaian Pembelajaran</th><th>Alokasi Waktu</th></tr></thead><tbody>`;
+            prota.semester2Components.forEach(c => {
+                contentHtml += `<tr><td>${c.topic}</td><td>${(c.elemenCapaianPembelajaran && c.elemenCapaianPembelajaran.length > 0) ? c.elemenCapaianPembelajaran.join(', ') : '-'}</td><td>${c.alokasiWaktu}</td></tr>`;
+            });
+            contentHtml += `</tbody></table>`;
+        } else {
+            contentHtml += `<p>Tidak ada komponen untuk semester 2.</p>`;
+        }
     } else if (item.type === 'Promes') {
         const promes = item as SemesterProgram;
         contentHtml += `<p><strong>Tahun Ajaran:</strong> ${promes.year}, <strong>Semester:</strong> ${promes.semester === '1' ? 'Ganjil' : 'Genap'}</p>`;
@@ -108,26 +147,38 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
         if (promes.alokasiWaktuTotalSemester) {
             contentHtml += `<p><strong>Alokasi Waktu Total:</strong> ${promes.alokasiWaktuTotalSemester}</p>`;
         }
-        contentHtml += `<h2>Komponen Mingguan</h2>`;
-        promes.komponenMingguan.forEach(w => {
-            contentHtml += `<div style="margin-bottom: 15px; padding: 10px; border: 1px solid #eee;">
-                <h4>Minggu ke-${w.mingguKe} ${w.bulan ? `(${w.bulan})` : ''}</h4>
-                <p><strong>Materi Pokok/Tujuan Pembelajaran:</strong> ${w.materiPokokAtauTujuanPembelajaran}</p>
-                <p><strong>Alokasi Waktu:</strong> ${w.alokasiWaktu}</p>`;
-            if (w.metodeStrategi && w.metodeStrategi.length > 0) {
-                 contentHtml += `<p><strong>Metode/Strategi:</strong> ${w.metodeStrategi.join(', ')}</p>`;
-            }
-            if (w.sumberBelajar && w.sumberBelajar.length > 0) {
-                 contentHtml += `<p><strong>Sumber Belajar:</strong> ${w.sumberBelajar.join(', ')}</p>`;
-            }
-            if (w.rencanaAsesmen && w.rencanaAsesmen.length > 0) {
-                 contentHtml += `<p><strong>Rencana Asesmen:</strong> ${w.rencanaAsesmen.join(', ')}</p>`;
-            }
-            if (w.catatanIntegrasiP5) {
-                 contentHtml += `<p><strong>Catatan Integrasi P5:</strong> ${w.catatanIntegrasiP5}</p>`;
-            }
-            contentHtml += `</div>`;
-        });
+        contentHtml += `<h3>Rincian Mingguan</h3>`;
+        if (promes.komponenMingguan.length > 0) {
+            contentHtml += `<table class="component-table weekly-table">
+                <thead>
+                    <tr>
+                        <th>Minggu Ke</th>
+                        <th>Bulan</th>
+                        <th>Materi Pokok/Tujuan Pembelajaran</th>
+                        <th>Alokasi Waktu</th>
+                        <th>Metode/Strategi</th>
+                        <th>Sumber Belajar</th>
+                        <th>Rencana Asesmen</th>
+                        <th>Catatan Integrasi P5</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+            promes.komponenMingguan.forEach(w => {
+                contentHtml += `<tr>
+                    <td>${w.mingguKe}</td>
+                    <td>${w.bulan || '-'}</td>
+                    <td>${w.materiPokokAtauTujuanPembelajaran}</td>
+                    <td>${w.alokasiWaktu}</td>
+                    <td>${(w.metodeStrategi && w.metodeStrategi.length > 0) ? w.metodeStrategi.join(', ') : '-'}</td>
+                    <td>${(w.sumberBelajar && w.sumberBelajar.length > 0) ? w.sumberBelajar.join(', ') : '-'}</td>
+                    <td>${(w.rencanaAsesmen && w.rencanaAsesmen.length > 0) ? w.rencanaAsesmen.join(', ') : '-'}</td>
+                    <td>${w.catatanIntegrasiP5 || '-'}</td>
+                </tr>`;
+            });
+            contentHtml += `</tbody></table>`;
+        } else {
+            contentHtml += `<p>Tidak ada komponen mingguan.</p>`;
+        }
     }
 
     return `
@@ -135,31 +186,43 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
         <head>
           <title>Cetak: ${item.title}</title>
           <style>
-            body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
-            h1, h2, h3, h4 { color: #333; }
-            h1 { font-size: 24px; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
-            h2 { font-size: 20px; margin-top: 30px; margin-bottom: 10px; color: #555; border-bottom: 1px dashed #ccc; padding-bottom: 5px;}
-            h3 { font-size: 16px; margin-top: 20px; margin-bottom: 5px; color: #666;}
-            h4 { font-size: 14px; margin-top: 15px; margin-bottom: 5px; color: #777;}
-            ul { padding-left: 20px; }
-            li { margin-bottom: 5px; }
-            p { margin-bottom: 10px; }
-            hr { border: 0; border-top: 1px solid #ccc; margin: 20px 0; }
-            div { margin-bottom: 10px; }
-            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-            th { background-color: #f2f2f2; }
+            body { font-family: 'Times New Roman', Times, serif; margin: 20px; line-height: 1.4; font-size: 12pt; }
+            .kop-surat { display: flex; align-items: center; margin-bottom: 10px; border-bottom: 3px solid black; padding-bottom: 10px; }
+            .logo-sekolah { max-height: 80px; max-width: 80px; margin-right: 20px; object-fit: contain; }
+            .logo-placeholder { width: 80px; height: 80px; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 10pt; color: #777; margin-right: 20px;}
+            .kop-text { text-align: center; flex-grow: 1; }
+            .kop-text h1 { font-size: 16pt; margin: 0; font-weight: bold; }
+            .kop-text p { font-size: 10pt; margin: 2px 0; }
+            .kop-hr { display: none; } /* Replaced by border-bottom on .kop-surat */
+            .doc-info { margin-top: 20px; margin-bottom: 15px; }
+            .doc-info h2 { font-size: 14pt; text-align: center; margin-bottom: 15px; font-weight: bold; text-transform: uppercase; }
+            .info-table { width: auto; margin-bottom: 15px; font-size: 11pt;}
+            .info-table td { padding: 2px 5px; vertical-align: top;}
+            .info-table td:first-child { font-weight: normal; width: 180px; }
+            .content-hr { border: 0; border-top: 1px solid #ccc; margin: 15px 0; }
+            h3 { font-size: 13pt; margin-top: 20px; margin-bottom: 8px; font-weight: bold; }
+            h4 { font-size: 12pt; margin-top: 15px; margin-bottom: 5px; font-weight: bold; }
+            ul { padding-left: 20px; margin-top: 0; margin-bottom: 10px; }
+            li { margin-bottom: 4px; }
+            p { margin-bottom: 8px; }
+            .component-table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 15px; font-size: 10pt;}
+            .component-table th, .component-table td { border: 1px solid #333; padding: 6px; text-align: left; vertical-align: top; }
+            .component-table th { background-color: #f0f0f0; font-weight: bold; }
+            .weekly-table td, .weekly-table th { font-size: 9pt; } /* Smaller font for dense table */
+            .print-button-container { text-align: center; margin-top: 30px; }
             @media print {
-              body { margin: 0.5in; }
-              h1, h2, h3, h4 { page-break-after: avoid; }
-              table, div { page-break-inside: avoid; }
-              button { display: none; }
+              body { margin: 0.75in; } /* Adjust margins for printing */
+              .print-button-container { display: none; }
+              h2, h3, h4 { page-break-after: avoid; }
+              table, div, ul, p { page-break-inside: avoid; }
             }
           </style>
         </head>
         <body>
           ${contentHtml}
-          <button onclick="window.print()" style="margin-top: 20px; padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">Cetak Dokumen</button>
+          <div class="print-button-container">
+            <button onclick="window.print()" style="padding: 10px 20px; font-size: 12pt; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">Cetak Dokumen</button>
+          </div>
         </body>
       </html>
     `;
@@ -168,11 +231,10 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
   const handlePrint = (item: AnyCurriculumItem) => {
     if (!isClient) return;
     const printableHtml = generatePrintableHtml(item);
-    const printWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+    const printWindow = window.open('', '_blank', 'width=1000,height=700,scrollbars=yes,resizable=yes');
     if (printWindow) {
       printWindow.document.write(printableHtml);
-      printWindow.document.close(); // Important for some browsers
-      // printWindow.print(); // Optional: directly trigger print dialog
+      printWindow.document.close();
     } else {
       toast({ title: "Gagal Membuka Jendela Cetak", description: "Pastikan pop-up diizinkan untuk situs ini.", variant: "destructive" });
     }
@@ -336,7 +398,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => onView(item)}>
-                      <Eye className="mr-2 h-4 w-4" /> Lihat
+                      <Eye className="mr-2 h-4 w-4" /> Lihat Detail
                     </DropdownMenuItem>
                     {canEdit(item) && onEdit && (
                       <DropdownMenuItem onClick={() => onEdit(item)}>
@@ -365,3 +427,4 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
     </div>
   );
 }
+

@@ -32,7 +32,7 @@ const initialLessonPlans: LessonPlan[] = [
     materials: "Papan tulis, spidol, lembar kerja, kartu pola bilangan",
     createdAt: new Date("2023-09-01T10:00:00Z").toISOString(),
     updatedAt: new Date("2023-09-05T14:30:00Z").toISOString(),
-    createdByUserId: "guru-rpp1" // Example user ID
+    createdByUserId: "user-4" // Updated to match a user in UserManagementSection
   },
   {
     id: "rpp2",
@@ -53,7 +53,7 @@ const initialLessonPlans: LessonPlan[] = [
     materials: "Buku teks IPA, video animasi fotosintesis, gambar ekosistem, kertas plano, spidol",
     createdAt: new Date("2023-10-10T09:00:00Z").toISOString(),
     updatedAt: new Date("2023-10-12T11:00:00Z").toISOString(),
-    createdByUserId: "guru-rpp2" // Example user ID
+    createdByUserId: "user-4" // Updated to match a user in UserManagementSection
   },
 ];
 
@@ -73,9 +73,8 @@ export default function LessonPlansPage() {
         // Logic to fetch all RPPs (using initialLessonPlans for demo)
         setLessonPlans(initialLessonPlans);
     } else if (user && user.role === "Guru") {
-        // Logic to fetch RPPs created by this guru (using createdByUserId for demo)
-        // setLessonPlans(initialLessonPlans.filter(lp => lp.createdByUserId === user.id));
-        setLessonPlans(initialLessonPlans); // For demo, Guru still sees all initially to simplify data
+        // For demo, Guru sees all RPPs. In a real app, filter by createdByUserId or other logic.
+        setLessonPlans(initialLessonPlans); 
     }
   }, [user]);
 
@@ -84,17 +83,18 @@ export default function LessonPlansPage() {
   
   const canEditItem = (item: LessonPlan): boolean => {
     if (!user) return false;
-    if (user.role === "Admin" || user.role === "WakaKurikulum") return true;
-    if (user.role === "Guru" && item.createdByUserId === user.id) return true; 
-    if (user.role === "Guru" && initialLessonPlans.find(lp => lp.id === item.id)) return true; // Simplified for demo: Guru can edit any of the initial RPPs
+    if (user.role === "Admin" || user.role === "WakaKurikulum") return true; // Admin/Waka can edit any
+    if (user.role === "Guru" && item.createdByUserId === user.id) return true; // Guru can edit their own
+    // For demo purposes, allow Guru to edit any of the initial RPPs if their ID isn't directly matched
+    // This simplifies demo data management. A real app would be stricter.
+    if (user.role === "Guru" && initialLessonPlans.some(lp => lp.id === item.id)) return true; 
     return false;
   };
 
   const canDeleteItem = (item: LessonPlan): boolean => {
      if (!user) return false;
-    if (user.role === "Admin" || user.role === "WakaKurikulum") return true;
-    if (user.role === "Guru" && item.createdByUserId === user.id) return true;
-    // Simplified for demo: Guru cannot delete initial RPPs they didn't "create"
+    if (user.role === "Admin" || user.role === "WakaKurikulum") return true; // Admin/Waka can delete any
+    if (user.role === "Guru" && item.createdByUserId === user.id) return true; // Guru can delete their own
     return false;
   };
 
@@ -103,6 +103,12 @@ export default function LessonPlansPage() {
 
   const handleCreateOrUpdate = (itemData: AnyCurriculumItem) => {
     const newItem = itemData as LessonPlan; 
+    if (!newItem.id) { // New item
+        newItem.id = `rpp-${Date.now()}`;
+        newItem.createdAt = new Date().toISOString();
+    }
+    newItem.updatedAt = new Date().toISOString();
+
     if (!newItem.createdByUserId && user) { 
         newItem.createdByUserId = user.id;
     }
@@ -237,6 +243,8 @@ export default function LessonPlansPage() {
                     itemType="RPP"
                     initialData={editingItem}
                     onSubmit={handleCreateOrUpdate}
+                    forceOpen={!!editingItem} // To control dialog externally
+                    onOpenChange={(open) => { if (!open) setEditingItem(null); }}
                 />
             </div>
         </>
@@ -245,3 +253,4 @@ export default function LessonPlansPage() {
     </div>
   );
 }
+
