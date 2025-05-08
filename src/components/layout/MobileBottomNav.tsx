@@ -21,7 +21,7 @@ const mobileNavItemsData: MobileNavItemData[] = [
   { href: "/annual-programs", label: "PROTA", icon: CalendarDays, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/semester-programs", label: "Promes", icon: CalendarClock, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/ai-assistant", label: "AI", icon: Sparkles, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"] },
-  { href: "/settings", label: "Atur", icon: SettingsIcon, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] }, // Kept short for mobile
+  { href: "/settings", label: "Atur", icon: SettingsIcon, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] }, 
 ];
 
 
@@ -32,9 +32,6 @@ export function MobileBottomNav() {
   const visibleNavItems = user 
     ? mobileNavItemsData
         .filter(item => !item.roles || item.roles.includes(user.role))
-        // Prioritize core features. If more than 5, "Settings" might be pushed out.
-        // A common pattern is 3-5 main items.
-        .slice(0, 5) 
     : [];
 
   if (!user || visibleNavItems.length === 0) {
@@ -63,3 +60,4 @@ export function MobileBottomNav() {
     </nav>
   );
 }
+
