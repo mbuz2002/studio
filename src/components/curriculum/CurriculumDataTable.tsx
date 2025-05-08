@@ -42,11 +42,21 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
     if (typeof window !== 'undefined') {
       const storedProfile = localStorage.getItem("schoolProfile");
       if (storedProfile) {
-        setSchoolProfile(JSON.parse(storedProfile));
+        try {
+            setSchoolProfile(JSON.parse(storedProfile));
+        } catch (e) {
+            console.error("Failed to parse school profile from localStorage", e);
+            localStorage.removeItem("schoolProfile"); // Clear corrupted data
+        }
       }
       const storedUsers = localStorage.getItem("appUsers");
       if (storedUsers) {
-        setAppUsers(JSON.parse(storedUsers));
+         try {
+            setAppUsers(JSON.parse(storedUsers));
+        } catch (e) {
+            console.error("Failed to parse app users from localStorage", e);
+            localStorage.removeItem("appUsers"); // Clear corrupted data
+        }
       }
     }
   }, []);
@@ -57,17 +67,31 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
 
     let contentHtml = ``;
 
-    if (options.showKopSurat) {
+    if (options.showKopSurat && schoolProfile) {
       contentHtml += `
         <div class="kop-surat">
-          ${schoolProfile?.logoUrl ? `<img src="${schoolProfile.logoUrl}" alt="Logo Sekolah" class="logo-sekolah" data-ai-hint="school logo">` : '<div class="logo-placeholder">Logo Sekolah</div>'}
+          ${schoolProfile.logoUrl ? `<img src="${schoolProfile.logoUrl}" alt="Logo Sekolah" class="logo-sekolah" data-ai-hint="school logo">` : '<div class="logo-placeholder">Logo Sekolah</div>'}
           <div class="kop-text">
-            <h1>${schoolProfile?.namaSekolah || 'Nama Sekolah Belum Diatur'}</h1>
-            <p>${schoolProfile?.alamat || 'Alamat Sekolah Belum Diatur'}</p>
-            <p>NPSN: ${schoolProfile?.npsn || 'N/A'}${schoolProfile?.nomorTelepon ? ` | Telp: ${schoolProfile.nomorTelepon}` : ''} ${schoolProfile?.emailSekolah ? ` | Email: ${schoolProfile.emailSekolah}` : ''}</p>
+            <h1>${schoolProfile.namaSekolah || 'Nama Sekolah Belum Diatur'}</h1>
+            <p>${schoolProfile.alamat || 'Alamat Sekolah Belum Diatur'}</p>
+            <p>
+              ${schoolProfile.npsn ? `NPSN: ${schoolProfile.npsn}` : 'NPSN: Belum Diatur'}
+              ${schoolProfile.nomorTelepon ? ` | Telp: ${schoolProfile.nomorTelepon}` : ''}
+              ${schoolProfile.emailSekolah ? ` | Email: ${schoolProfile.emailSekolah}` : ''}
+            </p>
           </div>
         </div>
-        <hr class="kop-hr">
+      `;
+    } else if (options.showKopSurat) {
+        contentHtml += `
+        <div class="kop-surat">
+          <div class="logo-placeholder">Logo Sekolah</div>
+          <div class="kop-text">
+            <h1>Nama Sekolah Belum Diatur</h1>
+            <p>Alamat Sekolah Belum Diatur</p>
+            <p>NPSN: Belum Diatur</p>
+          </div>
+        </div>
       `;
     }
     
@@ -220,9 +244,8 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
             .logo-sekolah { max-height: 80px; max-width: 80px; margin-right: 20px; object-fit: contain; }
             .logo-placeholder { width: 80px; height: 80px; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 10pt; color: #777; margin-right: 20px;}
             .kop-text { text-align: center; flex-grow: 1; }
-            .kop-text h1 { font-size: 16pt; margin: 0; font-weight: bold; }
+            .kop-text h1 { font-size: 16pt; margin: 0; font-weight: bold; text-transform: uppercase; }
             .kop-text p { font-size: 10pt; margin: 2px 0; }
-            .kop-hr { display: none; } /* Replaced by border-bottom on .kop-surat */
             .doc-info { margin-top: 20px; margin-bottom: 15px; }
             .doc-info h2 { font-size: 14pt; text-align: center; margin-bottom: 15px; font-weight: bold; text-transform: uppercase; }
             .info-table { width: auto; margin-bottom: 15px; font-size: 11pt;}
@@ -242,7 +265,8 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
             @media print {
               body { margin: 0.75in; } /* Adjust margins for printing */
               .print-button-container { display: none; }
-              h2, h3, h4 { page-break-after: avoid; }
+              .kop-surat { border-bottom: 3px solid black !important; } /* Ensure border prints */
+              h1, h2, h3, h4 { page-break-after: avoid; }
               table, div, ul, p { page-break-inside: avoid; }
             }
           </style>
@@ -271,6 +295,12 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
     if (printWindow) {
       printWindow.document.write(printableHtml);
       printWindow.document.close();
+      // Adding a slight delay for content to render before print dialog
+      setTimeout(() => {
+          if (printWindow && !printWindow.closed) { // Check if window is still open
+            // printWindow.print(); // Trigger print dialog directly
+          }
+      }, 500);
     } else {
       toast({ title: "Gagal Membuka Jendela Cetak", description: "Pastikan pop-up diizinkan untuk situs ini.", variant: "destructive" });
     }
@@ -290,14 +320,18 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
 
       if (item.type === 'RPP') {
         const rppInput = item as LessonPlan;
+        // Prepare input for the Genkit flow, ensuring all optional fields are at least empty arrays/strings
+        // so the Handlebars template doesn't break.
         const inputForFlow: ExportRppToTextInput = {
           ...rppInput,
+          // Ensure all potentially undefined arrays are initialized for the prompt
+          learningObjectives: rppInput.learningObjectives || [],
           pemahamanBermakna: rppInput.pemahamanBermakna || [],
           pertanyaanPemantik: rppInput.pertanyaanPemantik || [],
-          langkahPembelajaran: rppInput.langkahPembelajaran || { pendahuluan: [], kegiatanInti: [], penutup: []},
+          langkahPembelajaran: rppInput.langkahPembelajaran || { pendahuluan: [], kegiatanInti: [], penutup: [] },
           assessment: rppInput.assessment || "Belum dirinci",
           differentiationStrategies: rppInput.differentiationStrategies || [],
-          materials: rppInput.materials || "Tidak ada",
+          materials: rppInput.materials || "Tidak ada sumber belajar spesifik",
         };
         const result = await exportRppToText(inputForFlow);
         documentContent = result.documentContent;
@@ -327,7 +361,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
             }
             protaText += `   - Alokasi Waktu: ${c.alokasiWaktu}\n\n`;
         });
-        protaText += `\n\n*Dokumen ini dibuat pada: ${format(new Date(prota.updatedAt), "PPpp", { locale: indonesianLocale })} (Data terakhir diperbarui)*`;
+        protaText += `\n\n*Dokumen ini terakhir diperbarui pada: ${format(new Date(prota.updatedAt), "PPpp", { locale: indonesianLocale })}*`;
         documentContent = protaText;
 
       } else if (item.type === 'Promes') {
@@ -363,7 +397,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
             }
             promesText += `\n`;
         });
-        promesText += `\n\n*Dokumen ini dibuat pada: ${format(new Date(promes.updatedAt), "PPpp", { locale: indonesianLocale })} (Data terakhir diperbarui)*`;
+        promesText += `\n\n*Dokumen ini terakhir diperbarui pada: ${format(new Date(promes.updatedAt), "PPpp", { locale: indonesianLocale })}*`;
         documentContent = promesText;
       }
        else {
@@ -469,8 +503,10 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
             itemType={itemToPrint.type}
             defaultOptions={currentPrintOptions}
             onSubmit={handleFinalizePrint}
+            hasSchoolProfile={!!schoolProfile} // Pass whether profile exists
         />
       )}
     </>
   );
 }
+

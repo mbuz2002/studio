@@ -25,6 +25,7 @@ interface PrintOptionsDialogProps {
   itemType: AnyCurriculumItem['type'];
   defaultOptions: PrintOptions;
   onSubmit: (options: PrintOptions) => void;
+  hasSchoolProfile: boolean; // New prop
 }
 
 export function PrintOptionsDialog({
@@ -33,12 +34,18 @@ export function PrintOptionsDialog({
   itemType,
   defaultOptions,
   onSubmit,
+  hasSchoolProfile, // Use new prop
 }: PrintOptionsDialogProps) {
   const [options, setOptions] = useState<PrintOptions>(defaultOptions);
 
   useEffect(() => {
-    setOptions(defaultOptions);
-  }, [defaultOptions, isOpen]);
+    // Ensure showKopSurat is false if hasSchoolProfile is false when dialog opens
+    const initialOpts = {...defaultOptions};
+    if (!hasSchoolProfile) {
+      initialOpts.showKopSurat = false;
+    }
+    setOptions(initialOpts);
+  }, [defaultOptions, isOpen, hasSchoolProfile]);
 
   const handleCheckboxChange = (optionKey: keyof PrintOptions) => {
     setOptions((prev) => ({
@@ -142,8 +149,15 @@ export function PrintOptionsDialog({
         <ScrollArea className="max-h-[60vh] py-4 pr-3">
           <div className="grid gap-3">
             <div className="flex items-center space-x-2">
-                <Checkbox id="showKopSurat" checked={options.showKopSurat} onCheckedChange={() => handleCheckboxChange("showKopSurat")} />
-                <Label htmlFor="showKopSurat">Tampilkan Kop Surat Sekolah</Label>
+                <Checkbox 
+                  id="showKopSurat" 
+                  checked={options.showKopSurat} 
+                  onCheckedChange={() => handleCheckboxChange("showKopSurat")}
+                  disabled={!hasSchoolProfile} // Disable if no profile
+                />
+                <Label htmlFor="showKopSurat" className={!hasSchoolProfile ? "text-muted-foreground" : ""}>
+                  Tampilkan Kop Surat Sekolah {!hasSchoolProfile && "(Profil Sekolah belum diatur)"}
+                </Label>
             </div>
             <hr className="my-2"/>
             {itemType === 'RPP' && renderRPPOptions()}
@@ -166,3 +180,4 @@ export function PrintOptionsDialog({
     </Dialog>
   );
 }
+
