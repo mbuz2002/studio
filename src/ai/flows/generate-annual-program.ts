@@ -28,6 +28,10 @@ const GenerateAnnualProgramInputSchema = z.object({
 });
 export type GenerateAnnualProgramInput = z.infer<typeof GenerateAnnualProgramInputSchema>;
 
+const PromptInputSchema = GenerateAnnualProgramInputSchema.extend({
+    isKurikulumMerdeka: z.boolean(),
+});
+
 const GenerateAnnualProgramOutputSchema = z.object({
   title: z.string().describe('Judul Program Tahunan yang menarik dan informatif.'),
   semester1Components: z.array(AnnualProgramComponentSchema).describe('Daftar komponen pembelajaran untuk Semester 1.'),
@@ -42,7 +46,7 @@ export async function generateAnnualProgram(input: GenerateAnnualProgramInput): 
 
 const prompt = ai.definePrompt({
   name: 'generateAnnualProgramPrompt',
-  input: {schema: GenerateAnnualProgramInputSchema},
+  input: {schema: PromptInputSchema}, // Use schema with boolean flags
   output: {schema: GenerateAnnualProgramOutputSchema},
   prompt: `Anda adalah seorang ahli perancang kurikulum yang bertugas membuat draf Program Tahunan (PROTA).
 Buatlah draf PROTA untuk:
@@ -56,14 +60,14 @@ PROTA harus mencakup:
 1.  **Judul Program Tahunan**: Judul yang jelas, relevan, dan menarik.
 2.  **Komponen Semester 1**: Daftar topik/unit pembelajaran utama (atau Materi Pokok/Tema untuk KTSP/K-13) untuk semester ganjil. Untuk setiap komponen:
     *   Sebutkan topik/unitnya.
-    *   {{#if (eq curriculumType "Kurikulum Merdeka")}}
+    *   {{#if isKurikulumMerdeka}}
         Sebutkan elemen-elemen Capaian Pembelajaran (CP) yang terkait (bisa berupa poin-poin kompetensi umum jika CP spesifik tidak langsung tersedia).
         {{else}}
         Sebutkan Kompetensi Dasar (KD) yang relevan dengan topik tersebut.
         {{/if}}
     *   Berikan estimasi alokasi waktu (misalnya, dalam Jam Pelajaran (JP) atau minggu).
 3.  **Komponen Semester 2**: Sama seperti Semester 1, namun untuk semester genap.
-4.  **Fokus Profil Pelajar Pancasila (Opsional)**: {{#if (eq curriculumType "Kurikulum Merdeka")}}Sebutkan beberapa dimensi Profil Pelajar Pancasila yang relevan.{{else}}Jika relevan, sebutkan aspek karakter atau nilai yang ditekankan.{{/if}}
+4.  **Fokus Profil Pelajar Pancasila (Opsional)**: {{#if isKurikulumMerdeka}}Sebutkan beberapa dimensi Profil Pelajar Pancasila yang relevan.{{else}}Jika relevan, sebutkan aspek karakter atau nilai yang ditekankan.{{/if}}
 
 Pastikan output yang dihasilkan sesuai dengan skema JSON yang diharapkan dan menggunakan Bahasa Indonesia yang baik dan benar. Buatlah minimal 2-3 komponen per semester sebagai contoh.
 Istilah "elemenCapaianPembelajaran" pada output akan berisi CP jika Kurikulum Merdeka, atau KD jika K-13/KTSP.
@@ -73,15 +77,21 @@ Istilah "elemenCapaianPembelajaran" pada output akan berisi CP jika Kurikulum Me
 const generateAnnualProgramFlow = ai.defineFlow(
   {
     name: 'generateAnnualProgramFlow',
-    inputSchema: GenerateAnnualProgramInputSchema,
+    inputSchema: GenerateAnnualProgramInputSchema, // Flow input remains the original schema
     outputSchema: GenerateAnnualProgramOutputSchema,
   },
   async (input: GenerateAnnualProgramInput) => {
-    const {output} = await prompt(input);
+    const curriculumFlags = {
+        isKurikulumMerdeka: input.curriculumType === "Kurikulum Merdeka",
+    };
+    const promptInputWithFlags = { ...input, ...curriculumFlags };
+    const {output} = await prompt(promptInputWithFlags);
+    
     if (output && input.curriculumType !== "Kurikulum Merdeka") {
         // Potentially remove profilPelajarPancasilaFocus if not applicable or desired for non-Merdeka
-        // delete output.profilPelajarPancasilaFocus; // Or let AI decide based on prompt
+        delete output.profilPelajarPancasilaFocus; 
     }
     return output!;
   }
 );
+

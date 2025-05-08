@@ -21,6 +21,15 @@ const GenerateLessonPlanInputSchema = z.object({
 });
 export type GenerateLessonPlanInput = z.infer<typeof GenerateLessonPlanInputSchema>;
 
+// Schema for the data passed to the prompt, including boolean flags
+const PromptInputSchema = GenerateLessonPlanInputSchema.extend({
+  isKurikulumMerdeka: z.boolean(),
+  isK13: z.boolean(),
+  isKTSP2006: z.boolean(),
+  isK13OrKTSP: z.boolean(),
+});
+
+
 const GenerateLessonPlanOutputSchema = z.object({
   title: z.string().describe('Judul modul ajar/RPP yang menarik dan relevan.'),
   learningObjectives: z.array(z.string()).describe('Tujuan pembelajaran (atau Capaian Pembelajaran/TP untuk Kurikulum Merdeka, Tujuan Pembelajaran berbasis IPK untuk K-13/KTSP) yang ingin dicapai.'),
@@ -53,7 +62,7 @@ export async function generateLessonPlanFromTopic(input: GenerateLessonPlanInput
 
 const prompt = ai.definePrompt({
   name: 'generateLessonPlanFromTopicPrompt',
-  input: {schema: GenerateLessonPlanInputSchema},
+  input: {schema: PromptInputSchema}, // Use schema with boolean flags
   output: {schema: GenerateLessonPlanOutputSchema},
   prompt: `Anda adalah seorang guru berpengalaman yang ahli dalam menyusun Modul Ajar (MA) atau Rencana Pelaksanaan Pembelajaran (RPP) Plus.
 Buatlah draf Modul Ajar/RPP untuk:
@@ -68,15 +77,15 @@ Modul Ajar/RPP harus mencakup komponen inti berikut, disesuaikan dengan kurikulu
 2.  **Tujuan Pembelajaran**: 
     *   Untuk Kurikulum Merdeka: Rumuskan Tujuan Pembelajaran (TP) yang merupakan turunan dari Capaian Pembelajaran (CP) atau Alur Tujuan Pembelajaran (ATP).
     *   Untuk K-13/KTSP: Rumuskan tujuan pembelajaran berdasarkan Indikator Pencapaian Kompetensi (IPK) yang diturunkan dari Kompetensi Dasar (KD).
-3.  {{#if (eq curriculumType "Kurikulum Merdeka")}}
+3.  {{#if isKurikulumMerdeka}}
     **Pemahaman Bermakna**: Jelaskan manfaat atau pemahaman penting yang akan diperoleh peserta didik.
     **Pertanyaan Pemantik**: Susun beberapa pertanyaan yang dapat memantik rasa ingin tahu.
     {{/if}}
-4.  {{#if (or (eq curriculumType "KTSP 2006") (eq curriculumType "K-13"))}}
-    {{#if (eq curriculumType "KTSP 2006")}}
+4.  {{#if isK13OrKTSP}}
+    {{#if isKTSP2006}}
     **Standar Kompetensi (SK)**: Sebutkan SK yang relevan.
     {{/if}}
-    {{#if (eq curriculumType "K-13")}}
+    {{#if isK13}}
     **Kompetensi Inti (KI)**: Sebutkan KI yang relevan (KI-1, KI-2, KI-3, KI-4).
     {{/if}}
     **Kompetensi Dasar (KD)**: Sebutkan KD yang relevan dengan topik.
@@ -86,7 +95,7 @@ Modul Ajar/RPP harus mencakup komponen inti berikut, disesuaikan dengan kurikulu
 5.  **Langkah-langkah Pembelajaran**: Rincikan kegiatan pembelajaran secara sistematis (Pendahuluan, Kegiatan Inti, Penutup).
     *   Untuk Kurikulum Merdeka: Integrasikan elemen Profil Pelajar Pancasila dan terapkan pembelajaran berdiferensiasi dalam Kegiatan Inti.
 6.  **Strategi Asesmen**: Jelaskan berbagai strategi asesmen (diagnostik, formatif, sumatif) yang relevan.
-    {{#if (eq curriculumType "Kurikulum Merdeka")}}
+    {{#if isKurikulumMerdeka}}
 7.  **Strategi Diferensiasi**: Jelaskan strategi diferensiasi yang akan diterapkan (konten, proses, produk, lingkungan belajar).
     {{/if}}
 
@@ -98,12 +107,21 @@ Misalnya, 'pemahamanBermakna' hanya untuk 'Kurikulum Merdeka'. 'standarKompetens
 const generateLessonPlanFromTopicFlow = ai.defineFlow(
   {
     name: 'generateLessonPlanFromTopicFlow',
-    inputSchema: GenerateLessonPlanInputSchema,
+    inputSchema: GenerateLessonPlanInputSchema, // Flow input remains the original schema
     outputSchema: GenerateLessonPlanOutputSchema,
   },
   async (input: GenerateLessonPlanInput) => {
-    const {output} = await prompt(input);
-    // Clean up optional fields not relevant to the curriculum type
+    const curriculumFlags = {
+      isKurikulumMerdeka: input.curriculumType === "Kurikulum Merdeka",
+      isK13: input.curriculumType === "K-13",
+      isKTSP2006: input.curriculumType === "KTSP 2006",
+      isK13OrKTSP: input.curriculumType === "K-13" || input.curriculumType === "KTSP 2006",
+    };
+    const promptInputWithFlags = { ...input, ...curriculumFlags };
+
+    const {output} = await prompt(promptInputWithFlags);
+    
+    // Clean up optional fields not relevant to the curriculum type AFTER getting output
     if (output) {
         if (input.curriculumType !== "Kurikulum Merdeka") {
             delete output.pemahamanBermakna;
@@ -127,3 +145,4 @@ const generateLessonPlanFromTopicFlow = ai.defineFlow(
     return output!;
   }
 );
+

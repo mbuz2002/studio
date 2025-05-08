@@ -1,16 +1,20 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
 import { CurriculumDataTable } from "@/components/curriculum/CurriculumDataTable";
-import { CurriculumFormDialog } from "@/components/curriculum/CurriculumFormDialog";
+// import { CurriculumFormDialog } from "@/components/curriculum/CurriculumFormDialog"; // Removed
 import type { LessonPlan, AnyCurriculumItem } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { FileUp, Filter, Search, Loader2, BookOpenText } from "lucide-react";
+import { FileUp, Filter, Search, Loader2, BookOpenText, PlusCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { useCurriculum } from "@/contexts/CurriculumContext"; // Import curriculum context
+import { useCurriculum } from "@/contexts/CurriculumContext"; 
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+
 
 const initialLessonPlansData: LessonPlan[] = [
   {
@@ -67,9 +71,8 @@ const LESSON_PLANS_STORAGE_KEY = "appLessonPlans";
 export default function LessonPlansPage() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { defaultCurriculum } = useCurriculum(); // Get default curriculum
+  const router = useRouter();
   const [lessonPlans, setLessonPlans] = useState<LessonPlan[]>([]);
-  const [editingItem, setEditingItem] = useState<LessonPlan | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [isClient, setIsClient] = useState(false);
 
@@ -121,47 +124,12 @@ export default function LessonPlansPage() {
 
   const canImport = user && (user.role === "Admin" || user.role === "WakaKurikulum");
 
-
-  const handleCreateOrUpdate = (itemData: AnyCurriculumItem) => {
-    const newItem = itemData as LessonPlan; 
-    let updatedLessonPlans;
-
-    if (!newItem.id) { 
-        newItem.id = `rpp-${Date.now()}`;
-        newItem.createdAt = new Date().toISOString();
-        newItem.curriculumType = newItem.curriculumType || defaultCurriculum; // Set default curriculum for new items
-    }
-    newItem.updatedAt = new Date().toISOString();
-
-    if (!newItem.createdByUserId && user) { 
-        newItem.createdByUserId = user.id;
-    }
-
-    if (editingItem) {
-      if (!canEditItem(editingItem)) {
-        toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengedit RPP ini.", variant: "destructive" });
-        return;
-      }
-      updatedLessonPlans = lessonPlans.map(lp => lp.id === newItem.id ? newItem : lp);
-    } else {
-      if (!canCreate) {
-        toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk membuat RPP baru.", variant: "destructive" });
-        return;
-      }
-      updatedLessonPlans = [newItem, ...lessonPlans];
-    }
-    setLessonPlans(updatedLessonPlans);
-    localStorage.setItem(LESSON_PLANS_STORAGE_KEY, JSON.stringify(updatedLessonPlans));
-    setEditingItem(null);
-    toast({ title: editingItem ? "RPP Diperbarui" : "RPP Dibuat", description: `"${newItem.title}" telah berhasil disimpan.`});
-  };
-
   const handleEdit = (item: AnyCurriculumItem) => {
     if (!canEditItem(item as LessonPlan)) { 
         toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengedit RPP ini.", variant: "destructive" });
         return;
     }
-    setEditingItem(item as LessonPlan);
+    router.push(`/lesson-plans/edit/${item.id}`);
   };
 
   const handleDelete = (itemToDelete: AnyCurriculumItem) => {
@@ -241,14 +209,11 @@ export default function LessonPlansPage() {
             </div>
              {canCreate && (
                 <div className="w-full md:w-auto">
-                    <CurriculumFormDialog
-                    triggerButtonText="Buat Rencana Baru"
-                    dialogTitle="Buat Rencana Pembelajaran Baru"
-                    dialogDescription="Isi rincian untuk rencana pembelajaran baru Anda (RPP/Modul Ajar)."
-                    itemType="RPP"
-                    onSubmit={handleCreateOrUpdate}
-                    initialData={null} // Will use defaultCurriculum from context
-                    />
+                    <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground w-full sm:w-auto">
+                      <Link href="/lesson-plans/new">
+                        <PlusCircle className="mr-2 h-5 w-5" /> Buat Rencana Baru
+                      </Link>
+                    </Button>
                 </div>
              )}
           </div>
@@ -265,21 +230,7 @@ export default function LessonPlansPage() {
           </div>
         </CardContent>
       </Card>
-      {editingItem && canEditItem(editingItem) && ( 
-        <>
-            <CurriculumFormDialog
-                triggerButtonText="Pemicu Edit Tersembunyi" 
-                dialogTitle={`Edit Rencana Pembelajaran`} 
-                dialogDescription="Perbarui rincian untuk rencana pembelajaran ini."
-                itemType="RPP"
-                initialData={editingItem}
-                onSubmit={handleCreateOrUpdate}
-                forceOpen={!!editingItem} 
-                onOpenChange={(open) => { if (!open) setEditingItem(null); }}
-            />
-        </>
-      )}
-
     </div>
   );
 }
+

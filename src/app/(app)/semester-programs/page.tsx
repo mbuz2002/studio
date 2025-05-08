@@ -1,16 +1,19 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
 import { CurriculumDataTable } from "@/components/curriculum/CurriculumDataTable";
-import { CurriculumFormDialog } from "@/components/curriculum/CurriculumFormDialog";
+// import { CurriculumFormDialog } from "@/components/curriculum/CurriculumFormDialog"; // Removed
 import type { SemesterProgram, AnyCurriculumItem } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { FileUp, Filter, Search, Loader2, CalendarClock } from "lucide-react";
+import { FileUp, Filter, Search, Loader2, CalendarClock, PlusCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { useCurriculum } from "@/contexts/CurriculumContext"; // Import curriculum context
+import { useCurriculum } from "@/contexts/CurriculumContext"; 
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const initialSemesterProgramsData: SemesterProgram[] = [
   {
@@ -58,12 +61,10 @@ const SEMESTER_PROGRAMS_STORAGE_KEY = "appSemesterPrograms";
 export default function SemesterProgramsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { defaultCurriculum } = useCurriculum(); // Get default curriculum
+  const router = useRouter();
   const [semesterPrograms, setSemesterPrograms] = useState<SemesterProgram[]>([]);
-  const [editingItem, setEditingItem] = useState<SemesterProgram | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [isClient, setIsClient] = useState(false);
-  const [isFormOpen, setIsFormOpen] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -109,49 +110,12 @@ export default function SemesterProgramsPage() {
   }
   const canImport = user && (user.role === "Admin" || user.role === "WakaKurikulum");
 
-
-  const handleCreateOrUpdate = (itemData: AnyCurriculumItem) => {
-    const newItem = itemData as SemesterProgram;
-    let updatedSemesterPrograms;
-
-    if (!newItem.id) { 
-        newItem.id = `promes-${Date.now()}`;
-        newItem.createdAt = new Date().toISOString();
-        newItem.curriculumType = newItem.curriculumType || defaultCurriculum; // Set default curriculum for new items
-    }
-    newItem.updatedAt = new Date().toISOString();
-
-     if (!newItem.createdByUserId && user) { 
-        newItem.createdByUserId = user.id;
-    }
-
-    if (editingItem) {
-      if (!canEdit(editingItem)) { 
-        toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengedit Promes ini.", variant: "destructive" });
-        return;
-      }
-      updatedSemesterPrograms = semesterPrograms.map(sp => sp.id === newItem.id ? newItem : sp);
-    } else {
-       if (!canCreate) { 
-        toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk membuat Promes baru.", variant: "destructive" });
-        return;
-      }
-      updatedSemesterPrograms = [newItem, ...semesterPrograms];
-    }
-    setSemesterPrograms(updatedSemesterPrograms);
-    localStorage.setItem(SEMESTER_PROGRAMS_STORAGE_KEY, JSON.stringify(updatedSemesterPrograms));
-    setEditingItem(null);
-    setIsFormOpen(false);
-    toast({ title: editingItem ? "Promes Diperbarui" : "Promes Dibuat", description: `"${newItem.title}" telah berhasil disimpan.`});
-  };
-
   const handleEdit = (item: AnyCurriculumItem) => {
     if (!canEdit(item as SemesterProgram)) { 
         toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengedit Promes ini.", variant: "destructive" });
         return;
     }
-    setEditingItem(item as SemesterProgram);
-    setIsFormOpen(true);
+    router.push(`/semester-programs/edit/${item.id}`);
   };
 
   const handleDelete = (itemToDelete: AnyCurriculumItem) => {
@@ -233,21 +197,11 @@ export default function SemesterProgramsPage() {
               </div>
               {canCreate && (
                 <div className="w-full md:w-auto">
-                  <CurriculumFormDialog
-                  triggerButtonText="Buat Program Baru"
-                  dialogTitle="Buat Program Semester Baru (Promes)"
-                  dialogDescription="Rancang kurikulum Anda untuk semester tertentu."
-                  itemType="Promes"
-                  onSubmit={handleCreateOrUpdate}
-                  initialData={null} // Will use defaultCurriculum from context
-                  forceOpen={isFormOpen && !editingItem}
-                  onOpenChange={(open) => {
-                     if (!open && editingItem) {
-                      setEditingItem(null);
-                    }
-                    setIsFormOpen(open);
-                  }}
-                  />
+                  <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground w-full sm:w-auto">
+                    <Link href="/semester-programs/new">
+                        <PlusCircle className="mr-2 h-5 w-5" /> Buat Program Baru
+                    </Link>
+                  </Button>
                 </div>
               )}
           </div>
@@ -264,23 +218,7 @@ export default function SemesterProgramsPage() {
           </div>
         </CardContent>
       </Card>
-      {editingItem && canEdit(editingItem) && (
-        <CurriculumFormDialog
-            triggerButtonText="Pemicu Edit Tersembunyi"
-            dialogTitle={`Edit Program Semester`} 
-            dialogDescription="Perbarui rincian untuk program semester ini."
-            itemType="Promes"
-            initialData={editingItem}
-            onSubmit={handleCreateOrUpdate}
-            forceOpen={isFormOpen && !!editingItem}
-            onOpenChange={(open) => {
-              if (!open) {
-                setEditingItem(null);
-              }
-              setIsFormOpen(open);
-            }}
-        />
-      )}
     </div>
   );
 }
+

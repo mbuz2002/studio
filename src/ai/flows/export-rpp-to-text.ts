@@ -24,7 +24,7 @@ const LessonPlanSchema = z.object({
   title: z.string(),
   subject: z.string(),
   gradeLevel: z.string(),
-  curriculumType: z.enum(["Kurikulum Merdeka", "K-13", "KTSP 2006"]), // Added
+  curriculumType: z.enum(["Kurikulum Merdeka", "K-13", "KTSP 2006"]), 
   topic: z.string(),
   learningObjectives: z.array(z.string()),
   // Kurikulum Merdeka specific
@@ -49,8 +49,15 @@ const LessonPlanSchema = z.object({
   updatedAt: z.string(),
 });
 
-const ExportRppToTextInputSchema = LessonPlanSchema; 
-export type ExportRppToTextInput = z.infer<typeof ExportRppToTextInputSchema>;
+// Add boolean flags for curriculum type to the input schema for the prompt
+const PromptInputSchema = LessonPlanSchema.extend({
+  isKurikulumMerdeka: z.boolean(),
+  isK13: z.boolean(),
+  isKTSP2006: z.boolean(),
+  formattedUpdatedAt: z.string(),
+});
+
+export type ExportRppToTextInput = z.infer<typeof LessonPlanSchema>; // External type remains the same
 
 const ExportRppToTextOutputSchema = z.object({
   documentContent: z.string().describe('Konten RPP/Modul Ajar dalam format teks terstruktur, siap untuk diunduh atau disalin.'),
@@ -63,7 +70,7 @@ export async function exportRppToText(input: ExportRppToTextInput): Promise<Expo
 
 const prompt = ai.definePrompt({
   name: 'exportRppToTextPrompt',
-  input: { schema: ExportRppToTextInputSchema },
+  input: { schema: PromptInputSchema }, // Use the extended schema for the prompt
   output: { schema: ExportRppToTextOutputSchema },
   prompt: `Anda adalah asisten yang bertugas mengubah data Rencana Pelaksanaan Pembelajaran (RPP) / Modul Ajar (MA) dari format JSON menjadi dokumen teks yang terstruktur dengan baik dan rapi. Gunakan Bahasa Indonesia.
 Format output harus jelas, mudah dibaca, dan siap untuk disalin ke editor teks atau diunduh sebagai file .txt.
@@ -87,7 +94,7 @@ Berikut adalah data RPP/MA yang perlu diformat:
 - {{{this}}}
 {{/each}}
 
-{{#if (eq curriculumType "Kurikulum Merdeka")}}
+{{#if isKurikulumMerdeka}}
     {{#if pemahamanBermakna.length}}
     **B. PEMAHAMAN BERMAKNA**
     {{#each pemahamanBermakna}}
@@ -102,7 +109,7 @@ Berikut adalah data RPP/MA yang perlu diformat:
     {{/each}}
     {{/if}}
 {{else}}
-    {{#if (eq curriculumType "KTSP 2006")}}
+    {{#if isKTSP2006}}
         {{#if standarKompetensi.length}}
         **B. STANDAR KOMPETENSI (SK)**
         {{#each standarKompetensi}}
@@ -110,7 +117,7 @@ Berikut adalah data RPP/MA yang perlu diformat:
         {{/each}}
         {{/if}}
     {{/if}}
-    {{#if (eq curriculumType "K-13")}}
+    {{#if isK13}}
         {{#if kompetensiInti.length}}
         **B. KOMPETENSI INTI (KI)**
         {{#each kompetensiInti}}
@@ -141,7 +148,7 @@ Berikut adalah data RPP/MA yang perlu diformat:
     {{/if}}
 {{/if}}
 
-**{{#if (eq curriculumType "Kurikulum Merdeka")}}D{{else}}F{{/if}}. LANGKAH-LANGKAH PEMBELAJARAN**
+**{{#if isKurikulumMerdeka}}D{{else}}F{{/if}}. LANGKAH-LANGKAH PEMBELAJARAN**
 
   **1. Pendahuluan:**
   {{#each langkahPembelajaran.pendahuluan}}
@@ -158,10 +165,10 @@ Berikut adalah data RPP/MA yang perlu diformat:
     - {{{this}}}
   {{/each}}
 
-**{{#if (eq curriculumType "Kurikulum Merdeka")}}E{{else}}G{{/if}}. ASESMEN/PENILAIAN**
+**{{#if isKurikulumMerdeka}}E{{else}}G{{/if}}. ASESMEN/PENILAIAN**
 {{{assessment}}}
 
-{{#if (eq curriculumType "Kurikulum Merdeka")}}
+{{#if isKurikulumMerdeka}}
     {{#if differentiationStrategies.length}}
     **F. STRATEGI DIFERENSIASI**
     {{#each differentiationStrategies}}
@@ -171,7 +178,7 @@ Berikut adalah data RPP/MA yang perlu diformat:
 {{/if}}
 
 {{#if materials}}
-**{{#if (eq curriculumType "Kurikulum Merdeka")}}G{{else}}H{{/if}}. MEDIA/SUMBER BELAJAR**
+**{{#if isKurikulumMerdeka}}G{{else}}H{{/if}}. MEDIA/SUMBER BELAJAR**
 - {{{materials}}}
 {{/if}}
 
@@ -186,7 +193,7 @@ Pastikan semua bagian terisi sesuai data yang diberikan dan jenis kurikulum. Jik
 const exportRppToTextFlow = ai.defineFlow(
   {
     name: 'exportRppToTextFlow',
-    inputSchema: ExportRppToTextInputSchema,
+    inputSchema: LessonPlanSchema, // Flow input remains original LessonPlan
     outputSchema: ExportRppToTextOutputSchema,
   },
   async (input: ExportRppToTextInput) => {
@@ -205,7 +212,17 @@ const exportRppToTextFlow = ai.defineFlow(
       materials: input.materials || "", 
       formattedUpdatedAt: input.updatedAt ? format(new Date(input.updatedAt), "dd MMMM yyyy, HH:mm", { locale: indonesianLocale }) : "Data tidak tersedia"
     };
-    const { output } = await prompt(preparedInput);
+
+    const curriculumFlags = {
+        isKurikulumMerdeka: preparedInput.curriculumType === "Kurikulum Merdeka",
+        isK13: preparedInput.curriculumType === "K-13",
+        isKTSP2006: preparedInput.curriculumType === "KTSP 2006",
+    };
+
+    const finalPromptInput = { ...preparedInput, ...curriculumFlags };
+    
+    const { output } = await prompt(finalPromptInput);
     return output!;
   }
 );
+

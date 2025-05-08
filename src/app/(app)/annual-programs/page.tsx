@@ -1,16 +1,19 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
 import { CurriculumDataTable } from "@/components/curriculum/CurriculumDataTable";
-import { CurriculumFormDialog } from "@/components/curriculum/CurriculumFormDialog";
+// import { CurriculumFormDialog } from "@/components/curriculum/CurriculumFormDialog"; // Removed
 import type { AnnualProgram, AnyCurriculumItem } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { FileUp, Filter, Search, Loader2, CalendarDays } from "lucide-react";
+import { FileUp, Filter, Search, Loader2, CalendarDays, PlusCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { useCurriculum } from "@/contexts/CurriculumContext"; // Import curriculum context
+import { useCurriculum } from "@/contexts/CurriculumContext"; 
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const initialAnnualProgramsData: AnnualProgram[] = [
   {
@@ -61,12 +64,10 @@ const ANNUAL_PROGRAMS_STORAGE_KEY = "appAnnualPrograms";
 export default function AnnualProgramsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { defaultCurriculum } = useCurriculum(); // Get default curriculum
+  const router = useRouter();
   const [annualPrograms, setAnnualPrograms] = useState<AnnualProgram[]>([]);
-  const [editingItem, setEditingItem] = useState<AnnualProgram | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [isClient, setIsClient] = useState(false);
-  const [isFormOpen, setIsFormOpen] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -112,48 +113,13 @@ export default function AnnualProgramsPage() {
   }
   const canImport = user && (user.role === "Admin" || user.role === "WakaKurikulum");
 
-  const handleCreateOrUpdate = (itemData: AnyCurriculumItem) => {
-    const newItem = itemData as AnnualProgram;
-    let updatedAnnualPrograms;
-
-     if (!newItem.id) {
-        newItem.id = `prota-${Date.now()}`;
-        newItem.createdAt = new Date().toISOString();
-        newItem.curriculumType = newItem.curriculumType || defaultCurriculum; // Set default curriculum for new items
-    }
-    newItem.updatedAt = new Date().toISOString();
-
-    if (!newItem.createdByUserId && user) { 
-        newItem.createdByUserId = user.id;
-    }
-
-    if (editingItem) {
-      if (!canEdit(editingItem)) { 
-        toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengedit PROTA ini.", variant: "destructive" });
-        return;
-      }
-      updatedAnnualPrograms = annualPrograms.map(ap => ap.id === newItem.id ? newItem : ap);
-    } else {
-      if (!canCreate) { 
-        toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk membuat PROTA baru.", variant: "destructive" });
-        return;
-      }
-      updatedAnnualPrograms = [newItem, ...annualPrograms];
-    }
-    setAnnualPrograms(updatedAnnualPrograms);
-    localStorage.setItem(ANNUAL_PROGRAMS_STORAGE_KEY, JSON.stringify(updatedAnnualPrograms));
-    setEditingItem(null);
-    setIsFormOpen(false);
-    toast({ title: editingItem ? "PROTA Diperbarui" : "PROTA Dibuat", description: `"${newItem.title}" telah berhasil disimpan.`});
-  };
 
   const handleEdit = (item: AnyCurriculumItem) => {
     if (!canEdit(item as AnnualProgram)) { 
         toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengedit PROTA ini.", variant: "destructive" });
         return;
     }
-    setEditingItem(item as AnnualProgram);
-    setIsFormOpen(true);
+    router.push(`/annual-programs/edit/${item.id}`);
   };
 
   const handleDelete = (itemToDelete: AnyCurriculumItem) => {
@@ -234,21 +200,11 @@ export default function AnnualProgramsPage() {
             </div>
             {canCreate && (
               <div className="w-full md:w-auto">
-                  <CurriculumFormDialog
-                  triggerButtonText="Buat Program Baru"
-                  dialogTitle="Buat Program Tahunan Baru (PROTA)"
-                  dialogDescription="Definisikan struktur untuk seluruh tahun ajaran."
-                  itemType="PROTA"
-                  onSubmit={handleCreateOrUpdate}
-                  initialData={null} // Will use defaultCurriculum from context
-                  forceOpen={isFormOpen && !editingItem}
-                  onOpenChange={(open) => {
-                    if (!open && editingItem) { 
-                      setEditingItem(null);
-                    }
-                    setIsFormOpen(open);
-                  }}
-                  />
+                 <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground w-full sm:w-auto">
+                    <Link href="/annual-programs/new">
+                        <PlusCircle className="mr-2 h-5 w-5" /> Buat Program Baru
+                    </Link>
+                  </Button>
               </div>
             )}
           </div>
@@ -265,23 +221,7 @@ export default function AnnualProgramsPage() {
           </div>
         </CardContent>
       </Card>
-      {editingItem && canEdit(editingItem) && (
-         <CurriculumFormDialog
-            triggerButtonText="Pemicu Edit Tersembunyi"
-            dialogTitle={`Edit Program Tahunan`} 
-            dialogDescription="Perbarui rincian untuk program tahunan ini."
-            itemType="PROTA"
-            initialData={editingItem}
-            onSubmit={handleCreateOrUpdate}
-            forceOpen={isFormOpen && !!editingItem}
-            onOpenChange={(open) => {
-              if (!open) {
-                setEditingItem(null);
-              }
-              setIsFormOpen(open);
-            }}
-        />
-      )}
     </div>
   );
 }
+
