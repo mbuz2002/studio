@@ -4,11 +4,12 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Cog, UserCircle, ShieldCheck, Database, Users as UsersIcon } from "lucide-react";
+import { Cog, UserCircle, ShieldCheck, Database, Palette } from "lucide-react"; // Added Palette icon
 import { useAuth } from "@/contexts/AuthContext";
 import { SchoolProfileForm } from "@/components/settings/SchoolProfileForm";
 import { UserManagementSection } from "@/components/settings/UserManagementSection";
-import { EditUserDialog } from "@/components/settings/EditUserDialog"; // Import the new dialog
+import { EditUserDialog } from "@/components/settings/EditUserDialog";
+import { AppPreferencesDialog } from "@/components/settings/AppPreferencesDialog"; // Import AppPreferencesDialog
 import type { User } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 
@@ -17,6 +18,7 @@ export default function SettingsPage() {
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
   const [isEditUserDialogOpen, setIsEditUserDialogOpen] = useState(false);
+  const [isAppPreferencesDialogOpen, setIsAppPreferencesDialogOpen] = useState(false); // State for AppPreferencesDialog
 
 
   if (!user) {
@@ -105,14 +107,14 @@ export default function SettingsPage() {
               <Card>
                 <CardHeader>
                  <div className="flex items-center gap-2">
-                    <Cog className="h-6 w-6 text-primary" />
+                    <Palette className="h-6 w-6 text-primary" /> {/* Changed icon */}
                     <CardTitle>Preferensi Aplikasi</CardTitle>
                   </div>
-                  <CardDescription>Sesuaikan pengalaman EduAI Planner Anda.</CardDescription>
+                  <CardDescription>Sesuaikan tema tampilan aplikasi Anda.</CardDescription> {/* Updated description */}
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground">Pengaturan tema, notifikasi, dan preferensi lainnya akan dikelola di sini.</p>
-                   <Button variant="outline" className="mt-2" onClick={() => alert("Fitur preferensi aplikasi belum diimplementasikan.")}>Atur Preferensi (Contoh)</Button>
+                  <p className="text-muted-foreground">Atur tema visual aplikasi (Terang, Gelap, atau Sistem).</p>
+                   <Button variant="outline" className="mt-2" onClick={() => setIsAppPreferencesDialogOpen(true)}>Atur Preferensi Tampilan</Button>
                 </CardContent>
               </Card>
             )}
@@ -168,6 +170,12 @@ export default function SettingsPage() {
             onUserUpdated={handleUserUpdate}
           />
       )}
+      {/* Add AppPreferencesDialog instance */}
+      <AppPreferencesDialog
+        isOpen={isAppPreferencesDialogOpen}
+        onOpenChange={setIsAppPreferencesDialogOpen}
+      />
     </div>
   );
 }
+
