@@ -4,97 +4,99 @@
 
 @layer base {
   :root {
-    --background: 210 20% 98%; /* Light Grayish Blue */
-    --foreground: 210 10% 23%; /* Dark Grayish Blue */
+    /* Cyber Dark Theme (applied as default/light for a consistent dark experience) */
+    --background: 240 15% 7%; /* Deep dark blue/purple */
+    --foreground: 190 40% 88%; /* Light cyan/gray for text */
 
-    --card: 0 0% 100%; /* White */
-    --card-foreground: 210 10% 23%;
+    --card: 240 15% 10%; /* Slightly lighter dark for cards */
+    --card-foreground: 190 40% 88%;
 
-    --popover: 0 0% 100%; /* White */
-    --popover-foreground: 210 10% 23%;
+    --popover: 240 15% 9%; /* Dark popover */
+    --popover-foreground: 190 40% 88%;
 
-    --primary: 207 68% 53%; /* Calm Blue: #3498db */
-    --primary-foreground: 210 20% 98%; /* Light Gray for contrast */
+    --primary: 190 90% 55%; /* Bright Cyan/Electric Blue */
+    --primary-foreground: 240 10% 4%; /* Very dark for contrast on primary */
 
-    --secondary: 210 17% 95%; /* Light Gray: #ecf0f1 */
-    --secondary-foreground: 210 10% 23%; /* Dark Gray for contrast */
+    --secondary: 260 20% 20%; /* Muted dark purple/blue - slightly darker */
+    --secondary-foreground: 190 30% 80%; /* Lighter cyan/gray for contrast */
 
-    --muted: 210 17% 93%;
-    --muted-foreground: 210 10% 45%;
+    --muted: 240 15% 18%; /* Darker muted tone - slightly lighter for better visibility */
+    --muted-foreground: 220 10% 55%; /* Muted gray text - slightly lighter */
 
-    --accent: 145 63% 49%; /* Green: #2ecc71 */
-    --accent-foreground: 145 63% 98%; /* Light Green/White for contrast */
+    --accent: 320 80% 60%; /* Bright Magenta/Pink */
+    --accent-foreground: 0 0% 100%; /* White or very light for contrast on accent */
 
-    --destructive: 0 72% 51%; /* Adjusted Red */
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 0 72% 51%; /* Red for destructive actions */
+    --destructive-foreground: 0 0% 98%; /* Light foreground for destructive */
 
-    --border: 210 17% 88%;
-    --input: 210 17% 88%;
-    --ring: 207 68% 53%; /* Primary color for focus rings */
+    --border: 240 15% 15%; /* Muted border color - slightly darker */
+    --input: 240 15% 12%; /* Dark input background */
+    --ring: 320 80% 60%; /* Accent color for focus rings for more pop */
 
     --radius: 0.5rem;
 
-    /* Sidebar specific theme variables */
-    --sidebar-background: 210 15% 15%; /* Darker blue/gray for sidebar */
-    --sidebar-foreground: 210 20% 90%; 
-    --sidebar-primary: 207 68% 53%; /* Calm Blue */
+    /* Sidebar specific theme variables - Cyber Dark */
+    --sidebar-background: 240 15% 5%; /* Even darker for sidebar */
+    --sidebar-foreground: 190 70% 80%;  /* Cyan-ish text for sidebar */
+    --sidebar-primary: 320 80% 60%;     /* Magenta for active/primary elements in sidebar */
     --sidebar-primary-foreground: 0 0% 100%; /* White */
-    --sidebar-accent: 210 15% 25%; /* Slightly lighter than sidebar bg */
-    --sidebar-accent-foreground: 0 0% 100%; /* White */
-    --sidebar-border: 210 15% 20%;
-    --sidebar-ring: 207 68% 53%; /* Calm Blue */
+    --sidebar-accent: 240 15% 15%;      /* Hover/accent color for sidebar items */
+    --sidebar-accent-foreground: 190 80% 85%; /* Lighter cyan on hover */
+    --sidebar-border: 240 15% 10%;      /* Border within sidebar */
+    --sidebar-ring: 320 80% 60%;        /* Magenta for focus rings in sidebar */
 
-     --chart-1: 207 68% 53%;
-     --chart-2: 145 63% 49%;
-     --chart-3: 30 80% 55%;
-     --chart-4: 280 65% 60%;
-     --chart-5: 340 75% 55%;
+     --chart-1: 190 90% 55%; /* Cyan */
+     --chart-2: 320 80% 60%; /* Magenta */
+     --chart-3: 120 70% 55%; /* Lime Green */
+     --chart-4: 270 70% 65%; /* Purple */
+     --chart-5: 30 90% 60%;  /* Orange */
   }
 
   .dark {
-    --background: 210 10% 12%; /* Dark Blue/Gray */
-    --foreground: 210 20% 94%; /* Light Gray */
+    /* Cyber Dark Theme (can be identical to :root or slightly tweaked if needed) */
+    --background: 240 15% 7%;
+    --foreground: 190 40% 88%;
 
-    --card: 210 10% 15%;
-    --card-foreground: 210 20% 94%;
+    --card: 240 15% 10%;
+    --card-foreground: 190 40% 88%;
 
-    --popover: 210 10% 15%;
-    --popover-foreground: 210 20% 94%;
+    --popover: 240 15% 9%;
+    --popover-foreground: 190 40% 88%;
 
-    --primary: 207 68% 53%; /* Calm Blue */
-    --primary-foreground: 210 20% 98%;
+    --primary: 190 90% 55%;
+    --primary-foreground: 240 10% 4%;
 
-    --secondary: 210 10% 20%; /* Darker Gray */
-    --secondary-foreground: 210 20% 94%;
+    --secondary: 260 20% 20%;
+    --secondary-foreground: 190 30% 80%;
 
-    --muted: 210 10% 20%;
-    --muted-foreground: 210 10% 60%;
+    --muted: 240 15% 18%;
+    --muted-foreground: 220 10% 55%;
 
-    --accent: 145 63% 49%; /* Green */
-    --accent-foreground: 145 63% 98%;
+    --accent: 320 80% 60%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 63% 40%;
+    --destructive: 0 63% 45%; /* Slightly adjusted for dark */
     --destructive-foreground: 0 0% 98%;
 
-    --border: 210 10% 25%;
-    --input: 210 10% 25%;
-    --ring: 207 68% 53%;
+    --border: 240 15% 15%;
+    --input: 240 15% 12%;
+    --ring: 320 80% 60%;
 
-    /* Dark Sidebar specific theme variables */
-    --sidebar-background: 210 12% 10%; 
-    --sidebar-foreground: 210 15% 85%; 
-    --sidebar-primary: 207 68% 53%; 
+    /* Dark Sidebar specific theme variables - can be same as :root for consistency */
+    --sidebar-background: 240 15% 5%;
+    --sidebar-foreground: 190 70% 80%;
+    --sidebar-primary: 320 80% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 12% 18%; 
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 210 12% 15%;
-    --sidebar-ring: 207 68% 53%;
+    --sidebar-accent: 240 15% 15%;
+    --sidebar-accent-foreground: 190 80% 85%;
+    --sidebar-border: 240 15% 10%;
+    --sidebar-ring: 320 80% 60%;
 
-    --chart-1: 207 60% 50%;
-    --chart-2: 145 55% 45%;
-    --chart-3: 30 70% 50%;
-    --chart-4: 280 55% 55%;
-    --chart-5: 340 65% 50%;
+    --chart-1: 190 80% 50%;
+    --chart-2: 320 70% 55%;
+    --chart-3: 120 60% 50%;
+    --chart-4: 270 60% 60%;
+    --chart-5: 30 80% 55%;
   }
 }
 
