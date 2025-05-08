@@ -185,10 +185,11 @@ export default function LessonPlansPage() {
   };
 
   const filteredLessonPlans = isClient ? lessonPlans.filter(lp =>
-    lp.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (lp.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     lp.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
     lp.gradeLevel.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    lp.curriculumType.toLowerCase().includes(searchTerm.toLowerCase())
+    lp.curriculumType.toLowerCase().includes(searchTerm.toLowerCase())) &&
+    (user?.role !== "Guru" || lp.createdByUserId === user?.id || initialLessonPlansData.some(initialLp => initialLp.id === lp.id && (!lp.createdByUserId || lp.createdByUserId === 'user-demo-fallback'))) // Show initial data or user's own
   ) : [];
 
   if (!isClient || !user) {
@@ -282,4 +283,3 @@ export default function LessonPlansPage() {
     </div>
   );
 }
-

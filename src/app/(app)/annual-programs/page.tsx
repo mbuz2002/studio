@@ -95,9 +95,21 @@ export default function AnnualProgramsPage() {
     }
   }, [toast, user]);
 
-  const canCreate = user && (user.role === "Admin" || user.role === "WakaKurikulum");
-  const canEdit = user && (user.role === "Admin" || user.role === "WakaKurikulum");
-  const canDelete = user && (user.role === "Admin" || user.role === "WakaKurikulum");
+  const canCreate = user && (user.role === "Admin" || user.role === "WakaKurikulum" || user.role === "Guru");
+  const canEdit = (item: AnnualProgram): boolean => {
+    if (!user) return false;
+    if (user.role === "Admin" || user.role === "WakaKurikulum") return true;
+    if (user.role === "Guru" && item.createdByUserId === user.id) return true;
+    if (user.role === "Guru" && initialAnnualProgramsData.some(ap => ap.id === item.id && (!item.createdByUserId || item.createdByUserId === 'user-demo-fallback'))) return true;
+    return false;
+  }
+  const canDelete = (item: AnnualProgram): boolean => {
+    if (!user) return false;
+    if (user.role === "Admin" || user.role === "WakaKurikulum") return true;
+    if (user.role === "Guru" && item.createdByUserId === user.id) return true;
+    if (user.role === "Guru" && initialAnnualProgramsData.some(ap => ap.id === item.id && (!item.createdByUserId || item.createdByUserId === 'user-demo-fallback'))) return true;
+    return false;
+  }
   const canImport = user && (user.role === "Admin" || user.role === "WakaKurikulum");
 
   const handleCreateOrUpdate = (itemData: AnyCurriculumItem) => {
@@ -116,8 +128,8 @@ export default function AnnualProgramsPage() {
     }
 
     if (editingItem) {
-      if (!canEdit) { 
-        toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengedit PROTA.", variant: "destructive" });
+      if (!canEdit(editingItem)) { 
+        toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengedit PROTA ini.", variant: "destructive" });
         return;
       }
       updatedAnnualPrograms = annualPrograms.map(ap => ap.id === newItem.id ? newItem : ap);
@@ -136,8 +148,8 @@ export default function AnnualProgramsPage() {
   };
 
   const handleEdit = (item: AnyCurriculumItem) => {
-    if (!canEdit) { 
-        toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengedit PROTA.", variant: "destructive" });
+    if (!canEdit(item as AnnualProgram)) { 
+        toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengedit PROTA ini.", variant: "destructive" });
         return;
     }
     setEditingItem(item as AnnualProgram);
@@ -145,8 +157,8 @@ export default function AnnualProgramsPage() {
   };
 
   const handleDelete = (itemToDelete: AnyCurriculumItem) => {
-    if (!canDelete) { 
-        toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk menghapus PROTA.", variant: "destructive" });
+    if (!canDelete(itemToDelete as AnnualProgram)) { 
+        toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk menghapus PROTA ini.", variant: "destructive" });
         return;
     }
      if (window.confirm(`Apakah Anda yakin ingin menghapus "${itemToDelete.title}"?`)) {
@@ -165,10 +177,11 @@ export default function AnnualProgramsPage() {
   };
 
   const filteredAnnualPrograms = isClient ? annualPrograms.filter(ap =>
-    ap.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (ap.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     ap.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
     ap.year.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    ap.curriculumType.toLowerCase().includes(searchTerm.toLowerCase())
+    ap.curriculumType.toLowerCase().includes(searchTerm.toLowerCase())) &&
+    (user?.role !== "Guru" || ap.createdByUserId === user?.id || initialAnnualProgramsData.some(initialAp => initialAp.id === ap.id && (!ap.createdByUserId || ap.createdByUserId === 'user-demo-fallback')))
   ) : [];
 
   if (!isClient || !user) {
@@ -192,7 +205,7 @@ export default function AnnualProgramsPage() {
                     Kelola program tahun ajaran Anda. 
                     {user.role === "KepalaSekolah" || user.role === "WakaKurikulum" || user.role === "TataUsaha" ? " Anda dapat melihat semua PROTA." : ""}
                     {user.role === "Guru" ? " Lihat PROTA yang telah disusun." : ""}
-                    {(user.role === "Admin" || user.role === "WakaKurikulum") && " Anda dapat membuat, mengedit, dan menghapus PROTA."}
+                    {(user.role === "Admin" || user.role === "WakaKurikulum" || user.role === "Guru") && " Anda dapat membuat, mengedit, dan menghapus PROTA."}
                 </CardDescription>
             </div>
           </div>
@@ -245,14 +258,14 @@ export default function AnnualProgramsPage() {
                 onView={handleView}
                 onEdit={canEdit ? handleEdit : undefined} 
                 onDelete={canDelete ? handleDelete : undefined} 
-                canEdit={() => canEdit} 
-                canDelete={() => canDelete} 
+                canEdit={(item) => canEdit(item as AnnualProgram)} 
+                canDelete={(item) => canDelete(item as AnnualProgram)} 
                 itemTypeForExport="PROTA"
             />
           </div>
         </CardContent>
       </Card>
-      {editingItem && canEdit && (
+      {editingItem && canEdit(editingItem) && (
          <CurriculumFormDialog
             triggerButtonText="Pemicu Edit Tersembunyi"
             dialogTitle={`Edit Program Tahunan`} 
@@ -272,4 +285,3 @@ export default function AnnualProgramsPage() {
     </div>
   );
 }
-

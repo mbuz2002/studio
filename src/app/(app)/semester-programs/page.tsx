@@ -92,9 +92,21 @@ export default function SemesterProgramsPage() {
     }
   }, [toast, user]);
 
-  const canCreate = user && (user.role === "Admin" || user.role === "WakaKurikulum");
-  const canEdit = user && (user.role === "Admin" || user.role === "WakaKurikulum");
-  const canDelete = user && (user.role === "Admin" || user.role === "WakaKurikulum");
+  const canCreate = user && (user.role === "Admin" || user.role === "WakaKurikulum" || user.role === "Guru");
+  const canEdit = (item: SemesterProgram): boolean => {
+    if (!user) return false;
+    if (user.role === "Admin" || user.role === "WakaKurikulum") return true;
+    if (user.role === "Guru" && item.createdByUserId === user.id) return true;
+    if (user.role === "Guru" && initialSemesterProgramsData.some(sp => sp.id === item.id && (!item.createdByUserId || item.createdByUserId === 'user-demo-fallback'))) return true;
+    return false;
+  }
+  const canDelete = (item: SemesterProgram): boolean => {
+    if (!user) return false;
+    if (user.role === "Admin" || user.role === "WakaKurikulum") return true;
+    if (user.role === "Guru" && item.createdByUserId === user.id) return true;
+    if (user.role === "Guru" && initialSemesterProgramsData.some(sp => sp.id === item.id && (!item.createdByUserId || item.createdByUserId === 'user-demo-fallback'))) return true;
+    return false;
+  }
   const canImport = user && (user.role === "Admin" || user.role === "WakaKurikulum");
 
 
@@ -114,8 +126,8 @@ export default function SemesterProgramsPage() {
     }
 
     if (editingItem) {
-      if (!canEdit) { 
-        toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengedit Promes.", variant: "destructive" });
+      if (!canEdit(editingItem)) { 
+        toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengedit Promes ini.", variant: "destructive" });
         return;
       }
       updatedSemesterPrograms = semesterPrograms.map(sp => sp.id === newItem.id ? newItem : sp);
@@ -134,8 +146,8 @@ export default function SemesterProgramsPage() {
   };
 
   const handleEdit = (item: AnyCurriculumItem) => {
-    if (!canEdit) { 
-        toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengedit Promes.", variant: "destructive" });
+    if (!canEdit(item as SemesterProgram)) { 
+        toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengedit Promes ini.", variant: "destructive" });
         return;
     }
     setEditingItem(item as SemesterProgram);
@@ -143,8 +155,8 @@ export default function SemesterProgramsPage() {
   };
 
   const handleDelete = (itemToDelete: AnyCurriculumItem) => {
-     if (!canDelete) { 
-        toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk menghapus Promes.", variant: "destructive" });
+     if (!canDelete(itemToDelete as SemesterProgram)) { 
+        toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk menghapus Promes ini.", variant: "destructive" });
         return;
     }
     if (window.confirm(`Apakah Anda yakin ingin menghapus "${itemToDelete.title}"?`)) {
@@ -163,10 +175,11 @@ export default function SemesterProgramsPage() {
   };
 
   const filteredSemesterPrograms = isClient ? semesterPrograms.filter(sp =>
-    sp.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (sp.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     sp.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
     `Semester ${sp.semester}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    sp.curriculumType.toLowerCase().includes(searchTerm.toLowerCase())
+    sp.curriculumType.toLowerCase().includes(searchTerm.toLowerCase())) &&
+    (user?.role !== "Guru" || sp.createdByUserId === user?.id || initialSemesterProgramsData.some(initialSp => initialSp.id === sp.id && (!sp.createdByUserId || sp.createdByUserId === 'user-demo-fallback')))
   ) : [];
 
 
@@ -191,7 +204,7 @@ export default function SemesterProgramsPage() {
                     Rincikan rencana pengajaran Anda untuk setiap semester. 
                     {user.role === "KepalaSekolah" || user.role === "WakaKurikulum" || user.role === "TataUsaha" ? " Anda dapat melihat semua Promes." : ""}
                     {user.role === "Guru" ? " Lihat Promes yang telah disusun." : ""}
-                    {(user.role === "Admin" || user.role === "WakaKurikulum") && " Anda dapat membuat, mengedit, dan menghapus Promes."}
+                    {(user.role === "Admin" || user.role === "WakaKurikulum" || user.role === "Guru") && " Anda dapat membuat, mengedit, dan menghapus Promes."}
                 </CardDescription>
             </div>
           </div>
@@ -244,14 +257,14 @@ export default function SemesterProgramsPage() {
                 onView={handleView}
                 onEdit={canEdit ? handleEdit : undefined} 
                 onDelete={canDelete ? handleDelete : undefined} 
-                canEdit={() => canEdit} 
-                canDelete={() => canDelete} 
+                canEdit={(item) => canEdit(item as SemesterProgram)} 
+                canDelete={(item) => canDelete(item as SemesterProgram)} 
                 itemTypeForExport="Promes"
             />
           </div>
         </CardContent>
       </Card>
-      {editingItem && canEdit && (
+      {editingItem && canEdit(editingItem) && (
         <CurriculumFormDialog
             triggerButtonText="Pemicu Edit Tersembunyi"
             dialogTitle={`Edit Program Semester`} 
@@ -271,4 +284,3 @@ export default function SemesterProgramsPage() {
     </div>
   );
 }
-
