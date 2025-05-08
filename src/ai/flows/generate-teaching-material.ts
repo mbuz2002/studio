@@ -24,7 +24,7 @@ const SuggestedSourceSchema = z.object({
     type: z.enum(['buku', 'jurnal', 'artikel online', 'video', 'website edukasi', 'lainnya']).describe('Jenis sumber referensi.'),
     title: z.string().describe('Judul sumber referensi (misal, judul buku, artikel, atau video).'),
     authorOrPublisher: z.string().optional().describe('Penulis atau penerbit sumber (jika ada).'),
-    url: z.string().url().optional().describe('URL jika sumber online (misal, link ke artikel atau video).'),
+    url: z.string().optional().describe('URL jika sumber online (misal, link ke artikel atau video). Harap pastikan ini adalah URL yang valid jika memungkinkan.'),
     description: z.string().optional().describe('Deskripsi singkat mengapa sumber ini relevan atau bagaimana menggunakannya.'),
 });
 
@@ -62,6 +62,7 @@ Materi pembelajaran harus:
     *   Sediakan minimal 2-3 sumber referensi yang kredibel dan relevan.
     *   Untuk setiap sumber, sebutkan jenisnya (buku, artikel online, video, dll.), judul, penulis/penerbit (jika ada), URL (jika online), dan deskripsi singkat mengapa sumber tersebut berguna.
     *   Prioritaskan sumber-sumber yang mudah diakses oleh guru atau siswa di Indonesia (misalnya, situs Kemdikbud, platform edukasi lokal, buku teks yang umum).
+    *   Jika URL disediakan, pastikan itu adalah URL yang berfungsi dan valid.
 
 Pastikan output yang dihasilkan sesuai dengan skema JSON yang diharapkan dan menggunakan Bahasa Indonesia yang baik dan benar.
 `,
@@ -80,3 +81,4 @@ const generateTeachingMaterialFlow = ai.defineFlow(
 );
 
     
+
