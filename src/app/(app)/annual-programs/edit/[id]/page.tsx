@@ -17,6 +17,7 @@ import { generateAnnualProgram, type GenerateAnnualProgramInput, type GenerateAn
 const ANNUAL_PROGRAMS_STORAGE_KEY = "appAnnualPrograms";
 
 type ProtaFormState = {
+  capaianPembelajaran_textarea?: string; 
   profilPelajarPancasilaFocus_textarea?: string;
   semester1_topics_textarea?: string;
   semester1_elements_textarea?: string; 
@@ -43,7 +44,7 @@ export default function EditAnnualProgramPage() {
 
   useEffect(() => {
      if (!user) {
-      router.push("/login"); // Redirect if not authenticated
+      router.push("/login"); 
       return;
     }
     if (protaId && typeof window !== 'undefined') {
@@ -61,6 +62,7 @@ export default function EditAnnualProgramPage() {
 
           setFormData({
             ...programToEdit,
+            capaianPembelajaran_textarea: programToEdit.capaianPembelajaran?.join('\n') || '',
             profilPelajarPancasilaFocus_textarea: programToEdit.profilPelajarPancasilaFocus?.join('\n') || '',
             semester1_topics_textarea: programToEdit.semester1Components?.map(c => c.topic).join('\n') || '',
             semester1_elements_textarea: programToEdit.semester1Components?.map(c => c.elemenCapaianPembelajaran?.join(', ') || '').join('\n') || '',
@@ -88,8 +90,15 @@ export default function EditAnnualProgramPage() {
   const handleSelectChange = (name: string, value: string) => {
     if (name === 'curriculumType') {
       setSelectedCurriculum(value as CurriculumFramework);
+      setFormData(prev => ({
+        ...prev,
+        [name]: value,
+        capaianPembelajaran_textarea: value === "Kurikulum Merdeka" ? prev.capaianPembelajaran_textarea || '' : undefined,
+        profilPelajarPancasilaFocus_textarea: value === "Kurikulum Merdeka" ? prev.profilPelajarPancasilaFocus_textarea || '' : undefined,
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
     }
-    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const parseProtaComponents = (topicsStr?: string, elementsStr?: string, allocationsStr?: string): AnnualProgramComponent[] => {
@@ -116,15 +125,25 @@ export default function EditAnnualProgramPage() {
          addLog("WARN", `Gagal membuat draf PROTA dengan AI: Informasi kurang. PROTA ID: ${protaId}`, source);
          return;
     }
+    if (selectedCurriculum === "Kurikulum Merdeka" && !formData.capaianPembelajaran_textarea) {
+         toast({
+            title: "Informasi Kurang untuk Kurikulum Merdeka",
+            description: `Harap isi Capaian Pembelajaran Umum Tahunan untuk hasil AI yang lebih baik.`,
+            variant: "destructive",
+         });
+        addLog("WARN", `Gagal membuat draf PROTA dengan AI (Kurikulum Merdeka): Capaian Pembelajaran kosong. PROTA ID: ${protaId}`, source);
+        return;
+    }
 
     setIsGeneratingAI(true);
-    addLog("INFO", `Memulai pembuatan draf PROTA dengan AI untuk PROTA ID: ${protaId}. Kurikulum: ${selectedCurriculum}. Jenjang: "${formData.gradeLevel}". Mapel: "${formData.subject}". Tahun: "${formData.year}"`, source);
+    addLog("INFO", `Memulai pembuatan draf PROTA dengan AI untuk PROTA ID: ${protaId}. Kurikulum: ${selectedCurriculum}. Jenjang: "${formData.gradeLevel}". Mapel: "${formData.subject}". Tahun: "${formData.year}". CP Umum: ${selectedCurriculum === "Kurikulum Merdeka" ? formData.capaianPembelajaran_textarea : 'N/A'}`, source);
     try {
         const aiInput: GenerateAnnualProgramInput = {
           subject: formData.subject as string,
           jenjangFaseKelas: formData.gradeLevel as string,
           year: formData.year as string,
           curriculumType: selectedCurriculum,
+          capaianPembelajaran: selectedCurriculum === "Kurikulum Merdeka" ? formData.capaianPembelajaran_textarea?.split('\n').map(s => s.trim()).filter(s => s) || [] : undefined,
         };
         const result: GenerateAnnualProgramOutput = await generateAnnualProgram(aiInput);
         setFormData(prev => ({
@@ -163,6 +182,7 @@ export default function EditAnnualProgramPage() {
       id: protaId as string,
       type: 'PROTA',
       curriculumType: selectedCurriculum,
+      capaianPembelajaran: selectedCurriculum === "Kurikulum Merdeka" ? formData.capaianPembelajaran_textarea?.split('\n').map(s => s.trim()).filter(s => s) || [] : undefined,
       semester1Components: parseProtaComponents(formData.semester1_topics_textarea, formData.semester1_elements_textarea, formData.semester1_allocations_textarea),
       semester2Components: parseProtaComponents(formData.semester2_topics_textarea, formData.semester2_elements_textarea, formData.semester2_allocations_textarea),
       profilPelajarPancasilaFocus: selectedCurriculum === "Kurikulum Merdeka" ? formData.profilPelajarPancasilaFocus_textarea?.split('\n').map(s => s.trim()).filter(s => s) || [] : undefined,

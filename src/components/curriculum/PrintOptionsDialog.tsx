@@ -45,19 +45,21 @@ export function PrintOptionsDialog({
     if (!hasSchoolProfile) {
       initialOpts.showKopSurat = false;
     }
-    // Conditionally enable/disable RPP fields based on itemCurriculumType
+    
     if (itemType === 'RPP') {
         if (itemCurriculumType === "Kurikulum Merdeka") {
             initialOpts.showRPPSK = false;
             initialOpts.showRPPKI = false;
-            initialOpts.showRPPKD = false; // KM typically doesn't use KD in RPP structure
+            initialOpts.showRPPKD = false; 
             initialOpts.showRPPIPK = false;
-            initialOpts.showRPPMetodePembelajaran = false; // Less emphasized in KM structure
+            initialOpts.showRPPMetodePembelajaran = false; 
+            initialOpts.showRPPCapaianPembelajaran = true; // Default true for KM
             initialOpts.showRPPPemahamanBermakna = true;
             initialOpts.showRPPPertanyaanPemantik = true;
             initialOpts.showRPPDifferentiationStrategies = true;
         } else if (itemCurriculumType === "K-13") {
-            initialOpts.showRPPSK = false; // K-13 uses KI/KD
+            initialOpts.showRPPSK = false; 
+            initialOpts.showRPPCapaianPembelajaran = false; // Not typical for K13
             initialOpts.showRPPPemahamanBermakna = false;
             initialOpts.showRPPPertanyaanPemantik = false;
             initialOpts.showRPPDifferentiationStrategies = false;
@@ -66,7 +68,8 @@ export function PrintOptionsDialog({
             initialOpts.showRPPIPK = true;
             initialOpts.showRPPMetodePembelajaran = true;
         } else if (itemCurriculumType === "KTSP 2006") {
-            initialOpts.showRPPKI = false; // KTSP uses SK/KD
+            initialOpts.showRPPKI = false; 
+            initialOpts.showRPPCapaianPembelajaran = false; // Not typical for KTSP
             initialOpts.showRPPPemahamanBermakna = false;
             initialOpts.showRPPPertanyaanPemantik = false;
             initialOpts.showRPPDifferentiationStrategies = false;
@@ -74,6 +77,15 @@ export function PrintOptionsDialog({
             initialOpts.showRPPKD = true;
             initialOpts.showRPPIPK = true;
             initialOpts.showRPPMetodePembelajaran = true;
+        }
+        initialOpts.showRPPAlokasiWaktu = true; // Always enable for RPP by default
+    } else if (itemType === 'PROTA') {
+        if (itemCurriculumType === "Kurikulum Merdeka") {
+            initialOpts.showPROTACapaianPembelajaran = true;
+            initialOpts.showPROTAFokusP5 = true;
+        } else {
+            initialOpts.showPROTACapaianPembelajaran = false;
+            initialOpts.showPROTAFokusP5 = false; // Or adapt for karakter
         }
     }
 
@@ -99,9 +111,17 @@ export function PrintOptionsDialog({
         <Checkbox id="showRPPLearningObjectives" checked={options.showRPPLearningObjectives} onCheckedChange={() => handleCheckboxChange("showRPPLearningObjectives")} />
         <Label htmlFor="showRPPLearningObjectives">Tujuan Pembelajaran</Label>
       </div>
+      <div className="flex items-center space-x-2">
+        <Checkbox id="showRPPAlokasiWaktu" checked={options.showRPPAlokasiWaktu} onCheckedChange={() => handleCheckboxChange("showRPPAlokasiWaktu")} />
+        <Label htmlFor="showRPPAlokasiWaktu">Alokasi Waktu (JP)</Label>
+      </div>
 
       {itemCurriculumType === "Kurikulum Merdeka" && (
         <>
+          <div className="flex items-center space-x-2">
+            <Checkbox id="showRPPCapaianPembelajaran" checked={options.showRPPCapaianPembelajaran} onCheckedChange={() => handleCheckboxChange("showRPPCapaianPembelajaran")} />
+            <Label htmlFor="showRPPCapaianPembelajaran">Capaian Pembelajaran (CP)</Label>
+          </div>
           <div className="flex items-center space-x-2">
             <Checkbox id="showRPPPemahamanBermakna" checked={options.showRPPPemahamanBermakna} onCheckedChange={() => handleCheckboxChange("showRPPPemahamanBermakna")} />
             <Label htmlFor="showRPPPemahamanBermakna">Pemahaman Bermakna</Label>
@@ -172,18 +192,24 @@ export function PrintOptionsDialog({
   const renderPROTAOptions = () => (
     <>
       {itemCurriculumType === "Kurikulum Merdeka" && (
-        <div className="flex items-center space-x-2">
-          <Checkbox id="showPROTAFokusP5" checked={options.showPROTAFokusP5} onCheckedChange={() => handleCheckboxChange("showPROTAFokusP5")} />
-          <Label htmlFor="showPROTAFokusP5">Fokus Profil Pelajar Pancasila</Label>
-        </div>
+        <>
+          <div className="flex items-center space-x-2">
+            <Checkbox id="showPROTACapaianPembelajaran" checked={options.showPROTACapaianPembelajaran} onCheckedChange={() => handleCheckboxChange("showPROTACapaianPembelajaran")} />
+            <Label htmlFor="showPROTACapaianPembelajaran">Capaian Pembelajaran Umum Tahunan</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox id="showPROTAFokusP5" checked={options.showPROTAFokusP5} onCheckedChange={() => handleCheckboxChange("showPROTAFokusP5")} />
+            <Label htmlFor="showPROTAFokusP5">Fokus Profil Pelajar Pancasila</Label>
+          </div>
+        </>
       )}
       <div className="flex items-center space-x-2">
         <Checkbox id="showPROTASemester1" checked={options.showPROTASemester1} onCheckedChange={() => handleCheckboxChange("showPROTASemester1")} />
-        <Label htmlFor="showPROTASemester1">Komponen Semester 1</Label>
+        <Label htmlFor="showPROTASemester1">Komponen Semester 1 (Topik, Elemen CP/KD, Alokasi Waktu JP)</Label>
       </div>
       <div className="flex items-center space-x-2">
         <Checkbox id="showPROTASemester2" checked={options.showPROTASemester2} onCheckedChange={() => handleCheckboxChange("showPROTASemester2")} />
-        <Label htmlFor="showPROTASemester2">Komponen Semester 2</Label>
+        <Label htmlFor="showPROTASemester2">Komponen Semester 2 (Topik, Elemen CP/KD, Alokasi Waktu JP)</Label>
       </div>
     </>
   );
@@ -193,16 +219,16 @@ export function PrintOptionsDialog({
        <div className="flex items-center space-x-2">
         <Checkbox id="showPromesCapaianUmum" checked={options.showPromesCapaianUmum} onCheckedChange={() => handleCheckboxChange("showPromesCapaianUmum")} />
         <Label htmlFor="showPromesCapaianUmum">
-            {itemCurriculumType === "Kurikulum Merdeka" ? "Capaian Pembelajaran Umum" : "Rangkuman SK/KD Utama"}
+            {itemCurriculumType === "Kurikulum Merdeka" ? "Capaian Pembelajaran Umum Semester" : "Rangkuman SK/KD Utama Semester"}
         </Label>
       </div>
        <div className="flex items-center space-x-2">
         <Checkbox id="showPromesAlokasiTotal" checked={options.showPromesAlokasiTotal} onCheckedChange={() => handleCheckboxChange("showPromesAlokasiTotal")} />
-        <Label htmlFor="showPromesAlokasiTotal">Alokasi Waktu Total</Label>
+        <Label htmlFor="showPromesAlokasiTotal">Alokasi Waktu Total Semester (JP)</Label>
       </div>
       <div className="flex items-center space-x-2">
         <Checkbox id="showPromesKomponenMingguan" checked={options.showPromesKomponenMingguan} onCheckedChange={() => handleCheckboxChange("showPromesKomponenMingguan")} />
-        <Label htmlFor="showPromesKomponenMingguan">Rincian Komponen Mingguan</Label>
+        <Label htmlFor="showPromesKomponenMingguan">Rincian Komponen Mingguan (termasuk Alokasi Waktu JP per minggu)</Label>
       </div>
     </>
   );

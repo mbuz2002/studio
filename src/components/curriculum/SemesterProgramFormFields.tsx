@@ -79,24 +79,30 @@ export function SemesterProgramFormFields({
           <Input id="subject" name="subject" value={formData.subject || ''} onChange={handleChange} required />
         </div>
       </div>
-      <div className="space-y-1">
-        <Label htmlFor="gradeLevel">Jenjang/Fase/Kelas</Label>
-         <Select value={formData.gradeLevel || ''} onValueChange={(value) => handleSelectChange('gradeLevel', value)}>
-            <SelectTrigger id="gradeLevel">
-                <SelectValue placeholder="Pilih Jenjang/Fase/Kelas" />
-            </SelectTrigger>
-            <SelectContent>
-                <SelectItem value="PAUD">PAUD</SelectItem>
-                <SelectItem value="Fase A (Kelas 1-2 SD)">Fase A (Kelas 1-2 SD)</SelectItem>
-                <SelectItem value="Fase B (Kelas 3-4 SD)">Fase B (Kelas 3-4 SD)</SelectItem>
-                <SelectItem value="Fase C (Kelas 5-6 SD)">Fase C (Kelas 5-6 SD)</SelectItem>
-                <SelectItem value="Fase D (Kelas 7-9 SMP)">Fase D (Kelas 7-9 SMP)</SelectItem>
-                <SelectItem value="Fase E (Kelas 10 SMA/SMK)">Fase E (Kelas 10 SMA/SMK)</SelectItem>
-                <SelectItem value="Fase F (Kelas 11-12 SMA/SMK)">Fase F (Kelas 11-12 SMA/SMK)</SelectItem>
-                <SelectItem value="SLB">SLB (disesuaikan)</SelectItem>
-                <SelectItem value="Pendidikan Kesetaraan">Pendidikan Kesetaraan</SelectItem>
-            </SelectContent>
-        </Select>
+       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-1">
+            <Label htmlFor="gradeLevel">Jenjang/Fase/Kelas</Label>
+            <Select value={formData.gradeLevel || ''} onValueChange={(value) => handleSelectChange('gradeLevel', value)}>
+                <SelectTrigger id="gradeLevel">
+                    <SelectValue placeholder="Pilih Jenjang/Fase/Kelas" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="PAUD">PAUD</SelectItem>
+                    <SelectItem value="Fase A (Kelas 1-2 SD)">Fase A (Kelas 1-2 SD)</SelectItem>
+                    <SelectItem value="Fase B (Kelas 3-4 SD)">Fase B (Kelas 3-4 SD)</SelectItem>
+                    <SelectItem value="Fase C (Kelas 5-6 SD)">Fase C (Kelas 5-6 SD)</SelectItem>
+                    <SelectItem value="Fase D (Kelas 7-9 SMP)">Fase D (Kelas 7-9 SMP)</SelectItem>
+                    <SelectItem value="Fase E (Kelas 10 SMA/SMK)">Fase E (Kelas 10 SMA/SMK)</SelectItem>
+                    <SelectItem value="Fase F (Kelas 11-12 SMA/SMK)">Fase F (Kelas 11-12 SMA/SMK)</SelectItem>
+                    <SelectItem value="SLB">SLB (disesuaikan)</SelectItem>
+                    <SelectItem value="Pendidikan Kesetaraan">Pendidikan Kesetaraan</SelectItem>
+                </SelectContent>
+            </Select>
+        </div>
+         <div className="space-y-1">
+          <Label htmlFor="year">Tahun Ajaran</Label>
+          <Input id="year" name="year" value={formData.year || ''} onChange={handleChange} placeholder="cth., 2023/2024" required />
+        </div>
       </div>
 
       {/* Promes Specific Fields */}
@@ -114,26 +120,33 @@ export function SemesterProgramFormFields({
           </Select>
         </div>
         <div className="space-y-1">
-          <Label htmlFor="year">Tahun Ajaran</Label>
-          <Input id="year" name="year" value={formData.year || ''} onChange={handleChange} placeholder="cth., 2023/2024" required />
+            <Label htmlFor="alokasiWaktuTotalSemester_input">Alokasi Waktu Total Semester (JP) (Opsional)</Label>
+            <Input id="alokasiWaktuTotalSemester_input" name="alokasiWaktuTotalSemester_input" value={formData.alokasiWaktuTotalSemester_input || ''} onChange={handleChange} placeholder="cth., 72 JP" />
         </div>
+      </div>
+      
+      <div className="space-y-1">
+        <Label htmlFor="capaianPembelajaranUmum_textarea">
+          {selectedCurriculum === "Kurikulum Merdeka" ? "Input Capaian Pembelajaran (CP) Umum Semester" : "Input Rangkuman SK/KD Utama Semester"}
+            (Opsional, untuk input ke AI)
+        </Label>
+        <Textarea 
+            id="capaianPembelajaranUmum_textarea" 
+            name="capaianPembelajaranUmum_textarea" 
+            value={formData.capaianPembelajaranUmum_textarea || ''} 
+            onChange={handleChange} 
+            placeholder={
+                selectedCurriculum === "Kurikulum Merdeka" 
+                ? "Deskripsikan Capaian Pembelajaran umum yang ingin dicapai pada semester ini..." 
+                : "Rangkum Standar Kompetensi dan Kompetensi Dasar utama untuk semester ini..."
+            } 
+        />
       </div>
       
       {commonAIButton}
 
-      <div className="space-y-1">
-        <Label htmlFor="capaianPembelajaranUmum_textarea">
-          {selectedCurriculum === "Kurikulum Merdeka" ? "Capaian Pembelajaran Umum Semester" : "Rangkuman SK/KD Utama Semester"}
-            (Opsional)
-        </Label>
-        <Textarea id="capaianPembelajaranUmum_textarea" name="capaianPembelajaranUmum_textarea" value={formData.capaianPembelajaranUmum_textarea || ''} onChange={handleChange} placeholder="Deskripsikan CP umum atau SK/KD utama untuk semester ini..." />
-      </div>
-      <div className="space-y-1">
-        <Label htmlFor="alokasiWaktuTotalSemester_input">Alokasi Waktu Total Semester (Opsional)</Label>
-        <Input id="alokasiWaktuTotalSemester_input" name="alokasiWaktuTotalSemester_input" value={formData.alokasiWaktuTotalSemester_input || ''} onChange={handleChange} placeholder="cth., 18 Minggu x 6 JP = 108 JP" />
-      </div>
         <div className="space-y-1">
-        <Label htmlFor="komponenMingguan_textarea">Komponen Mingguan</Label>
+        <Label htmlFor="komponenMingguan_textarea">Komponen Mingguan (Alokasi Waktu dalam JP)</Label>
         <Textarea 
           id="komponenMingguan_textarea" 
           name="komponenMingguan_textarea" 
@@ -144,12 +157,12 @@ export function SemesterProgramFormFields({
 `Format per unit mingguan (pisahkan antar unit dengan '---'):
 Minggu ke: 1
 Bulan: Juli
-Materi/TP: Pengenalan Bilangan Bulat (atau Materi Pokok untuk KTSP/K13)
-Alokasi: 6 JP (2 Pertemuan)
+Materi/TP: ${selectedCurriculum === "Kurikulum Merdeka" ? "Tujuan Pembelajaran 1.1" : "Materi Pokok: Bilangan Bulat"}
+Alokasi: 6 JP 
 Metode: Ceramah, Latihan Soal
 Sumber: Buku Matematika Kelas VII Hal. 1-15
 Asesmen: Kuis awal, Observasi keaktifan
-P5: Mandiri dalam mengerjakan latihan (jika Kurikulum Merdeka)
+P5: ${selectedCurriculum === "Kurikulum Merdeka" ? "Mandiri dalam mengerjakan latihan" : "(kosongkan atau isi nilai karakter jika relevan)"}
 
 ---
 
@@ -157,7 +170,7 @@ Minggu ke: 2
 ... (dan seterusnya)`
           } 
         />
-        <p className="text-xs text-muted-foreground">Isi rincian per minggu. Gunakan '---' (tiga tanda hubung) sebagai pemisah antar unit mingguan.</p>
+        <p className="text-xs text-muted-foreground">Isi rincian per minggu. Gunakan '---' (tiga tanda hubung) sebagai pemisah antar unit mingguan. Pastikan alokasi waktu dalam Jam Pelajaran (JP).</p>
       </div>
     </>
   );

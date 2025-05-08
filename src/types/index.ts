@@ -33,15 +33,17 @@ export interface CurriculumItem {
   createdAt: string; 
   updatedAt: string; 
   createdByUserId?: string; 
-  curriculumType: CurriculumFramework; // Added curriculum type
+  curriculumType: CurriculumFramework; 
 }
 
 export interface LessonPlan extends CurriculumItem {
   type: 'RPP'; 
   topic: string; 
   learningObjectives: string[]; 
+  alokasiWaktuJP?: string; // Added: Alokasi Waktu Jam Pelajaran
   
   // Kurikulum Merdeka specific
+  capaianPembelajaran?: string[]; // Added: Capaian Pembelajaran
   pemahamanBermakna?: string[]; 
   pertanyaanPemantik?: string[]; 
   differentiationStrategies?: string[]; 
@@ -64,24 +66,25 @@ export interface LessonPlan extends CurriculumItem {
 }
 
 export interface AnnualProgramComponent {
-  topic: string; // Materi Pokok/Tema for KTSP/K13
-  elemenCapaianPembelajaran?: string[]; // CP (Merdeka) / KD (KTSP/K13) - AI will adapt
-  alokasiWaktu: string; 
+  topic: string; 
+  elemenCapaianPembelajaran?: string[]; 
+  alokasiWaktu: string; // Interpreted as Jam Pelajaran
 }
 
 export interface AnnualProgram extends CurriculumItem {
   type: 'PROTA'; 
   year: string; 
+  capaianPembelajaran?: string[]; // Added: Capaian Pembelajaran Umum for the year (Kurikulum Merdeka)
   semester1Components: AnnualProgramComponent[];
   semester2Components: AnnualProgramComponent[];
-  profilPelajarPancasilaFocus?: string[]; // Primarily Merdeka, but can be adapted
+  profilPelajarPancasilaFocus?: string[]; 
 }
 
 export interface WeeklyUnit {
   mingguKe: number;
   bulan?: string; 
-  materiPokokAtauTujuanPembelajaran: string; // Materi Pokok (KTSP/K13) / TP (Merdeka)
-  alokasiWaktu: string; 
+  materiPokokAtauTujuanPembelajaran: string; 
+  alokasiWaktu: string; // Interpreted as Jam Pelajaran
   metodeStrategi?: string[]; 
   sumberBelajar?: string[]; 
   rencanaAsesmen?: string[]; 
@@ -92,8 +95,8 @@ export interface SemesterProgram extends CurriculumItem {
   type: 'Promes'; 
   semester: '1' | '2'; 
   year: string; 
-  capaianPembelajaranUmum?: string; // CP (Merdeka) / SK-KD Rangkuman (KTSP/K13)
-  alokasiWaktuTotalSemester?: string; 
+  capaianPembelajaranUmum?: string; // CP (Merdeka) / SK-KD Rangkuman (KTSP/K13) - This field is used for input to AI
+  alokasiWaktuTotalSemester?: string; // Overall Jam Pelajaran estimate for the semester
   komponenMingguan: WeeklyUnit[];
 }
 
@@ -110,31 +113,34 @@ export interface PrintOptions {
   showKopSurat: boolean;
   
   // RPP common
-  showRPPLearningObjectives: boolean; // For Tujuan Pembelajaran
+  showRPPLearningObjectives: boolean; 
   showRPPLangkahPendahuluan: boolean;
   showRPPLangkahKegiatanInti: boolean;
   showRPPLangkahPenutup: boolean;
   showRPPAssessment: boolean;
   showRPPMaterials: boolean;
+  showRPPAlokasiWaktu?: boolean; // New option for RPP JP
 
   // RPP Kurikulum Merdeka specific
+  showRPPCapaianPembelajaran?: boolean; // New option for RPP CP
   showRPPPemahamanBermakna: boolean;
   showRPPPertanyaanPemantik: boolean;
   showRPPDifferentiationStrategies: boolean;
   
   // RPP KTSP/K-13 specific
-  showRPPSK?: boolean; // Standar Kompetensi (KTSP)
-  showRPPKI?: boolean; // Kompetensi Inti (K-13)
-  showRPPKD?: boolean; // Kompetensi Dasar (KTSP, K-13)
-  showRPPIPK?: boolean; // Indikator Pencapaian Kompetensi (KTSP, K-13)
+  showRPPSK?: boolean; 
+  showRPPKI?: boolean; 
+  showRPPKD?: boolean; 
+  showRPPIPK?: boolean; 
   showRPPMetodePembelajaran?: boolean;
 
-  // PROTA specific (mostly generic, content varies by curriculum)
-  showPROTAFokusP5: boolean; // More for Merdeka, but can be adapted
+  // PROTA specific 
+  showPROTACapaianPembelajaran?: boolean; // New option for PROTA CP
+  showPROTAFokusP5: boolean; 
   showPROTASemester1: boolean;
   showPROTASemester2: boolean;
   
-  // Promes specific (mostly generic, content varies by curriculum)
+  // Promes specific 
   showPromesCapaianUmum: boolean;
   showPromesAlokasiTotal: boolean;
   showPromesKomponenMingguan: boolean;
@@ -144,6 +150,8 @@ export const defaultPrintOptions: PrintOptions = {
   showKopSurat: true,
   // RPP
   showRPPLearningObjectives: true,
+  showRPPAlokasiWaktu: true, 
+  showRPPCapaianPembelajaran: true, 
   showRPPLangkahPendahuluan: true,
   showRPPLangkahKegiatanInti: true,
   showRPPLangkahPenutup: true,
@@ -158,6 +166,7 @@ export const defaultPrintOptions: PrintOptions = {
   showRPPIPK: true,
   showRPPMetodePembelajaran: true,
   // PROTA
+  showPROTACapaianPembelajaran: true,
   showPROTAFokusP5: true,
   showPROTASemester1: true,
   showPROTASemester2: true,
@@ -174,9 +183,4 @@ export interface ExportedCurriculumData {
   semesterPrograms: SemesterProgram[];
   schoolProfile: SchoolProfile | null;
   appUsers: User[];
-  // Add global curriculum setting if needed for export/import
-  // defaultCurriculum?: CurriculumFramework; 
 }
-
-// Default data structures will be updated in their respective page files.
-// For example, in lesson-plans/page.tsx, initialLessonPlansData will add curriculumType.

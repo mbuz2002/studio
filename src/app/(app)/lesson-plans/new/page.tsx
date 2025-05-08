@@ -16,10 +16,10 @@ import { generateLessonPlanFromTopic, type GenerateLessonPlanInput, type Generat
 
 const LESSON_PLANS_STORAGE_KEY = "appLessonPlans";
 
-// Base default structures for initializing the form for NEW items
 const baseRppData: Omit<LessonPlan, 'id' | 'createdAt' | 'updatedAt' | 'createdByUserId' | 'curriculumType'> = {
   type: 'RPP', title: '', subject: '', gradeLevel: '', topic: '',
   learningObjectives: [],
+  alokasiWaktuJP: '',
   langkahPembelajaran: { pendahuluan: [], kegiatanInti: [], penutup: [] },
   assessment: '',
   materials: '',
@@ -44,7 +44,19 @@ export default function NewLessonPlanPage() {
       toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk membuat RPP baru.", variant: "destructive" });
       router.push("/lesson-plans");
     }
-    setFormData(prev => ({ ...prev, curriculumType: defaultCurriculum }));
+    setFormData(prev => ({ 
+        ...prev, 
+        curriculumType: defaultCurriculum,
+        capaianPembelajaran: defaultCurriculum === "Kurikulum Merdeka" ? [] : undefined,
+        pemahamanBermakna: defaultCurriculum === "Kurikulum Merdeka" ? [] : undefined,
+        pertanyaanPemantik: defaultCurriculum === "Kurikulum Merdeka" ? [] : undefined,
+        differentiationStrategies: defaultCurriculum === "Kurikulum Merdeka" ? [] : undefined,
+        standarKompetensi: defaultCurriculum === "KTSP 2006" ? [] : undefined,
+        kompetensiInti: defaultCurriculum === "K-13" ? [] : undefined,
+        kompetensiDasar: defaultCurriculum !== "Kurikulum Merdeka" ? [] : undefined,
+        indikatorPencapaianKompetensi: defaultCurriculum !== "Kurikulum Merdeka" ? [] : undefined,
+        metodePembelajaran: defaultCurriculum !== "Kurikulum Merdeka" ? [] : undefined,
+    }));
     setSelectedCurriculum(defaultCurriculum);
   }, [user, router, toast, defaultCurriculum]);
 
@@ -57,8 +69,28 @@ export default function NewLessonPlanPage() {
   const handleSelectChange = (name: string, value: string) => {
     if (name === 'curriculumType') {
       setSelectedCurriculum(value as CurriculumFramework);
+       // Clear curriculum-specific fields when curriculum type changes
+      setFormData(prev => ({
+        ...baseRppData, // Reset to base, then apply new curriculum type and common fields
+        curriculumType: value as CurriculumFramework,
+        title: prev.title,
+        subject: prev.subject,
+        gradeLevel: prev.gradeLevel,
+        topic: prev.topic,
+        alokasiWaktuJP: prev.alokasiWaktuJP,
+        capaianPembelajaran: value === "Kurikulum Merdeka" ? [] : undefined,
+        pemahamanBermakna: value === "Kurikulum Merdeka" ? [] : undefined,
+        pertanyaanPemantik: value === "Kurikulum Merdeka" ? [] : undefined,
+        differentiationStrategies: value === "Kurikulum Merdeka" ? [] : undefined,
+        standarKompetensi: value === "KTSP 2006" ? [] : undefined,
+        kompetensiInti: value === "K-13" ? [] : undefined,
+        kompetensiDasar: value !== "Kurikulum Merdeka" ? [] : undefined,
+        indikatorPencapaianKompetensi: value !== "Kurikulum Merdeka" ? [] : undefined,
+        metodePembelajaran: value !== "Kurikulum Merdeka" ? [] : undefined,
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
     }
-    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleArrayChange = (name: keyof LessonPlan, value: string) => {
@@ -91,20 +123,31 @@ export default function NewLessonPlanPage() {
          addLog("WARN", `Gagal membuat draf RPP dengan AI: Informasi kurang (Topik/Jenjang/Kurikulum).`, source);
          return;
     }
+    if (selectedCurriculum === "Kurikulum Merdeka" && (!formData.capaianPembelajaran || formData.capaianPembelajaran.length === 0)) {
+        toast({
+            title: "Informasi Kurang untuk Kurikulum Merdeka",
+            description: "Harap isi Capaian Pembelajaran untuk hasil AI yang lebih optimal dengan Kurikulum Merdeka.",
+            variant: "destructive"
+        });
+        addLog("WARN", `Gagal membuat draf RPP dengan AI (Kurikulum Merdeka): Capaian Pembelajaran kosong.`, source);
+        return;
+    }
 
     setIsGeneratingAI(true);
-    addLog("INFO", `Memulai pembuatan draf RPP dengan AI. Kurikulum: ${selectedCurriculum}. Jenjang: "${formData.gradeLevel}". Topik: "${formData.topic}"`, source);
+    addLog("INFO", `Memulai pembuatan draf RPP dengan AI. Kurikulum: ${selectedCurriculum}. Jenjang: "${formData.gradeLevel}". Topik: "${formData.topic}". CP: ${selectedCurriculum === "Kurikulum Merdeka" ? formData.capaianPembelajaran?.join(', ') : 'N/A'}.`, source);
     try {
         const aiInput: GenerateLessonPlanInput = {
           topic: formData.topic as string,
           jenjangFaseKelas: formData.gradeLevel as string,
           curriculumType: selectedCurriculum,
+          capaianPembelajaran: selectedCurriculum === "Kurikulum Merdeka" ? formData.capaianPembelajaran || [] : undefined,
         };
         const result: GenerateLessonPlanOutput = await generateLessonPlanFromTopic(aiInput);
         setFormData(prev => ({
             ...prev,
             title: result.title || prev.title || `RPP ${formData.topic} - ${formData.gradeLevel}`,
             learningObjectives: result.learningObjectives,
+            alokasiWaktuJP: result.alokasiWaktuJP || prev.alokasiWaktuJP,
             langkahPembelajaran: result.langkahPembelajaran,
             assessment: result.assessmentStrategies.join('\n- ') || '',
             pemahamanBermakna: result.pemahamanBermakna || (selectedCurriculum === "Kurikulum Merdeka" ? [] : undefined),
@@ -145,6 +188,8 @@ export default function NewLessonPlanPage() {
       curriculumType: selectedCurriculum,
       topic: formData.topic || '',
       learningObjectives: formData.learningObjectives || [],
+      alokasiWaktuJP: formData.alokasiWaktuJP || '',
+      capaianPembelajaran: selectedCurriculum === "Kurikulum Merdeka" ? formData.capaianPembelajaran || [] : undefined,
       langkahPembelajaran: formData.langkahPembelajaran || { pendahuluan: [], kegiatanInti: [], penutup: [] },
       assessment: formData.assessment || '',
       materials: formData.materials || '',

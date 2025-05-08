@@ -11,6 +11,7 @@ import { Loader2, Wand2 } from "lucide-react";
 
 interface AnnualProgramFormFieldsProps {
   formData: Partial<AnnualProgram & {
+    capaianPembelajaran_textarea?: string; // For Kurikulum Merdeka's overall CP for the year
     profilPelajarPancasilaFocus_textarea?: string;
     semester1_topics_textarea?: string;
     semester1_elements_textarea?: string; 
@@ -42,7 +43,7 @@ export function AnnualProgramFormFields({
         <Button
             type="button"
             onClick={handleGenerateWithAI}
-            disabled={isGeneratingAI || !formData.gradeLevel || !selectedCurriculum || !formData.subject || !formData.year}
+            disabled={isGeneratingAI || !formData.gradeLevel || !selectedCurriculum || !formData.subject || !formData.year || (selectedCurriculum === "Kurikulum Merdeka" && !formData.capaianPembelajaran_textarea)}
             variant="outline"
             className="w-full border-primary text-primary hover:bg-primary/10"
         >
@@ -52,6 +53,11 @@ export function AnnualProgramFormFields({
         {(!formData.subject || !formData.gradeLevel || !formData.year || !selectedCurriculum) && !isGeneratingAI && (
             <p className="text-xs text-muted-foreground mt-1">
                 Isi Jenis Kurikulum, Mata Pelajaran, Jenjang dan Tahun Ajaran untuk mengaktifkan tombol AI.
+            </p>
+        )}
+        {(selectedCurriculum === "Kurikulum Merdeka" && !formData.capaianPembelajaran_textarea && !isGeneratingAI) && (
+           <p className="text-xs text-muted-foreground mt-1">
+                Untuk Kurikulum Merdeka, isi juga Capaian Pembelajaran Umum Tahunan untuk hasil AI yang lebih baik.
             </p>
         )}
       </div>
@@ -83,31 +89,41 @@ export function AnnualProgramFormFields({
           <Input id="subject" name="subject" value={formData.subject || ''} onChange={handleChange} required />
         </div>
       </div>
-      <div className="space-y-1">
-        <Label htmlFor="gradeLevel">Jenjang/Fase/Kelas</Label>
-         <Select value={formData.gradeLevel || ''} onValueChange={(value) => handleSelectChange('gradeLevel', value)}>
-            <SelectTrigger id="gradeLevel">
-                <SelectValue placeholder="Pilih Jenjang/Fase/Kelas" />
-            </SelectTrigger>
-            <SelectContent>
-                <SelectItem value="PAUD">PAUD</SelectItem>
-                <SelectItem value="Fase A (Kelas 1-2 SD)">Fase A (Kelas 1-2 SD)</SelectItem>
-                <SelectItem value="Fase B (Kelas 3-4 SD)">Fase B (Kelas 3-4 SD)</SelectItem>
-                <SelectItem value="Fase C (Kelas 5-6 SD)">Fase C (Kelas 5-6 SD)</SelectItem>
-                <SelectItem value="Fase D (Kelas 7-9 SMP)">Fase D (Kelas 7-9 SMP)</SelectItem>
-                <SelectItem value="Fase E (Kelas 10 SMA/SMK)">Fase E (Kelas 10 SMA/SMK)</SelectItem>
-                <SelectItem value="Fase F (Kelas 11-12 SMA/SMK)">Fase F (Kelas 11-12 SMA/SMK)</SelectItem>
-                <SelectItem value="SLB">SLB (disesuaikan)</SelectItem>
-                <SelectItem value="Pendidikan Kesetaraan">Pendidikan Kesetaraan</SelectItem>
-            </SelectContent>
-        </Select>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-1">
+            <Label htmlFor="gradeLevel">Jenjang/Fase/Kelas</Label>
+            <Select value={formData.gradeLevel || ''} onValueChange={(value) => handleSelectChange('gradeLevel', value)}>
+                <SelectTrigger id="gradeLevel">
+                    <SelectValue placeholder="Pilih Jenjang/Fase/Kelas" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="PAUD">PAUD</SelectItem>
+                    <SelectItem value="Fase A (Kelas 1-2 SD)">Fase A (Kelas 1-2 SD)</SelectItem>
+                    <SelectItem value="Fase B (Kelas 3-4 SD)">Fase B (Kelas 3-4 SD)</SelectItem>
+                    <SelectItem value="Fase C (Kelas 5-6 SD)">Fase C (Kelas 5-6 SD)</SelectItem>
+                    <SelectItem value="Fase D (Kelas 7-9 SMP)">Fase D (Kelas 7-9 SMP)</SelectItem>
+                    <SelectItem value="Fase E (Kelas 10 SMA/SMK)">Fase E (Kelas 10 SMA/SMK)</SelectItem>
+                    <SelectItem value="Fase F (Kelas 11-12 SMA/SMK)">Fase F (Kelas 11-12 SMA/SMK)</SelectItem>
+                    <SelectItem value="SLB">SLB (disesuaikan)</SelectItem>
+                    <SelectItem value="Pendidikan Kesetaraan">Pendidikan Kesetaraan</SelectItem>
+                </SelectContent>
+            </Select>
+        </div>
+        <div className="space-y-1">
+            <Label htmlFor="year">Tahun Ajaran</Label>
+            <Input id="year" name="year" value={formData.year || ''} onChange={handleChange} placeholder="cth., 2023/2024" required />
+        </div>
       </div>
 
+
       {/* PROTA Specific Fields */}
-      <div className="space-y-1">
-        <Label htmlFor="year">Tahun Ajaran</Label>
-        <Input id="year" name="year" value={formData.year || ''} onChange={handleChange} placeholder="cth., 2023/2024" required />
-      </div>
+      {selectedCurriculum === "Kurikulum Merdeka" && (
+        <div className="space-y-1">
+            <Label htmlFor="capaianPembelajaran_textarea">Capaian Pembelajaran (CP) Umum Tahunan (satu per baris, opsional)</Label>
+            <Textarea id="capaianPembelajaran_textarea" name="capaianPembelajaran_textarea" value={formData.capaianPembelajaran_textarea || ''} onChange={handleChange} placeholder="Pada akhir Fase F, peserta didik dapat..." />
+            <p className="text-xs text-muted-foreground">Masukkan CP umum untuk tahun ajaran ini. Akan digunakan AI untuk mengaitkannya dengan elemen CP per topik.</p>
+        </div>
+      )}
 
       {commonAIButton}
       
@@ -132,7 +148,7 @@ export function AnnualProgramFormFields({
           <Textarea id="semester1_elements_textarea" name="semester1_elements_textarea" value={formData.semester1_elements_textarea || ''} onChange={handleChange} placeholder="Bilangan, Aljabar&#10;Geometri" />
         </div>
         <div className="space-y-1">
-          <Label htmlFor="semester1_allocations_textarea">Alokasi Waktu (satu per baris, sesuai urutan topik)</Label>
+          <Label htmlFor="semester1_allocations_textarea">Alokasi Waktu (JP) (satu per baris, sesuai urutan topik)</Label>
           <Textarea id="semester1_allocations_textarea" name="semester1_allocations_textarea" value={formData.semester1_allocations_textarea || ''} onChange={handleChange} placeholder="24 JP&#10;18 JP" />
         </div>
       </div>
@@ -151,7 +167,7 @@ export function AnnualProgramFormFields({
           <Textarea id="semester2_elements_textarea" name="semester2_elements_textarea" value={formData.semester2_elements_textarea || ''} onChange={handleChange} placeholder="Statistika, Peluang&#10;Analisis Data" />
         </div>
         <div className="space-y-1">
-          <Label htmlFor="semester2_allocations_textarea">Alokasi Waktu (satu per baris, sesuai urutan topik)</Label>
+          <Label htmlFor="semester2_allocations_textarea">Alokasi Waktu (JP) (satu per baris, sesuai urutan topik)</Label>
           <Textarea id="semester2_allocations_textarea" name="semester2_allocations_textarea" value={formData.semester2_allocations_textarea || ''} onChange={handleChange} placeholder="20 JP&#10;22 JP" />
         </div>
       </div>

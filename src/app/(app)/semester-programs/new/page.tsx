@@ -74,7 +74,11 @@ export default function NewSemesterProgramPage() {
   const { addLog } = useLog();
 
   const [formData, setFormData] = useState<Partial<SemesterProgram & PromesFormState>>(
-     { ...basePromesData, curriculumType: defaultCurriculum }
+     { 
+        ...basePromesData, 
+        curriculumType: defaultCurriculum,
+        capaianPembelajaranUmum_textarea: '', // Initialize as empty
+     }
   );
   const [selectedCurriculum, setSelectedCurriculum] = useState<CurriculumFramework>(defaultCurriculum);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -85,7 +89,11 @@ export default function NewSemesterProgramPage() {
       toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk membuat Promes baru.", variant: "destructive" });
       router.push("/semester-programs");
     }
-    setFormData(prev => ({ ...prev, curriculumType: defaultCurriculum }));
+    setFormData(prev => ({ 
+        ...prev, 
+        curriculumType: defaultCurriculum,
+        capaianPembelajaranUmum_textarea: prev.capaianPembelajaranUmum_textarea || '', // Keep existing if any, else empty
+    }));
     setSelectedCurriculum(defaultCurriculum);
   }, [user, router, toast, defaultCurriculum]);
 
@@ -97,8 +105,19 @@ export default function NewSemesterProgramPage() {
   const handleSelectChange = (name: string, value: string) => {
     if (name === 'curriculumType') {
       setSelectedCurriculum(value as CurriculumFramework);
+      setFormData(prev => ({
+        ...basePromesData, // Reset to base, then apply new curriculum type and common fields
+        curriculumType: value as CurriculumFramework,
+        title: prev.title,
+        subject: prev.subject,
+        gradeLevel: prev.gradeLevel,
+        year: prev.year,
+        semester: prev.semester,
+        capaianPembelajaranUmum_textarea: '', // Reset this field for new curriculum
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
     }
-    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleGenerateWithAI = async () => {
@@ -114,7 +133,7 @@ export default function NewSemesterProgramPage() {
     }
 
     setIsGeneratingAI(true);
-    addLog("INFO", `Memulai pembuatan draf Promes dengan AI. Kurikulum: ${selectedCurriculum}. Jenjang: "${formData.gradeLevel}". Mapel: "${formData.subject}". Tahun: "${formData.year}". Semester: "${formData.semester}"`, source);
+    addLog("INFO", `Memulai pembuatan draf Promes dengan AI. Kurikulum: ${selectedCurriculum}. Jenjang: "${formData.gradeLevel}". Mapel: "${formData.subject}". Tahun: "${formData.year}". Semester: "${formData.semester}". Input CP/SK-KD: ${formData.capaianPembelajaranUmum_textarea || 'Tidak ada'}`, source);
     try {
         const aiInput: GenerateSemesterProgramInput = {
           subject: formData.subject as string,
@@ -128,6 +147,8 @@ export default function NewSemesterProgramPage() {
         setFormData(prev => ({
             ...prev,
             title: result.title || prev.title || `Promes ${formData.subject} ${formData.gradeLevel} Sem ${formData.semester} ${formData.year}`,
+            capaianPembelajaranUmum: result.capaianPembelajaranUmum || '', // AI returns 'capaianPembelajaranUmum'
+             // For display in textarea, sync it
             capaianPembelajaranUmum_textarea: result.capaianPembelajaranUmum || '',
             alokasiWaktuTotalSemester_input: result.alokasiWaktuTotalSemester || '',
             komponenMingguan_textarea: formatWeeklyUnitsToString(result.komponenMingguan || []),

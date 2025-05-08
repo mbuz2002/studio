@@ -114,8 +114,11 @@ export default function EditSemesterProgramPage() {
   const handleSelectChange = (name: string, value: string) => {
     if (name === 'curriculumType') {
       setSelectedCurriculum(value as CurriculumFramework);
+      // No specific fields to clear for Promes based on curriculum type for now beyond default form structure
+      setFormData(prev => ({...prev, [name]: value}));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
     }
-    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleGenerateWithAI = async () => {
@@ -129,9 +132,11 @@ export default function EditSemesterProgramPage() {
          addLog("WARN", `Gagal membuat draf Promes dengan AI: Informasi kurang. Promes ID: ${promesId}`, source);
          return;
     }
+    // For Kurikulum Merdeka, it's good to have CP, but not strictly blocking if user wants to generate without it
+    // This is different from RPP and PROTA where CP is more crucial for AI.
 
     setIsGeneratingAI(true);
-    addLog("INFO", `Memulai pembuatan draf Promes dengan AI untuk Promes ID: ${promesId}. Kurikulum: ${selectedCurriculum}. Jenjang: "${formData.gradeLevel}". Mapel: "${formData.subject}". Tahun: "${formData.year}". Semester: "${formData.semester}"`, source);
+    addLog("INFO", `Memulai pembuatan draf Promes dengan AI untuk Promes ID: ${promesId}. Kurikulum: ${selectedCurriculum}. Jenjang: "${formData.gradeLevel}". Mapel: "${formData.subject}". Tahun: "${formData.year}". Semester: "${formData.semester}". Input CP/SK-KD: ${formData.capaianPembelajaranUmum_textarea || 'Tidak ada'}`, source);
     try {
         const aiInput: GenerateSemesterProgramInput = {
           subject: formData.subject as string,
@@ -145,7 +150,7 @@ export default function EditSemesterProgramPage() {
         setFormData(prev => ({
             ...prev,
             title: result.title || prev.title,
-            capaianPembelajaranUmum_textarea: result.capaianPembelajaranUmum || '',
+            capaianPembelajaranUmum: result.capaianPembelajaranUmum || '', // Note: AI returns 'capaianPembelajaranUmum' not '_textarea'
             alokasiWaktuTotalSemester_input: result.alokasiWaktuTotalSemester || '',
             komponenMingguan_textarea: formatWeeklyUnitsToString(result.komponenMingguan || []),
         }));

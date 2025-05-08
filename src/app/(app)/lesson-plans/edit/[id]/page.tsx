@@ -34,7 +34,7 @@ export default function EditLessonPlanPage() {
 
   useEffect(() => {
     if (!user) {
-      router.push("/login"); // Redirect if not authenticated
+      router.push("/login"); 
       return;
     }
     if (lessonPlanId && typeof window !== 'undefined') {
@@ -43,7 +43,6 @@ export default function EditLessonPlanPage() {
         const plans: LessonPlan[] = JSON.parse(storedPlans);
         const planToEdit = plans.find(p => p.id === lessonPlanId);
         if (planToEdit) {
-          // Check permissions
           const canEdit = user.role === "Admin" || user.role === "WakaKurikulum" || (user.role === "Guru" && planToEdit.createdByUserId === user.id);
           if (!canEdit) {
             toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengedit RPP ini.", variant: "destructive" });
@@ -70,8 +69,23 @@ export default function EditLessonPlanPage() {
   const handleSelectChange = (name: string, value: string) => {
     if (name === 'curriculumType') {
       setSelectedCurriculum(value as CurriculumFramework);
+       // Clear curriculum-specific fields when curriculum type changes
+      setFormData(prev => ({
+        ...prev,
+        [name]: value,
+        capaianPembelajaran: value === "Kurikulum Merdeka" ? prev.capaianPembelajaran || [] : undefined,
+        pemahamanBermakna: value === "Kurikulum Merdeka" ? prev.pemahamanBermakna || [] : undefined,
+        pertanyaanPemantik: value === "Kurikulum Merdeka" ? prev.pertanyaanPemantik || [] : undefined,
+        differentiationStrategies: value === "Kurikulum Merdeka" ? prev.differentiationStrategies || [] : undefined,
+        standarKompetensi: value === "KTSP 2006" ? prev.standarKompetensi || [] : undefined,
+        kompetensiInti: value === "K-13" ? prev.kompetensiInti || [] : undefined,
+        kompetensiDasar: value !== "Kurikulum Merdeka" ? prev.kompetensiDasar || [] : undefined,
+        indikatorPencapaianKompetensi: value !== "Kurikulum Merdeka" ? prev.indikatorPencapaianKompetensi || [] : undefined,
+        metodePembelajaran: value !== "Kurikulum Merdeka" ? prev.metodePembelajaran || [] : undefined,
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
     }
-    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleArrayChange = (name: keyof LessonPlan, value: string) => {
@@ -104,21 +118,32 @@ export default function EditLessonPlanPage() {
          addLog("WARN", `Gagal membuat draf RPP dengan AI: Informasi kurang (Topik/Jenjang/Kurikulum). RPP ID: ${lessonPlanId}`, source);
          return;
     }
+    if (selectedCurriculum === "Kurikulum Merdeka" && (!formData.capaianPembelajaran || formData.capaianPembelajaran.length === 0)) {
+        toast({
+            title: "Informasi Kurang untuk Kurikulum Merdeka",
+            description: "Harap isi Capaian Pembelajaran untuk hasil AI yang lebih optimal dengan Kurikulum Merdeka.",
+            variant: "destructive"
+        });
+        addLog("WARN", `Gagal membuat draf RPP dengan AI (Kurikulum Merdeka): Capaian Pembelajaran kosong. RPP ID: ${lessonPlanId}`, source);
+        return;
+    }
+
 
     setIsGeneratingAI(true);
-    addLog("INFO", `Memulai pembuatan draf RPP dengan AI untuk RPP ID: ${lessonPlanId}. Kurikulum: ${selectedCurriculum}. Jenjang: "${formData.gradeLevel}". Topik: "${formData.topic}"`, source);
+    addLog("INFO", `Memulai pembuatan draf RPP dengan AI untuk RPP ID: ${lessonPlanId}. Kurikulum: ${selectedCurriculum}. Jenjang: "${formData.gradeLevel}". Topik: "${formData.topic}". CP: ${selectedCurriculum === "Kurikulum Merdeka" ? formData.capaianPembelajaran?.join(', ') : 'N/A'}.`, source);
     try {
         const aiInput: GenerateLessonPlanInput = {
           topic: formData.topic as string,
           jenjangFaseKelas: formData.gradeLevel as string,
           curriculumType: selectedCurriculum,
+          capaianPembelajaran: selectedCurriculum === "Kurikulum Merdeka" ? formData.capaianPembelajaran || [] : undefined,
         };
         const result: GenerateLessonPlanOutput = await generateLessonPlanFromTopic(aiInput);
         setFormData(prev => ({
             ...prev,
-            // Keep existing title unless AI provides one and user wants to overwrite
             title: result.title && prev.title !== result.title ? result.title : prev.title,
             learningObjectives: result.learningObjectives,
+            alokasiWaktuJP: result.alokasiWaktuJP || prev.alokasiWaktuJP,
             langkahPembelajaran: result.langkahPembelajaran,
             assessment: result.assessmentStrategies.join('\n- ') || '',
             pemahamanBermakna: result.pemahamanBermakna || (selectedCurriculum === "Kurikulum Merdeka" ? [] : undefined),
@@ -155,7 +180,7 @@ export default function EditLessonPlanPage() {
       type: 'RPP',
       curriculumType: selectedCurriculum,
       updatedAt: new Date().toISOString(),
-    } as LessonPlan; // Cast because formData is Partial
+    } as LessonPlan; 
 
     try {
       const existingPlans = JSON.parse(localStorage.getItem(LESSON_PLANS_STORAGE_KEY) || "[]") as LessonPlan[];
@@ -196,7 +221,7 @@ export default function EditLessonPlanPage() {
     );
   }
   
-  if (!formData.id) { // Plan not found or not yet loaded
+  if (!formData.id) { 
       return (
         <div className="flex h-screen items-center justify-center">
             <p className="text-destructive text-lg">RPP tidak ditemukan atau gagal dimuat.</p>

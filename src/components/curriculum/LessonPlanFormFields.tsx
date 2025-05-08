@@ -21,8 +21,6 @@ interface LessonPlanFormFieldsProps {
   availableCurriculums: { value: CurriculumFramework; label: string }[];
   isGeneratingAI: boolean;
   handleGenerateWithAI: () => Promise<void>;
-  // For react-hook-form integration if needed later, or remove if pure controlled components
-  // form?: UseFormReturn<any>; // Example if using react-hook-form
 }
 
 export function LessonPlanFormFields({
@@ -42,7 +40,7 @@ export function LessonPlanFormFields({
         <Button
             type="button"
             onClick={handleGenerateWithAI}
-            disabled={isGeneratingAI || !formData.gradeLevel || !selectedCurriculum || !formData.topic}
+            disabled={isGeneratingAI || !formData.gradeLevel || !selectedCurriculum || !formData.topic || (selectedCurriculum === "Kurikulum Merdeka" && (!formData.capaianPembelajaran || formData.capaianPembelajaran.length === 0))}
             variant="outline"
             className="w-full border-primary text-primary hover:bg-primary/10"
         >
@@ -52,6 +50,11 @@ export function LessonPlanFormFields({
         {(!formData.topic || !formData.gradeLevel || !selectedCurriculum) && !isGeneratingAI && (
             <p className="text-xs text-muted-foreground mt-1">
                 Isi Jenis Kurikulum, Topik dan Jenjang untuk mengaktifkan tombol AI.
+            </p>
+        )}
+         {(selectedCurriculum === "Kurikulum Merdeka" && (!formData.capaianPembelajaran || formData.capaianPembelajaran.length === 0) && !isGeneratingAI) && (
+            <p className="text-xs text-muted-foreground mt-1">
+                Untuk Kurikulum Merdeka, isi juga Capaian Pembelajaran untuk hasil AI yang lebih baik.
             </p>
         )}
       </div>
@@ -83,31 +86,46 @@ export function LessonPlanFormFields({
           <Input id="subject" name="subject" value={formData.subject || ''} onChange={handleChange} required />
         </div>
       </div>
-      <div className="space-y-1">
-        <Label htmlFor="gradeLevel">Jenjang/Fase/Kelas</Label>
-         <Select value={formData.gradeLevel || ''} onValueChange={(value) => handleSelectChange('gradeLevel', value)}>
-            <SelectTrigger id="gradeLevel">
-                <SelectValue placeholder="Pilih Jenjang/Fase/Kelas" />
-            </SelectTrigger>
-            <SelectContent>
-                <SelectItem value="PAUD">PAUD</SelectItem>
-                <SelectItem value="Fase A (Kelas 1-2 SD)">Fase A (Kelas 1-2 SD)</SelectItem>
-                <SelectItem value="Fase B (Kelas 3-4 SD)">Fase B (Kelas 3-4 SD)</SelectItem>
-                <SelectItem value="Fase C (Kelas 5-6 SD)">Fase C (Kelas 5-6 SD)</SelectItem>
-                <SelectItem value="Fase D (Kelas 7-9 SMP)">Fase D (Kelas 7-9 SMP)</SelectItem>
-                <SelectItem value="Fase E (Kelas 10 SMA/SMK)">Fase E (Kelas 10 SMA/SMK)</SelectItem>
-                <SelectItem value="Fase F (Kelas 11-12 SMA/SMK)">Fase F (Kelas 11-12 SMA/SMK)</SelectItem>
-                <SelectItem value="SLB">SLB (disesuaikan)</SelectItem>
-                <SelectItem value="Pendidikan Kesetaraan">Pendidikan Kesetaraan</SelectItem>
-            </SelectContent>
-        </Select>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-1">
+            <Label htmlFor="gradeLevel">Jenjang/Fase/Kelas</Label>
+            <Select value={formData.gradeLevel || ''} onValueChange={(value) => handleSelectChange('gradeLevel', value)}>
+                <SelectTrigger id="gradeLevel">
+                    <SelectValue placeholder="Pilih Jenjang/Fase/Kelas" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="PAUD">PAUD</SelectItem>
+                    <SelectItem value="Fase A (Kelas 1-2 SD)">Fase A (Kelas 1-2 SD)</SelectItem>
+                    <SelectItem value="Fase B (Kelas 3-4 SD)">Fase B (Kelas 3-4 SD)</SelectItem>
+                    <SelectItem value="Fase C (Kelas 5-6 SD)">Fase C (Kelas 5-6 SD)</SelectItem>
+                    <SelectItem value="Fase D (Kelas 7-9 SMP)">Fase D (Kelas 7-9 SMP)</SelectItem>
+                    <SelectItem value="Fase E (Kelas 10 SMA/SMK)">Fase E (Kelas 10 SMA/SMK)</SelectItem>
+                    <SelectItem value="Fase F (Kelas 11-12 SMA/SMK)">Fase F (Kelas 11-12 SMA/SMK)</SelectItem>
+                    <SelectItem value="SLB">SLB (disesuaikan)</SelectItem>
+                    <SelectItem value="Pendidikan Kesetaraan">Pendidikan Kesetaraan</SelectItem>
+                </SelectContent>
+            </Select>
+        </div>
+        <div className="space-y-1">
+            <Label htmlFor="alokasiWaktuJP">Alokasi Waktu (JP)</Label>
+            <Input id="alokasiWaktuJP" name="alokasiWaktuJP" value={formData.alokasiWaktuJP || ''} onChange={handleChange} placeholder="cth., 2 JP atau 3x40 menit" />
+        </div>
       </div>
+
 
       {/* RPP Specific Fields */}
       <div className="space-y-1">
         <Label htmlFor="topic">Topik/Materi Pembelajaran</Label>
         <Input id="topic" name="topic" value={formData.topic || ''} onChange={handleChange} required />
       </div>
+
+      {selectedCurriculum === "Kurikulum Merdeka" && (
+        <div className="space-y-1">
+          <Label htmlFor="capaianPembelajaran">Capaian Pembelajaran (CP) (satu per baris)</Label>
+          <Textarea id="capaianPembelajaran" name="capaianPembelajaran" value={formData.capaianPembelajaran?.join('\n') || ''} onChange={(e) => handleArrayChange('capaianPembelajaran', e.target.value)} placeholder="CP Elemen 1...&#10;CP Elemen 2..." />
+          <p className="text-xs text-muted-foreground">Masukkan CP yang relevan dengan topik ini. Akan digunakan AI untuk merumuskan Tujuan Pembelajaran.</p>
+        </div>
+      )}
       
       {commonAIButton}
 
