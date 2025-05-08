@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 
+const NO_GRADE_LEVEL_VALUE = "__none__";
 
 export default function AIAssistantPage() {
   const { toast } = useToast();
@@ -28,7 +29,7 @@ export default function AIAssistantPage() {
 
   // State for Improvement Suggestions
   const [draftPlan, setDraftPlan] = useState("");
-  const [improvementGradeLevel, setImprovementGradeLevel] = useState("");
+  const [improvementGradeLevel, setImprovementGradeLevel] = useState(""); // Initialize as empty string for placeholder to show
   const [suggestedImprovements, setSuggestedImprovements] = useState<SuggestLessonPlanImprovementsOutput | null>(null);
   const [isSuggesting, setIsSuggesting] = useState(false);
 
@@ -70,7 +71,7 @@ export default function AIAssistantPage() {
     try {
       const input: SuggestLessonPlanImprovementsInput = { 
         lessonPlan: draftPlan,
-        jenjangFaseKelas: improvementGradeLevel || undefined 
+        jenjangFaseKelas: improvementGradeLevel === NO_GRADE_LEVEL_VALUE ? undefined : improvementGradeLevel 
       };
       const result = await suggestLessonPlanImprovements(input);
       setSuggestedImprovements(result);
@@ -246,7 +247,7 @@ export default function AIAssistantPage() {
                       <SelectValue placeholder="Pilih Jenjang/Fase/Kelas (jika spesifik)" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Tidak Ada (Umum)</SelectItem>
+                      <SelectItem value={NO_GRADE_LEVEL_VALUE}>Tidak Ada (Umum)</SelectItem>
                       <SelectItem value="PAUD">PAUD</SelectItem>
                       <SelectItem value="Fase A (Kelas 1-2 SD)">Fase A (Kelas 1-2 SD)</SelectItem>
                       <SelectItem value="Fase B (Kelas 3-4 SD)">Fase B (Kelas 3-4 SD)</SelectItem>
