@@ -11,7 +11,7 @@ import { ShieldCheck, Loader2, Eye, EyeOff, Trash2, ExternalLink } from "lucide-
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useRouter }_CLIENT_ तरफ से "@/../../../../../../../next/navigation";
+import { useRouter } from "next/navigation";
 
 export default function AdminSystemSettingsPage() {
   const { user, loading } = useAuth();
@@ -122,6 +122,7 @@ export default function AdminSystemSettingsPage() {
                 id="maintenance-mode"
                 checked={maintenanceMode}
                 onCheckedChange={handleToggleMaintenance}
+                aria-label={`Toggle Mode Perawatan. Saat ini ${maintenanceMode ? 'Aktif' : 'Tidak Aktif'}`}
               />
               <Label htmlFor="maintenance-mode">
                 {maintenanceMode ? "Mode Perawatan Aktif" : "Mode Perawatan Tidak Aktif"}
