@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { ShieldCheck, Loader2, Eye, EyeOff, Trash2, ExternalLink } from "lucide-react";
+import { ShieldCheck, Loader2, Eye, EyeOff, Trash2, ExternalLink, Activity } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -79,12 +79,7 @@ export default function AdminSystemSettingsPage() {
   };
 
   const handleViewLogs = () => {
-    // In a real app, this might open a new page or modal with logs
-    toast({
-      title: "Melihat Log Sistem",
-      description: "Fitur log sistem sedang dalam pengembangan. (Simulasi)",
-    });
-     // Example: window.open('/admin/system-logs', '_blank');
+    router.push('/admin/system-logs');
   };
   
   const handleGenkitDashboard = () => {
@@ -178,7 +173,7 @@ export default function AdminSystemSettingsPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             <Button onClick={handleViewLogs} variant="outline">
-              Lihat Log Sistem
+              <Activity className="mr-2 h-4 w-4" /> Lihat Log Sistem
             </Button>
             <p className="text-sm text-muted-foreground">
               Akses log sistem untuk memantau aktivitas dan mendiagnosis masalah.

@@ -5,7 +5,7 @@ import { useEffect, useMemo } from 'react';
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset } from '@/components/ui/sidebar';
 import { AppLogo } from '@/components/layout/AppLogo';
 import { UserProfile } from '@/components/layout/UserProfile';
-import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, ShieldCheck, Activity } from 'lucide-react';
 import Link from 'next/link';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
@@ -18,7 +18,8 @@ interface NavItem {
   label: string;
   icon: React.ElementType;
   roles: UserRole[]; 
-  isSystemSetting?: boolean;
+  isSystemSetting?: boolean; // If true, only Admin can access, even if listed in roles
+  isHiddenFromSidebar?: boolean; // Explicitly hide from sidebar even if role matches
 }
 
 const allNavItems: NavItem[] = [
@@ -29,6 +30,7 @@ const allNavItems: NavItem[] = [
   { href: "/ai-assistant", label: "Asisten AI", icon: Sparkles, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"] },
   { href: "/settings", label: "Pengaturan Akun", icon: SettingsIcon, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/admin/system-settings", label: "Pengaturan Sistem", icon: ShieldCheck, roles: ["Admin"], isSystemSetting: true },
+  { href: "/admin/system-logs", label: "Log Sistem", icon: Activity, roles: ["Admin"], isSystemSetting: true, isHiddenFromSidebar: true },
 ];
 
 export default function AppLayout({ children }: PropsWithChildren) {
@@ -44,27 +46,35 @@ export default function AppLayout({ children }: PropsWithChildren) {
 
   const filteredNavItems = useMemo(() => {
     if (!user) return [];
-    return allNavItems.filter(item => item.roles.includes(user.role));
+    return allNavItems.filter(item => 
+        item.roles.includes(user.role) && 
+        !item.isHiddenFromSidebar && // Hide if explicitly marked
+        (!item.isSystemSetting || user.role === 'Admin') // Only show system settings to Admin in sidebar if not hidden
+    );
   }, [user]);
 
    useEffect(() => {
     if (!loading && isAuthenticated && user) {
       const currentNavItem = allNavItems.find(item => pathname.startsWith(item.href));
-      if (pathname.startsWith('/settings')) {
+      
+      if (pathname.startsWith('/settings')) { // General settings page
         const settingsBaseAccess = allNavItems.find(item => item.href === "/settings" && item.roles.includes(user.role));
         if (!settingsBaseAccess) {
-            router.push("/dashboard");
+            router.push("/dashboard"); // Redirect if no access to base /settings
         }
-      } else if (currentNavItem && currentNavItem.isSystemSetting && user.role !== 'Admin') {
-         router.push("/dashboard"); 
-      } else if (currentNavItem && !currentNavItem.roles.includes(user.role)) {
-        const dashboardAccess = allNavItems.find(item => item.href === "/dashboard" && item.roles.includes(user.role));
-        if (dashboardAccess) {
-          router.push("/dashboard");
-        } else {
-          logout(); 
+      } else if (currentNavItem) {
+        // Check role access for the current item
+        if (!currentNavItem.roles.includes(user.role)) {
+          const dashboardAccess = allNavItems.find(item => item.href === "/dashboard" && item.roles.includes(user.role));
+          if (dashboardAccess) router.push("/dashboard"); else logout();
+          return;
+        }
+        // Specifically for system settings or system logs, ensure user is Admin
+        if (currentNavItem.isSystemSetting && user.role !== 'Admin') {
+           router.push("/dashboard"); 
         }
       }
+      // If no currentNavItem matched (e.g. 404), Next.js handles it.
     }
   }, [loading, isAuthenticated, user, pathname, router, logout]);
 
