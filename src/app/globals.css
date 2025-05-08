@@ -1,205 +1,245 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    /* Default Light Theme: Calm Blue */
+    /* Default Light Theme: Professional Indigo */
     --background: 0 0% 100%; /* White */
-    --foreground: 210 29% 30%; /* Dark Slate Blue */
+    --foreground: 220 15% 25%; /* Dark Indigo-Gray */
 
-    --card: 0 0% 98%; /* Very Light Gray */
-    --card-foreground: 210 29% 30%;
+    --card: 0 0% 100%; /* White */
+    --card-foreground: 220 15% 25%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 210 29% 30%;
+    --popover-foreground: 220 15% 25%;
 
-    --primary: 207 68% 53%; /* Calm Blue */
+    --primary: 220 70% 55%; /* Indigo */
     --primary-foreground: 0 0% 100%; /* White */
 
-    --secondary: 200 17% 94%; /* Light Gray from proposal */
-    --secondary-foreground: 210 29% 30%; /* Dark Slate Blue */
+    --secondary: 220 10% 95%; /* Light Indigo-Gray */
+    --secondary-foreground: 220 15% 25%; 
 
-    --muted: 200 17% 90%; /* Slightly darker light gray */
-    --muted-foreground: 210 15% 45%; /* Muted Slate Blue */
+    --muted: 220 10% 90%; /* Slightly darker light Indigo-gray */
+    --muted-foreground: 220 10% 45%; /* Muted Indigo-Gray */
 
-    --accent: 145 63% 49%; /* Green */
+    --accent: 250 65% 60%; /* Vibrant Violet/Purple */
     --accent-foreground: 0 0% 100%; /* White */
 
     --destructive: 0 72% 51%; /* Red */
     --destructive-foreground: 0 0% 100%; /* White */
 
-    --border: 200 17% 88%; /* Light Gray Border */
-    --input: 200 17% 96%; /* Lighter Gray Input */
-    --ring: 207 68% 53%; /* Calm Blue for focus rings */
+    --border: 220 10% 85%; /* Light Indigo-Gray Border */
+    --input: 220 10% 97%; /* Very Light Indigo-Gray Input */
+    --ring: 220 70% 55%; /* Indigo for focus rings */
 
     --radius: 0.5rem;
 
     /* Sidebar for Default Light Theme */
-    --sidebar-background: 200 17% 94%; /* Light Gray */
-    --sidebar-foreground: 210 29% 30%; /* Dark Slate Blue */
-    --sidebar-primary: 207 68% 53%;    /* Calm Blue */
+    --sidebar-background: 220 15% 97%; /* Very Light Indigo, almost white */
+    --sidebar-foreground: 220 15% 30%; /* Dark Indigo-Gray */
+    --sidebar-primary: 220 70% 55%;    /* Indigo */
     --sidebar-primary-foreground: 0 0% 100%; /* White */
-    --sidebar-accent: 200 17% 88%;      /* Slightly darker Light Gray for hover */
-    --sidebar-accent-foreground: 207 68% 53%; /* Calm Blue on hover */
-    --sidebar-border: 200 17% 82%;      /* Border within sidebar */
-    --sidebar-ring: 207 68% 53%;        /* Calm Blue for focus rings */
+    --sidebar-accent: 220 15% 90%;      /* Light Indigo Gray for hover */
+    --sidebar-accent-foreground: 220 70% 50%; /* Darker Indigo on hover */
+    --sidebar-border: 220 15% 85%;      /* Border within sidebar */
+    --sidebar-ring: 220 70% 55%;        /* Indigo for focus rings */
 
-    --chart-1: 207 68% 53%; /* Calm Blue */
-    --chart-2: 145 63% 49%; /* Green */
-    --chart-3: 39 90% 51%;  /* Orange (example) */
-    --chart-4: 270 70% 65%; /* Purple (example) */
+    --chart-1: 220 70% 55%; /* Indigo */
+    --chart-2: 250 65% 60%; /* Violet */
+    --chart-3: 170 60% 45%;  /* Teal (example) */
+    --chart-4: 30 80% 55%; /* Orange (example) */
     --chart-5: 0 72% 51%;   /* Red (example) */
   }
 
   .dark {
-    /* Default Dark Theme: Cyber Dark */
-    --background: 240 15% 7%; 
-    --foreground: 190 40% 88%; 
+    /* Default Dark Theme: Professional Deep Blue */
+    --background: 220 20% 10%; 
+    --foreground: 220 15% 88%; 
 
-    --card: 240 15% 10%; 
-    --card-foreground: 190 40% 88%;
+    --card: 220 20% 13%; 
+    --card-foreground: 220 15% 88%;
 
-    --popover: 240 15% 9%; 
-    --popover-foreground: 190 40% 88%;
+    --popover: 220 20% 12%; 
+    --popover-foreground: 220 15% 88%;
 
-    --primary: 190 90% 55%; 
-    --primary-foreground: 240 10% 4%; 
+    --primary: 210 80% 65%; /* Brighter Blue */
+    --primary-foreground: 220 15% 10%; 
 
-    --secondary: 260 20% 20%; 
-    --secondary-foreground: 190 30% 80%; 
+    --secondary: 220 15% 20%; /* Darker Blue-Gray */
+    --secondary-foreground: 220 10% 80%; 
 
-    --muted: 240 15% 18%; 
-    --muted-foreground: 220 10% 55%; 
+    --muted: 220 15% 18%; 
+    --muted-foreground: 220 10% 60%; 
 
-    --accent: 320 80% 60%; 
+    --accent: 260 70% 70%; /* Vibrant Purple */
     --accent-foreground: 0 0% 100%; 
 
-    --destructive: 0 63% 45%; 
+    --destructive: 0 65% 55%; 
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 15% 15%;
-    --input: 240 15% 12%; 
-    --ring: 320 80% 60%; 
+    --border: 220 15% 20%;
+    --input: 220 15% 15%; 
+    --ring: 210 80% 65%; 
 
-    /* Sidebar for Cyber Dark Theme */
-    --sidebar-background: 240 15% 5%; 
-    --sidebar-foreground: 190 70% 80%;  
-    --sidebar-primary: 320 80% 60%;     
-    --sidebar-primary-foreground: 0 0% 100%; 
-    --sidebar-accent: 240 15% 15%;      
-    --sidebar-accent-foreground: 190 80% 85%; 
-    --sidebar-border: 240 15% 10%;      
-    --sidebar-ring: 320 80% 60%;    
+    /* Sidebar for Professional Deep Blue Theme */
+    --sidebar-background: 220 20% 8%; 
+    --sidebar-foreground: 220 15% 85%;  
+    --sidebar-primary: 210 80% 65%;     
+    --sidebar-primary-foreground: 220 15% 10%; 
+    --sidebar-accent: 220 15% 18%;      
+    --sidebar-accent-foreground: 210 80% 75%; 
+    --sidebar-border: 220 15% 15%;      
+    --sidebar-ring: 210 80% 65%;    
 
-    --chart-1: 190 80% 50%;
-    --chart-2: 320 70% 55%;
-    --chart-3: 120 60% 50%;
-    --chart-4: 270 60% 60%;
-    --chart-5: 30 80% 55%;
+    --chart-1: 210 80% 65%;
+    --chart-2: 260 70% 70%;
+    --chart-3: 180 70% 55%; /* Cyan/Teal */
+    --chart-4: 30 70% 60%; /* Orange */
+    --chart-5: 0 65% 55%; /* Red */
   }
 
   .theme-ocean-breeze {
-    --background: 195 30% 96%; /* Lighter, slightly cyan-tinted off-white */
-    --foreground: 210 35% 35%; /* Slightly softer dark blue */
+    /* Ocean Breeze Theme (Light) */
+    --background: 195 30% 96%; 
+    --foreground: 210 35% 35%; 
 
-    --card: 0 0% 100%; /* White */
+    --card: 0 0% 100%; 
     --card-foreground: 210 35% 35%;
 
     --popover: 0 0% 100%;
     --popover-foreground: 210 35% 35%;
 
-    --primary: 185 60% 50%;  /* Clear, medium aquamarine/cyan */
-    --primary-foreground: 0 0% 100%; /* White */
+    --primary: 185 60% 50%;  
+    --primary-foreground: 0 0% 100%; 
 
-    --secondary: 190 30% 88%; /* Softer, lighter cyan-gray */
-    --secondary-foreground: 185 50% 25%; /* Darker cyan for text on secondary */
+    --secondary: 190 30% 88%; 
+    --secondary-foreground: 185 50% 25%; 
 
-    --muted: 190 30% 92%;    /* Very light cyan-gray */
-    --muted-foreground: 190 25% 50%; /* Muted cyan-gray text */
+    --muted: 190 30% 92%;    
+    --muted-foreground: 190 25% 50%; 
 
-    --accent: 170 65% 45%;   /* Deeper seafoam green/turquoise */
-    --accent-foreground: 0 0% 100%; /* White */
+    --accent: 170 65% 45%;   
+    --accent-foreground: 0 0% 100%; 
 
     --destructive: 0 72% 51%; 
     --destructive-foreground: 0 0% 100%;
 
     --border: 190 25% 85%;
-    --input: 0 0% 100%; /* White input */
-    --ring: 185 60% 50%; /* Match primary */
+    --input: 0 0% 100%; 
+    --ring: 185 60% 50%; 
 
     /* Sidebar for Ocean Breeze */
-    --sidebar-background: 190 35% 92%; /* Very light cyan-gray */
-    --sidebar-foreground: 210 35% 35%;
+    --sidebar-background: 190 35% 94%; /* Slightly darker for sidebar background */
+    --sidebar-foreground: 210 35% 30%; /* Darker text for better contrast */
     --sidebar-primary: 185 60% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 190 35% 85%;
-    --sidebar-accent-foreground: 185 60% 50%;
-    --sidebar-border: 190 30% 80%;
+    --sidebar-accent: 190 35% 88%; /* Hover accent */
+    --sidebar-accent-foreground: 185 60% 45%; /* Darker primary on hover */
+    --sidebar-border: 190 30% 82%;
     --sidebar-ring: 185 60% 50%;
 
     --chart-1: 185 60% 50%; 
     --chart-2: 170 65% 45%; 
-    --chart-3: 45 85% 60%;  /* Sandy yellow/gold */
+    --chart-3: 45 85% 60%;  
     --chart-4: 270 70% 65%; 
     --chart-5: 0 72% 51%;
   }
 
   .theme-forest-haven {
-    /* Rimba Teduh (Gelap) */
-    --background: 140 25% 10%; /* Deep Forest Green-Brown */
-    --foreground: 90 20% 88%; /* Soft Mossy White */
+    /* Forest Haven Theme (Dark) */
+    --background: 140 25% 10%; 
+    --foreground: 90 20% 88%; 
 
-    --card: 140 25% 13%; /* Slightly Lighter Forest Green-Brown */
-    --card-foreground: 90 20% 88%; /* Soft Mossy White */
+    --card: 140 25% 13%; 
+    --card-foreground: 90 20% 88%; 
 
-    --popover: 140 25% 12%; /* Darker than card */
-    --popover-foreground: 90 20% 88%; /* Soft Mossy White */
+    --popover: 140 25% 12%; 
+    --popover-foreground: 90 20% 88%; 
 
-    --primary: 120 55% 38%; /* Rich Leaf Green */
-    --primary-foreground: 60 70% 95%; /* Pale Yellow/Cream */
+    --primary: 120 55% 42%; /* Slightly brighter Leaf Green */
+    --primary-foreground: 60 70% 95%; 
 
-    --secondary: 153 60% 31%; /* Green #1F7D53 */
-    --secondary-foreground: 90 20% 88%; /* Soft Mossy White (contrast with dark green secondary) */
+    --secondary: 153 60% 28%; /* Darker #1F7D53 for secondary */
+    --secondary-foreground: 90 20% 88%; 
 
-    --muted: 140 20% 18%; /* Dark Desaturated Green-Brown */
-    --muted-foreground: 100 15% 65%; /* Muted Greenish Grey */
+    --muted: 140 20% 18%; 
+    --muted-foreground: 100 15% 65%; 
 
-    --accent: 35 75% 50%; /* Warm Golden Amber/Sunlight */
-    --accent-foreground: 25 50% 10%; /* Very Dark Brown for contrast */
+    --accent: 35 75% 55%; /* Brighter Golden Amber/Sunlight */
+    --accent-foreground: 25 50% 10%; 
 
-    --destructive: 0 70% 45%; /* Deep Red, slightly desaturated */
-    --destructive-foreground: 0 0% 95%; /* Off-white */
+    --destructive: 0 70% 48%; /* Slightly brighter Deep Red */
+    --destructive-foreground: 0 0% 95%; 
 
-    --border: 140 25% 18%; /* Subtle border, slightly lighter than card */
-    --input: 140 25% 15%; /* Input background */
-    --ring: 120 55% 38%; /* Match primary */
+    --border: 140 25% 18%; 
+    --input: 140 25% 15%; 
+    --ring: 120 55% 42%; 
     
     /* Sidebar for Forest Haven */
-    --sidebar-background: 140 25% 8%; /* Darkest Green-Brown, for depth */
-    --sidebar-foreground: 90 20% 85%; /* Slightly dimmer than main foreground */
-    --sidebar-primary: 120 55% 38%; /* Same as main primary */
-    --sidebar-primary-foreground: 60 70% 95%; /* Same as main primary-foreground */
-    --sidebar-accent: 140 25% 15%; /* Hover background, like card */
-    --sidebar-accent-foreground: 120 55% 55%; /* Brighter primary on hover */
-    --sidebar-border: 140 25% 12%; /* Darker border within sidebar */
-    --sidebar-ring: 120 55% 38%; /* Match primary */
+    --sidebar-background: 140 25% 9%; /* Slightly darker for sidebar */
+    --sidebar-foreground: 90 20% 85%; 
+    --sidebar-primary: 120 55% 42%; 
+    --sidebar-primary-foreground: 60 70% 95%; 
+    --sidebar-accent: 140 25% 16%; /* Hover background */
+    --sidebar-accent-foreground: 120 55% 60%; /* Brighter primary on hover */
+    --sidebar-border: 140 25% 14%; 
+    --sidebar-ring: 120 55% 42%; 
     
-    --chart-1: 120 55% 38%; /* Primary Green */
-    --chart-2: 35 75% 50%; /* Accent Amber */
-    --chart-3: 153 60% 45%; /* Lighter version of secondary green for charts */
-    --chart-4: 25 40% 40%; /* Earthy Brown */
-    --chart-5: 0 60% 55%; /* Muted Red/Terracotta */
+    --chart-1: 120 55% 42%; 
+    --chart-2: 35 75% 55%; 
+    --chart-3: 153 60% 50%; 
+    --chart-4: 25 40% 45%; 
+    --chart-5: 0 60% 60%; 
   }
 }
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border transition-colors duration-150 ease-in-out;
   }
   body {
-    @apply bg-background text-foreground;
-    font-family: var(--font-roboto); /* Updated to Roboto */
+    @apply bg-background text-foreground antialiased; /* Added antialiased */
+    font-family: var(--font-plus-jakarta-sans), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    font-feature-settings: "rlig" 1, "calt" 1; /* Common useful OpenType features */
+    min-height: 100vh; /* Ensure body takes full viewport height */
+    display: flex; /* For full height layouts */
+    flex-direction: column; /* For full height layouts */
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+  }
+
+  h1 { @apply text-3xl md:text-4xl; }
+  h2 { @apply text-2xl md:text-3xl; }
+  h3 { @apply text-xl md:text-2xl; }
+  h4 { @apply text-lg md:text-xl; }
+
+  /* Improve focus visibility for accessibility */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
   }
 }
 
+/* Markdown specific styling */
+.markdown-content h1 { @apply text-2xl md:text-3xl mt-6 mb-4 pb-2 border-b; }
+.markdown-content h2 { @apply text-xl md:text-2xl mt-5 mb-3 pb-1 border-b; }
+.markdown-content h3 { @apply text-lg md:text-xl mt-4 mb-2; }
+.markdown-content p { @apply text-base leading-relaxed mb-4; }
+.markdown-content ul, .markdown-content ol { @apply list-inside pl-4 mb-4 space-y-1; }
+.markdown-content li { @apply mb-1; }
+.markdown-content blockquote { @apply pl-4 border-l-4 border-accent italic text-muted-foreground my-4 py-1; }
+.markdown-content code:not(pre code) { @apply bg-muted/70 px-1.5 py-0.5 rounded text-sm font-mono text-foreground; }
+.markdown-content pre { @apply bg-muted p-4 rounded-md overflow-x-auto my-4 text-sm shadow-sm; }
+.markdown-content table { @apply min-w-full divide-y divide-border my-4 text-sm border rounded-md shadow-sm; }
+.markdown-content thead { @apply bg-muted/50; }
+.markdown-content th { @apply px-4 py-2.5 text-left font-semibold text-foreground; }
+.markdown-content td { @apply px-4 py-2.5 text-foreground border-t border-border align-top; }
+
+.markdown-content [dir="rtl"] {
+  direction: rtl;
+  text-align: right;
+  font-family: 'Noto Naskh Arabic', 'Amiri', serif; /* Ensure specific Arabic fonts are listed */
+}

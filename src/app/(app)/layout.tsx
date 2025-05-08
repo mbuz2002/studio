@@ -28,8 +28,8 @@ const allNavItems: NavItem[] = [
   { href: "/annual-programs", label: "Program Tahunan", icon: CalendarDays, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/semester-programs", label: "Program Semester", icon: CalendarClock, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/ai-assistant", label: "Asisten AI", icon: Sparkles, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"] },
-  { href: "/settings", label: "Pengaturan Akun", icon: SettingsIcon, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/admin/user-management", label: "Manajemen Pengguna", icon: Users, roles: ["Admin", "TataUsaha"], isSystemSetting: false }, 
+  { href: "/settings", label: "Pengaturan Akun", icon: SettingsIcon, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/admin/system-settings", label: "Pengaturan Sistem", icon: ShieldCheck, roles: ["Admin"], isSystemSetting: true },
   { href: "/admin/system-logs", label: "Log Sistem", icon: Activity, roles: ["Admin"], isSystemSetting: true, isHiddenFromSidebar: true },
 ];
@@ -52,15 +52,25 @@ export default function AppLayout({ children }: PropsWithChildren) {
         !item.isHiddenFromSidebar &&
         (item.isSystemSetting === false || (item.isSystemSetting === true && user.role === 'Admin') || item.roles.includes(user.role) )
     ).sort((a,b) => { 
-        if (a.isSystemSetting && !b.isSystemSetting) return 1;
-        if (!a.isSystemSetting && b.isSystemSetting) return -1;
+        // Sort system settings to the bottom, but regular settings (non-system) before them.
+        if (a.isSystemSetting && !b.isSystemSetting) return 1; // a (system) goes after b (non-system)
+        if (!a.isSystemSetting && b.isSystemSetting) return -1; // a (non-system) goes before b (system)
+        
+        // If both are system settings or both are not, keep original order or sort alphabetically (optional)
+        // For now, keep original for non-system items, and system settings together
+        if (a.isSystemSetting && b.isSystemSetting) {
+            return a.label.localeCompare(b.label); // Alphabetical for system settings
+        }
+        if (a.href === "/settings") return 1; // Pengaturan Akun specifically to the end of non-system items
+        if (b.href === "/settings") return -1;
+
         return 0;
     });
   }, [user]);
 
    useEffect(() => {
     if (!loading && isAuthenticated && user) {
-      const currentNavItem = allNavItems.find(item => pathname.startsWith(item.href));
+      const currentNavItem = allNavItems.find(item => pathname.startsWith(item.href) && item.href !== '/'); // Ensure exact match or startsWith for subpages
       
       if (currentNavItem) {
         if (!currentNavItem.roles.includes(user.role)) {
@@ -74,6 +84,8 @@ export default function AppLayout({ children }: PropsWithChildren) {
             router.push("/dashboard");
          }
       }
+      // Allow access if no specific nav item matches (e.g. deeper settings pages not in nav)
+      // but ensure the base segment is accessible if it exists (handled above).
     }
   }, [loading, isAuthenticated, user, pathname, router, logout]);
 
@@ -88,8 +100,8 @@ export default function AppLayout({ children }: PropsWithChildren) {
   
   return (
       <SidebarProvider defaultOpen={true}>
-        <Sidebar collapsible="icon" variant="sidebar" side="left" className="border-r shadow-lg">
-          <SidebarHeader className="border-b p-3 shadow-sm">
+        <Sidebar collapsible="icon" variant="sidebar" side="left" className="border-r shadow-xl bg-sidebar text-sidebar-foreground">
+          <SidebarHeader className="border-b border-sidebar-border p-3 shadow-sm">
             <AppLogo />
           </SidebarHeader>
           <ScrollArea className="flex-1">
@@ -100,7 +112,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
                   <Link href={item.href} legacyBehavior passHref>
                     <SidebarMenuButton 
                       className="w-full text-base font-medium" 
-                      tooltip={{children: item.label, className: "ml-1"}}
+                      tooltip={{children: item.label, className: "ml-1 text-xs"}}
                       isActive={pathname.startsWith(item.href)}
                     >
                       <item.icon className="h-5 w-5" />
@@ -112,17 +124,17 @@ export default function AppLayout({ children }: PropsWithChildren) {
             </SidebarMenu>
           </SidebarContent>
           </ScrollArea>
-          <SidebarFooter className="border-t p-3 mt-auto shadow-inner">
+          <SidebarFooter className="border-t border-sidebar-border p-2 mt-auto shadow-inner">
             <UserProfile />
           </SidebarFooter>
         </Sidebar>
         <SidebarInset>
           <MobileBottomNav />
-          <main className="flex-1 overflow-auto p-4 md:p-6 pb-24 sm:pb-6 flex flex-col min-h-screen"> {/* Adjusted padding and flex, min-h-screen */}
+          <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8 pb-24 sm:pb-8 flex flex-col min-h-screen bg-background text-foreground"> {/* Adjusted padding */}
             <div className="flex-grow">
                 {children}
             </div>
-            <footer className="mt-auto pt-6 text-center text-xs text-muted-foreground">
+            <footer className="mt-auto pt-8 text-center text-xs text-muted-foreground">
               <p>&copy; {new Date().getFullYear()} EduAI Planner. Created by RIFQY IZA FAHRIZAL.</p>
             </footer>
           </main>

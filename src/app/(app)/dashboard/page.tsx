@@ -20,38 +20,38 @@ const featureCardsConfig: {
 }[] = [
   {
     title: "Rencana Pembelajaran (RPP)",
-    description: "Buat, edit, dan kelola rencana pembelajaran harian atau mingguan Anda.",
+    description: "Buat, edit, dan kelola rencana pembelajaran harian atau mingguan Anda dengan mudah dan terstruktur.",
     icon: BookOpenText,
     href: "/lesson-plans",
-    image: "https://picsum.photos/seed/lessonplan/600/400",
-    aiHint: "kelas buku",
-    roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"] // TataUsaha can view
+    image: "https://picsum.photos/seed/rppmodern/800/600",
+    aiHint: "ruang kelas modern",
+    roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"] 
   },
   {
     title: "Program Tahunan (PROTA)",
-    description: "Rencanakan kurikulum Anda untuk seluruh tahun ajaran.",
+    description: "Rencanakan visi kurikulum Anda untuk keseluruhan tahun ajaran secara komprehensif.",
     icon: CalendarDays,
     href: "/annual-programs",
-    image: "https://picsum.photos/seed/annualprogram/600/400",
-    aiHint: "kalender perencanaan",
-    roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"] // TataUsaha can view
+    image: "https://picsum.photos/seed/protamodern/800/600",
+    aiHint: "kalender perencanaan tahunan",
+    roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"] 
   },
   {
     title: "Program Semester (Promes)",
-    description: "Rincikan jadwal mengajar Anda untuk setiap semester.",
+    description: "Rincikan jadwal dan materi pengajaran Anda dengan detail untuk setiap semester akademik.",
     icon: CalendarClock,
     href: "/semester-programs",
-    image: "https://picsum.photos/seed/semesterprogram/600/400",
-    aiHint: "perencana meja",
-    roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"] // TataUsaha can view
+    image: "https://picsum.photos/seed/promesmodern/800/600",
+    aiHint: "jadwal semester",
+    roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"] 
   },
   {
-    title: "Asisten AI",
-    description: "Dapatkan saran berbasis AI untuk meningkatkan materi pengajaran Anda.",
+    title: "Asisten AI EduPlanner",
+    description: "Manfaatkan kecerdasan buatan untuk ide, saran, dan pembuatan draf materi pengajaran.",
     icon: Sparkles,
     href: "/ai-assistant",
-    image: "https://picsum.photos/seed/aiassistant/600/400",
-    aiHint: "kecerdasan buatan",
+    image: "https://picsum.photos/seed/aimodern/800/600",
+    aiHint: "teknologi AI pendidikan",
     roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"]
   },
 ];
@@ -65,30 +65,29 @@ export default function DashboardPage() {
 
   return (
     <div className="container mx-auto py-6 md:py-8">
-      <Card className="mb-8 shadow-lg rounded-lg">
-        <CardHeader className="p-6 md:p-8 bg-gradient-to-br from-primary to-accent text-primary-foreground rounded-t-lg">
-           <div className="flex items-start gap-4 mb-2">
-            <LayoutDashboard className="h-10 w-10 text-primary-foreground flex-shrink-0 mt-1" />
+      <Card className="mb-8 shadow-xl rounded-lg overflow-hidden">
+        <CardHeader className="p-6 md:p-8 bg-gradient-to-br from-primary via-primary/90 to-accent text-primary-foreground rounded-t-lg">
+           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-2">
+            <LayoutDashboard className="h-10 w-10 md:h-12 md:w-12 text-primary-foreground flex-shrink-0 mt-1 drop-shadow-lg" />
             <div>
-              <CardTitle className="text-3xl md:text-4xl font-bold">Selamat Datang di EduAI Planner!</CardTitle>
-              <CardDescription className="text-lg md:text-xl text-primary-foreground/90 mt-1">
-                Asisten cerdas Anda untuk perencanaan dan manajemen kurikulum yang efisien.
+              <CardTitle className="text-3xl md:text-4xl font-bold tracking-tight">Selamat Datang di EduAI Planner!</CardTitle>
+              <CardDescription className="text-lg md:text-xl text-primary-foreground/90 mt-1.5">
+                Platform cerdas untuk perencanaan dan manajemen kurikulum yang efektif dan inovatif.
               </CardDescription>
             </div>
           </div>
-          <p className="text-base text-primary-foreground/90">
-            Peran Anda saat ini: <span className="font-semibold">{user?.role}</span>
+          <p className="text-base text-primary-foreground/90 mt-2">
+            Peran Anda: <span className="font-semibold bg-black/20 px-2 py-0.5 rounded">{user?.role}</span>
           </p>
         </CardHeader>
-        <CardContent className="p-6 md:p-8 pt-4">
-          <p className="mb-6 text-base">
-            Buat, atur, dan tingkatkan Rencana Pelaksanaan Pembelajaran (RPP), Program Tahunan (PROTA), dan Program Semester (Promes) Anda secara efisien dengan kekuatan AI. 
-            Mulai dengan menjelajahi fitur di bawah atau buat item kurikulum baru.
+        <CardContent className="p-6 md:p-8 pt-6">
+          <p className="mb-6 text-base md:text-lg leading-relaxed text-foreground/90">
+            Maksimalkan potensi pengajaran Anda dengan EduAI Planner. Buat, atur, dan tingkatkan kualitas Rencana Pelaksanaan Pembelajaran (RPP), Program Tahunan (PROTA), serta Program Semester (Promes) Anda dengan dukungan AI. Mulai jelajahi fitur-fitur unggulan di bawah ini atau langsung buat perangkat ajar baru.
           </p>
           {canCreateNewPlan && (
-            <Button asChild size="lg" className="bg-gradient-to-r from-accent to-primary hover:from-accent/90 hover:to-primary/90 text-accent-foreground text-base shadow-md hover:shadow-lg transition-shadow">
+            <Button asChild size="lg" className="bg-gradient-to-r from-accent to-primary hover:from-accent/90 hover:to-primary/90 text-accent-foreground text-lg py-3 px-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 rounded-md">
               <Link href="/lesson-plans"> 
-                <PlusCircle className="mr-2 h-5 w-5" /> Buat Rencana Baru
+                <PlusCircle className="mr-2.5 h-5 w-5" /> Buat Rencana Baru
               </Link>
             </Button>
           )}
@@ -97,27 +96,29 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2">
         {visibleFeatureCards.map((feature) => (
-          <Card key={feature.title} className="flex flex-col overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300 rounded-lg">
-            <div className="relative h-48 w-full"> 
+          <Card key={feature.title} className="flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 rounded-lg border-border/50 hover:border-primary/50 group">
+            <div className="relative h-52 w-full overflow-hidden"> 
               <Image 
                 src={feature.image} 
                 alt={feature.title} 
                 fill
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 style={{objectFit:"cover"}}
-                className="rounded-t-lg"
+                className="rounded-t-lg group-hover:scale-105 transition-transform duration-500 ease-in-out"
                 data-ai-hint={feature.aiHint}
+                priority={feature.href === "/lesson-plans"} // Prioritize first image or most important one
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
             </div>
-            <CardHeader className="pb-3 pt-4 px-5">
-              <div className="flex items-center gap-3 mb-1">
-                <feature.icon className="h-6 w-6 text-primary flex-shrink-0" /> 
-                <CardTitle className="text-xl font-semibold">{feature.title}</CardTitle>
+            <CardHeader className="pb-3 pt-5 px-5">
+              <div className="flex items-center gap-3 mb-1.5">
+                <feature.icon className="h-7 w-7 text-primary flex-shrink-0 drop-shadow-sm" /> 
+                <CardTitle className="text-xl md:text-2xl font-semibold text-foreground">{feature.title}</CardTitle>
               </div>
-              <CardDescription className="text-sm text-muted-foreground leading-relaxed">{feature.description}</CardDescription>
+              <CardDescription className="text-sm text-muted-foreground leading-relaxed line-clamp-3">{feature.description}</CardDescription>
             </CardHeader>
             <CardContent className="flex-grow flex items-end mt-auto pt-3 pb-5 px-5"> 
-              <Button asChild variant="outline" className="w-full text-base">
+              <Button asChild variant="outline" className="w-full text-base border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground transition-colors duration-300 rounded-md">
                 <Link href={feature.href}>
                   Buka {feature.title}
                 </Link>
@@ -126,10 +127,10 @@ export default function DashboardPage() {
           </Card>
         ))}
          {visibleFeatureCards.length === 0 && (
-           <Card className="rounded-lg col-span-full">
-            <CardHeader>
-              <CardTitle className="text-xl md:text-2xl">Tidak Ada Fitur Tersedia</CardTitle>
-              <CardDescription className="text-sm md:text-base">Saat ini tidak ada fitur yang dapat diakses untuk peran Anda.</CardDescription>
+           <Card className="rounded-lg col-span-full shadow-md border-border/50">
+            <CardHeader className="p-6">
+              <CardTitle className="text-xl md:text-2xl font-semibold">Tidak Ada Fitur Tersedia</CardTitle>
+              <CardDescription className="text-base text-muted-foreground mt-1">Saat ini tidak ada fitur yang dapat diakses untuk peran Anda. Silakan hubungi administrator jika ini tidak sesuai.</CardDescription>
             </CardHeader>
           </Card>
         )}

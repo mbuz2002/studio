@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Sparkles, BookOpenCheck, ExternalLink, FileText, Video, Book, Newspaper, Globe, Search, TableIcon, Languages } from "lucide-react";
+import { Loader2, Sparkles, BookOpenCheck, ExternalLink, FileText, Video, Book, Newspaper, Globe, Search, TableIcon, Languages, MessageSquareWarning } from "lucide-react";
 import { generateTeachingMaterial, type GenerateTeachingMaterialInput, type GenerateTeachingMaterialOutput, type AISuggestedSource } from "@/ai/flows/generate-teaching-material";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -85,12 +85,12 @@ export default function AIAssistantPage() {
 
   if (!isClient || !user) {
     return (
-      <div className="space-y-6 py-8">
+      <div className="container mx-auto py-6 md:py-8">
         <Card className="shadow-lg rounded-lg">
           <CardHeader className="p-6 rounded-t-lg bg-gradient-to-br from-primary to-accent text-primary-foreground">
             <CardTitle className="text-2xl md:text-3xl font-bold">Memuat Asisten AI...</CardTitle>
           </CardHeader>
-          <CardContent className="p-6 pt-0 flex items-center">
+          <CardContent className="p-6 pt-4 flex items-center">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
             <p className="ml-3 text-lg">Silakan tunggu...</p>
           </CardContent>
@@ -102,13 +102,13 @@ export default function AIAssistantPage() {
   return (
     <div className="container mx-auto py-6 md:py-8">
       <header className="mb-8">
-        <Card className="shadow-xl overflow-hidden rounded-lg">
-          <CardHeader className="bg-gradient-to-br from-primary via-accent to-secondary p-6 md:p-8 text-primary-foreground rounded-t-lg">
+        <Card className="shadow-xl overflow-hidden rounded-lg border-transparent">
+          <CardHeader className="bg-gradient-to-br from-primary via-primary/90 to-accent p-6 md:p-8 text-primary-foreground rounded-t-lg">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-              <Sparkles className="h-12 w-12 flex-shrink-0 text-background drop-shadow-lg" />
+              <Sparkles className="h-12 w-12 md:h-14 md:w-14 flex-shrink-0 text-background drop-shadow-lg" />
               <div>
-                <CardTitle className="text-3xl md:text-4xl font-bold">Asisten AI Pembuatan Materi</CardTitle>
-                <CardDescription className="text-lg md:text-xl mt-1 text-primary-foreground/90">
+                <CardTitle className="text-3xl md:text-4xl font-bold tracking-tight">Asisten AI Pembuatan Materi</CardTitle>
+                <CardDescription className="text-lg md:text-xl mt-1.5 text-primary-foreground/90">
                   Buat draf materi pembelajaran inovatif lengkap dengan sumber referensi yang disarankan AI.
                 </CardDescription>
               </div>
@@ -119,23 +119,23 @@ export default function AIAssistantPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-1">
-          <Card className="shadow-lg sticky top-6 rounded-lg">
-            <CardHeader className="p-6">
-              <CardTitle className="text-xl font-semibold">Parameter Materi Ajar</CardTitle>
-              <CardDescription className="text-base text-muted-foreground">
-                Isi detail untuk menghasilkan materi yang relevan.
+          <Card className="shadow-lg sticky top-6 rounded-lg border-border/50">
+            <CardHeader className="p-6 border-b">
+              <CardTitle className="text-xl font-semibold text-foreground">Parameter Materi Ajar</CardTitle>
+              <CardDescription className="text-base text-muted-foreground mt-1">
+                Isi detail di bawah ini untuk menghasilkan materi ajar yang relevan dan berkualitas.
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-6 pt-0">
+            <CardContent className="p-6">
               <form onSubmit={handleGenerateMaterial} className="space-y-6">
                 <div className="space-y-1.5">
                   <Label htmlFor="materialTopic" className="text-base font-medium">Topik Materi</Label>
-                  <Input id="materialTopic" value={materialTopic} onChange={(e) => setMaterialTopic(e.target.value)} placeholder="cth., Peradaban Lembah Sungai Nil" className="text-base" />
+                  <Input id="materialTopic" value={materialTopic} onChange={(e) => setMaterialTopic(e.target.value)} placeholder="cth., Revolusi Industri 4.0" className="text-base h-11 rounded-md focus:border-primary" />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="materialGradeLevel" className="text-base font-medium">Jenjang/Fase/Kelas</Label>
                   <Select value={materialGradeLevel} onValueChange={(value) => { if (value !== "placeholder") setMaterialGradeLevel(value); else setMaterialGradeLevel("");}}>
-                    <SelectTrigger id="materialGradeLevel" className="text-base">
+                    <SelectTrigger id="materialGradeLevel" className="text-base h-11 rounded-md focus:border-primary">
                       <SelectValue placeholder="Pilih Jenjang/Fase/Kelas" />
                     </SelectTrigger>
                     <SelectContent>
@@ -155,7 +155,7 @@ export default function AIAssistantPage() {
                 <div className="space-y-1.5">
                   <Label htmlFor="materialDetailLevel" className="text-base font-medium">Tingkat Kedetailan</Label>
                   <Select value={materialDetailLevel} onValueChange={(value) => setMaterialDetailLevel(value as NonNullable<GenerateTeachingMaterialInput['detailLevel']>)}>
-                    <SelectTrigger id="materialDetailLevel" className="text-base">
+                    <SelectTrigger id="materialDetailLevel" className="text-base h-11 rounded-md focus:border-primary">
                       <SelectValue placeholder="Pilih tingkat kedetailan" />
                     </SelectTrigger>
                     <SelectContent>
@@ -165,8 +165,8 @@ export default function AIAssistantPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <Button type="submit" disabled={isGeneratingMaterial || !materialTopic || !materialGradeLevel} className="w-full bg-gradient-to-r from-accent to-primary hover:from-accent/90 hover:to-primary/90 text-accent-foreground text-lg py-3 mt-4 shadow-md hover:shadow-lg transition-shadow">
-                  {isGeneratingMaterial ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <BookOpenCheck className="mr-2 h-5 w-5" />}
+                <Button type="submit" disabled={isGeneratingMaterial || !materialTopic || !materialGradeLevel} className="w-full bg-gradient-to-r from-accent to-primary hover:from-accent/90 hover:to-primary/90 text-accent-foreground text-lg py-3 h-12 mt-2 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 rounded-md">
+                  {isGeneratingMaterial ? <Loader2 className="mr-2.5 h-5 w-5 animate-spin" /> : <BookOpenCheck className="mr-2.5 h-5 w-5" />}
                   Buat Materi Ajar
                 </Button>
               </form>
@@ -176,58 +176,59 @@ export default function AIAssistantPage() {
 
         <div className="lg:col-span-2">
           {isGeneratingMaterial && (
-            <Card className="shadow-lg animate-pulse rounded-lg">
-              <CardHeader className="p-6 rounded-t-lg">
-                <CardTitle className="text-2xl font-semibold text-muted-foreground">AI sedang meracik materi...</CardTitle>
-                <CardDescription className="text-base text-muted-foreground">Mohon tunggu sejenak.</CardDescription>
+            <Card className="shadow-lg animate-pulse rounded-lg border-border/50">
+              <CardHeader className="p-6 rounded-t-lg bg-muted/30">
+                <CardTitle className="text-2xl font-semibold text-muted-foreground">AI sedang meracik materi untuk Anda...</CardTitle>
+                <CardDescription className="text-base text-muted-foreground mt-1">Proses ini mungkin memerlukan beberapa saat. Mohon tunggu.</CardDescription>
               </CardHeader>
-              <CardContent className="p-6 pt-0 space-y-4">
-                <div className="h-8 bg-muted rounded w-3/4"></div>
-                <div className="h-4 bg-muted rounded w-full"></div>
-                <div className="h-4 bg-muted rounded w-5/6"></div>
-                <div className="h-4 bg-muted rounded w-full"></div>
+              <CardContent className="p-6 space-y-5">
+                <div className="h-10 bg-muted rounded w-3/4"></div>
+                <div className="h-6 bg-muted rounded w-full"></div>
+                <div className="h-6 bg-muted rounded w-5/6"></div>
+                <div className="h-6 bg-muted rounded w-full"></div>
+                <div className="h-6 bg-muted rounded w-4/5"></div>
               </CardContent>
             </Card>
           )}
 
           {generatedMaterial && !isGeneratingMaterial && (
-            <Card className="shadow-xl rounded-lg">
+            <Card className="shadow-xl rounded-lg border-border/50">
               <CardHeader className="p-6 bg-muted/30 border-b rounded-t-lg">
-                <CardTitle className="text-2xl md:text-3xl text-primary font-bold">{generatedMaterial.materialTitle}</CardTitle>
-                <CardDescription className="text-base text-muted-foreground pt-1">
-                  Berikut adalah draf materi ajar yang dihasilkan oleh AI. Silakan tinjau dan sesuaikan.
+                <CardTitle className="text-2xl md:text-3xl text-primary font-bold tracking-tight">{generatedMaterial.materialTitle}</CardTitle>
+                <CardDescription className="text-base text-muted-foreground pt-1.5">
+                  Berikut adalah draf materi ajar yang dihasilkan oleh AI. Silakan tinjau, sesuaikan, dan lengkapi sesuai kebutuhan Anda.
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-6 space-y-8">
                 <div className="prose prose-base dark:prose-invert max-w-none leading-relaxed">
-                  <h3 className="text-xl font-semibold mb-3 text-foreground flex items-center">
-                    <Book className="mr-2 h-5 w-5 text-primary" /> Konten Materi Ajar
+                  <h3 className="text-xl font-semibold mb-4 text-foreground flex items-center">
+                    <Book className="mr-2.5 h-5 w-5 text-primary" /> Konten Materi Ajar
                   </h3>
                   <Separator className="my-4" />
                   <ScrollArea className="h-auto max-h-[70vh] rounded-md border shadow-inner bg-background">
-                    <div className="p-4"> {/* Padding moved inside ScrollArea Viewport */}
+                    <div className="p-4 md:p-5"> {/* Padding moved inside ScrollArea Viewport */}
                       <ReactMarkdown
                         className="markdown-content"
                         remarkPlugins={[remarkGfm]}
                         components={{
-                          table: ({node, ...props}) => <div className="overflow-x-auto"><table className="min-w-full divide-y divide-border my-4 text-sm" {...props} /></div>,
+                          table: ({node, ...props}) => <div className="overflow-x-auto my-4 rounded-md border"><table className="min-w-full divide-y divide-border text-sm" {...props} /></div>,
                           thead: ({node, ...props}) => <thead className="bg-muted/50" {...props} />,
-                          th: ({node, ...props}) => <th className="px-4 py-2 text-left font-semibold text-foreground" {...props} />,
-                          td: ({node, ...props}) => <td className="px-4 py-2 text-foreground border-t border-border" {...props} />,
-                          p: ({node, ...props}) => <p className="mb-4 last:mb-0" {...props} />,
-                          h1: ({node, ...props}) => <h1 className="text-3xl font-bold mt-6 mb-3 pb-1 border-b border-border" {...props} />,
-                          h2: ({node, ...props}) => <h2 className="text-2xl font-semibold mt-5 mb-2 pb-1 border-b border-border" {...props} />,
+                          th: ({node, ...props}) => <th className="px-4 py-2.5 text-left font-semibold text-foreground" {...props} />,
+                          td: ({node, ...props}) => <td className="px-4 py-2.5 text-foreground border-t border-border align-top" {...props} />,
+                          p: ({node, ...props}) => <p className="mb-4 last:mb-0 text-base" {...props} />,
+                          h1: ({node, ...props}) => <h1 className="text-3xl font-bold mt-6 mb-3 pb-2 border-b border-border" {...props} />,
+                          h2: ({node, ...props}) => <h2 className="text-2xl font-semibold mt-5 mb-2.5 pb-1.5 border-b border-border" {...props} />,
                           h3: ({node, ...props}) => <h3 className="text-xl font-semibold mt-4 mb-2" {...props} />,
-                          ul: ({node, ...props}) => <ul className="list-disc pl-6 mb-4 space-y-1" {...props} />,
-                          ol: ({node, ...props}) => <ol className="list-decimal pl-6 mb-4 space-y-1" {...props} />,
+                          ul: ({node, ...props}) => <ul className="list-disc pl-6 mb-4 space-y-1.5 text-base" {...props} />,
+                          ol: ({node, ...props}) => <ol className="list-decimal pl-6 mb-4 space-y-1.5 text-base" {...props} />,
                           li: ({node, ...props}) => <li className="mb-1" {...props} />,
-                          blockquote: ({node, ...props}) => <blockquote className="pl-4 border-l-4 border-accent italic text-muted-foreground my-4" {...props} />,
+                          blockquote: ({node, ...props}) => <blockquote className="pl-4 border-l-4 border-accent italic text-muted-foreground my-4 py-1" {...props} />,
                           code: ({node, inline, className, children, ...props}) => {
                             const match = /language-(\w+)/.exec(className || '')
                             return !inline && match ? (
-                              <pre className="bg-muted p-3 rounded-md overflow-x-auto my-4 text-sm"><code className={className} {...props}>{children}</code></pre>
+                              <pre className="bg-muted p-3.5 rounded-md overflow-x-auto my-4 text-sm shadow-sm"><code className={className} {...props}>{children}</code></pre>
                             ) : (
-                              <code className="bg-muted/70 px-1 py-0.5 rounded text-sm font-roboto" {...props}>{children}</code>
+                              <code className="bg-muted/70 px-1.5 py-0.5 rounded text-sm font-mono text-foreground" {...props}>{children}</code>
                             )
                           }
                         }}
@@ -241,24 +242,24 @@ export default function AIAssistantPage() {
                 <Separator className="my-6" />
 
                 <div>
-                  <h3 className="text-xl font-semibold mb-4 text-foreground flex items-center">
-                    <Globe className="mr-2 h-5 w-5 text-primary" /> Sumber Referensi yang Disarankan
+                  <h3 className="text-xl font-semibold mb-5 text-foreground flex items-center">
+                    <Globe className="mr-2.5 h-5 w-5 text-primary" /> Sumber Referensi yang Disarankan
                   </h3>
                   {generatedMaterial.suggestedSources.length > 0 ? (
                     <div className="space-y-4">
                       {generatedMaterial.suggestedSources.map((source, index) => {
                         const IconComponent = sourceIcons[source.type] || FileText;
                         return (
-                            <Card key={index} className="p-4 bg-card shadow-md hover:shadow-lg transition-shadow duration-200 rounded-md">
+                            <Card key={index} className="p-4 bg-card shadow-md hover:shadow-lg transition-shadow duration-200 rounded-md border-border/70">
                                 <div className="flex items-start gap-4">
-                                    <IconComponent className="h-7 w-7 text-accent flex-shrink-0 mt-1" />
+                                    <IconComponent className="h-7 w-7 text-accent flex-shrink-0 mt-1.5" />
                                     <div className="flex-grow">
                                     <h4 className="font-semibold text-lg text-primary">{source.title}</h4>
                                     <p className="text-sm text-muted-foreground capitalize">Jenis: {source.type}</p>
                                     {source.authorOrPublisher && <p className="text-sm text-muted-foreground">Penulis/Penerbit: {source.authorOrPublisher}</p>}
-                                    {source.description && <p className="text-base mt-1.5 text-foreground/90">{source.description}</p>}
+                                    {source.description && <p className="text-base mt-2 text-foreground/90">{source.description}</p>}
                                     {source.url && (
-                                        <Button variant="link" size="sm" asChild className="p-0 h-auto mt-2 text-base text-accent hover:text-accent/80">
+                                        <Button variant="link" size="sm" asChild className="p-0 h-auto mt-2.5 text-base text-accent hover:text-accent/80 font-medium">
                                         <a href={source.url} target="_blank" rel="noopener noreferrer">
                                             Kunjungi Sumber <ExternalLink className="ml-1.5 h-4 w-4" />
                                         </a>
@@ -271,17 +272,22 @@ export default function AIAssistantPage() {
                       })}
                     </div>
                   ) : (
-                    <p className="text-base text-muted-foreground">AI tidak menyarankan sumber referensi untuk materi ini.</p>
+                    <Alert variant="default" className="border-primary/30 shadow-sm rounded-md">
+                        <MessageSquareWarning className="h-5 w-5 text-primary" />
+                        <AlertTitle className="font-semibold text-primary">Tidak Ada Sumber</AlertTitle>
+                        <AlertDescription className="text-base">
+                            AI tidak menyarankan sumber referensi spesifik untuk materi ini. Anda dapat mencari sumber secara mandiri.
+                        </AlertDescription>
+                    </Alert>
                   )}
                 </div>
               </CardContent>
-              <CardFooter className="p-6 border-t">
+              <CardFooter className="p-6 border-t bg-muted/20 rounded-b-lg">
                  <Alert variant="default" className="border-primary/50 shadow-sm rounded-md">
                     <Search className="h-5 w-5 text-primary" />
-                    <AlertTitle className="font-semibold text-primary">Verifikasi & Sesuaikan</AlertTitle>
+                    <AlertTitle className="font-semibold text-primary">Verifikasi & Sesuaikan Materi</AlertTitle>
                     <AlertDescription className="text-base">
-                        Selalu verifikasi keakuratan dan relevansi materi serta sumber yang disarankan AI sebelum digunakan dalam pengajaran. Konten ini adalah draf awal.
-                        Pastikan teks Arab (jika ada) ditampilkan dengan benar, termasuk harakat dan arah baca (RTL).
+                        Konten yang dihasilkan AI adalah draf awal. Selalu verifikasi keakuratan, kelengkapan, dan relevansi materi serta sumber yang disarankan sebelum digunakan dalam proses pembelajaran. Pastikan teks Arab (jika ada) ditampilkan dengan benar, termasuk harakat dan arah baca (RTL).
                     </AlertDescription>
                 </Alert>
               </CardFooter>
@@ -289,15 +295,15 @@ export default function AIAssistantPage() {
           )}
           
           {!generatedMaterial && !isGeneratingMaterial && (
-            <Card className="shadow-lg h-full flex flex-col items-center justify-center text-center p-8 bg-muted/20 border-2 border-dashed rounded-lg">
-                <Sparkles className="h-16 w-16 text-muted-foreground/50 mb-4" />
-                <CardTitle className="text-2xl font-semibold text-muted-foreground">Hasil Materi Akan Muncul di Sini</CardTitle>
-                <CardDescription className="text-base text-muted-foreground mt-2 max-w-md">
-                    Isi parameter di sebelah kiri dan klik "Buat Materi Ajar" untuk melihat keajaiban AI dalam menyusun konten pembelajaran untuk Anda.
+            <Card className="shadow-lg h-full flex flex-col items-center justify-center text-center p-8 md:p-12 bg-muted/30 border-2 border-dashed border-border/70 rounded-lg min-h-[400px]">
+                <Sparkles className="h-16 w-16 md:h-20 md:w-20 text-muted-foreground/40 mb-5" />
+                <CardTitle className="text-2xl md:text-3xl font-semibold text-muted-foreground">Hasil Materi Akan Tampil di Sini</CardTitle>
+                <CardDescription className="text-base md:text-lg text-muted-foreground mt-3 max-w-md">
+                    Isi parameter di sebelah kiri dan klik "Buat Materi Ajar" untuk melihat bagaimana AI dapat membantu Anda menyusun konten pembelajaran.
                 </CardDescription>
-                 <div className="mt-6 space-y-2 text-sm text-muted-foreground text-left">
-                    <p className="flex items-center"><TableIcon className="mr-2 h-4 w-4 text-accent"/> AI dapat menyertakan tabel jika relevan.</p>
-                    <p className="flex items-center"><Languages className="mr-2 h-4 w-4 text-accent"/> Materi Bahasa Arab akan menyertakan harakat.</p>
+                 <div className="mt-8 space-y-2.5 text-sm text-muted-foreground text-left">
+                    <p className="flex items-center"><TableIcon className="mr-2.5 h-4 w-4 text-accent"/> AI dapat menyertakan tabel jika relevan dengan topik.</p>
+                    <p className="flex items-center"><Languages className="mr-2.5 h-4 w-4 text-accent"/> Materi Bahasa Arab akan menyertakan harakat (jika diminta).</p>
                  </div>
             </Card>
           )}
@@ -315,12 +321,15 @@ const style = `
   .markdown-content [dir="rtl"] {
     direction: rtl;
     text-align: right; /* Or start if you prefer */
-    font-family: 'Noto Naskh Arabic', ' Amiri', serif; /* Example Arabic fonts */
+    font-family: 'Noto Naskh Arabic', 'Amiri', serif; /* Example Arabic fonts */
   }
-  .prose table { width: 100%; }
-  .prose th, .prose td { border: 1px solid hsl(var(--border)); padding: 0.5em 0.75em; }
-  .prose thead { background-color: hsl(var(--muted)); }
-  .prose thead th { font-weight: 600; }
+  /* Additional responsive table styling if needed */
+  .prose table { width: 100%; display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; } 
+  .prose th, .prose td { white-space: nowrap; } /* Prevent text wrapping in table cells to force scroll */
+  @media (min-width: 768px) { /* For larger screens, allow normal table behavior */
+    .prose table { display: table; overflow-x: visible; }
+    .prose th, .prose td { white-space: normal; }
+  }
 `;
 if (typeof window !== 'undefined') {
   const styleSheet = document.createElement("style");

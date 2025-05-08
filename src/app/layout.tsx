@@ -1,20 +1,18 @@
 
-
 import type { Metadata } from 'next';
-import { Roboto } from 'next/font/google'; // Changed font
+import { Plus_Jakarta_Sans } from 'next/font/google'; // Changed font
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { QueryClientProvider } from '@/lib/query-provider';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { LogProvider } from '@/contexts/LogContext';
-import { CurriculumProvider } from '@/contexts/CurriculumContext'; // Added CurriculumProvider
+import { CurriculumProvider } from '@/contexts/CurriculumContext';
 
-// Instantiate Roboto font
-const roboto = Roboto({
+const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ['latin'],
-  variable: '--font-roboto', // CSS variable for Roboto
-  weight: ['300', '400', '500', '700', '900'] // Common weights for Roboto
+  variable: '--font-plus-jakarta-sans', 
+  weight: ['300', '400', '500', '600', '700', '800'] // Common weights for Plus Jakarta Sans
 });
 
 export const metadata: Metadata = {
@@ -29,13 +27,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id" suppressHydrationWarning>
-      {/* Applied the new Roboto font variable to the body */}
-      <body className={`${roboto.variable} antialiased`}>
+      <body className={`${plusJakartaSans.variable} antialiased`}>
         <ThemeProvider>
           <QueryClientProvider>
             <LogProvider> 
               <AuthProvider>
-                <CurriculumProvider> {/* Added CurriculumProvider */}
+                <CurriculumProvider> 
                   {children}
                   <Toaster />
                 </CurriculumProvider>
@@ -47,4 +44,3 @@ export default function RootLayout({
     </html>
   );
 }
-

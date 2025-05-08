@@ -15,16 +15,13 @@ interface MobileNavItemData {
   roles?: UserRole[]; 
 }
 
-// Define the specific items for the bottom nav, prioritized
 const mobileNavItemsData: MobileNavItemData[] = [
   { href: "/dashboard", label: "Dasbor", icon: LayoutDashboard, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/lesson-plans", label: "RPP", icon: BookOpenText, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/annual-programs", label: "PROTA", icon: CalendarDays, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/semester-programs", label: "Promes", icon: CalendarClock, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/ai-assistant", label: "AI", icon: Sparkles, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"] },
-  // Settings and User Management are less frequently accessed on the go, so they are implicitly excluded by the slice if the above fill up the 5 slots.
-  { href: "/admin/user-management", label: "Pengguna", icon: Users, roles: ["Admin", "TataUsaha"] }, 
-  { href: "/settings", label: "Pengaturan", icon: SettingsIcon, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+  { href: "/settings", label: "Atur", icon: SettingsIcon, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] }, // Kept short for mobile
 ];
 
 
@@ -32,11 +29,12 @@ export function MobileBottomNav() {
   const pathname = usePathname();
   const { user } = useAuth();
 
-  // Filter items based on user role and limit to 5 items
   const visibleNavItems = user 
     ? mobileNavItemsData
         .filter(item => !item.roles || item.roles.includes(user.role))
-        .slice(0, 5) // Ensure max 5 items
+        // Prioritize core features. If more than 5, "Settings" might be pushed out.
+        // A common pattern is 3-5 main items.
+        .slice(0, 5) 
     : [];
 
   if (!user || visibleNavItems.length === 0) {
@@ -44,7 +42,7 @@ export function MobileBottomNav() {
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 flex h-16 items-stretch justify-around border-t border-border bg-background shadow-t-lg sm:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 flex h-16 items-stretch justify-around border-t border-border bg-background/95 backdrop-blur-md shadow-t-xl sm:hidden">
       {visibleNavItems.map((item) => {
         const isActive = pathname.startsWith(item.href);
         return (
@@ -52,12 +50,12 @@ export function MobileBottomNav() {
             key={item.href}
             href={item.href}
             className={cn(
-              "flex flex-col items-center justify-center p-1 rounded-md text-xs font-medium transition-colors flex-1 text-center", 
+              "flex flex-col items-center justify-center p-1 rounded-md text-[10px] font-medium transition-colors flex-1 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2", 
               isActive ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
             )}
             aria-current={isActive ? "page" : undefined}
           >
-            <item.icon className={cn("h-5 w-5 mb-0.5", isActive ? "text-primary" : "")} />
+            <item.icon className={cn("h-[22px] w-[22px] mb-0.5", isActive ? "text-primary" : "")} />
             {item.label}
           </Link>
         );
