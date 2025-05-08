@@ -4,99 +4,191 @@
 
 @layer base {
   :root {
-    /* Cyber Dark Theme (applied as default/light for a consistent dark experience) */
-    --background: 240 15% 7%; /* Deep dark blue/purple */
-    --foreground: 190 40% 88%; /* Light cyan/gray for text */
+    /* Default Light Theme: Calm Blue */
+    --background: 0 0% 100%; /* White */
+    --foreground: 210 29% 30%; /* Dark Slate Blue */
 
-    --card: 240 15% 10%; /* Slightly lighter dark for cards */
-    --card-foreground: 190 40% 88%;
+    --card: 0 0% 98%; /* Very Light Gray */
+    --card-foreground: 210 29% 30%;
 
-    --popover: 240 15% 9%; /* Dark popover */
-    --popover-foreground: 190 40% 88%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 29% 30%;
 
-    --primary: 190 90% 55%; /* Bright Cyan/Electric Blue */
-    --primary-foreground: 240 10% 4%; /* Very dark for contrast on primary */
+    --primary: 207 68% 53%; /* Calm Blue */
+    --primary-foreground: 0 0% 100%; /* White */
 
-    --secondary: 260 20% 20%; /* Muted dark purple/blue - slightly darker */
-    --secondary-foreground: 190 30% 80%; /* Lighter cyan/gray for contrast */
+    --secondary: 200 17% 94%; /* Light Gray from proposal */
+    --secondary-foreground: 210 29% 30%; /* Dark Slate Blue */
 
-    --muted: 240 15% 18%; /* Darker muted tone - slightly lighter for better visibility */
-    --muted-foreground: 220 10% 55%; /* Muted gray text - slightly lighter */
+    --muted: 200 17% 90%; /* Slightly darker light gray */
+    --muted-foreground: 210 15% 45%; /* Muted Slate Blue */
 
-    --accent: 320 80% 60%; /* Bright Magenta/Pink */
-    --accent-foreground: 0 0% 100%; /* White or very light for contrast on accent */
+    --accent: 145 63% 49%; /* Green */
+    --accent-foreground: 0 0% 100%; /* White */
 
-    --destructive: 0 72% 51%; /* Red for destructive actions */
-    --destructive-foreground: 0 0% 98%; /* Light foreground for destructive */
+    --destructive: 0 72% 51%; /* Red */
+    --destructive-foreground: 0 0% 100%; /* White */
 
-    --border: 240 15% 15%; /* Muted border color - slightly darker */
-    --input: 240 15% 12%; /* Dark input background */
-    --ring: 320 80% 60%; /* Accent color for focus rings for more pop */
+    --border: 200 17% 88%; /* Light Gray Border */
+    --input: 200 17% 96%; /* Lighter Gray Input */
+    --ring: 207 68% 53%; /* Calm Blue for focus rings */
 
     --radius: 0.5rem;
 
-    /* Sidebar specific theme variables - Cyber Dark */
-    --sidebar-background: 240 15% 5%; /* Even darker for sidebar */
-    --sidebar-foreground: 190 70% 80%;  /* Cyan-ish text for sidebar */
-    --sidebar-primary: 320 80% 60%;     /* Magenta for active/primary elements in sidebar */
+    /* Sidebar for Default Light Theme */
+    --sidebar-background: 200 17% 94%; /* Light Gray */
+    --sidebar-foreground: 210 29% 30%; /* Dark Slate Blue */
+    --sidebar-primary: 207 68% 53%;    /* Calm Blue */
     --sidebar-primary-foreground: 0 0% 100%; /* White */
-    --sidebar-accent: 240 15% 15%;      /* Hover/accent color for sidebar items */
-    --sidebar-accent-foreground: 190 80% 85%; /* Lighter cyan on hover */
-    --sidebar-border: 240 15% 10%;      /* Border within sidebar */
-    --sidebar-ring: 320 80% 60%;        /* Magenta for focus rings in sidebar */
+    --sidebar-accent: 200 17% 88%;      /* Slightly darker Light Gray for hover */
+    --sidebar-accent-foreground: 207 68% 53%; /* Calm Blue on hover */
+    --sidebar-border: 200 17% 82%;      /* Border within sidebar */
+    --sidebar-ring: 207 68% 53%;        /* Calm Blue for focus rings */
 
-     --chart-1: 190 90% 55%; /* Cyan */
-     --chart-2: 320 80% 60%; /* Magenta */
-     --chart-3: 120 70% 55%; /* Lime Green */
-     --chart-4: 270 70% 65%; /* Purple */
-     --chart-5: 30 90% 60%;  /* Orange */
+    --chart-1: 207 68% 53%; /* Calm Blue */
+    --chart-2: 145 63% 49%; /* Green */
+    --chart-3: 39 90% 51%;  /* Orange (example) */
+    --chart-4: 270 70% 65%; /* Purple (example) */
+    --chart-5: 0 72% 51%;   /* Red (example) */
   }
 
   .dark {
-    /* Cyber Dark Theme (can be identical to :root or slightly tweaked if needed) */
-    --background: 240 15% 7%;
-    --foreground: 190 40% 88%;
+    /* Default Dark Theme: Cyber Dark */
+    --background: 240 15% 7%; 
+    --foreground: 190 40% 88%; 
 
-    --card: 240 15% 10%;
+    --card: 240 15% 10%; 
     --card-foreground: 190 40% 88%;
 
-    --popover: 240 15% 9%;
+    --popover: 240 15% 9%; 
     --popover-foreground: 190 40% 88%;
 
-    --primary: 190 90% 55%;
-    --primary-foreground: 240 10% 4%;
+    --primary: 190 90% 55%; 
+    --primary-foreground: 240 10% 4%; 
 
-    --secondary: 260 20% 20%;
-    --secondary-foreground: 190 30% 80%;
+    --secondary: 260 20% 20%; 
+    --secondary-foreground: 190 30% 80%; 
 
-    --muted: 240 15% 18%;
-    --muted-foreground: 220 10% 55%;
+    --muted: 240 15% 18%; 
+    --muted-foreground: 220 10% 55%; 
 
-    --accent: 320 80% 60%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 320 80% 60%; 
+    --accent-foreground: 0 0% 100%; 
 
-    --destructive: 0 63% 45%; /* Slightly adjusted for dark */
+    --destructive: 0 63% 45%; 
     --destructive-foreground: 0 0% 98%;
 
     --border: 240 15% 15%;
-    --input: 240 15% 12%;
-    --ring: 320 80% 60%;
+    --input: 240 15% 12%; 
+    --ring: 320 80% 60%; 
 
-    /* Dark Sidebar specific theme variables - can be same as :root for consistency */
-    --sidebar-background: 240 15% 5%;
-    --sidebar-foreground: 190 70% 80%;
-    --sidebar-primary: 320 80% 60%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 15% 15%;
-    --sidebar-accent-foreground: 190 80% 85%;
-    --sidebar-border: 240 15% 10%;
-    --sidebar-ring: 320 80% 60%;
+    /* Sidebar for Cyber Dark Theme */
+    --sidebar-background: 240 15% 5%; 
+    --sidebar-foreground: 190 70% 80%;  
+    --sidebar-primary: 320 80% 60%;     
+    --sidebar-primary-foreground: 0 0% 100%; 
+    --sidebar-accent: 240 15% 15%;      
+    --sidebar-accent-foreground: 190 80% 85%; 
+    --sidebar-border: 240 15% 10%;      
+    --sidebar-ring: 320 80% 60%;    
 
     --chart-1: 190 80% 50%;
     --chart-2: 320 70% 55%;
     --chart-3: 120 60% 50%;
     --chart-4: 270 60% 60%;
     --chart-5: 30 80% 55%;
+  }
+
+  .theme-ocean-breeze {
+    --background: 180 10% 96%; /* Very light cool gray */
+    --foreground: 210 29% 30%; /* Dark Slate Blue */
+
+    --card: 0 0% 100%; /* White */
+    --card-foreground: 210 29% 30%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 29% 30%;
+
+    --primary: 206 67% 62%; /* Lighter Blue */
+    --primary-foreground: 0 0% 100%; /* White */
+
+    --secondary: 206 44% 75%; /* Soft Blue-Gray */
+    --secondary-foreground: 210 29% 30%;
+
+    --muted: 206 44% 85%; /* Lighter Soft Blue-Gray */
+    --muted-foreground: 210 29% 40%;
+
+    --accent: 168 50% 55%; /* Turquoise */
+    --accent-foreground: 0 0% 100%; /* White */
+
+    --destructive: 0 72% 51%; 
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 206 44% 80%; /* Border for soft blue-gray */
+    --input: 0 0% 100%; /* White input */
+    --ring: 206 67% 62%; /* Lighter Blue for rings */
+
+    /* Sidebar for Ocean Breeze */
+    --sidebar-background: 206 44% 90%; /* Light Soft Blue-Gray */
+    --sidebar-foreground: 210 29% 30%;
+    --sidebar-primary: 206 67% 62%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 206 44% 82%;
+    --sidebar-accent-foreground: 206 67% 62%;
+    --sidebar-border: 206 44% 78%;
+    --sidebar-ring: 206 67% 62%;
+
+    --chart-1: 206 67% 62%; 
+    --chart-2: 168 50% 55%; 
+    --chart-3: 39 90% 51%;  
+    --chart-4: 270 70% 65%; 
+    --chart-5: 0 72% 51%;
+  }
+
+  .theme-forest-haven {
+    --background: 165 19% 12%; /* Very Dark Greenish-Gray */
+    --foreground: 195 10% 92%; /* Light Grayish-Cyan */
+
+    --card: 165 19% 15%; /* Slightly Lighter Dark Greenish-Gray */
+    --card-foreground: 195 10% 92%;
+
+    --popover: 165 19% 14%;
+    --popover-foreground: 195 10% 92%;
+
+    --primary: 145 60% 42%; /* Emerald Green */
+    --primary-foreground: 0 0% 100%; /* White */
+
+    --secondary: 210 29% 21%; /* Dark Slate Blue */
+    --secondary-foreground: 195 10% 85%;
+
+    --muted: 210 29% 28%; /* Muted Dark Slate Blue */
+    --muted-foreground: 195 10% 65%;
+
+    --accent: 39 90% 51%; /* Orange */
+    --accent-foreground: 0 0% 0%; /* Black for contrast on orange */
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 210 29% 25%; /* Border for dark slate */
+    --input: 210 29% 18%; /* Darker input */
+    --ring: 145 60% 42%; /* Emerald Green for rings */
+    
+    /* Sidebar for Forest Haven */
+    --sidebar-background: 165 19% 10%; /* Darker Greenish-Gray */
+    --sidebar-foreground: 195 10% 92%;
+    --sidebar-primary: 145 60% 42%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 165 19% 20%;
+    --sidebar-accent-foreground: 145 60% 42%;
+    --sidebar-border: 165 19% 14%;
+    --sidebar-ring: 145 60% 42%;
+    
+    --chart-1: 145 60% 42%; 
+    --chart-2: 39 90% 51%; 
+    --chart-3: 190 80% 50%; 
+    --chart-4: 270 60% 60%; 
+    --chart-5: 0 63% 45%;
   }
 }
 
