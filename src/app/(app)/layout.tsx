@@ -2,7 +2,7 @@
 "use client";
 import type { PropsWithChildren } from 'react';
 import { useEffect, useMemo } from 'react';
-import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset } from '@/components/ui/sidebar';
+import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset, SidebarRail } from '@/components/ui/sidebar';
 import { AppLogo } from '@/components/layout/AppLogo';
 import { UserProfile } from '@/components/layout/UserProfile';
 import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, ShieldCheck, Activity, Users, Info } from 'lucide-react';
@@ -52,16 +52,13 @@ export default function AppLayout({ children }: PropsWithChildren) {
         !item.isHiddenFromSidebar &&
         (item.isSystemSetting === false || (item.isSystemSetting === true && user.role === 'Admin') || item.roles.includes(user.role) )
     ).sort((a,b) => { 
-        // Sort system settings to the bottom, but regular settings (non-system) before them.
-        if (a.isSystemSetting && !b.isSystemSetting) return 1; // a (system) goes after b (non-system)
-        if (!a.isSystemSetting && b.isSystemSetting) return -1; // a (non-system) goes before b (system)
+        if (a.isSystemSetting && !b.isSystemSetting) return 1; 
+        if (!a.isSystemSetting && b.isSystemSetting) return -1; 
         
-        // If both are system settings or both are not, keep original order or sort alphabetically (optional)
-        // For now, keep original for non-system items, and system settings together
         if (a.isSystemSetting && b.isSystemSetting) {
-            return a.label.localeCompare(b.label); // Alphabetical for system settings
+            return a.label.localeCompare(b.label); 
         }
-        if (a.href === "/settings") return 1; // Pengaturan Akun specifically to the end of non-system items
+        if (a.href === "/settings") return 1; 
         if (b.href === "/settings") return -1;
 
         return 0;
@@ -70,7 +67,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
 
    useEffect(() => {
     if (!loading && isAuthenticated && user) {
-      const currentNavItem = allNavItems.find(item => pathname.startsWith(item.href) && item.href !== '/'); // Ensure exact match or startsWith for subpages
+      const currentNavItem = allNavItems.find(item => pathname.startsWith(item.href) && item.href !== '/'); 
       
       if (currentNavItem) {
         if (!currentNavItem.roles.includes(user.role)) {
@@ -84,8 +81,6 @@ export default function AppLayout({ children }: PropsWithChildren) {
             router.push("/dashboard");
          }
       }
-      // Allow access if no specific nav item matches (e.g. deeper settings pages not in nav)
-      // but ensure the base segment is accessible if it exists (handled above).
     }
   }, [loading, isAuthenticated, user, pathname, router, logout]);
 
@@ -99,7 +94,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
   }
   
   return (
-      <SidebarProvider defaultOpen={true}>
+      <SidebarProvider>
         <Sidebar collapsible="icon" variant="sidebar" side="left" className="border-r shadow-xl bg-sidebar text-sidebar-foreground">
           <SidebarHeader className="border-b border-sidebar-border p-3 shadow-sm">
             <AppLogo />
@@ -130,7 +125,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
         </Sidebar>
         <SidebarInset>
           <MobileBottomNav />
-          <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8 pb-24 sm:pb-8 flex flex-col min-h-screen bg-background text-foreground"> {/* Adjusted padding */}
+          <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8 pb-24 sm:pb-8 flex flex-col min-h-screen bg-background text-foreground"> 
             <div className="flex-grow">
                 {children}
             </div>
@@ -142,3 +137,4 @@ export default function AppLayout({ children }: PropsWithChildren) {
       </SidebarProvider>
   );
 }
+
