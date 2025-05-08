@@ -29,6 +29,7 @@ const initialSemesterPrograms: SemesterProgram[] = [
     ],
     createdAt: new Date("2024-07-10T00:00:00Z").toISOString(),
     updatedAt: new Date("2024-07-12T00:00:00Z").toISOString(),
+    createdByUserId: "waka-promes1"
   },
   {
     id: "promes2",
@@ -46,6 +47,7 @@ const initialSemesterPrograms: SemesterProgram[] = [
     ],
     createdAt: new Date("2024-07-11T00:00:00Z").toISOString(),
     updatedAt: new Date("2024-07-15T00:00:00Z").toISOString(),
+    createdByUserId: "admin-promes2"
   },
 ];
 
@@ -58,9 +60,11 @@ export default function SemesterProgramsPage() {
 
   useEffect(() => {
     setIsClient(true);
+    // In a real app, fetch data. For KepalaSekolah/WakaKurikulum, fetch all.
   }, []);
 
   // Role-based permissions
+  // PROTA/Promes are typically managed by Admin/WakaKurikulum. Gurus view.
   const canCreate = user && (user.role === "Admin" || user.role === "WakaKurikulum");
   const canEdit = user && (user.role === "Admin" || user.role === "WakaKurikulum");
   const canDelete = user && (user.role === "Admin" || user.role === "WakaKurikulum");
@@ -68,18 +72,22 @@ export default function SemesterProgramsPage() {
 
 
   const handleCreateOrUpdate = (itemData: AnyCurriculumItem) => {
-     if (!canCreate && !editingItem) {
-        alert("Anda tidak memiliki izin untuk membuat item baru.");
-        return;
+    const newItem = itemData as SemesterProgram;
+     if (!newItem.createdByUserId && user) { // Assign creator if new
+        newItem.createdByUserId = user.id;
     }
-    if (!canEdit && editingItem) {
+
+    if (editingItem) {
+      if (!canEdit) {
         alert("Anda tidak memiliki izin untuk mengedit item ini.");
         return;
-    }
-    const newItem = itemData as SemesterProgram;
-    if (editingItem) {
+      }
       setSemesterPrograms(semesterPrograms.map(sp => sp.id === newItem.id ? newItem : sp));
     } else {
+       if (!canCreate) {
+        alert("Anda tidak memiliki izin untuk membuat item baru.");
+        return;
+      }
       setSemesterPrograms([newItem, ...semesterPrograms]);
     }
     setEditingItem(null);
@@ -137,7 +145,11 @@ export default function SemesterProgramsPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Program Semester (Promes)</CardTitle>
-          <CardDescription>Rincikan rencana pengajaran Anda untuk setiap semester sesuai Kurikulum Merdeka. Atur topik dan kegiatan mingguan.</CardDescription>
+          <CardDescription>
+            Rincikan rencana pengajaran Anda untuk setiap semester. 
+            {user.role === "KepalaSekolah" || user.role === "WakaKurikulum" ? " Anda dapat melihat semua Promes." : ""}
+            {user.role === "Guru" ? " Lihat Promes yang telah disusun." : ""}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-2 mb-4 items-center">
@@ -179,8 +191,8 @@ export default function SemesterProgramsPage() {
             onView={handleView}
             onEdit={canEdit ? handleEdit : undefined}
             onDelete={canDelete ? handleDelete : undefined}
-            canEdit={!!canEdit}
-            canDelete={!!canDelete}
+            canEdit={() => canEdit} // Pass permission check function (simplified for Promes)
+            canDelete={() => canDelete} // Pass permission check function (simplified for Promes)
             itemTypeForExport="Promes"
           />
         </CardContent>

@@ -16,12 +16,11 @@ import { useToast } from "@/hooks/use-toast";
 interface CurriculumDataTableProps {
   items: AnyCurriculumItem[];
   onView: (item: AnyCurriculumItem) => void;
-  onEdit?: (item: AnyCurriculumItem) => void; // Made optional
-  onDelete?: (item: AnyCurriculumItem) => void; // Made optional
-  canCreate?: boolean; // To control general create/import actions, though handled by parent
-  canEdit: boolean;
-  canDelete: boolean;
-  itemTypeForExport?: 'RPP' | 'PROTA' | 'Promes'; // To guide export logic
+  onEdit?: (item: AnyCurriculumItem) => void;
+  onDelete?: (item: AnyCurriculumItem) => void;
+  canEdit: (item: AnyCurriculumItem) => boolean; // Now a function
+  canDelete: (item: AnyCurriculumItem) => boolean; // Now a function
+  itemTypeForExport?: 'RPP' | 'PROTA' | 'Promes';
 }
 
 export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, canDelete, itemTypeForExport }: CurriculumDataTableProps) {
@@ -123,6 +122,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
             <TableHead>Jenis</TableHead>
             <TableHead className="min-w-[150px]">Mata Pelajaran</TableHead>
             <TableHead className="min-w-[150px]">Jenjang/Kelas</TableHead>
+            {/* <TableHead className="min-w-[120px]">Dibuat Oleh</TableHead> */}
             <TableHead className="min-w-[180px]">Terakhir Diperbarui</TableHead>
             <TableHead className="text-right min-w-[100px]">Aksi</TableHead>
           </TableRow>
@@ -145,6 +145,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
               </TableCell>
               <TableCell>{item.subject}</TableCell>
               <TableCell>{item.gradeLevel}</TableCell>
+              {/* <TableCell>{item.createdByUserId || 'N/A'}</TableCell> */}
               <TableCell>{isClient ? format(new Date(item.updatedAt), "PPp", { locale: indonesianLocale }) : item.updatedAt}</TableCell>
               <TableCell className="text-right">
                 <DropdownMenu>
@@ -158,7 +159,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
                     <DropdownMenuItem onClick={() => onView(item)}>
                       <Eye className="mr-2 h-4 w-4" /> Lihat
                     </DropdownMenuItem>
-                    {canEdit && onEdit && (
+                    {canEdit(item) && onEdit && (
                       <DropdownMenuItem onClick={() => onEdit(item)}>
                         <FilePenLine className="mr-2 h-4 w-4" /> Edit
                       </DropdownMenuItem>
@@ -167,7 +168,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
                       {isExporting[item.id] ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />} 
                       Ekspor ke Teks
                     </DropdownMenuItem>
-                    {canDelete && onDelete && (
+                    {canDelete(item) && onDelete && (
                       <DropdownMenuItem onClick={() => onDelete(item)} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
                         <Trash2 className="mr-2 h-4 w-4" /> Hapus
                       </DropdownMenuItem>

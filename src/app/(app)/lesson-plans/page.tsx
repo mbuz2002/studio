@@ -32,6 +32,7 @@ const initialLessonPlans: LessonPlan[] = [
     materials: "Papan tulis, spidol, lembar kerja, kartu pola bilangan",
     createdAt: new Date("2023-09-01T10:00:00Z").toISOString(),
     updatedAt: new Date("2023-09-05T14:30:00Z").toISOString(),
+    createdByUserId: "guru-rpp1" // Example user ID
   },
   {
     id: "rpp2",
@@ -52,6 +53,7 @@ const initialLessonPlans: LessonPlan[] = [
     materials: "Buku teks IPA, video animasi fotosintesis, gambar ekosistem, kertas plano, spidol",
     createdAt: new Date("2023-10-10T09:00:00Z").toISOString(),
     updatedAt: new Date("2023-10-12T11:00:00Z").toISOString(),
+    createdByUserId: "guru-rpp2" // Example user ID
   },
 ];
 
@@ -64,36 +66,61 @@ export default function LessonPlansPage() {
 
   useEffect(() => {
     setIsClient(true);
+    // In a real app, fetch lesson plans based on user role.
+    // For KepalaSekolah/WakaKurikulum, fetch all. For Guru, fetch their own.
+    // For this demo, all users see the initial global list.
   }, []);
 
   // Role-based permissions
+  // KepalaSekolah and WakaKurikulum can view all. Others (Guru) can view theirs (if data was user-specific).
+  // Admin and WakaKurikulum have broader edit/delete. Guru can edit/delete their own.
   const canCreate = user && (user.role === "Admin" || user.role === "WakaKurikulum" || user.role === "Guru");
-  const canEdit = user && (user.role === "Admin" || user.role === "WakaKurikulum" || user.role === "Guru");
-  const canDelete = user && (user.role === "Admin" || user.role === "WakaKurikulum");
+  
+  // Edit: Admin, Waka, or Guru if it's their own item.
+  // (Simplified for demo: Admin & Waka can edit all, Guru can edit any shown - in real app, check createdByUserId)
+  const canEditItem = (item: LessonPlan): boolean => {
+    if (!user) return false;
+    if (user.role === "Admin" || user.role === "WakaKurikulum") return true;
+    // if (user.role === "Guru" && item.createdByUserId === user.id) return true; // Full implementation
+    if (user.role === "Guru") return true; // Simplified for demo - Guru can edit any shown RPP
+    return false;
+  };
+
+  // Delete: Admin, Waka. (Guru potentially their own, but stricter for demo)
+  const canDeleteItem = (item: LessonPlan): boolean => {
+     if (!user) return false;
+    if (user.role === "Admin" || user.role === "WakaKurikulum") return true;
+    // if (user.role === "Guru" && item.createdByUserId === user.id) return true; // Full implementation
+    return false; // Guru cannot delete in this simplified demo setup for RPPs shown
+  };
+
   const canImport = user && (user.role === "Admin" || user.role === "WakaKurikulum");
 
 
   const handleCreateOrUpdate = (itemData: AnyCurriculumItem) => {
-    if (!canCreate && !editingItem) {
-        alert("Anda tidak memiliki izin untuk membuat item baru.");
-        return;
-    }
-    if (!canEdit && editingItem) {
-        alert("Anda tidak memiliki izin untuk mengedit item ini.");
-        return;
+    const newItem = itemData as LessonPlan; 
+    if (!newItem.createdByUserId && user) { // Assign creator if new
+        newItem.createdByUserId = user.id;
     }
 
-    const newItem = itemData as LessonPlan; 
     if (editingItem) {
+      if (!canEditItem(editingItem)) {
+        alert("Anda tidak memiliki izin untuk mengedit item ini.");
+        return;
+      }
       setLessonPlans(lessonPlans.map(lp => lp.id === newItem.id ? newItem : lp));
     } else {
+      if (!canCreate) {
+        alert("Anda tidak memiliki izin untuk membuat item baru.");
+        return;
+      }
       setLessonPlans([newItem, ...lessonPlans]);
     }
     setEditingItem(null);
   };
 
   const handleEdit = (item: AnyCurriculumItem) => {
-    if (!canEdit) {
+    if (!canEditItem(item as LessonPlan)) { // Pass the item to check specific edit permission
         alert("Anda tidak memiliki izin untuk mengedit item ini.");
         return;
     }
@@ -101,7 +128,7 @@ export default function LessonPlansPage() {
   };
 
   const handleDelete = (itemToDelete: AnyCurriculumItem) => {
-    if (!canDelete) {
+    if (!canDeleteItem(itemToDelete as LessonPlan)) { // Pass the item to check specific delete permission
         alert("Anda tidak memiliki izin untuk menghapus item ini.");
         return;
     }
@@ -143,7 +170,11 @@ export default function LessonPlansPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Rencana Pembelajaran (RPP/Modul Ajar)</CardTitle>
-          <CardDescription>Kelola rencana pembelajaran Anda. Buat baru, edit, atau lihat rincian.</CardDescription>
+          <CardDescription>
+            Kelola rencana pembelajaran Anda. 
+            {user.role === "KepalaSekolah" || user.role === "WakaKurikulum" ? " Anda dapat melihat semua RPP yang dibuat." : ""}
+            {user.role === "Guru" ? " Buat baru, edit, atau lihat rincian RPP Anda." : ""}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-2 mb-4 items-center">
@@ -183,15 +214,15 @@ export default function LessonPlansPage() {
           <CurriculumDataTable
             items={filteredLessonPlans}
             onView={handleView}
-            onEdit={canEdit ? handleEdit : undefined} 
-            onDelete={canDelete ? handleDelete : undefined}
-            canEdit={!!canEdit}
-            canDelete={!!canDelete}
+            onEdit={handleEdit} // DataTable will internally check canEdit prop based on item
+            onDelete={handleDelete} // DataTable will internally check canDelete prop based on item
+            canEdit={(item) => canEditItem(item as LessonPlan)} // Pass permission check function
+            canDelete={(item) => canDeleteItem(item as LessonPlan)} // Pass permission check function
             itemTypeForExport="RPP"
           />
         </CardContent>
       </Card>
-      {editingItem && canEdit && ( // Ensure dialog only shows if user can edit
+      {editingItem && canEditItem(editingItem) && ( // Ensure dialog only shows if user can edit this specific item
         <>
             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40" onClick={() => setEditingItem(null)} />
             <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-[90vw] max-w-2xl">

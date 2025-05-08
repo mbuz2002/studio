@@ -30,6 +30,7 @@ const initialAnnualPrograms: AnnualProgram[] = [
     profilPelajarPancasilaFocus: ["Bernalar Kritis", "Kreatif"],
     createdAt: new Date("2024-07-01T00:00:00Z").toISOString(),
     updatedAt: new Date("2024-07-05T00:00:00Z").toISOString(),
+    createdByUserId: "waka-prota1"
   },
   {
     id: "prota2",
@@ -51,6 +52,7 @@ const initialAnnualPrograms: AnnualProgram[] = [
     profilPelajarPancasilaFocus: ["Gotong Royong", "Mandiri"],
     createdAt: new Date("2024-07-02T00:00:00Z").toISOString(),
     updatedAt: new Date("2024-07-06T00:00:00Z").toISOString(),
+    createdByUserId: "admin-prota2"
   },
 ];
 
@@ -63,27 +65,33 @@ export default function AnnualProgramsPage() {
 
   useEffect(() => {
     setIsClient(true);
+    // In a real app, fetch data. For KepalaSekolah/WakaKurikulum, fetch all.
   }, []);
 
   // Role-based permissions
+  // PROTA/Promes are typically managed by Admin/WakaKurikulum. Gurus view.
   const canCreate = user && (user.role === "Admin" || user.role === "WakaKurikulum");
   const canEdit = user && (user.role === "Admin" || user.role === "WakaKurikulum");
   const canDelete = user && (user.role === "Admin" || user.role === "WakaKurikulum");
   const canImport = user && (user.role === "Admin" || user.role === "WakaKurikulum");
 
   const handleCreateOrUpdate = (itemData: AnyCurriculumItem) => {
-    if (!canCreate && !editingItem) {
-        alert("Anda tidak memiliki izin untuk membuat item baru.");
-        return;
+    const newItem = itemData as AnnualProgram;
+     if (!newItem.createdByUserId && user) { // Assign creator if new
+        newItem.createdByUserId = user.id;
     }
-    if (!canEdit && editingItem) {
+
+    if (editingItem) {
+      if (!canEdit) {
         alert("Anda tidak memiliki izin untuk mengedit item ini.");
         return;
-    }
-    const newItem = itemData as AnnualProgram;
-    if (editingItem) {
+      }
       setAnnualPrograms(annualPrograms.map(ap => ap.id === newItem.id ? newItem : ap));
     } else {
+      if (!canCreate) {
+        alert("Anda tidak memiliki izin untuk membuat item baru.");
+        return;
+      }
       setAnnualPrograms([newItem, ...annualPrograms]);
     }
     setEditingItem(null);
@@ -140,7 +148,11 @@ export default function AnnualProgramsPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Program Tahunan (PROTA)</CardTitle>
-          <CardDescription>Kelola program tahun ajaran Anda. Rencanakan tujuan dan struktur kurikulum jangka panjang sesuai Kurikulum Merdeka.</CardDescription>
+          <CardDescription>
+            Kelola program tahun ajaran Anda. 
+            {user.role === "KepalaSekolah" || user.role === "WakaKurikulum" ? " Anda dapat melihat semua PROTA." : ""}
+            {user.role === "Guru" ? " Lihat PROTA yang telah disusun." : ""}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-2 mb-4 items-center">
@@ -182,8 +194,8 @@ export default function AnnualProgramsPage() {
             onView={handleView}
             onEdit={canEdit ? handleEdit : undefined}
             onDelete={canDelete ? handleDelete : undefined}
-            canEdit={!!canEdit}
-            canDelete={!!canDelete}
+            canEdit={() => canEdit} // Pass permission check function (simplified for PROTA)
+            canDelete={() => canDelete} // Pass permission check function (simplified for PROTA)
             itemTypeForExport="PROTA"
           />
         </CardContent>

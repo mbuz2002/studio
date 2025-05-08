@@ -6,6 +6,19 @@ export interface User {
   name: string;
   role: UserRole;
   avatarUrl?: string;
+  schoolId?: string; // Optional: to associate user with a specific school profile
+}
+
+export interface SchoolProfile {
+  id: string;
+  namaSekolah: string;
+  alamat: string;
+  nomorTelepon: string;
+  emailSekolah: string;
+  namaKepalaSekolah: string;
+  npsn?: string; // Nomor Pokok Sekolah Nasional (Optional)
+  logoUrl?: string; // URL to school logo (Optional)
+  updatedAt: string;
 }
 
 export interface CurriculumItem {
@@ -15,6 +28,7 @@ export interface CurriculumItem {
   gradeLevel: string; // e.g., "Fase A (Kelas 1-2 SD)", "PAUD", "Kelas 10 SMA"
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string
+  createdByUserId?: string; // Optional: to track who created the item
 }
 
 export interface LessonPlan extends CurriculumItem {
