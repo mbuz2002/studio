@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { PropsWithChildren } from 'react';
@@ -29,15 +28,16 @@ export const ThemeProvider = ({ children }: PropsWithChildren) => {
 
   const applyThemeToDocument = useCallback((newTheme: Theme) => {
     const root = window.document.documentElement;
-    // Remove all potential theme classes
+    // Clear existing theme classes
     root.classList.remove("dark", "theme-ocean-breeze", "theme-forest-haven");
 
+    // Apply new theme class
     if (newTheme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-      if (systemTheme === "dark") {
-        root.classList.add("dark");
+      const systemIsDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      if (systemIsDark) {
+        root.classList.add("dark"); // Default dark theme for system dark
       }
-      // 'light' system theme uses the :root defaults, no specific class needed
+      // If system is light, no class is added, :root (default-light) applies.
     } else if (newTheme === "default-dark") {
       root.classList.add("dark");
     } else if (newTheme === "ocean-breeze") {
@@ -45,36 +45,44 @@ export const ThemeProvider = ({ children }: PropsWithChildren) => {
     } else if (newTheme === "forest-haven") {
       root.classList.add("theme-forest-haven");
     }
-    // 'default-light' uses the :root defaults, no specific class needed
+    // If newTheme is "default-light", no class is added, :root applies.
   }, []);
 
+  // Effect for initial mount and loading theme from localStorage
   useEffect(() => {
     setIsMounted(true);
     const storedTheme = localStorage.getItem(THEME_STORAGE_KEY) as Theme | null;
     const initialTheme = storedTheme || "system";
     setThemeState(initialTheme);
-    applyThemeToDocument(initialTheme);
-  }, [applyThemeToDocument]);
+  }, []);
+
+  // Effect for applying the current theme to the document
+  useEffect(() => {
+    if (isMounted) {
+      applyThemeToDocument(theme);
+    }
+  }, [theme, isMounted, applyThemeToDocument]);
+
+  // Effect for handling system theme changes
+  useEffect(() => {
+    if (isMounted && theme === 'system') {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const handleChange = () => {
+        applyThemeToDocument('system'); // Re-evaluate and apply system theme
+      };
+      mediaQuery.addEventListener('change', handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
+    }
+  }, [theme, isMounted, applyThemeToDocument]);
   
 
   const setTheme = useCallback((newTheme: Theme) => {
     setThemeState(newTheme);
     localStorage.setItem(THEME_STORAGE_KEY, newTheme);
-    applyThemeToDocument(newTheme);
-  }, [applyThemeToDocument]);
-
-  useEffect(() => {
-    if (theme === 'system' && isMounted) {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      const handleChange = () => {
-        applyThemeToDocument('system'); 
-      };
-      mediaQuery.addEventListener('change', handleChange);
-      return () => mediaQuery.removeEventListener('change', handleChange);
-    }
-  }, [theme, applyThemeToDocument, isMounted]);
+  }, []);
   
   if (!isMounted) {
+    // To prevent flash of unstyled content or incorrect theme during SSR/hydration
     return null; 
   }
 
@@ -92,3 +100,4 @@ export const useTheme = () => {
   }
   return context;
 };
+
