@@ -534,53 +534,53 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="min-w-[250px] w-2/5">Judul</TableHead>
-              <TableHead>Jenis</TableHead>
-              <TableHead className="min-w-[150px]">Kurikulum</TableHead>
-              <TableHead className="min-w-[150px]">Mata Pelajaran</TableHead>
-              <TableHead className="min-w-[180px]">Jenjang/Kelas</TableHead>
-              <TableHead className="min-w-[180px]">Nama Guru/Pembuat</TableHead>
-              <TableHead className="min-w-[180px]">Terakhir Diperbarui</TableHead>
-              <TableHead className="text-right min-w-[100px]">Aksi</TableHead>
+              <TableHead className="min-w-[250px] w-2/5 px-4 py-3">Judul</TableHead>
+              <TableHead className="min-w-[100px] px-4 py-3">Jenis</TableHead>
+              <TableHead className="min-w-[180px] px-4 py-3">Kurikulum</TableHead>
+              <TableHead className="min-w-[150px] px-4 py-3">Mata Pelajaran</TableHead>
+              <TableHead className="min-w-[180px] px-4 py-3">Jenjang/Kelas</TableHead>
+              <TableHead className="min-w-[180px] px-4 py-3">Nama Guru/Pembuat</TableHead>
+              <TableHead className="min-w-[180px] px-4 py-3">Terakhir Diperbarui</TableHead>
+              <TableHead className="text-right min-w-[100px] px-4 py-3">Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {items.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} className="text-center h-24 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center h-24 text-muted-foreground px-4 py-3">
                   Tidak ada item ditemukan.
                 </TableCell>
               </TableRow>
             )}
             {items.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell className="font-medium">{item.title}</TableCell>
-                <TableCell>
-                  <Badge variant={item.type === 'RPP' ? 'default' : item.type === 'PROTA' ? 'secondary' : 'outline'}>
+              <TableRow key={item.id} className="hover:bg-muted/50">
+                <TableCell className="font-medium px-4 py-3 align-top">{item.title}</TableCell>
+                <TableCell className="px-4 py-3 align-top">
+                  <Badge variant={item.type === 'RPP' ? 'default' : item.type === 'PROTA' ? 'secondary' : 'outline'} className="text-xs">
                     {item.type}
                   </Badge>
                 </TableCell>
-                <TableCell>
-                  <Badge variant={getCurriculumBadgeVariant(item.curriculumType)} className="whitespace-nowrap">
-                    <BookCopy className="mr-1.5 h-3.5 w-3.5"/>
+                <TableCell className="px-4 py-3 align-top">
+                  <Badge variant={getCurriculumBadgeVariant(item.curriculumType)} className="whitespace-nowrap text-xs">
+                    <BookCopy className="mr-1.5 h-3 w-3"/>
                     {item.curriculumType}
                   </Badge>
                 </TableCell>
-                <TableCell>{item.subject}</TableCell>
-                <TableCell>{item.gradeLevel}</TableCell>
-                <TableCell>
+                <TableCell className="px-4 py-3 align-top">{item.subject}</TableCell>
+                <TableCell className="px-4 py-3 align-top">{item.gradeLevel}</TableCell>
+                <TableCell className="px-4 py-3 align-top">
                   <div className="flex items-center gap-2">
-                    <Avatar className="h-7 w-7">
+                    <Avatar className="h-7 w-7 flex-shrink-0">
                         <AvatarImage src={getCreatorAvatar(item.createdByUserId)} alt={getCreatorName(item.createdByUserId)} data-ai-hint="user avatar" />
                         <AvatarFallback className="text-xs">
                             {getInitials(getCreatorName(item.createdByUserId))}
                         </AvatarFallback>
                     </Avatar>
-                    <span className="truncate text-sm">{getCreatorName(item.createdByUserId)}</span>
+                    <span className="truncate text-sm max-w-[120px]">{getCreatorName(item.createdByUserId)}</span>
                   </div>
                 </TableCell>
-                <TableCell>{isClient ? format(new Date(item.updatedAt), "PPp", { locale: indonesianLocale }) : item.updatedAt}</TableCell>
-                <TableCell className="text-right">
+                <TableCell className="px-4 py-3 align-top text-xs">{isClient ? format(new Date(item.updatedAt), "PPp", { locale: indonesianLocale }) : item.updatedAt}</TableCell>
+                <TableCell className="text-right px-4 py-3 align-top">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon" className="h-8 w-8">

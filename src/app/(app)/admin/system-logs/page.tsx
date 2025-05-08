@@ -169,16 +169,16 @@ export default function SystemLogsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[200px] min-w-[190px] text-sm">Waktu</TableHead>
-                  <TableHead className="w-[140px] min-w-[130px] text-sm">Level</TableHead>
-                  <TableHead className="min-w-[350px] text-sm">Pesan</TableHead>
-                  <TableHead className="w-[200px] min-w-[170px] text-sm">Sumber</TableHead>
+                  <TableHead className="w-[200px] min-w-[190px] text-sm px-4 py-3">Waktu</TableHead>
+                  <TableHead className="w-[140px] min-w-[130px] text-sm px-4 py-3">Level</TableHead>
+                  <TableHead className="min-w-[350px] text-sm px-4 py-3">Pesan</TableHead>
+                  <TableHead className="w-[200px] min-w-[170px] text-sm px-4 py-3">Sumber</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredLogs.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="h-32 text-center text-lg text-muted-foreground">
+                    <TableCell colSpan={4} className="h-32 text-center text-lg text-muted-foreground px-4 py-3">
                       {contextLogs.length === 0 ? "Tidak ada log tersedia." : "Tidak ada log yang cocok dengan filter Anda."}
                     </TableCell>
                   </TableRow>
@@ -188,17 +188,17 @@ export default function SystemLogsPage() {
                         log.level === "ERROR" ? "bg-destructive/10 hover:bg-destructive/15" : 
                         log.level === "WARN" ? "bg-yellow-500/10 hover:bg-yellow-500/15" : "hover:bg-muted/50"
                     }>
-                      <TableCell className="text-sm font-roboto">
+                      <TableCell className="text-sm font-roboto px-4 py-3 align-top">
                         {isClient ? format(log.timestamp, "dd MMM yyyy, HH:mm:ss.SSS", { locale: indonesianLocale }) : log.timestamp.toISOString()}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="px-4 py-3 align-top">
                         <Badge variant={getLogLevelBadgeVariant(log.level)} className="flex items-center gap-2 whitespace-nowrap text-sm py-1 px-2.5">
                           {getLogLevelIcon(log.level)}
                           {log.level}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-sm break-words whitespace-pre-wrap">{log.message}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{log.source || "-"}</TableCell>
+                      <TableCell className="text-sm break-words whitespace-pre-wrap px-4 py-3 align-top">{log.message}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground px-4 py-3 align-top">{log.source || "-"}</TableCell>
                     </TableRow>
                   ))
                 )}
