@@ -1,4 +1,5 @@
 
+
 export type UserRole = "Admin" | "KepalaSekolah" | "WakaKurikulum" | "TataUsaha" | "Guru";
 
 export interface User {
@@ -87,7 +88,7 @@ export interface SemesterProgram extends CurriculumItem {
 export type AnyCurriculumItem = LessonPlan | AnnualProgram | SemesterProgram;
 
 // For AI flow outputs - already defined in AI flow files, but useful to have centralized if expanded
-export type { GenerateLessonPlanOutput } from '@/ai/flows/generate-lesson-plan-from-topic';
+export type { GenerateLessonPlanInput, GenerateLessonPlanOutput } from '@/ai/flows/generate-lesson-plan-from-topic';
 export type { SuggestLessonPlanImprovementsOutput } from '@/ai/flows/suggest-lesson-plan-improvements';
 
 

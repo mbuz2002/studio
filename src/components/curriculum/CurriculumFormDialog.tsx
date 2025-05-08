@@ -9,18 +9,20 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { AnyCurriculumItem, LessonPlan, AnnualProgram, SemesterProgram, AnnualProgramComponent, WeeklyUnit } from "@/types";
-import { PlusCircle, Save, Trash2 } from "lucide-react";
+import type { AnyCurriculumItem, LessonPlan, AnnualProgram, SemesterProgram, AnnualProgramComponent, WeeklyUnit, GenerateLessonPlanInput } from "@/types";
+import { PlusCircle, Save, Trash2, Wand2, Loader2, Sparkles } from "lucide-react";
 import type { FormEvent } from 'react';
 import { useState, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { generateLessonPlanFromTopic, type GenerateLessonPlanOutput } from "@/ai/flows/generate-lesson-plan-from-topic";
+import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 
 interface CurriculumFormDialogProps {
@@ -35,7 +37,7 @@ interface CurriculumFormDialogProps {
 }
 
 // Default data structures adhering to new types
-const defaultLessonPlan: Omit<LessonPlan, 'id' | 'createdAt' | 'updatedAt'> = {
+const defaultLessonPlan: Omit<LessonPlan, 'id' | 'createdAt' | 'updatedAt' | 'createdByUserId'> = {
   type: 'RPP', title: '', subject: '', gradeLevel: '', topic: '',
   learningObjectives: [],
   pemahamanBermakna: [],
@@ -46,14 +48,14 @@ const defaultLessonPlan: Omit<LessonPlan, 'id' | 'createdAt' | 'updatedAt'> = {
   materials: '',
 };
 
-const defaultAnnualProgram: Omit<AnnualProgram, 'id' | 'createdAt' | 'updatedAt'> = {
+const defaultAnnualProgram: Omit<AnnualProgram, 'id' | 'createdAt' | 'updatedAt' | 'createdByUserId'> = {
   type: 'PROTA', title: '', subject: '', gradeLevel: '', year: '',
   semester1Components: [],
   semester2Components: [],
   profilPelajarPancasilaFocus: [],
 };
 
-const defaultSemesterProgram: Omit<SemesterProgram, 'id' | 'createdAt' | 'updatedAt'> = {
+const defaultSemesterProgram: Omit<SemesterProgram, 'id' | 'createdAt' | 'updatedAt' | 'createdByUserId'> = {
   type: 'Promes', title: '', subject: '', gradeLevel: '', semester: '1', year: '',
   capaianPembelajaranUmum: '',
   alokasiWaktuTotalSemester: '',
@@ -90,8 +92,9 @@ export function CurriculumFormDialog({
   onOpenChange,
 }: CurriculumFormDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
-  // Combined state for all form data, including specific textarea states for PROTA/Promes
   const [formData, setFormData] = useState<Partial<AnyCurriculumItem> & ProtaFormState & PromesFormState>({});
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (forceOpen !== undefined) {
@@ -234,7 +237,7 @@ export function CurriculumFormDialog({
       const protaForm = formData as Partial<AnnualProgram> & ProtaFormState;
       finalItemData = {
         ...defaultAnnualProgram,
-        ...formData, // Includes title, subject, gradeLevel, year from base handleChange
+        ...formData, 
         profilPelajarPancasilaFocus: protaForm.profilPelajarPancasilaFocus_textarea?.split('\n').map(s => s.trim()).filter(s => s) || [],
         semester1Components: parseProtaComponents(protaForm.semester1_topics_textarea, protaForm.semester1_elements_textarea, protaForm.semester1_allocations_textarea),
         semester2Components: parseProtaComponents(protaForm.semester2_topics_textarea, protaForm.semester2_elements_textarea, protaForm.semester2_allocations_textarea),
@@ -243,14 +246,13 @@ export function CurriculumFormDialog({
        const promesForm = formData as Partial<SemesterProgram> & PromesFormState;
       finalItemData = {
         ...defaultSemesterProgram,
-        ...formData, // Includes title, subject, gradeLevel, year, semester
+        ...formData, 
         capaianPembelajaranUmum: promesForm.capaianPembelajaranUmum_textarea || '',
         alokasiWaktuTotalSemester: promesForm.alokasiWaktuTotalSemester_input || '',
         komponenMingguan: parsePromesKomponenMingguan(promesForm.komponenMingguan_textarea),
       };
     }
     
-    // Remove textarea-specific helper fields before submission
     const fieldsToRemove: (keyof ProtaFormState | keyof PromesFormState)[] = [
       'profilPelajarPancasilaFocus_textarea',
       'semester1_topics_textarea', 'semester1_elements_textarea', 'semester1_allocations_textarea',
@@ -264,8 +266,9 @@ export function CurriculumFormDialog({
       id: initialData?.id || new Date().toISOString() + Math.random().toString(36).substring(2, 9),
       createdAt: initialData?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      ...finalItemData, // This already has type, title, etc.
-      type: itemType, // Explicitly set type
+      createdByUserId: initialData?.createdByUserId || (formData as AnyCurriculumItem).createdByUserId, // Preserve or set if new
+      ...finalItemData, 
+      type: itemType, 
     } as AnyCurriculumItem;
 
     onSubmit(completeFormData);
@@ -284,6 +287,57 @@ export function CurriculumFormDialog({
     }
   }
 
+  const handleGenerateWithAI = async () => {
+    if (itemType !== "RPP" || !formData.topic || !formData.gradeLevel) {
+      toast({
+        title: "Informasi Kurang",
+        description: "Harap isi Topik dan Jenjang/Fase/Kelas terlebih dahulu untuk menggunakan AI.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsGeneratingAI(true);
+    try {
+      const aiInput: GenerateLessonPlanInput = {
+        topic: formData.topic as string,
+        jenjangFaseKelas: formData.gradeLevel as string,
+      };
+      const result: GenerateLessonPlanOutput = await generateLessonPlanFromTopic(aiInput);
+      
+      setFormData(prev => {
+          const currentRppData = prev as Partial<LessonPlan>;
+          return {
+              ...currentRppData,
+              type: 'RPP',
+              title: result.title,
+              topic: currentRppData.topic, // Keep user-entered topic
+              gradeLevel: currentRppData.gradeLevel, // Keep user-entered grade level
+              learningObjectives: result.learningObjectives,
+              pemahamanBermakna: result.pemahamanBermakna,
+              pertanyaanPemantik: result.pertanyaanPemantik,
+              langkahPembelajaran: result.langkahPembelajaran,
+              assessment: result.assessmentStrategies.join('\n- ') || '',
+              differentiationStrategies: result.differentiationStrategies,
+              materials: currentRppData.materials || '', // Keep existing materials
+          };
+      });
+
+      toast({
+        title: "Konten RPP Dihasilkan!",
+        description: "AI telah membuat draf konten untuk RPP Anda. Silakan tinjau dan sesuaikan.",
+      });
+    } catch (error) {
+      console.error("Error generating RPP with AI:", error);
+      toast({
+        title: "Pembuatan AI Gagal",
+        description: "Tidak dapat menghasilkan konten RPP. Silakan coba lagi.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
 
   const renderSpecificFields = () => {
     switch (itemType) {
@@ -295,6 +349,27 @@ export function CurriculumFormDialog({
               <Label htmlFor="topic">Topik/Materi Pembelajaran</Label>
               <Input id="topic" name="topic" value={lessonPlanData.topic || ''} onChange={handleChange} required />
             </div>
+            
+            {itemType === "RPP" && (
+                <div className="my-4">
+                    <Button
+                        type="button"
+                        onClick={handleGenerateWithAI}
+                        disabled={isGeneratingAI || !formData.topic || !formData.gradeLevel}
+                        variant="outline"
+                        className="w-full border-primary text-primary hover:bg-primary/10"
+                    >
+                        {isGeneratingAI ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
+                        Buat Draf Konten RPP dengan AI
+                    </Button>
+                    {(!formData.topic || !formData.gradeLevel) && !isGeneratingAI && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                            Isi Topik dan Jenjang/Fase/Kelas untuk mengaktifkan tombol AI.
+                        </p>
+                    )}
+                </div>
+            )}
+
             <div className="space-y-1">
               <Label htmlFor="learningObjectives">Tujuan Pembelajaran (satu per baris)</Label>
               <Textarea id="learningObjectives" name="learningObjectives" value={lessonPlanData.learningObjectives?.join('\n') || ''} onChange={(e) => handleArrayChange('learningObjectives', e.target.value)} placeholder="Tujuan 1&#10;Tujuan 2" />
@@ -382,6 +457,13 @@ export function CurriculumFormDialog({
                 <Textarea id="semester2_allocations_textarea" name="semester2_allocations_textarea" value={protaData.semester2_allocations_textarea || ''} onChange={handleChange} placeholder="20 JP&#10;22 JP" />
               </div>
             </div>
+            <Alert variant="default" className="mt-4">
+                <Sparkles className="h-5 w-5 text-primary" />
+                <AlertTitle>Asisten AI (Segera Hadir)</AlertTitle>
+                <AlertDescription>
+                    Fitur pembuatan PROTA otomatis dengan AI akan segera tersedia untuk membantu Anda!
+                </AlertDescription>
+            </Alert>
           </>
         );
       case "Promes":
@@ -439,6 +521,13 @@ Minggu ke: 2
               />
               <p className="text-xs text-muted-foreground">Isi rincian per minggu. Gunakan '---' (tiga tanda hubung) sebagai pemisah antar unit mingguan.</p>
             </div>
+            <Alert variant="default" className="mt-4">
+                <Sparkles className="h-5 w-5 text-primary" />
+                <AlertTitle>Asisten AI (Segera Hadir)</AlertTitle>
+                <AlertDescription>
+                    Fitur pembuatan Promes otomatis dengan AI akan segera tersedia untuk membantu Anda!
+                </AlertDescription>
+            </Alert>
           </>
         );
       default:
@@ -452,7 +541,6 @@ Minggu ke: 2
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      {/* Only render DialogTrigger if not in edit mode or if trigger text is not 'Pemicu Edit Tersembunyi' */}
       {!isEditMode && triggerButtonText !== "Pemicu Edit Tersembunyi" && (
          <DialogTrigger asChild>
             <Button className="bg-accent hover:bg-accent/90 text-accent-foreground w-full sm:w-auto">
@@ -466,8 +554,8 @@ Minggu ke: 2
           <DialogTitle>{actualDialogTitle}</DialogTitle>
           <DialogDescription>{dialogDescription}</DialogDescription>
         </DialogHeader>
-        <ScrollArea className="max-h-[calc(90vh-10rem)]"> {/* Adjust max-height as needed */}
-          <form onSubmit={handleSubmit} className="pr-6 py-2"> {/* Added padding for scrollbar */}
+        <ScrollArea className="max-h-[calc(90vh-10rem)]"> 
+          <form onSubmit={handleSubmit} className="pr-6 py-2"> 
             <div className="grid gap-4 py-4">
               <div className="space-y-1">
                 <Label htmlFor="title">Judul</Label>

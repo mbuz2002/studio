@@ -1,5 +1,6 @@
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
+import { Sparkles } from "lucide-react"; // Import Sparkles
 
 import { cn } from "@/lib/utils"
 
