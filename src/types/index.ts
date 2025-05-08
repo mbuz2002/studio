@@ -35,8 +35,8 @@ export interface LessonPlan extends CurriculumItem {
   type: 'RPP'; // Rencana Pelaksanaan Pembelajaran
   topic: string; // Topik atau Materi Pembelajaran
   learningObjectives: string[]; // Tujuan Pembelajaran / Capaian Pembelajaran
-  pemahamanBermakna: string[]; // Pemahaman Bermakna yang akan dibangun
-  pertanyaanPemantik: string[]; // Pertanyaan Pemantik untuk memantik rasa ingin tahu
+  pemahamanBermakna?: string[]; // Pemahaman Bermakna yang akan dibangun
+  pertanyaanPemantik?: string[]; // Pertanyaan Pemantik untuk memantik rasa ingin tahu
   langkahPembelajaran: { // Menggantikan suggestedActivities
     pendahuluan: string[]; // Kegiatan pendahuluan
     kegiatanInti: string[]; // Kegiatan inti pembelajaran
@@ -87,3 +87,45 @@ export type AnyCurriculumItem = LessonPlan | AnnualProgram | SemesterProgram;
 // For AI flow outputs - already defined in AI flow files, but useful to have centralized if expanded
 export type { GenerateLessonPlanOutput } from '@/ai/flows/generate-lesson-plan-from-topic';
 export type { SuggestLessonPlanImprovementsOutput } from '@/ai/flows/suggest-lesson-plan-improvements';
+
+
+export interface PrintOptions {
+  showKopSurat: boolean;
+  // RPP specific
+  showRPPTujuanPembelajaran: boolean;
+  showRPPPemahamanBermakna: boolean;
+  showRPPPertanyaanPemantik: boolean;
+  showRPPLangkahPendahuluan: boolean;
+  showRPPLangkahKegiatanInti: boolean;
+  showRPPLangkahPenutup: boolean;
+  showRPPAsesmen: boolean;
+  showRPPStrategiDiferensiasi: boolean;
+  showRPPMediaSumberBelajar: boolean;
+  // PROTA specific
+  showPROTAFokusP5: boolean;
+  showPROTASemester1: boolean;
+  showPROTASemester2: boolean;
+  // Promes specific
+  showPromesCapaianUmum: boolean;
+  showPromesAlokasiTotal: boolean;
+  showPromesKomponenMingguan: boolean;
+}
+
+export const defaultPrintOptions: PrintOptions = {
+  showKopSurat: true,
+  showRPPTujuanPembelajaran: true,
+  showRPPPemahamanBermakna: true,
+  showRPPPertanyaanPemantik: true,
+  showRPPLangkahPendahuluan: true,
+  showRPPLangkahKegiatanInti: true,
+  showRPPLangkahPenutup: true,
+  showRPPAsesmen: true,
+  showRPPStrategiDiferensiasi: true,
+  showRPPMediaSumberBelajar: true,
+  showPROTAFokusP5: true,
+  showPROTASemester1: true,
+  showPROTASemester2: true,
+  showPromesCapaianUmum: true,
+  showPromesAlokasiTotal: true,
+  showPromesKomponenMingguan: true,
+};

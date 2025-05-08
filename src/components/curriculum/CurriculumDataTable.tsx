@@ -1,17 +1,19 @@
 
 "use client";
 
-import type { AnyCurriculumItem, LessonPlan, AnnualProgram, SemesterProgram, User, SchoolProfile } from "@/types";
+import type { AnyCurriculumItem, LessonPlan, AnnualProgram, SemesterProgram, User, SchoolProfile, PrintOptions } from "@/types";
+import { defaultPrintOptions } from "@/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Download, Eye, FilePenLine, MoreHorizontal, Trash2, Loader2, Printer } from "lucide-react";
+import { Download, Eye, FilePenLine, MoreHorizontal, Trash2, Loader2, Printer, Settings2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { id as indonesianLocale } from "date-fns/locale"; 
 import { useState, useEffect } from "react";
 import { exportRppToText, type ExportRppToTextInput } from "@/ai/flows/export-rpp-to-text";
 import { useToast } from "@/hooks/use-toast";
+import { PrintOptionsDialog } from "./PrintOptionsDialog";
 
 interface CurriculumDataTableProps {
   items: AnyCurriculumItem[];
@@ -30,6 +32,11 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
   const [schoolProfile, setSchoolProfile] = useState<SchoolProfile | null>(null);
   const [appUsers, setAppUsers] = useState<User[]>([]);
 
+  const [isPrintOptionsOpen, setIsPrintOptionsOpen] = useState(false);
+  const [itemToPrint, setItemToPrint] = useState<AnyCurriculumItem | null>(null);
+  const [currentPrintOptions, setCurrentPrintOptions] = useState<PrintOptions>(defaultPrintOptions);
+
+
   useEffect(() => {
     setIsClient(true);
     if (typeof window !== 'undefined') {
@@ -44,22 +51,26 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
     }
   }, []);
 
- const generatePrintableHtml = (item: AnyCurriculumItem): string => {
+ const generatePrintableHtml = (item: AnyCurriculumItem, options: PrintOptions): string => {
     const creatorUser = appUsers.find(u => u.id === item.createdByUserId);
     const creatorName = creatorUser ? creatorUser.name : item.createdByUserId || 'Tidak diketahui';
 
-    let contentHtml = `
-      <div class="kop-surat">
-        ${schoolProfile?.logoUrl ? `<img src="${schoolProfile.logoUrl}" alt="Logo Sekolah" class="logo-sekolah" data-ai-hint="school logo">` : '<div class="logo-placeholder">Logo Sekolah</div>'}
-        <div class="kop-text">
-          <h1>${schoolProfile?.namaSekolah || 'Nama Sekolah Belum Diatur'}</h1>
-          <p>${schoolProfile?.alamat || 'Alamat Sekolah Belum Diatur'}</p>
-          <p>NPSN: ${schoolProfile?.npsn || 'N/A'}${schoolProfile?.nomorTelepon ? ` | Telp: ${schoolProfile.nomorTelepon}` : ''} ${schoolProfile?.emailSekolah ? ` | Email: ${schoolProfile.emailSekolah}` : ''}</p>
-        </div>
-      </div>
-      <hr class="kop-hr">
-    `;
+    let contentHtml = ``;
 
+    if (options.showKopSurat) {
+      contentHtml += `
+        <div class="kop-surat">
+          ${schoolProfile?.logoUrl ? `<img src="${schoolProfile.logoUrl}" alt="Logo Sekolah" class="logo-sekolah" data-ai-hint="school logo">` : '<div class="logo-placeholder">Logo Sekolah</div>'}
+          <div class="kop-text">
+            <h1>${schoolProfile?.namaSekolah || 'Nama Sekolah Belum Diatur'}</h1>
+            <p>${schoolProfile?.alamat || 'Alamat Sekolah Belum Diatur'}</p>
+            <p>NPSN: ${schoolProfile?.npsn || 'N/A'}${schoolProfile?.nomorTelepon ? ` | Telp: ${schoolProfile.nomorTelepon}` : ''} ${schoolProfile?.emailSekolah ? ` | Email: ${schoolProfile.emailSekolah}` : ''}</p>
+          </div>
+        </div>
+        <hr class="kop-hr">
+      `;
+    }
+    
     contentHtml += `<div class="doc-info">
         <h2>${item.title} (${item.type})</h2>
         <table class="info-table">
@@ -75,109 +86,127 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
 
     if (item.type === 'RPP') {
         const rpp = item as LessonPlan;
-        contentHtml += `<h3>A. Tujuan Pembelajaran</h3><ul>`;
-        rpp.learningObjectives.forEach(obj => contentHtml += `<li>${obj}</li>`);
-        contentHtml += `</ul>`;
+        if (options.showRPPTujuanPembelajaran) {
+            contentHtml += `<h3>A. Tujuan Pembelajaran</h3><ul>`;
+            rpp.learningObjectives.forEach(obj => contentHtml += `<li>${obj}</li>`);
+            contentHtml += `</ul>`;
+        }
 
-        if (rpp.pemahamanBermakna && rpp.pemahamanBermakna.length > 0) {
+        if (options.showRPPPemahamanBermakna && rpp.pemahamanBermakna && rpp.pemahamanBermakna.length > 0) {
             contentHtml += `<h3>B. Pemahaman Bermakna</h3><ul>`;
             rpp.pemahamanBermakna.forEach(pm => contentHtml += `<li>${pm}</li>`);
             contentHtml += `</ul>`;
         }
-        if (rpp.pertanyaanPemantik && rpp.pertanyaanPemantik.length > 0) {
+        if (options.showRPPPertanyaanPemantik && rpp.pertanyaanPemantik && rpp.pertanyaanPemantik.length > 0) {
             contentHtml += `<h3>C. Pertanyaan Pemantik</h3><ul>`;
             rpp.pertanyaanPemantik.forEach(pp => contentHtml += `<li>${pp}</li>`);
             contentHtml += `</ul>`;
         }
 
         contentHtml += `<h3>D. Langkah-langkah Pembelajaran</h3>`;
-        contentHtml += `<h4>1. Pendahuluan:</h4><ul>`;
-        rpp.langkahPembelajaran.pendahuluan.forEach(act => contentHtml += `<li>${act}</li>`);
-        contentHtml += `</ul>`;
-        contentHtml += `<h4>2. Kegiatan Inti:</h4><ul>`;
-        rpp.langkahPembelajaran.kegiatanInti.forEach(act => contentHtml += `<li>${act}</li>`);
-        contentHtml += `</ul>`;
-        contentHtml += `<h4>3. Penutup:</h4><ul>`;
-        rpp.langkahPembelajaran.penutup.forEach(act => contentHtml += `<li>${act}</li>`);
-        contentHtml += `</ul>`;
+        if (options.showRPPLangkahPendahuluan) {
+            contentHtml += `<h4>1. Pendahuluan:</h4><ul>`;
+            rpp.langkahPembelajaran.pendahuluan.forEach(act => contentHtml += `<li>${act}</li>`);
+            contentHtml += `</ul>`;
+        }
+        if (options.showRPPLangkahKegiatanInti) {
+            contentHtml += `<h4>2. Kegiatan Inti:</h4><ul>`;
+            rpp.langkahPembelajaran.kegiatanInti.forEach(act => contentHtml += `<li>${act}</li>`);
+            contentHtml += `</ul>`;
+        }
+        if (options.showRPPLangkahPenutup) {
+            contentHtml += `<h4>3. Penutup:</h4><ul>`;
+            rpp.langkahPembelajaran.penutup.forEach(act => contentHtml += `<li>${act}</li>`);
+            contentHtml += `</ul>`;
+        }
         
-        contentHtml += `<h3>E. Asesmen/Penilaian</h3><p>${rpp.assessment}</p>`;
+        if (options.showRPPAsesmen) {
+            contentHtml += `<h3>E. Asesmen/Penilaian</h3><p>${rpp.assessment}</p>`;
+        }
 
-        if (rpp.differentiationStrategies && rpp.differentiationStrategies.length > 0) {
+        if (options.showRPPStrategiDiferensiasi && rpp.differentiationStrategies && rpp.differentiationStrategies.length > 0) {
             contentHtml += `<h3>F. Strategi Diferensiasi</h3><ul>`;
             rpp.differentiationStrategies.forEach(strat => contentHtml += `<li>${strat}</li>`);
             contentHtml += `</ul>`;
         }
-        if (rpp.materials) {
+        if (options.showRPPMediaSumberBelajar && rpp.materials) {
             contentHtml += `<h3>G. Media/Sumber Belajar</h3><p>${rpp.materials}</p>`;
         }
     } else if (item.type === 'PROTA') {
         const prota = item as AnnualProgram;
         contentHtml += `<p><strong>Tahun Ajaran:</strong> ${prota.year}</p>`;
-        if (prota.profilPelajarPancasilaFocus && prota.profilPelajarPancasilaFocus.length > 0) {
+        if (options.showPROTAFokusP5 && prota.profilPelajarPancasilaFocus && prota.profilPelajarPancasilaFocus.length > 0) {
             contentHtml += `<p><strong>Fokus Profil Pelajar Pancasila:</strong> ${prota.profilPelajarPancasilaFocus.join(', ')}</p>`;
         }
-        contentHtml += `<h3>Semester 1</h3>`;
-        if (prota.semester1Components.length > 0) {
-            contentHtml += `<table class="component-table"><thead><tr><th>Topik</th><th>Elemen Capaian Pembelajaran</th><th>Alokasi Waktu</th></tr></thead><tbody>`;
-            prota.semester1Components.forEach(c => {
-                contentHtml += `<tr><td>${c.topic}</td><td>${(c.elemenCapaianPembelajaran && c.elemenCapaianPembelajaran.length > 0) ? c.elemenCapaianPembelajaran.join(', ') : '-'}</td><td>${c.alokasiWaktu}</td></tr>`;
-            });
-            contentHtml += `</tbody></table>`;
-        } else {
-            contentHtml += `<p>Tidak ada komponen untuk semester 1.</p>`;
+        
+        if (options.showPROTASemester1) {
+            contentHtml += `<h3>Semester 1</h3>`;
+            if (prota.semester1Components.length > 0) {
+                contentHtml += `<table class="component-table"><thead><tr><th>Topik</th><th>Elemen Capaian Pembelajaran</th><th>Alokasi Waktu</th></tr></thead><tbody>`;
+                prota.semester1Components.forEach(c => {
+                    contentHtml += `<tr><td>${c.topic}</td><td>${(c.elemenCapaianPembelajaran && c.elemenCapaianPembelajaran.length > 0) ? c.elemenCapaianPembelajaran.join(', ') : '-'}</td><td>${c.alokasiWaktu}</td></tr>`;
+                });
+                contentHtml += `</tbody></table>`;
+            } else {
+                contentHtml += `<p>Tidak ada komponen untuk semester 1.</p>`;
+            }
         }
         
-        contentHtml += `<h3>Semester 2</h3>`;
-         if (prota.semester2Components.length > 0) {
-            contentHtml += `<table class="component-table"><thead><tr><th>Topik</th><th>Elemen Capaian Pembelajaran</th><th>Alokasi Waktu</th></tr></thead><tbody>`;
-            prota.semester2Components.forEach(c => {
-                contentHtml += `<tr><td>${c.topic}</td><td>${(c.elemenCapaianPembelajaran && c.elemenCapaianPembelajaran.length > 0) ? c.elemenCapaianPembelajaran.join(', ') : '-'}</td><td>${c.alokasiWaktu}</td></tr>`;
-            });
-            contentHtml += `</tbody></table>`;
-        } else {
-            contentHtml += `<p>Tidak ada komponen untuk semester 2.</p>`;
+        if (options.showPROTASemester2) {
+            contentHtml += `<h3>Semester 2</h3>`;
+            if (prota.semester2Components.length > 0) {
+                contentHtml += `<table class="component-table"><thead><tr><th>Topik</th><th>Elemen Capaian Pembelajaran</th><th>Alokasi Waktu</th></tr></thead><tbody>`;
+                prota.semester2Components.forEach(c => {
+                    contentHtml += `<tr><td>${c.topic}</td><td>${(c.elemenCapaianPembelajaran && c.elemenCapaianPembelajaran.length > 0) ? c.elemenCapaianPembelajaran.join(', ') : '-'}</td><td>${c.alokasiWaktu}</td></tr>`;
+                });
+                contentHtml += `</tbody></table>`;
+            } else {
+                contentHtml += `<p>Tidak ada komponen untuk semester 2.</p>`;
+            }
         }
     } else if (item.type === 'Promes') {
         const promes = item as SemesterProgram;
         contentHtml += `<p><strong>Tahun Ajaran:</strong> ${promes.year}, <strong>Semester:</strong> ${promes.semester === '1' ? 'Ganjil' : 'Genap'}</p>`;
-        if (promes.capaianPembelajaranUmum) {
+        if (options.showPromesCapaianUmum && promes.capaianPembelajaranUmum) {
             contentHtml += `<p><strong>Capaian Pembelajaran Umum:</strong> ${promes.capaianPembelajaranUmum}</p>`;
         }
-        if (promes.alokasiWaktuTotalSemester) {
+        if (options.showPromesAlokasiTotal && promes.alokasiWaktuTotalSemester) {
             contentHtml += `<p><strong>Alokasi Waktu Total:</strong> ${promes.alokasiWaktuTotalSemester}</p>`;
         }
-        contentHtml += `<h3>Rincian Mingguan</h3>`;
-        if (promes.komponenMingguan.length > 0) {
-            contentHtml += `<table class="component-table weekly-table">
-                <thead>
-                    <tr>
-                        <th>Minggu Ke</th>
-                        <th>Bulan</th>
-                        <th>Materi Pokok/Tujuan Pembelajaran</th>
-                        <th>Alokasi Waktu</th>
-                        <th>Metode/Strategi</th>
-                        <th>Sumber Belajar</th>
-                        <th>Rencana Asesmen</th>
-                        <th>Catatan Integrasi P5</th>
-                    </tr>
-                </thead>
-                <tbody>`;
-            promes.komponenMingguan.forEach(w => {
-                contentHtml += `<tr>
-                    <td>${w.mingguKe}</td>
-                    <td>${w.bulan || '-'}</td>
-                    <td>${w.materiPokokAtauTujuanPembelajaran}</td>
-                    <td>${w.alokasiWaktu}</td>
-                    <td>${(w.metodeStrategi && w.metodeStrategi.length > 0) ? w.metodeStrategi.join(', ') : '-'}</td>
-                    <td>${(w.sumberBelajar && w.sumberBelajar.length > 0) ? w.sumberBelajar.join(', ') : '-'}</td>
-                    <td>${(w.rencanaAsesmen && w.rencanaAsesmen.length > 0) ? w.rencanaAsesmen.join(', ') : '-'}</td>
-                    <td>${w.catatanIntegrasiP5 || '-'}</td>
-                </tr>`;
-            });
-            contentHtml += `</tbody></table>`;
-        } else {
-            contentHtml += `<p>Tidak ada komponen mingguan.</p>`;
+
+        if (options.showPromesKomponenMingguan) {
+            contentHtml += `<h3>Rincian Mingguan</h3>`;
+            if (promes.komponenMingguan.length > 0) {
+                contentHtml += `<table class="component-table weekly-table">
+                    <thead>
+                        <tr>
+                            <th>Minggu Ke</th>
+                            <th>Bulan</th>
+                            <th>Materi Pokok/Tujuan Pembelajaran</th>
+                            <th>Alokasi Waktu</th>
+                            <th>Metode/Strategi</th>
+                            <th>Sumber Belajar</th>
+                            <th>Rencana Asesmen</th>
+                            <th>Catatan Integrasi P5</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+                promes.komponenMingguan.forEach(w => {
+                    contentHtml += `<tr>
+                        <td>${w.mingguKe}</td>
+                        <td>${w.bulan || '-'}</td>
+                        <td>${w.materiPokokAtauTujuanPembelajaran}</td>
+                        <td>${w.alokasiWaktu}</td>
+                        <td>${(w.metodeStrategi && w.metodeStrategi.length > 0) ? w.metodeStrategi.join(', ') : '-'}</td>
+                        <td>${(w.sumberBelajar && w.sumberBelajar.length > 0) ? w.sumberBelajar.join(', ') : '-'}</td>
+                        <td>${(w.rencanaAsesmen && w.rencanaAsesmen.length > 0) ? w.rencanaAsesmen.join(', ') : '-'}</td>
+                        <td>${w.catatanIntegrasiP5 || '-'}</td>
+                    </tr>`;
+                });
+                contentHtml += `</tbody></table>`;
+            } else {
+                contentHtml += `<p>Tidak ada komponen mingguan.</p>`;
+            }
         }
     }
 
@@ -228,9 +257,16 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
     `;
   };
 
-  const handlePrint = (item: AnyCurriculumItem) => {
+  const handlePreparePrint = (item: AnyCurriculumItem) => {
     if (!isClient) return;
-    const printableHtml = generatePrintableHtml(item);
+    setItemToPrint(item);
+    setCurrentPrintOptions(defaultPrintOptions); // Reset to defaults each time
+    setIsPrintOptionsOpen(true);
+  };
+  
+  const handleFinalizePrint = (options: PrintOptions) => {
+    if (!itemToPrint) return;
+    const printableHtml = generatePrintableHtml(itemToPrint, options);
     const printWindow = window.open('', '_blank', 'width=1000,height=700,scrollbars=yes,resizable=yes');
     if (printWindow) {
       printWindow.document.write(printableHtml);
@@ -238,6 +274,8 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
     } else {
       toast({ title: "Gagal Membuka Jendela Cetak", description: "Pastikan pop-up diizinkan untuk situs ini.", variant: "destructive" });
     }
+    setIsPrintOptionsOpen(false);
+    setItemToPrint(null);
   };
 
 
@@ -355,76 +393,84 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
 
 
   return (
-    <div className="rounded-lg border shadow-sm overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="min-w-[200px] w-2/5">Judul</TableHead>
-            <TableHead>Jenis</TableHead>
-            <TableHead className="min-w-[150px]">Mata Pelajaran</TableHead>
-            <TableHead className="min-w-[150px]">Jenjang/Kelas</TableHead>
-            {/* <TableHead className="min-w-[120px]">Dibuat Oleh</TableHead> */}
-            <TableHead className="min-w-[180px]">Terakhir Diperbarui</TableHead>
-            <TableHead className="text-right min-w-[100px]">Aksi</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {items.length === 0 && (
+    <>
+      <div className="rounded-lg border shadow-sm overflow-x-auto">
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={6} className="text-center h-24 text-muted-foreground">
-                Tidak ada item ditemukan.
-              </TableCell>
+              <TableHead className="min-w-[200px] w-2/5">Judul</TableHead>
+              <TableHead>Jenis</TableHead>
+              <TableHead className="min-w-[150px]">Mata Pelajaran</TableHead>
+              <TableHead className="min-w-[150px]">Jenjang/Kelas</TableHead>
+              <TableHead className="min-w-[180px]">Terakhir Diperbarui</TableHead>
+              <TableHead className="text-right min-w-[100px]">Aksi</TableHead>
             </TableRow>
-          )}
-          {items.map((item) => (
-            <TableRow key={item.id}>
-              <TableCell className="font-medium">{item.title}</TableCell>
-              <TableCell>
-                <Badge variant={item.type === 'RPP' ? 'default' : item.type === 'PROTA' ? 'secondary' : 'outline'}>
-                  {item.type}
-                </Badge>
-              </TableCell>
-              <TableCell>{item.subject}</TableCell>
-              <TableCell>{item.gradeLevel}</TableCell>
-              {/* <TableCell>{item.createdByUserId || 'N/A'}</TableCell> */}
-              <TableCell>{isClient ? format(new Date(item.updatedAt), "PPp", { locale: indonesianLocale }) : item.updatedAt}</TableCell>
-              <TableCell className="text-right">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreHorizontal className="h-4 w-4" />
-                      <span className="sr-only">Aksi</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => onView(item)}>
-                      <Eye className="mr-2 h-4 w-4" /> Lihat Detail
-                    </DropdownMenuItem>
-                    {canEdit(item) && onEdit && (
-                      <DropdownMenuItem onClick={() => onEdit(item)}>
-                        <FilePenLine className="mr-2 h-4 w-4" /> Edit
+          </TableHeader>
+          <TableBody>
+            {items.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center h-24 text-muted-foreground">
+                  Tidak ada item ditemukan.
+                </TableCell>
+              </TableRow>
+            )}
+            {items.map((item) => (
+              <TableRow key={item.id}>
+                <TableCell className="font-medium">{item.title}</TableCell>
+                <TableCell>
+                  <Badge variant={item.type === 'RPP' ? 'default' : item.type === 'PROTA' ? 'secondary' : 'outline'}>
+                    {item.type}
+                  </Badge>
+                </TableCell>
+                <TableCell>{item.subject}</TableCell>
+                <TableCell>{item.gradeLevel}</TableCell>
+                <TableCell>{isClient ? format(new Date(item.updatedAt), "PPp", { locale: indonesianLocale }) : item.updatedAt}</TableCell>
+                <TableCell className="text-right">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <MoreHorizontal className="h-4 w-4" />
+                        <span className="sr-only">Aksi</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => onView(item)}>
+                        <Eye className="mr-2 h-4 w-4" /> Lihat Detail
                       </DropdownMenuItem>
-                    )}
-                    <DropdownMenuItem onClick={() => handlePrint(item)} disabled={!isClient}>
-                      <Printer className="mr-2 h-4 w-4" /> Cetak / PDF
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleExportToText(item)} disabled={isExporting[item.id] || !isClient}>
-                      {isExporting[item.id] ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />} 
-                      Ekspor ke Teks
-                    </DropdownMenuItem>
-                    {canDelete(item) && onDelete && (
-                      <DropdownMenuItem onClick={() => onDelete(item)} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
-                        <Trash2 className="mr-2 h-4 w-4" /> Hapus
+                      {canEdit(item) && onEdit && (
+                        <DropdownMenuItem onClick={() => onEdit(item)}>
+                          <FilePenLine className="mr-2 h-4 w-4" /> Edit
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuItem onClick={() => handlePreparePrint(item)} disabled={!isClient}>
+                        <Printer className="mr-2 h-4 w-4" /> Cetak / PDF
                       </DropdownMenuItem>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+                      <DropdownMenuItem onClick={() => handleExportToText(item)} disabled={isExporting[item.id] || !isClient}>
+                        {isExporting[item.id] ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />} 
+                        Ekspor ke Teks
+                      </DropdownMenuItem>
+                      {canDelete(item) && onDelete && (
+                        <DropdownMenuItem onClick={() => onDelete(item)} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                          <Trash2 className="mr-2 h-4 w-4" /> Hapus
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      {itemToPrint && (
+        <PrintOptionsDialog
+            isOpen={isPrintOptionsOpen}
+            onOpenChange={setIsPrintOptionsOpen}
+            itemType={itemToPrint.type}
+            defaultOptions={currentPrintOptions}
+            onSubmit={handleFinalizePrint}
+        />
+      )}
+    </>
   );
 }
-
