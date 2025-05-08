@@ -65,11 +65,20 @@ export default function AnnualProgramsPage() {
 
   useEffect(() => {
     setIsClient(true);
-    // In a real app, fetch data. For KepalaSekolah/WakaKurikulum, fetch all.
-  }, []);
+    // For KepalaSekolah/WakaKurikulum/TataUsaha/Admin, fetch all. Gurus view only (or their own if applicable).
+     if (user && (user.role === "KepalaSekolah" || user.role === "WakaKurikulum" || user.role === "TataUsaha" || user.role === "Admin")) {
+        setAnnualPrograms(initialAnnualPrograms);
+    } else if (user && user.role === "Guru") {
+        // PROTA/Promes are typically not user-specific to one Guru in the same way RPPs are.
+        // Gurus would typically view PROTA/Promes relevant to their subject/grade.
+        // For demo, they see all.
+        setAnnualPrograms(initialAnnualPrograms);
+    }
+  }, [user]);
 
-  // Role-based permissions
-  // PROTA/Promes are typically managed by Admin/WakaKurikulum. Gurus view.
+  // Role-based permissions for PROTA
+  // Create, Edit, Delete: Admin, WakaKurikulum.
+  // View: All roles (Admin, KepalaSekolah, WakaKurikulum, TataUsaha, Guru).
   const canCreate = user && (user.role === "Admin" || user.role === "WakaKurikulum");
   const canEdit = user && (user.role === "Admin" || user.role === "WakaKurikulum");
   const canDelete = user && (user.role === "Admin" || user.role === "WakaKurikulum");
@@ -77,19 +86,19 @@ export default function AnnualProgramsPage() {
 
   const handleCreateOrUpdate = (itemData: AnyCurriculumItem) => {
     const newItem = itemData as AnnualProgram;
-     if (!newItem.createdByUserId && user) { // Assign creator if new
+     if (!newItem.createdByUserId && user) { 
         newItem.createdByUserId = user.id;
     }
 
     if (editingItem) {
-      if (!canEdit) {
-        alert("Anda tidak memiliki izin untuk mengedit item ini.");
+      if (!canEdit) { // Checks Admin/Waka permission for PROTA
+        alert("Anda tidak memiliki izin untuk mengedit PROTA.");
         return;
       }
       setAnnualPrograms(annualPrograms.map(ap => ap.id === newItem.id ? newItem : ap));
     } else {
-      if (!canCreate) {
-        alert("Anda tidak memiliki izin untuk membuat item baru.");
+      if (!canCreate) { // Checks Admin/Waka permission for PROTA
+        alert("Anda tidak memiliki izin untuk membuat PROTA baru.");
         return;
       }
       setAnnualPrograms([newItem, ...annualPrograms]);
@@ -98,16 +107,16 @@ export default function AnnualProgramsPage() {
   };
 
   const handleEdit = (item: AnyCurriculumItem) => {
-    if (!canEdit) {
-        alert("Anda tidak memiliki izin untuk mengedit item ini.");
+    if (!canEdit) { // Checks Admin/Waka permission for PROTA
+        alert("Anda tidak memiliki izin untuk mengedit PROTA.");
         return;
     }
     setEditingItem(item as AnnualProgram);
   };
 
   const handleDelete = (itemToDelete: AnyCurriculumItem) => {
-    if (!canDelete) {
-        alert("Anda tidak memiliki izin untuk menghapus item ini.");
+    if (!canDelete) { // Checks Admin/Waka permission for PROTA
+        alert("Anda tidak memiliki izin untuk menghapus PROTA.");
         return;
     }
      if (window.confirm(`Apakah Anda yakin ingin menghapus "${itemToDelete.title}"?`)) {
@@ -150,8 +159,9 @@ export default function AnnualProgramsPage() {
           <CardTitle className="text-2xl">Program Tahunan (PROTA)</CardTitle>
           <CardDescription>
             Kelola program tahun ajaran Anda. 
-            {user.role === "KepalaSekolah" || user.role === "WakaKurikulum" ? " Anda dapat melihat semua PROTA." : ""}
+            {user.role === "KepalaSekolah" || user.role === "WakaKurikulum" || user.role === "TataUsaha" ? " Anda dapat melihat semua PROTA." : ""}
             {user.role === "Guru" ? " Lihat PROTA yang telah disusun." : ""}
+            {user.role === "Admin" && " Anda dapat membuat, mengedit, dan menghapus PROTA."}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -192,10 +202,10 @@ export default function AnnualProgramsPage() {
           <CurriculumDataTable
             items={filteredAnnualPrograms}
             onView={handleView}
-            onEdit={canEdit ? handleEdit : undefined}
-            onDelete={canDelete ? handleDelete : undefined}
-            canEdit={() => canEdit} // Pass permission check function (simplified for PROTA)
-            canDelete={() => canDelete} // Pass permission check function (simplified for PROTA)
+            onEdit={canEdit ? handleEdit : undefined} // Pass function or undefined
+            onDelete={canDelete ? handleDelete : undefined} // Pass function or undefined
+            canEdit={() => canEdit} // Pass explicit permission check for PROTA
+            canDelete={() => canDelete} // Pass explicit permission check for PROTA
             itemTypeForExport="PROTA"
           />
         </CardContent>

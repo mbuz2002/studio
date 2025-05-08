@@ -1,3 +1,4 @@
+
 // src/ai/flows/export-rpp-to-text.ts
 'use server';
 
@@ -30,7 +31,7 @@ const LessonPlanSchema = z.object({
     kegiatanInti: z.array(z.string()),
     penutup: z.array(z.string()),
   }),
-  assessment: z.string(), // Or z.array(z.string()) if it's multiple ideas
+  assessment: z.string(), 
   differentiationStrategies: z.array(z.string()).optional(),
   materials: z.string().optional(),
   createdAt: z.string(),
@@ -55,16 +56,17 @@ const prompt = ai.definePrompt({
   output: { schema: ExportRppToTextOutputSchema },
   prompt: `Anda adalah asisten yang bertugas mengubah data Rencana Pelaksanaan Pembelajaran (RPP) / Modul Ajar (MA) dari format JSON menjadi dokumen teks yang terstruktur dengan baik dan rapi. Gunakan Bahasa Indonesia.
 Format output harus jelas, mudah dibaca, dan siap untuk disalin ke editor teks atau diunduh sebagai file .txt.
-Gunakan markdown sederhana untuk pen Überschriften (##, ###), Listen (*), und Fettgedrucktem (**Wichtige Begriffe**).
+Gunakan markdown sederhana untuk judul (##, ###), daftar (* atau -), dan penekanan (**teks tebal**).
 
 Berikut adalah data RPP/MA yang perlu diformat:
 
 **MODUL AJAR / RENCANA PELAKSANAAN PEMBELAJARAN (RPP)**
+------------------------------------------------------
 
-**Judul:** {{{title}}}
+**Judul Modul Ajar:** {{{title}}}
 **Mata Pelajaran:** {{{subject}}}
 **Jenjang/Fase/Kelas:** {{{gradeLevel}}}
-**Topik/Materi:** {{{topic}}}
+**Topik/Materi Pembelajaran:** {{{topic}}}
 
 ---
 
@@ -89,29 +91,23 @@ Berikut adalah data RPP/MA yang perlu diformat:
 
 **D. LANGKAH-LANGKAH PEMBELAJARAN**
 
-**1. Pendahuluan:**
-{{#each langkahPembelajaran.pendahuluan}}
-  - {{{this}}}
-{{/each}}
+  **1. Pendahuluan:**
+  {{#each langkahPembelajaran.pendahuluan}}
+    - {{{this}}}
+  {{/each}}
 
-**2. Kegiatan Inti:**
-{{#each langkahPembelajaran.kegiatanInti}}
-  - {{{this}}}
-{{/each}}
+  **2. Kegiatan Inti:**
+  {{#each langkahPembelajaran.kegiatanInti}}
+    - {{{this}}}
+  {{/each}}
 
-**3. Penutup:**
-{{#each langkahPembelajaran.penutup}}
-  - {{{this}}}
-{{/each}}
+  **3. Penutup:**
+  {{#each langkahPembelajaran.penutup}}
+    - {{{this}}}
+  {{/each}}
 
 **E. ASESMEN/PENILAIAN**
 {{{assessment}}}
-{{#if assessmentStrategies}} {{!-- This assumes assessmentStrategies might be passed if 'assessment' is simple string --}}
-  {{#each assessmentStrategies}}
-  - {{{this}}}
-  {{/each}}
-{{/if}}
-
 
 {{#if differentiationStrategies.length}}
 **F. STRATEGI DIFERENSIASI**
@@ -126,8 +122,9 @@ Berikut adalah data RPP/MA yang perlu diformat:
 {{/if}}
 
 ---
-*Dokumen ini dibuat pada: {{updatedAt}} (Data terakhir diperbarui)*
-Pastikan semua bagian terisi sesuai data yang diberikan. Jika ada data opsional yang tidak ada atau kosong, jangan tampilkan bagian tersebut.
+*Dokumen ini terakhir diperbarui pada: {{updatedAt}}*
+
+Pastikan semua bagian terisi sesuai data yang diberikan. Jika ada data opsional (seperti Pemahaman Bermakna, Pertanyaan Pemantik, Strategi Diferensiasi, Media/Sumber Belajar) yang tidak ada atau kosong, maka jangan tampilkan bagian (heading dan konten) tersebut sama sekali.
 `,
 });
 
@@ -140,15 +137,18 @@ const exportRppToTextFlow = ai.defineFlow(
   },
   async (input: ExportRppToTextInput) => {
     // Ensure all expected fields by the prompt are present, even if empty arrays/strings for optional ones
+    // This helps the Handlebars template render correctly by having the keys defined.
     const preparedInput = {
       ...input,
       pemahamanBermakna: input.pemahamanBermakna || [],
       pertanyaanPemantik: input.pertanyaanPemantik || [],
+      langkahPembelajaran: input.langkahPembelajaran || { pendahuluan: [], kegiatanInti: [], penutup: []},
+      assessment: input.assessment || "Belum dirinci.", // Provide a default if empty
       differentiationStrategies: input.differentiationStrategies || [],
-      materials: input.materials || "",
+      materials: input.materials || "", // Prompt expects string, handles empty by not rendering
+      updatedAt: input.updatedAt ? format(new Date(input.updatedAt), "dd MMMM yyyy, HH:mm", { locale: indonesianLocale }) : "Data tidak tersedia"
     };
     const { output } = await prompt(preparedInput);
     return output!;
   }
 );
-

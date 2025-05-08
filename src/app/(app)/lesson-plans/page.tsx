@@ -67,31 +67,35 @@ export default function LessonPlansPage() {
   useEffect(() => {
     setIsClient(true);
     // In a real app, fetch lesson plans based on user role.
-    // For KepalaSekolah/WakaKurikulum, fetch all. For Guru, fetch their own.
+    // For KepalaSekolah/WakaKurikulum/TataUsaha, fetch all. For Guru, fetch their own.
     // For this demo, all users see the initial global list.
-  }, []);
+    if (user && (user.role === "KepalaSekolah" || user.role === "WakaKurikulum" || user.role === "TataUsaha" || user.role === "Admin")) {
+        // Logic to fetch all RPPs (using initialLessonPlans for demo)
+        setLessonPlans(initialLessonPlans);
+    } else if (user && user.role === "Guru") {
+        // Logic to fetch RPPs created by this guru (using createdByUserId for demo)
+        // setLessonPlans(initialLessonPlans.filter(lp => lp.createdByUserId === user.id));
+        setLessonPlans(initialLessonPlans); // For demo, Guru still sees all initially to simplify data
+    }
+  }, [user]);
 
   // Role-based permissions
-  // KepalaSekolah and WakaKurikulum can view all. Others (Guru) can view theirs (if data was user-specific).
-  // Admin and WakaKurikulum have broader edit/delete. Guru can edit/delete their own.
   const canCreate = user && (user.role === "Admin" || user.role === "WakaKurikulum" || user.role === "Guru");
   
-  // Edit: Admin, Waka, or Guru if it's their own item.
-  // (Simplified for demo: Admin & Waka can edit all, Guru can edit any shown - in real app, check createdByUserId)
   const canEditItem = (item: LessonPlan): boolean => {
     if (!user) return false;
     if (user.role === "Admin" || user.role === "WakaKurikulum") return true;
-    // if (user.role === "Guru" && item.createdByUserId === user.id) return true; // Full implementation
-    if (user.role === "Guru") return true; // Simplified for demo - Guru can edit any shown RPP
+    if (user.role === "Guru" && item.createdByUserId === user.id) return true; 
+    if (user.role === "Guru" && initialLessonPlans.find(lp => lp.id === item.id)) return true; // Simplified for demo: Guru can edit any of the initial RPPs
     return false;
   };
 
-  // Delete: Admin, Waka. (Guru potentially their own, but stricter for demo)
   const canDeleteItem = (item: LessonPlan): boolean => {
      if (!user) return false;
     if (user.role === "Admin" || user.role === "WakaKurikulum") return true;
-    // if (user.role === "Guru" && item.createdByUserId === user.id) return true; // Full implementation
-    return false; // Guru cannot delete in this simplified demo setup for RPPs shown
+    if (user.role === "Guru" && item.createdByUserId === user.id) return true;
+    // Simplified for demo: Guru cannot delete initial RPPs they didn't "create"
+    return false;
   };
 
   const canImport = user && (user.role === "Admin" || user.role === "WakaKurikulum");
@@ -99,7 +103,7 @@ export default function LessonPlansPage() {
 
   const handleCreateOrUpdate = (itemData: AnyCurriculumItem) => {
     const newItem = itemData as LessonPlan; 
-    if (!newItem.createdByUserId && user) { // Assign creator if new
+    if (!newItem.createdByUserId && user) { 
         newItem.createdByUserId = user.id;
     }
 
@@ -120,7 +124,7 @@ export default function LessonPlansPage() {
   };
 
   const handleEdit = (item: AnyCurriculumItem) => {
-    if (!canEditItem(item as LessonPlan)) { // Pass the item to check specific edit permission
+    if (!canEditItem(item as LessonPlan)) { 
         alert("Anda tidak memiliki izin untuk mengedit item ini.");
         return;
     }
@@ -128,7 +132,7 @@ export default function LessonPlansPage() {
   };
 
   const handleDelete = (itemToDelete: AnyCurriculumItem) => {
-    if (!canDeleteItem(itemToDelete as LessonPlan)) { // Pass the item to check specific delete permission
+    if (!canDeleteItem(itemToDelete as LessonPlan)) { 
         alert("Anda tidak memiliki izin untuk menghapus item ini.");
         return;
     }
@@ -172,7 +176,7 @@ export default function LessonPlansPage() {
           <CardTitle className="text-2xl">Rencana Pembelajaran (RPP/Modul Ajar)</CardTitle>
           <CardDescription>
             Kelola rencana pembelajaran Anda. 
-            {user.role === "KepalaSekolah" || user.role === "WakaKurikulum" ? " Anda dapat melihat semua RPP yang dibuat." : ""}
+            {user.role === "KepalaSekolah" || user.role === "WakaKurikulum" || user.role === "TataUsaha" ? " Anda dapat melihat semua RPP yang dibuat." : ""}
             {user.role === "Guru" ? " Buat baru, edit, atau lihat rincian RPP Anda." : ""}
           </CardDescription>
         </CardHeader>
@@ -214,15 +218,15 @@ export default function LessonPlansPage() {
           <CurriculumDataTable
             items={filteredLessonPlans}
             onView={handleView}
-            onEdit={handleEdit} // DataTable will internally check canEdit prop based on item
-            onDelete={handleDelete} // DataTable will internally check canDelete prop based on item
-            canEdit={(item) => canEditItem(item as LessonPlan)} // Pass permission check function
-            canDelete={(item) => canDeleteItem(item as LessonPlan)} // Pass permission check function
+            onEdit={handleEdit} 
+            onDelete={handleDelete} 
+            canEdit={(item) => canEditItem(item as LessonPlan)} 
+            canDelete={(item) => canDeleteItem(item as LessonPlan)} 
             itemTypeForExport="RPP"
           />
         </CardContent>
       </Card>
-      {editingItem && canEditItem(editingItem) && ( // Ensure dialog only shows if user can edit this specific item
+      {editingItem && canEditItem(editingItem) && ( 
         <>
             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40" onClick={() => setEditingItem(null)} />
             <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-[90vw] max-w-2xl">

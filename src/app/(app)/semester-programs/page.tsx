@@ -60,11 +60,20 @@ export default function SemesterProgramsPage() {
 
   useEffect(() => {
     setIsClient(true);
-    // In a real app, fetch data. For KepalaSekolah/WakaKurikulum, fetch all.
-  }, []);
+    // For KepalaSekolah/WakaKurikulum/TataUsaha/Admin, fetch all. Gurus view only (or their own if applicable).
+    if (user && (user.role === "KepalaSekolah" || user.role === "WakaKurikulum" || user.role === "TataUsaha" || user.role === "Admin")) {
+        setSemesterPrograms(initialSemesterPrograms);
+    } else if (user && user.role === "Guru") {
+        // PROTA/Promes are typically not user-specific to one Guru in the same way RPPs are.
+        // Gurus would typically view PROTA/Promes relevant to their subject/grade.
+        // For demo, they see all.
+        setSemesterPrograms(initialSemesterPrograms);
+    }
+  }, [user]);
 
-  // Role-based permissions
-  // PROTA/Promes are typically managed by Admin/WakaKurikulum. Gurus view.
+  // Role-based permissions for Promes
+  // Create, Edit, Delete: Admin, WakaKurikulum.
+  // View: All roles (Admin, KepalaSekolah, WakaKurikulum, TataUsaha, Guru).
   const canCreate = user && (user.role === "Admin" || user.role === "WakaKurikulum");
   const canEdit = user && (user.role === "Admin" || user.role === "WakaKurikulum");
   const canDelete = user && (user.role === "Admin" || user.role === "WakaKurikulum");
@@ -73,19 +82,19 @@ export default function SemesterProgramsPage() {
 
   const handleCreateOrUpdate = (itemData: AnyCurriculumItem) => {
     const newItem = itemData as SemesterProgram;
-     if (!newItem.createdByUserId && user) { // Assign creator if new
+     if (!newItem.createdByUserId && user) { 
         newItem.createdByUserId = user.id;
     }
 
     if (editingItem) {
-      if (!canEdit) {
-        alert("Anda tidak memiliki izin untuk mengedit item ini.");
+      if (!canEdit) { // Checks Admin/Waka permission for Promes
+        alert("Anda tidak memiliki izin untuk mengedit Promes.");
         return;
       }
       setSemesterPrograms(semesterPrograms.map(sp => sp.id === newItem.id ? newItem : sp));
     } else {
-       if (!canCreate) {
-        alert("Anda tidak memiliki izin untuk membuat item baru.");
+       if (!canCreate) { // Checks Admin/Waka permission for Promes
+        alert("Anda tidak memiliki izin untuk membuat Promes baru.");
         return;
       }
       setSemesterPrograms([newItem, ...semesterPrograms]);
@@ -94,16 +103,16 @@ export default function SemesterProgramsPage() {
   };
 
   const handleEdit = (item: AnyCurriculumItem) => {
-    if (!canEdit) {
-        alert("Anda tidak memiliki izin untuk mengedit item ini.");
+    if (!canEdit) { // Checks Admin/Waka permission for Promes
+        alert("Anda tidak memiliki izin untuk mengedit Promes.");
         return;
     }
     setEditingItem(item as SemesterProgram);
   };
 
   const handleDelete = (itemToDelete: AnyCurriculumItem) => {
-     if (!canDelete) {
-        alert("Anda tidak memiliki izin untuk menghapus item ini.");
+     if (!canDelete) { // Checks Admin/Waka permission for Promes
+        alert("Anda tidak memiliki izin untuk menghapus Promes.");
         return;
     }
     if (window.confirm(`Apakah Anda yakin ingin menghapus "${itemToDelete.title}"?`)) {
@@ -147,8 +156,9 @@ export default function SemesterProgramsPage() {
           <CardTitle className="text-2xl">Program Semester (Promes)</CardTitle>
           <CardDescription>
             Rincikan rencana pengajaran Anda untuk setiap semester. 
-            {user.role === "KepalaSekolah" || user.role === "WakaKurikulum" ? " Anda dapat melihat semua Promes." : ""}
+            {user.role === "KepalaSekolah" || user.role === "WakaKurikulum" || user.role === "TataUsaha" ? " Anda dapat melihat semua Promes." : ""}
             {user.role === "Guru" ? " Lihat Promes yang telah disusun." : ""}
+            {user.role === "Admin" && " Anda dapat membuat, mengedit, dan menghapus Promes."}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -189,10 +199,10 @@ export default function SemesterProgramsPage() {
           <CurriculumDataTable
             items={filteredSemesterPrograms}
             onView={handleView}
-            onEdit={canEdit ? handleEdit : undefined}
-            onDelete={canDelete ? handleDelete : undefined}
-            canEdit={() => canEdit} // Pass permission check function (simplified for Promes)
-            canDelete={() => canDelete} // Pass permission check function (simplified for Promes)
+            onEdit={canEdit ? handleEdit : undefined} // Pass function or undefined
+            onDelete={canDelete ? handleDelete : undefined} // Pass function or undefined
+            canEdit={() => canEdit} // Pass explicit permission check for Promes
+            canDelete={() => canDelete} // Pass explicit permission check for Promes
             itemTypeForExport="Promes"
           />
         </CardContent>

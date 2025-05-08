@@ -5,7 +5,7 @@ import { useEffect, useMemo } from 'react';
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarTrigger, SidebarInset } from '@/components/ui/sidebar';
 import { AppLogo } from '@/components/layout/AppLogo';
 import { UserProfile } from '@/components/layout/UserProfile';
-import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, Users, FileText } from 'lucide-react';
+import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, Users, FileText, Printer } from 'lucide-react';
 import Link from 'next/link';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
@@ -21,9 +21,9 @@ interface NavItem {
 
 const allNavItems: NavItem[] = [
   { href: "/dashboard", label: "Dasbor", icon: LayoutDashboard, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
-  { href: "/lesson-plans", label: "Rencana Pembelajaran", icon: BookOpenText, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"] },
-  { href: "/annual-programs", label: "Program Tahunan", icon: CalendarDays, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"] },
-  { href: "/semester-programs", label: "Program Semester", icon: CalendarClock, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"] },
+  { href: "/lesson-plans", label: "Rencana Pembelajaran", icon: BookOpenText, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+  { href: "/annual-programs", label: "Program Tahunan", icon: CalendarDays, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+  { href: "/semester-programs", label: "Program Semester", icon: CalendarClock, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/ai-assistant", label: "Asisten AI", icon: Sparkles, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"] },
   // Example of Admin-specific pages (conceptual)
   // { href: "/admin/user-management", label: "Manajemen Pengguna", icon: Users, roles: ["Admin"] },
@@ -59,7 +59,8 @@ export default function AppLayout({ children }: PropsWithChildren) {
         } else {
           logout(); // Or a generic "access denied" page
         }
-      } else if (!currentNavItem && pathname !== '/dashboard') {
+      } else if (!currentNavItem && pathname !== '/dashboard' && !pathname.startsWith('/settings') ) { 
+        // Allow /settings as it's not always a direct nav item for all sub-routes
         // Potentially trying to access a sub-route of something not in nav, or a non-existent page.
         // For simplicity, if not dashboard and not explicitly allowed, consider redirecting.
         // This is a basic check; more robust routing protection might be needed.
