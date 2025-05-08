@@ -15,7 +15,7 @@ import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { id as indonesianLocale } from "date-fns/locale";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useLog, type LogEntry, type LogLevel } from "@/contexts/LogContext";
+import { useLog, type LogEntry, type LogLevel, MAX_LOGS } from "@/contexts/LogContext";
 
 export default function SystemLogsPage() {
   const { user, loading: authLoading } = useAuth();
@@ -225,3 +225,4 @@ export default function SystemLogsPage() {
     </div>
   );
 }
+

@@ -22,7 +22,7 @@ interface LogContextType {
 
 const LogContext = createContext<LogContextType | undefined>(undefined);
 
-const MAX_LOGS = 200; // Keep a maximum of 200 log entries
+export const MAX_LOGS = 200; // Keep a maximum of 200 log entries
 
 export const LogProvider = ({ children }: PropsWithChildren) => {
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -72,3 +72,4 @@ export const useLog = () => {
   }
   return context;
 };
+
