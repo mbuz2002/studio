@@ -146,49 +146,49 @@
   }
 
   .theme-forest-haven {
-    --background: 165 19% 12%; /* Very Dark Greenish-Gray */
-    --foreground: 195 10% 92%; /* Light Grayish-Cyan */
+    --background: 140 25% 10%; /* Deep Forest Green-Brown */
+    --foreground: 90 20% 88%; /* Soft Mossy White */
 
-    --card: 165 19% 15%; /* Slightly Lighter Dark Greenish-Gray */
-    --card-foreground: 195 10% 92%;
+    --card: 140 25% 13%; /* Slightly Lighter Forest Green-Brown */
+    --card-foreground: 90 20% 88%; /* Soft Mossy White */
 
-    --popover: 165 19% 14%;
-    --popover-foreground: 195 10% 92%;
+    --popover: 140 25% 12%; /* Darker than card */
+    --popover-foreground: 90 20% 88%; /* Soft Mossy White */
 
-    --primary: 145 60% 42%; /* Emerald Green */
-    --primary-foreground: 0 0% 100%; /* White */
+    --primary: 120 55% 38%; /* Rich Leaf Green */
+    --primary-foreground: 60 70% 95%; /* Pale Yellow/Cream */
 
-    --secondary: 210 29% 21%; /* Dark Slate Blue */
-    --secondary-foreground: 195 10% 85%;
+    --secondary: 30 30% 28%; /* Dark Earthy Brown */
+    --secondary-foreground: 45 40% 85%; /* Light Beige */
 
-    --muted: 210 29% 28%; /* Muted Dark Slate Blue */
-    --muted-foreground: 195 10% 65%;
+    --muted: 140 20% 18%; /* Dark Desaturated Green-Brown */
+    --muted-foreground: 100 15% 65%; /* Muted Greenish Grey */
 
-    --accent: 39 90% 51%; /* Orange */
-    --accent-foreground: 0 0% 0%; /* Black for contrast on orange */
+    --accent: 35 75% 50%; /* Warm Golden Amber/Sunlight */
+    --accent-foreground: 25 50% 10%; /* Very Dark Brown for contrast */
 
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 70% 45%; /* Deep Red, slightly desaturated */
+    --destructive-foreground: 0 0% 95%; /* Off-white */
 
-    --border: 210 29% 25%; /* Border for dark slate */
-    --input: 210 29% 18%; /* Darker input */
-    --ring: 145 60% 42%; /* Emerald Green for rings */
+    --border: 140 25% 18%; /* Subtle border, slightly lighter than card */
+    --input: 140 25% 15%; /* Input background */
+    --ring: 120 55% 38%; /* Match primary */
     
     /* Sidebar for Forest Haven */
-    --sidebar-background: 165 19% 10%; /* Darker Greenish-Gray */
-    --sidebar-foreground: 195 10% 92%;
-    --sidebar-primary: 145 60% 42%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 165 19% 20%;
-    --sidebar-accent-foreground: 145 60% 42%;
-    --sidebar-border: 165 19% 14%;
-    --sidebar-ring: 145 60% 42%;
+    --sidebar-background: 140 25% 8%; /* Darkest Green-Brown, for depth */
+    --sidebar-foreground: 90 20% 85%; /* Slightly dimmer than main foreground */
+    --sidebar-primary: 120 55% 38%; /* Same as main primary */
+    --sidebar-primary-foreground: 60 70% 95%; /* Same as main primary-foreground */
+    --sidebar-accent: 140 25% 15%; /* Hover background, like card */
+    --sidebar-accent-foreground: 120 55% 55%; /* Brighter primary on hover */
+    --sidebar-border: 140 25% 12%; /* Darker border within sidebar */
+    --sidebar-ring: 120 55% 38%; /* Match primary */
     
-    --chart-1: 145 60% 42%; 
-    --chart-2: 39 90% 51%; 
-    --chart-3: 190 80% 50%; 
-    --chart-4: 270 60% 60%; 
-    --chart-5: 0 63% 45%;
+    --chart-1: 120 55% 38%; /* Primary Green */
+    --chart-2: 35 75% 50%; /* Accent Amber */
+    --chart-3: 90 40% 50%; /* Moss Green */
+    --chart-4: 25 40% 40%; /* Earthy Brown */
+    --chart-5: 0 60% 55%; /* Muted Red/Terracotta */
   }
 }
 
@@ -201,3 +201,4 @@
     font-family: var(--font-geist-sans);
   }
 }
+
