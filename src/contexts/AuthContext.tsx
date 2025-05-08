@@ -31,41 +31,62 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const { addLog } = useLog(); // Get addLog function from LogContext
+  const { addLog } = useLog(); 
 
   useEffect(() => {
-    try {
-      const storedUser = localStorage.getItem('currentUser');
-      if (storedUser) {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-        // addLog("INFO", `Sesi pengguna ${parsedUser.email} dipulihkan dari penyimpanan lokal.`, "AuthContext");
+    let didCancel = false;
+
+    const attemptUserRestore = () => {
+      try {
+        const storedUser = localStorage.getItem('currentUser');
+        if (storedUser && !didCancel) {
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
+          // Log restoration success (deferred if needed, but usually fine as it's post-initial setUser)
+          // setTimeout(() => addLog("INFO", `Sesi pengguna ${parsedUser.email} dipulihkan.`, "AuthContext"),0);
+        }
+      } catch (error) {
+        console.error("Gagal memulihkan sesi pengguna:", error);
+        if (!didCancel) {
+          // Defer the addLog call to prevent issues during render phases
+          setTimeout(() => {
+            addLog("ERROR", `Gagal memulihkan sesi pengguna dari penyimpanan lokal: ${error instanceof Error ? error.message : String(error)}`, "AuthContext");
+          }, 0);
+          localStorage.removeItem('currentUser');
+        }
+      } finally {
+        if (!didCancel) {
+          setLoading(false);
+        }
       }
-    } catch (error) {
-      console.error("Gagal memulihkan sesi pengguna:", error);
-      addLog("ERROR", `Gagal memulihkan sesi pengguna dari penyimpanan lokal: ${error instanceof Error ? error.message : String(error)}`, "AuthContext");
-      localStorage.removeItem('currentUser');
-    }
-    setLoading(false);
-  }, [addLog]); // Add addLog to dependency array if it's stable (which it is with useCallback)
+    };
+
+    attemptUserRestore();
+
+    return () => {
+      didCancel = true;
+    };
+  }, [addLog]);
 
   const login = (email: string, role: UserRole) => {
-    const baseUser = mockUsers[role] || mockUsers.Guru; // Fallback to Guru if role not in mock
+    const baseUser = mockUsers[role] || mockUsers.Guru; 
     const loggedInUser: User = {
       id: `user-${Date.now()}-${Math.random().toString(36).substring(2,9)}`, 
       email,
       role,
       ...baseUser,
-      avatarUrl: baseUser.avatarUrl || `https://picsum.photos/seed/${email}/100/100` // Ensure avatar URL exists
+      avatarUrl: baseUser.avatarUrl || `https://picsum.photos/seed/${email}/100/100` 
     };
     setUser(loggedInUser);
     localStorage.setItem('currentUser', JSON.stringify(loggedInUser));
+    // addLog is called after state updates and navigation, generally safe.
     addLog("INFO", `Pengguna ${email} (Peran: ${role}) berhasil masuk.`, "AuthContext");
     router.push('/dashboard');
   };
 
   const logout = () => {
     if (user) {
+      // addLog is called before state updates, potentially defer if issues arise.
       addLog("INFO", `Pengguna ${user.email} keluar.`, "AuthContext");
     }
     setUser(null);
@@ -78,7 +99,12 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       if (currentUser) {
         const newUser = { ...currentUser, ...updatedUserData, updatedAt: new Date().toISOString() };
         localStorage.setItem('currentUser', JSON.stringify(newUser));
-        addLog("INFO", `Profil pengguna ${currentUser.email} diperbarui. Data baru: ${JSON.stringify(updatedUserData)}`, "AuthContext");
+        
+        // Defer the addLog call to prevent issues during render phases
+        setTimeout(() => {
+          addLog("INFO", `Profil pengguna ${currentUser.email} diperbarui. Data baru: ${JSON.stringify(Object.keys(updatedUserData))}`, "AuthContext");
+        }, 0);
+        
         return newUser;
       }
       return null;
