@@ -700,12 +700,12 @@ Minggu ke: 2
         </DialogTrigger>
       )}
      
-      <DialogContent className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-2xl max-h-[95vh] flex flex-col rounded-lg">
+      <DialogContent className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-2xl max-h-[95vh] flex flex-col rounded-lg overflow-x-hidden">
         <DialogHeader className="px-4 pt-4 sm:px-6 sm:pt-6">
           <DialogTitle>{actualDialogTitle}</DialogTitle>
           <DialogDescription>{dialogDescription}</DialogDescription>
         </DialogHeader>
-        <ScrollArea className="flex-grow overflow-y-auto px-1 sm:px-2"> 
+        <ScrollArea className="flex-grow overflow-y-auto px-1 sm:px-2 w-full"> 
           <form onSubmit={handleSubmit} className="px-3 py-2 sm:px-4 sm:py-4"> 
             <div className="grid gap-4 py-4">
               <div className="space-y-1">
