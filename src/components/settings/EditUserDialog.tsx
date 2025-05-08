@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, type FormEvent } from "react";
@@ -15,9 +14,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { User } from "@/types";
-import { Save, UserCircle2 } from "lucide-react";
+import { Save, UserCircle2, KeyRound } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
 
 interface EditUserDialogProps {
   isOpen: boolean;
@@ -30,6 +30,9 @@ export function EditUserDialog({ isOpen, onOpenChange, user, onUserUpdated }: Ed
   const [name, setName] = useState(user.name);
   const [email, setEmail] = useState(user.email);
   const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl || "");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -38,6 +41,10 @@ export function EditUserDialog({ isOpen, onOpenChange, user, onUserUpdated }: Ed
       setName(user.name);
       setEmail(user.email);
       setAvatarUrl(user.avatarUrl || "");
+      // Reset password fields when dialog opens
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmNewPassword("");
     }
   }, [isOpen, user]);
 
@@ -50,23 +57,53 @@ export function EditUserDialog({ isOpen, onOpenChange, user, onUserUpdated }: Ed
     setIsLoading(true);
 
     if (!name || !email) {
-      toast({ title: "Data Tidak Lengkap", description: "Nama dan email tidak boleh kosong.", variant: "destructive" });
+      toast({ title: "Data Profil Tidak Lengkap", description: "Nama dan email tidak boleh kosong.", variant: "destructive" });
       setIsLoading(false);
       return;
     }
     
-    // Simulate API call or direct update
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
+    // Profile update part
     const updatedUserData: Partial<User> = {
       name,
       email,
-      avatarUrl: avatarUrl || `https://picsum.photos/seed/${email}/100/100`, // Update avatar or generate new if empty
+      avatarUrl: avatarUrl || `https://picsum.photos/seed/${email}/100/100`,
     };
+    onUserUpdated(updatedUserData); // This will show "Profil Diperbarui" toast via SettingsPage
 
-    onUserUpdated(updatedUserData);
+    // Password change part (simulated)
+    if (newPassword || confirmNewPassword || currentPassword) { // Only process if any password field is touched
+      if (newPassword !== confirmNewPassword) {
+        toast({ title: "Gagal Mengganti Kata Sandi", description: "Kata sandi baru dan konfirmasi kata sandi tidak cocok.", variant: "destructive" });
+        setIsLoading(false);
+        return;
+      }
+      if (newPassword.length < 6 && newPassword.length > 0) { // Simple length check for demo
+        toast({ title: "Gagal Mengganti Kata Sandi", description: "Kata sandi baru minimal 6 karakter.", variant: "destructive" });
+        setIsLoading(false);
+        return;
+      }
+      if (newPassword.length >= 6) {
+          // Simulate password change success
+          // In a real app, you'd call an API here to change the password
+          // For this demo, we just show a success message
+          toast({
+          title: "Kata Sandi Diperbarui",
+          description: "Kata sandi Anda telah berhasil diperbarui (simulasi).",
+          });
+          // Clear password fields after successful "change"
+          setCurrentPassword("");
+          setNewPassword("");
+          setConfirmNewPassword("");
+      } else if (!newPassword && (currentPassword || confirmNewPassword)) {
+        // If new password is empty but other password fields were touched
+         toast({ title: "Informasi Kata Sandi Tidak Lengkap", description: "Harap isi kata sandi baru jika ingin mengubahnya.", variant: "destructive" });
+      }
+    }
+    
     setIsLoading(false);
-    // Toast is handled by the parent component (SettingsPage)
+    // Dialog will be closed by parent if onUserUpdated is successful.
+    // If only password fields were touched and no profile update, we might need to close explicitly.
+    // However, onUserUpdated always runs, so parent handles closure.
   };
 
   return (
@@ -103,11 +140,27 @@ export function EditUserDialog({ isOpen, onOpenChange, user, onUserUpdated }: Ed
             </div>
             <div className="space-y-1">
               <Label htmlFor="role-edit">Peran</Label>
-              <Input id="role-edit" value={user.role} disabled className="bg-muted/50" />
+              <Input id="role-edit" value={user.role} disabled className="bg-muted/50 cursor-not-allowed" />
               <p className="text-xs text-muted-foreground">Peran tidak dapat diubah melalui halaman ini.</p>
             </div>
+
+            <Separator className="my-4" />
+            
+            <div className="space-y-1">
+                <Label htmlFor="currentPassword">Kata Sandi Saat Ini (Kosongkan jika tidak ingin mengubah)</Label>
+                <Input id="currentPassword" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="********" />
+                <p className="text-xs text-muted-foreground">Untuk demo, validasi kata sandi saat ini diabaikan.</p>
+            </div>
+             <div className="space-y-1">
+                <Label htmlFor="newPassword">Kata Sandi Baru</Label>
+                <Input id="newPassword" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Minimal 6 karakter" />
+            </div>
+             <div className="space-y-1">
+                <Label htmlFor="confirmNewPassword">Konfirmasi Kata Sandi Baru</Label>
+                <Input id="confirmNewPassword" type="password" value={confirmNewPassword} onChange={(e) => setConfirmNewPassword(e.target.value)} placeholder="Ulangi kata sandi baru" />
+            </div>
           </div>
-          <DialogFooter className="mt-2">
+          <DialogFooter className="mt-4 pt-4 border-t">
             <DialogClose asChild>
                 <Button type="button" variant="outline">Batal</Button>
             </DialogClose>
