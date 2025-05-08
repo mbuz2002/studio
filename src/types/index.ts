@@ -141,5 +141,3 @@ export interface ExportedCurriculumData {
   schoolProfile: SchoolProfile | null;
   appUsers: User[];
 }
-
-```
