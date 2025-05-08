@@ -24,11 +24,11 @@ export function UserProfile() {
   }
 
   const getInitials = (name: string) => {
-    if (!name) return '';
+    if (!name || typeof name !== 'string') return '';
     return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
   }
 
-  const avatarSrc = user.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || user.email)}&background=random&color=fff&font-size=0.5`;
+  const avatarSrc = user.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || user.email)}&background=random&color=fff&font-size=0.45`;
 
 
   return (
@@ -38,7 +38,7 @@ export function UserProfile() {
           <Button variant="ghost" className="w-full justify-start gap-2.5 p-2 hover:bg-sidebar-accent group-data-[state=collapsed]:md:size-9 group-data-[state=collapsed]:md:justify-center group-data-[state=collapsed]:md:p-0 rounded-md">
             <Avatar className="h-8 w-8 border-2 border-sidebar-primary-foreground/50">
               <AvatarImage src={avatarSrc} alt={user.name} data-ai-hint="user avatar" />
-              <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground text-xs">
+              <AvatarFallback className="bg-secondary text-secondary-foreground text-xs">
                 {user.name ? getInitials(user.name) : <UserCircle size={20} />}
               </AvatarFallback>
             </Avatar>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -6,12 +7,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Edit2, Trash2, Users, UserPlus } from "lucide-react";
+import { MoreHorizontal, Edit2, Trash2, Users, UserPlus, UserCircle2 } from "lucide-react";
 import type { User, UserRole } from "@/types";
 import { AddUserDialog } from "./AddUserDialog";
 import { useToast } from "@/hooks/use-toast";
 import { useLog } from "@/contexts/LogContext"; // Import useLog
 import { useAuth } from "@/contexts/AuthContext"; // Import useAuth for current admin user
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const initialUsers: User[] = [
   { id: "user-1", name: "Admin User", email: "admin@sekolah.id", role: "Admin", avatarUrl: "https://picsum.photos/seed/admin/100/100" },
@@ -29,7 +31,6 @@ export function UserManagementSection() {
   const { user: adminUser } = useAuth();
   const logSource = "UserManagement";
 
-  // Simulate fetching users
   useEffect(() => {
     const storedUsers = localStorage.getItem("appUsers");
     if (storedUsers) {
@@ -41,7 +42,7 @@ export function UserManagementSection() {
         localStorage.setItem("appUsers", JSON.stringify(initialUsers));
       }
     } else {
-      localStorage.setItem("appUsers", JSON.stringify(initialUsers)); // Initialize if not present
+      localStorage.setItem("appUsers", JSON.stringify(initialUsers)); 
       addLog("INFO", "Tidak ada daftar pengguna di penyimpanan lokal, menggunakan data awal.", logSource);
     }
   }, [addLog]);
@@ -80,12 +81,15 @@ export function UserManagementSection() {
   };
   
   const handleEditUser = (userId: string) => {
-    // For demo, just show a toast. In a real app, this would open an edit dialog.
     const userToEdit = users.find(u => u.id === userId);
     toast({ title: "Fitur Edit Pengguna", description: `Dialog untuk mengedit pengguna ${userToEdit?.name} akan terbuka di sini. Fitur ini sedang dikembangkan.` });
     addLog("INFO", `Admin ${adminUser?.email} mencoba mengedit pengguna ${userToEdit?.email}. (Fitur edit dialog belum terimplementasi penuh).`, logSource);
   };
 
+  const getInitials = (name: string) => {
+    if (!name || typeof name !== 'string') return '';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+  }
 
   return (
     <Card className="rounded-lg">
@@ -123,10 +127,19 @@ export function UserManagementSection() {
               {users.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell className="font-medium px-3 sm:px-4 py-2 sm:py-3 align-top">
-                    <div className="flex items-center gap-2">
-                       <img src={user.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`} alt={user.name} className="h-8 w-8 rounded-full" data-ai-hint="user avatar" />
+                    <div className="flex items-center gap-3">
+                       <Avatar className="h-8 w-8 flex-shrink-0">
+                           <AvatarImage 
+                                src={user.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random&color=fff&font-size=0.45`} 
+                                alt={user.name}
+                                data-ai-hint="user avatar" 
+                            />
+                           <AvatarFallback className="text-xs">
+                               {getInitials(user.name) || <UserCircle2 size={16} />}
+                           </AvatarFallback>
+                       </Avatar>
                        <div className="flex flex-col">
-                          <span className="text-sm">{user.name}</span>
+                          <span className="text-sm font-semibold">{user.name}</span>
                           <span className="text-xs text-muted-foreground md:hidden">{user.email}</span>
                        </div>
                     </div>

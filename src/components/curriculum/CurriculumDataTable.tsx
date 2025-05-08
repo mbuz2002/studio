@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { AnyCurriculumItem, LessonPlan, AnnualProgram, SemesterProgram, User, SchoolProfile, PrintOptions, CurriculumFramework } from "@/types";
@@ -62,8 +63,6 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
             localStorage.removeItem("appUsers"); 
         }
       } else {
-        // Fallback if no users are stored, ensure at least current user is available
-        // This might be more robustly handled by fetching users from a service in a real app
         if (currentUser) {
           setAppUsers([currentUser]); 
         }
@@ -80,11 +79,15 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
   const getCreatorAvatar = (userId?: string): string | undefined => {
     if (!userId) return undefined;
     const user = appUsers.find(u => u.id === userId);
+    // Fallback to ui-avatars if user.avatarUrl is not set but user.name exists
+    if (user && !user.avatarUrl && user.name) {
+      return `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random&color=fff&font-size=0.45`;
+    }
     return user?.avatarUrl;
   };
   
    const getInitials = (name: string) => {
-    if (!name) return '';
+    if (!name || typeof name !== 'string') return '';
     return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
   }
 
@@ -402,7 +405,6 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
           assessment: rppInput.assessment || "Belum dirinci",
           differentiationStrategies: rppInput.differentiationStrategies || [],
           materials: rppInput.materials || "", 
-          // KTSP/K-13 fields need to be passed if they exist on rppInput
           standarKompetensi: rppInput.standarKompetensi,
           kompetensiInti: rppInput.kompetensiInti,
           kompetensiDasar: rppInput.kompetensiDasar,
@@ -583,9 +585,13 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
                 <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top">
                   <div className="flex items-center gap-1.5 sm:gap-2">
                     <Avatar className="h-7 w-7 flex-shrink-0">
-                        <AvatarImage src={getCreatorAvatar(item.createdByUserId)} alt={getCreatorName(item.createdByUserId)} data-ai-hint="user avatar" />
+                        <AvatarImage 
+                          src={getCreatorAvatar(item.createdByUserId)} 
+                          alt={getCreatorName(item.createdByUserId)} 
+                          data-ai-hint="user avatar"
+                        />
                         <AvatarFallback className="text-xs">
-                            {getInitials(getCreatorName(item.createdByUserId))}
+                          {getInitials(getCreatorName(item.createdByUserId)) || <UserIcon size={14}/>}
                         </AvatarFallback>
                     </Avatar>
                     <span className="truncate text-xs sm:text-sm max-w-[100px] sm:max-w-[120px]">{getCreatorName(item.createdByUserId)}</span>
