@@ -4,10 +4,9 @@
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Cog, UserCircle, ShieldCheck, Database, Palette, Upload, Download, FileText } from "lucide-react"; 
+import { Cog, UserCircle, ShieldCheck, Database, Palette, Upload, Download, FileText, Users } from "lucide-react"; 
 import { useAuth } from "@/contexts/AuthContext";
 import { SchoolProfileForm } from "@/components/settings/SchoolProfileForm";
-import { UserManagementSection } from "@/components/settings/UserManagementSection";
 import { EditUserDialog } from "@/components/settings/EditUserDialog";
 import { AppPreferencesDialog } from "@/components/settings/AppPreferencesDialog"; 
 import type { User, SchoolProfile, ExportedCurriculumData, LessonPlan, AnnualProgram, SemesterProgram } from "@/types";
@@ -34,7 +33,7 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (user) { // Log page access once user is confirmed
-      addLog("INFO", `Pengguna ${user.email} mengakses halaman Pengaturan.`, "SettingsPage");
+      addLog("INFO", `Pengguna ${user.email} mengakses halaman Pengaturan Akun.`, "SettingsPage");
     }
   }, [user, addLog]);
 
@@ -53,7 +52,7 @@ export default function SettingsPage() {
   const canSeeAppSettings = ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"].includes(user.role);
   
   const canManageSchoolProfile = ["Admin", "TataUsaha"].includes(user.role);
-  const canManageUsers = ["Admin", "TataUsaha"].includes(user.role);
+  const canManageUsers = ["Admin", "TataUsaha"].includes(user.role); // For link visibility
   
   const canManageData = ["Admin", "WakaKurikulum"].includes(user.role);
   const canSeeSystemSettings = user.role === "Admin";
@@ -184,10 +183,10 @@ export default function SettingsPage() {
         <CardHeader>
           <div className="flex items-center gap-3">
               <Cog className="h-8 w-8 text-primary" />
-              <CardTitle className="text-3xl font-bold">Pengaturan</CardTitle>
+              <CardTitle className="text-3xl font-bold">Pengaturan Akun</CardTitle>
           </div>
           <CardDescription className="text-lg">
-            Kelola preferensi aplikasi, profil sekolah (jika berwenang), pengguna (jika berwenang), dan pengaturan akun Anda.
+            Kelola preferensi aplikasi dan pengaturan akun Anda.
           </CardDescription>
         </CardHeader>
       </Card>
@@ -195,12 +194,6 @@ export default function SettingsPage() {
       {canManageSchoolProfile && (
         <div className="mt-6">
           <SchoolProfileForm />
-        </div>
-      )}
-
-      {canManageUsers && (
-        <div className="mt-6">
-          <UserManagementSection />
         </div>
       )}
       
@@ -282,6 +275,24 @@ export default function SettingsPage() {
                 </CardContent>
               </Card>
             )}
+             {canManageUsers && (
+                <Card>
+                <CardHeader>
+                    <div className="flex items-center gap-2">
+                        <Users className="h-6 w-6 text-primary" />
+                        <CardTitle>Manajemen Pengguna</CardTitle>
+                    </div>
+                    <CardDescription>Kelola akun pengguna dan peran mereka dalam sistem.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-muted-foreground">Akses panel manajemen pengguna untuk menambah, mengedit, atau menghapus pengguna.</p>
+                    <Button asChild className="mt-2">
+                        <Link href="/admin/user-management">Buka Manajemen Pengguna</Link>
+                    </Button>
+                </CardContent>
+                </Card>
+            )}
+
 
             {canSeeSystemSettings && (
                 <Card>
@@ -302,8 +313,8 @@ export default function SettingsPage() {
             )}
             
           </div>
-           {!(canSeeProfileSettings || canSeeAppSettings || canManageData || canSeeSystemSettings) && 
-            !canManageSchoolProfile && !canManageUsers && ( 
+           {!(canSeeProfileSettings || canSeeAppSettings || canManageData || canSeeSystemSettings || canManageUsers) && 
+            !canManageSchoolProfile && ( 
               <p className="text-muted-foreground">Tidak ada pengaturan yang tersedia untuk peran Anda saat ini.</p>
             )}
         </CardContent>

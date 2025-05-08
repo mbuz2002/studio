@@ -5,7 +5,7 @@ import { useEffect, useMemo } from 'react';
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset } from '@/components/ui/sidebar';
 import { AppLogo } from '@/components/layout/AppLogo';
 import { UserProfile } from '@/components/layout/UserProfile';
-import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, ShieldCheck, Activity } from 'lucide-react';
+import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, ShieldCheck, Activity, Users } from 'lucide-react';
 import Link from 'next/link';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
@@ -18,8 +18,8 @@ interface NavItem {
   label: string;
   icon: React.ElementType;
   roles: UserRole[]; 
-  isSystemSetting?: boolean; // If true, only Admin can access, even if listed in roles
-  isHiddenFromSidebar?: boolean; // Explicitly hide from sidebar even if role matches
+  isSystemSetting?: boolean; 
+  isHiddenFromSidebar?: boolean; 
 }
 
 const allNavItems: NavItem[] = [
@@ -29,6 +29,7 @@ const allNavItems: NavItem[] = [
   { href: "/semester-programs", label: "Program Semester", icon: CalendarClock, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/ai-assistant", label: "Asisten AI", icon: Sparkles, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"] },
   { href: "/settings", label: "Pengaturan Akun", icon: SettingsIcon, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+  { href: "/admin/user-management", label: "Manajemen Pengguna", icon: Users, roles: ["Admin", "TataUsaha"], isSystemSetting: false }, // New item
   { href: "/admin/system-settings", label: "Pengaturan Sistem", icon: ShieldCheck, roles: ["Admin"], isSystemSetting: true },
   { href: "/admin/system-logs", label: "Log Sistem", icon: Activity, roles: ["Admin"], isSystemSetting: true, isHiddenFromSidebar: true },
 ];
@@ -48,31 +49,33 @@ export default function AppLayout({ children }: PropsWithChildren) {
     if (!user) return [];
     return allNavItems.filter(item => 
         item.roles.includes(user.role) && 
-        !item.isHiddenFromSidebar && // Hide if explicitly marked
-        (!item.isSystemSetting || user.role === 'Admin') // Only show system settings to Admin in sidebar if not hidden
-    );
+        !item.isHiddenFromSidebar &&
+        // Show if not a system setting OR if it is a system setting AND user is Admin
+        // OR if it's a page specifically accessible by roles like user management (even if under /admin)
+        (item.isSystemSetting === false || (item.isSystemSetting === true && user.role === 'Admin') || item.roles.includes(user.role) )
+    ).sort((a,b) => { // Keep system settings at the bottom for Admin
+        if (a.isSystemSetting && !b.isSystemSetting) return 1;
+        if (!a.isSystemSetting && b.isSystemSetting) return -1;
+        return 0;
+    });
   }, [user]);
 
    useEffect(() => {
     if (!loading && isAuthenticated && user) {
       const currentNavItem = allNavItems.find(item => pathname.startsWith(item.href));
       
-      if (pathname.startsWith('/settings')) { // General settings page
-        const settingsBaseAccess = allNavItems.find(item => item.href === "/settings" && item.roles.includes(user.role));
-        if (!settingsBaseAccess) {
-            router.push("/dashboard"); // Redirect if no access to base /settings
-        }
-      } else if (currentNavItem) {
+      if (currentNavItem) {
         // Check role access for the current item
         if (!currentNavItem.roles.includes(user.role)) {
           const dashboardAccess = allNavItems.find(item => item.href === "/dashboard" && item.roles.includes(user.role));
-          if (dashboardAccess) router.push("/dashboard"); else logout();
+          if (dashboardAccess) router.push("/dashboard"); else logout(); // if no dashboard access, logout
           return;
         }
-        // Specifically for system settings or system logs, ensure user is Admin
-        if (currentNavItem.isSystemSetting && user.role !== 'Admin') {
-           router.push("/dashboard"); 
-        }
+      } else if (pathname === "/settings") { // Special handling for /settings base page
+         const settingsBaseAccess = allNavItems.find(item => item.href === "/settings" && item.roles.includes(user.role));
+         if (!settingsBaseAccess) {
+            router.push("/dashboard");
+         }
       }
       // If no currentNavItem matched (e.g. 404), Next.js handles it.
     }
