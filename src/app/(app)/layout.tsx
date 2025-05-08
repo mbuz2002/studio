@@ -107,13 +107,11 @@ export default function AppLayout({ children }: PropsWithChildren) {
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
-        {/* Sticky header for mobile sidebar trigger and potential breadcrumbs */}
-        <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 sm:py-4">
-          <SidebarTrigger className="sm:hidden" />
-          {/* Placeholder for breadcrumbs or page title if needed in the future */}
-          <div className="flex-1" /> {/* Spacer to push other items to the right if any */}
+        {/* Mobile-only sticky bottom bar for sidebar trigger */}
+        <header className="fixed bottom-0 left-0 right-0 z-50 flex h-16 items-center justify-center border-t border-border bg-background shadow-t-lg sm:hidden">
+          <SidebarTrigger /> {/* This SidebarTrigger is for mobile sidebar */}
         </header>
-        <main className="flex-1 overflow-auto p-4 sm:px-6"> {/* Adjusted padding */}
+        <main className="flex-1 overflow-auto p-4 pb-20 sm:px-6 sm:pb-4"> {/* Adjusted padding-bottom for mobile */}
           {children}
         </main>
       </SidebarInset>
