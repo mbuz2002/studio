@@ -6,7 +6,7 @@ import { defaultPrintOptions } from "@/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Download, Eye, FilePenLine, MoreHorizontal, Trash2, Loader2, Printer, Settings2 } from "lucide-react";
+import { Download, Eye, FilePenLine, MoreHorizontal, Trash2, Loader2, Printer, Settings2, User as UserIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { id as indonesianLocale } from "date-fns/locale"; 
@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { PrintOptionsDialog } from "./PrintOptionsDialog";
 import { useLog } from "@/contexts/LogContext"; // Import useLog
 import { useAuth } from "@/contexts/AuthContext"; // Import useAuth for user info
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface CurriculumDataTableProps {
   items: AnyCurriculumItem[];
@@ -61,9 +62,33 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
             console.error("Failed to parse app users from localStorage", e);
             localStorage.removeItem("appUsers"); // Clear corrupted data
         }
+      } else {
+        // If no users in local storage, try to get the current logged-in user
+        // This is a fallback, ideally appUsers should be managed globally or fetched
+        if (currentUser) {
+          setAppUsers([currentUser]);
+        }
       }
     }
-  }, []);
+  }, [currentUser]);
+
+  const getCreatorName = (userId?: string): string => {
+    if (!userId) return 'Tidak diketahui';
+    const user = appUsers.find(u => u.id === userId);
+    return user ? user.name : userId; // Fallback to ID if user not found
+  };
+
+  const getCreatorAvatar = (userId?: string): string | undefined => {
+    if (!userId) return undefined;
+    const user = appUsers.find(u => u.id === userId);
+    return user?.avatarUrl;
+  };
+  
+   const getInitials = (name: string) => {
+    if (!name) return '';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+  }
+
 
  const generatePrintableHtml = (item: AnyCurriculumItem, options: PrintOptions): string => {
     const creatorUser = appUsers.find(u => u.id === item.createdByUserId);
@@ -456,10 +481,11 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="min-w-[200px] w-2/5">Judul</TableHead>
+              <TableHead className="min-w-[250px] w-2/5">Judul</TableHead>
               <TableHead>Jenis</TableHead>
               <TableHead className="min-w-[150px]">Mata Pelajaran</TableHead>
-              <TableHead className="min-w-[150px]">Jenjang/Kelas</TableHead>
+              <TableHead className="min-w-[180px]">Jenjang/Kelas</TableHead>
+              <TableHead className="min-w-[180px]">Nama Guru/Pembuat</TableHead>
               <TableHead className="min-w-[180px]">Terakhir Diperbarui</TableHead>
               <TableHead className="text-right min-w-[100px]">Aksi</TableHead>
             </TableRow>
@@ -467,7 +493,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
           <TableBody>
             {items.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="text-center h-24 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center h-24 text-muted-foreground">
                   Tidak ada item ditemukan.
                 </TableCell>
               </TableRow>
@@ -482,6 +508,17 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
                 </TableCell>
                 <TableCell>{item.subject}</TableCell>
                 <TableCell>{item.gradeLevel}</TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <Avatar className="h-7 w-7">
+                        <AvatarImage src={getCreatorAvatar(item.createdByUserId)} alt={getCreatorName(item.createdByUserId)} data-ai-hint="user avatar" />
+                        <AvatarFallback className="text-xs">
+                            {getInitials(getCreatorName(item.createdByUserId))}
+                        </AvatarFallback>
+                    </Avatar>
+                    <span className="truncate text-sm">{getCreatorName(item.createdByUserId)}</span>
+                  </div>
+                </TableCell>
                 <TableCell>{isClient ? format(new Date(item.updatedAt), "PPp", { locale: indonesianLocale }) : item.updatedAt}</TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>
@@ -533,3 +570,4 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
     </>
   );
 }
+

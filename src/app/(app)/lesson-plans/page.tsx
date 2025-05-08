@@ -8,7 +8,7 @@ import type { LessonPlan, AnyCurriculumItem } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { FileUp, Filter, Search } from "lucide-react";
+import { FileUp, Filter, Search, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
@@ -76,8 +76,13 @@ export default function LessonPlansPage() {
         if (storedLessonPlans) {
           setLessonPlans(JSON.parse(storedLessonPlans));
         } else {
-          setLessonPlans(initialLessonPlansData);
-          localStorage.setItem(LESSON_PLANS_STORAGE_KEY, JSON.stringify(initialLessonPlansData));
+          // Ensure initial data has createdByUserId if it makes sense for your demo data
+          const dataToStore = initialLessonPlansData.map(lp => ({
+            ...lp,
+            createdByUserId: lp.createdByUserId || (user ? user.id : 'user-demo-fallback') // Example fallback
+          }));
+          setLessonPlans(dataToStore);
+          localStorage.setItem(LESSON_PLANS_STORAGE_KEY, JSON.stringify(dataToStore));
         }
       } catch (error) {
         console.error("Failed to access or parse localStorage for lesson plans:", error);
@@ -89,7 +94,7 @@ export default function LessonPlansPage() {
         });
       }
     }
-  }, [toast]);
+  }, [toast, user]);
 
 
   // Role-based permissions
@@ -101,7 +106,7 @@ export default function LessonPlansPage() {
     if (user.role === "Guru" && item.createdByUserId === user.id) return true; 
     // For demo, allow Guru to edit initial data not explicitly created by them IF it's part of the initial set.
     // In a real app, this might be stricter.
-    if (user.role === "Guru" && initialLessonPlansData.some(lp => lp.id === item.id && !item.createdByUserId)) return true;
+    if (user.role === "Guru" && initialLessonPlansData.some(lp => lp.id === item.id && (!item.createdByUserId || item.createdByUserId === 'user-demo-fallback'))) return true;
     return false;
   };
 
@@ -109,7 +114,7 @@ export default function LessonPlansPage() {
      if (!user) return false;
     if (user.role === "Admin" || user.role === "WakaKurikulum") return true;
     if (user.role === "Guru" && item.createdByUserId === user.id) return true;
-    if (user.role === "Guru" && initialLessonPlansData.some(lp => lp.id === item.id && !item.createdByUserId)) return true;
+    if (user.role === "Guru" && initialLessonPlansData.some(lp => lp.id === item.id && (!item.createdByUserId || item.createdByUserId === 'user-demo-fallback'))) return true;
     return false;
   };
 
@@ -185,15 +190,9 @@ export default function LessonPlansPage() {
 
   if (!isClient || !user) {
     return (
-      <div className="space-y-6 py-8">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">Memuat Rencana Pembelajaran...</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>Silakan tunggu...</p>
-          </CardContent>
-        </Card>
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="ml-2">Memuat Rencana Pembelajaran...</p>
       </div>
     );
   }
@@ -202,8 +201,8 @@ export default function LessonPlansPage() {
     <div className="space-y-6 py-4 md:py-8">
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Rencana Pembelajaran (RPP/Modul Ajar)</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-2xl font-bold">Rencana Pembelajaran (RPP/Modul Ajar)</CardTitle>
+          <CardDescription className="text-base">
             Kelola rencana pembelajaran Anda. 
             {user.role === "KepalaSekolah" || user.role === "WakaKurikulum" || user.role === "TataUsaha" ? " Anda dapat melihat semua RPP yang dibuat." : ""}
             {user.role === "Guru" ? " Buat baru, edit, atau lihat rincian RPP Anda." : ""}
@@ -276,3 +275,4 @@ export default function LessonPlansPage() {
     </div>
   );
 }
+

@@ -8,7 +8,7 @@ import type { SemesterProgram, AnyCurriculumItem } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { FileUp, Filter, Search } from "lucide-react";
+import { FileUp, Filter, Search, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
@@ -71,8 +71,12 @@ export default function SemesterProgramsPage() {
         if (storedSemesterPrograms) {
           setSemesterPrograms(JSON.parse(storedSemesterPrograms));
         } else {
-          setSemesterPrograms(initialSemesterProgramsData);
-          localStorage.setItem(SEMESTER_PROGRAMS_STORAGE_KEY, JSON.stringify(initialSemesterProgramsData));
+           const dataToStore = initialSemesterProgramsData.map(sp => ({
+            ...sp,
+            createdByUserId: sp.createdByUserId || (user ? user.id : 'user-demo-fallback')
+          }));
+          setSemesterPrograms(dataToStore);
+          localStorage.setItem(SEMESTER_PROGRAMS_STORAGE_KEY, JSON.stringify(dataToStore));
         }
       } catch (error) {
         console.error("Failed to access or parse localStorage for semester programs:", error);
@@ -84,7 +88,7 @@ export default function SemesterProgramsPage() {
         });
       }
     }
-  }, [toast]);
+  }, [toast, user]);
 
   const canCreate = user && (user.role === "Admin" || user.role === "WakaKurikulum");
   const canEdit = user && (user.role === "Admin" || user.role === "WakaKurikulum");
@@ -164,15 +168,9 @@ export default function SemesterProgramsPage() {
 
   if (!isClient || !user) {
     return (
-      <div className="space-y-6 py-8">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">Memuat Program Semester...</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>Silakan tunggu...</p>
-          </CardContent>
-        </Card>
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="ml-2">Memuat Program Semester...</p>
       </div>
     );
   }
@@ -181,8 +179,8 @@ export default function SemesterProgramsPage() {
     <div className="space-y-6 py-4 md:py-8">
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Program Semester (Promes)</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-2xl font-bold">Program Semester (Promes)</CardTitle>
+          <CardDescription className="text-base">
             Rincikan rencana pengajaran Anda untuk setiap semester. 
             {user.role === "KepalaSekolah" || user.role === "WakaKurikulum" || user.role === "TataUsaha" ? " Anda dapat melihat semua Promes." : ""}
             {user.role === "Guru" ? " Lihat Promes yang telah disusun." : ""}
@@ -262,3 +260,4 @@ export default function SemesterProgramsPage() {
     </div>
   );
 }
+
