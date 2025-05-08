@@ -12,7 +12,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import type { LessonPlan } from '@/types'; 
+import type { LessonPlan, CurriculumFramework } from '@/types'; 
 import { format } from 'date-fns';
 import { id as indonesianLocale } from 'date-fns/locale';
 
@@ -24,23 +24,32 @@ const LessonPlanSchema = z.object({
   title: z.string(),
   subject: z.string(),
   gradeLevel: z.string(),
+  curriculumType: z.enum(["Kurikulum Merdeka", "K-13", "KTSP 2006"]), // Added
   topic: z.string(),
   learningObjectives: z.array(z.string()),
+  // Kurikulum Merdeka specific
   pemahamanBermakna: z.array(z.string()).describe("Pemahaman bermakna yang akan dibangun oleh siswa.").optional(),
   pertanyaanPemantik: z.array(z.string()).describe("Pertanyaan pemantik untuk diskusi.").optional(),
+  differentiationStrategies: z.array(z.string()).optional(),
+  // KTSP / K-13 specific
+  standarKompetensi: z.array(z.string()).optional(),
+  kompetensiInti: z.array(z.string()).optional(),
+  kompetensiDasar: z.array(z.string()).optional(),
+  indikatorPencapaianKompetensi: z.array(z.string()).optional(),
+  metodePembelajaran: z.array(z.string()).optional(),
+  // Common
   langkahPembelajaran: z.object({
     pendahuluan: z.array(z.string()),
     kegiatanInti: z.array(z.string()),
     penutup: z.array(z.string()),
   }),
   assessment: z.string(), 
-  differentiationStrategies: z.array(z.string()).optional(),
   materials: z.string().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
 
-const ExportRppToTextInputSchema = LessonPlanSchema; // Input is a full LessonPlan object
+const ExportRppToTextInputSchema = LessonPlanSchema; 
 export type ExportRppToTextInput = z.infer<typeof ExportRppToTextInputSchema>;
 
 const ExportRppToTextOutputSchema = z.object({
@@ -65,7 +74,8 @@ Berikut adalah data RPP/MA yang perlu diformat:
 **MODUL AJAR / RENCANA PELAKSANAAN PEMBELAJARAN (RPP)**
 ------------------------------------------------------
 
-**Judul Modul Ajar:** {{{title}}}
+**Judul:** {{{title}}}
+**Kurikulum:** {{{curriculumType}}}
 **Mata Pelajaran:** {{{subject}}}
 **Jenjang/Fase/Kelas:** {{{gradeLevel}}}
 **Topik/Materi Pembelajaran:** {{{topic}}}
@@ -77,21 +87,61 @@ Berikut adalah data RPP/MA yang perlu diformat:
 - {{{this}}}
 {{/each}}
 
-{{#if pemahamanBermakna.length}}
-**B. PEMAHAMAN BERMAKNA**
-{{#each pemahamanBermakna}}
-- {{{this}}}
-{{/each}}
+{{#if (eq curriculumType "Kurikulum Merdeka")}}
+    {{#if pemahamanBermakna.length}}
+    **B. PEMAHAMAN BERMAKNA**
+    {{#each pemahamanBermakna}}
+    - {{{this}}}
+    {{/each}}
+    {{/if}}
+
+    {{#if pertanyaanPemantik.length}}
+    **C. PERTANYAAN PEMANTIK**
+    {{#each pertanyaanPemantik}}
+    - {{{this}}}
+    {{/each}}
+    {{/if}}
+{{else}}
+    {{#if (eq curriculumType "KTSP 2006")}}
+        {{#if standarKompetensi.length}}
+        **B. STANDAR KOMPETENSI (SK)**
+        {{#each standarKompetensi}}
+        - {{{this}}}
+        {{/each}}
+        {{/if}}
+    {{/if}}
+    {{#if (eq curriculumType "K-13")}}
+        {{#if kompetensiInti.length}}
+        **B. KOMPETENSI INTI (KI)**
+        {{#each kompetensiInti}}
+        - {{{this}}}
+        {{/each}}
+        {{/if}}
+    {{/if}}
+
+    {{#if kompetensiDasar.length}}
+    **C. KOMPETENSI DASAR (KD)**
+    {{#each kompetensiDasar}}
+    - {{{this}}}
+    {{/each}}
+    {{/if}}
+
+    {{#if indikatorPencapaianKompetensi.length}}
+    **D. INDIKATOR PENCAPAIAN KOMPETENSI (IPK)**
+    {{#each indikatorPencapaianKompetensi}}
+    - {{{this}}}
+    {{/each}}
+    {{/if}}
+
+    {{#if metodePembelajaran.length}}
+    **E. METODE PEMBELAJARAN**
+    {{#each metodePembelajaran}}
+    - {{{this}}}
+    {{/each}}
+    {{/if}}
 {{/if}}
 
-{{#if pertanyaanPemantik.length}}
-**C. PERTANYAAN PEMANTIK**
-{{#each pertanyaanPemantik}}
-- {{{this}}}
-{{/each}}
-{{/if}}
-
-**D. LANGKAH-LANGKAH PEMBELAJARAN**
+**{{#if (eq curriculumType "Kurikulum Merdeka")}}D{{else}}F{{/if}}. LANGKAH-LANGKAH PEMBELAJARAN**
 
   **1. Pendahuluan:**
   {{#each langkahPembelajaran.pendahuluan}}
@@ -108,25 +158,27 @@ Berikut adalah data RPP/MA yang perlu diformat:
     - {{{this}}}
   {{/each}}
 
-**E. ASESMEN/PENILAIAN**
+**{{#if (eq curriculumType "Kurikulum Merdeka")}}E{{else}}G{{/if}}. ASESMEN/PENILAIAN**
 {{{assessment}}}
 
-{{#if differentiationStrategies.length}}
-**F. STRATEGI DIFERENSIASI**
-{{#each differentiationStrategies}}
-- {{{this}}}
-{{/each}}
+{{#if (eq curriculumType "Kurikulum Merdeka")}}
+    {{#if differentiationStrategies.length}}
+    **F. STRATEGI DIFERENSIASI**
+    {{#each differentiationStrategies}}
+    - {{{this}}}
+    {{/each}}
+    {{/if}}
 {{/if}}
 
 {{#if materials}}
-**G. MEDIA/SUMBER BELAJAR**
+**{{#if (eq curriculumType "Kurikulum Merdeka")}}G{{else}}H{{/if}}. MEDIA/SUMBER BELAJAR**
 - {{{materials}}}
 {{/if}}
 
 ---
 *Dokumen ini terakhir diperbarui pada: {{{formattedUpdatedAt}}}*
 
-Pastikan semua bagian terisi sesuai data yang diberikan. Jika ada data opsional (seperti Pemahaman Bermakna, Pertanyaan Pemantik, Strategi Diferensiasi, Media/Sumber Belajar) yang tidak ada atau kosong, maka jangan tampilkan bagian (heading dan konten) tersebut sama sekali.
+Pastikan semua bagian terisi sesuai data yang diberikan dan jenis kurikulum. Jika ada data opsional yang tidak ada atau kosong, atau tidak relevan dengan jenis kurikulum yang dipilih, maka jangan tampilkan bagian (heading dan konten) tersebut sama sekali.
 `,
 });
 
@@ -142,6 +194,11 @@ const exportRppToTextFlow = ai.defineFlow(
       ...input,
       pemahamanBermakna: input.pemahamanBermakna || [],
       pertanyaanPemantik: input.pertanyaanPemantik || [],
+      standarKompetensi: input.standarKompetensi || [],
+      kompetensiInti: input.kompetensiInti || [],
+      kompetensiDasar: input.kompetensiDasar || [],
+      indikatorPencapaianKompetensi: input.indikatorPencapaianKompetensi || [],
+      metodePembelajaran: input.metodePembelajaran || [],
       langkahPembelajaran: input.langkahPembelajaran || { pendahuluan: [], kegiatanInti: [], penutup: []},
       assessment: input.assessment || "Belum dirinci.", 
       differentiationStrategies: input.differentiationStrategies || [],
@@ -152,4 +209,3 @@ const exportRppToTextFlow = ai.defineFlow(
     return output!;
   }
 );
-

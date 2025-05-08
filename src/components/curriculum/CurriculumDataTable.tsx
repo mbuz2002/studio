@@ -1,12 +1,12 @@
 
 "use client";
 
-import type { AnyCurriculumItem, LessonPlan, AnnualProgram, SemesterProgram, User, SchoolProfile, PrintOptions } from "@/types";
+import type { AnyCurriculumItem, LessonPlan, AnnualProgram, SemesterProgram, User, SchoolProfile, PrintOptions, CurriculumFramework } from "@/types";
 import { defaultPrintOptions } from "@/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Download, Eye, FilePenLine, MoreHorizontal, Trash2, Loader2, Printer, Settings2, User as UserIcon } from "lucide-react";
+import { Download, Eye, FilePenLine, MoreHorizontal, Trash2, Loader2, Printer, Settings2, User as UserIcon, BookCopy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { id as indonesianLocale } from "date-fns/locale"; 
@@ -14,8 +14,8 @@ import { useState, useEffect } from "react";
 import { exportRppToText, type ExportRppToTextInput } from "@/ai/flows/export-rpp-to-text";
 import { useToast } from "@/hooks/use-toast";
 import { PrintOptionsDialog } from "./PrintOptionsDialog";
-import { useLog } from "@/contexts/LogContext"; // Import useLog
-import { useAuth } from "@/contexts/AuthContext"; // Import useAuth for user info
+import { useLog } from "@/contexts/LogContext"; 
+import { useAuth } from "@/contexts/AuthContext"; 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface CurriculumDataTableProps {
@@ -23,8 +23,8 @@ interface CurriculumDataTableProps {
   onView: (item: AnyCurriculumItem) => void;
   onEdit?: (item: AnyCurriculumItem) => void;
   onDelete?: (item: AnyCurriculumItem) => void;
-  canEdit: (item: AnyCurriculumItem) => boolean; // Now a function
-  canDelete: (item: AnyCurriculumItem) => boolean; // Now a function
+  canEdit: (item: AnyCurriculumItem) => boolean; 
+  canDelete: (item: AnyCurriculumItem) => boolean; 
   itemTypeForExport?: 'RPP' | 'PROTA' | 'Promes';
 }
 
@@ -51,7 +51,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
             setSchoolProfile(JSON.parse(storedProfile));
         } catch (e) {
             console.error("Failed to parse school profile from localStorage", e);
-            localStorage.removeItem("schoolProfile"); // Clear corrupted data
+            localStorage.removeItem("schoolProfile"); 
         }
       }
       const storedUsers = localStorage.getItem("appUsers");
@@ -60,11 +60,9 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
             setAppUsers(JSON.parse(storedUsers));
         } catch (e) {
             console.error("Failed to parse app users from localStorage", e);
-            localStorage.removeItem("appUsers"); // Clear corrupted data
+            localStorage.removeItem("appUsers"); 
         }
       } else {
-        // If no users in local storage, try to get the current logged-in user
-        // This is a fallback, ideally appUsers should be managed globally or fetched
         if (currentUser) {
           setAppUsers([currentUser]);
         }
@@ -75,7 +73,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
   const getCreatorName = (userId?: string): string => {
     if (!userId) return 'Tidak diketahui';
     const user = appUsers.find(u => u.id === userId);
-    return user ? user.name : userId; // Fallback to ID if user not found
+    return user ? user.name : userId; 
   };
 
   const getCreatorAvatar = (userId?: string): string | undefined => {
@@ -131,6 +129,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
     contentHtml += `<div class="doc-info">
         <h2>${item.title} (${item.type})</h2>
         <table class="info-table">
+            <tr><td>Kurikulum</td><td>: ${item.curriculumType}</td></tr>
             <tr><td>Mata Pelajaran</td><td>: ${item.subject}</td></tr>
             <tr><td>Jenjang/Fase/Kelas</td><td>: ${item.gradeLevel}</td></tr>
             <tr><td>Penyusun</td><td>: ${creatorName}</td></tr>
@@ -140,27 +139,55 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
     <hr class="content-hr">
     `;
 
-
     if (item.type === 'RPP') {
         const rpp = item as LessonPlan;
-        if (options.showRPPTujuanPembelajaran) {
+        if (options.showRPPLearningObjectives) {
             contentHtml += `<h3>A. Tujuan Pembelajaran</h3><ul>`;
             rpp.learningObjectives.forEach(obj => contentHtml += `<li>${obj}</li>`);
             contentHtml += `</ul>`;
         }
 
-        if (options.showRPPPemahamanBermakna && rpp.pemahamanBermakna && rpp.pemahamanBermakna.length > 0) {
-            contentHtml += `<h3>B. Pemahaman Bermakna</h3><ul>`;
-            rpp.pemahamanBermakna.forEach(pm => contentHtml += `<li>${pm}</li>`);
-            contentHtml += `</ul>`;
+        if (rpp.curriculumType === "Kurikulum Merdeka") {
+            if (options.showRPPPemahamanBermakna && rpp.pemahamanBermakna && rpp.pemahamanBermakna.length > 0) {
+                contentHtml += `<h3>B. Pemahaman Bermakna</h3><ul>`;
+                rpp.pemahamanBermakna.forEach(pm => contentHtml += `<li>${pm}</li>`);
+                contentHtml += `</ul>`;
+            }
+            if (options.showRPPPertanyaanPemantik && rpp.pertanyaanPemantik && rpp.pertanyaanPemantik.length > 0) {
+                contentHtml += `<h3>C. Pertanyaan Pemantik</h3><ul>`;
+                rpp.pertanyaanPemantik.forEach(pp => contentHtml += `<li>${pp}</li>`);
+                contentHtml += `</ul>`;
+            }
+        } else { // KTSP or K-13
+            if (options.showRPPSK && rpp.standarKompetensi && rpp.standarKompetensi.length > 0 && rpp.curriculumType === "KTSP 2006") {
+                contentHtml += `<h3>B. Standar Kompetensi</h3><ul>`;
+                rpp.standarKompetensi.forEach(sk => contentHtml += `<li>${sk}</li>`);
+                contentHtml += `</ul>`;
+            }
+            if (options.showRPPKI && rpp.kompetensiInti && rpp.kompetensiInti.length > 0 && rpp.curriculumType === "K-13") {
+                 contentHtml += `<h3>B. Kompetensi Inti</h3><ul>`;
+                 rpp.kompetensiInti.forEach(ki => contentHtml += `<li>${ki}</li>`);
+                 contentHtml += `</ul>`;
+            }
+            if (options.showRPPKD && rpp.kompetensiDasar && rpp.kompetensiDasar.length > 0) {
+                 contentHtml += `<h3>C. Kompetensi Dasar</h3><ul>`;
+                 rpp.kompetensiDasar.forEach(kd => contentHtml += `<li>${kd}</li>`);
+                 contentHtml += `</ul>`;
+            }
+            if (options.showRPPIPK && rpp.indikatorPencapaianKompetensi && rpp.indikatorPencapaianKompetensi.length > 0) {
+                contentHtml += `<h3>D. Indikator Pencapaian Kompetensi</h3><ul>`;
+                rpp.indikatorPencapaianKompetensi.forEach(ipk => contentHtml += `<li>${ipk}</li>`);
+                contentHtml += `</ul>`;
+            }
+             if (options.showRPPMetodePembelajaran && rpp.metodePembelajaran && rpp.metodePembelajaran.length > 0) {
+                contentHtml += `<h3>E. Metode Pembelajaran</h3><ul>`;
+                rpp.metodePembelajaran.forEach(metode => contentHtml += `<li>${metode}</li>`);
+                contentHtml += `</ul>`;
+            }
         }
-        if (options.showRPPPertanyaanPemantik && rpp.pertanyaanPemantik && rpp.pertanyaanPemantik.length > 0) {
-            contentHtml += `<h3>C. Pertanyaan Pemantik</h3><ul>`;
-            rpp.pertanyaanPemantik.forEach(pp => contentHtml += `<li>${pp}</li>`);
-            contentHtml += `</ul>`;
-        }
-
-        contentHtml += `<h3>D. Langkah-langkah Pembelajaran</h3>`;
+        
+        const langkahHeading = rpp.curriculumType === "Kurikulum Merdeka" ? "D" : "F";
+        contentHtml += `<h3>${langkahHeading}. Langkah-langkah Pembelajaran</h3>`;
         if (options.showRPPLangkahPendahuluan) {
             contentHtml += `<h4>1. Pendahuluan:</h4><ul>`;
             rpp.langkahPembelajaran.pendahuluan.forEach(act => contentHtml += `<li>${act}</li>`);
@@ -177,29 +204,33 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
             contentHtml += `</ul>`;
         }
         
-        if (options.showRPPAsesmen) {
-            contentHtml += `<h3>E. Asesmen/Penilaian</h3><p>${rpp.assessment}</p>`;
+        const asesmenHeading = rpp.curriculumType === "Kurikulum Merdeka" ? "E" : "G";
+        if (options.showRPPAssessment) {
+            contentHtml += `<h3>${asesmenHeading}. Asesmen/Penilaian</h3><p>${rpp.assessment}</p>`;
         }
 
-        if (options.showRPPStrategiDiferensiasi && rpp.differentiationStrategies && rpp.differentiationStrategies.length > 0) {
+        if (rpp.curriculumType === "Kurikulum Merdeka" && options.showRPPDifferentiationStrategies && rpp.differentiationStrategies && rpp.differentiationStrategies.length > 0) {
             contentHtml += `<h3>F. Strategi Diferensiasi</h3><ul>`;
             rpp.differentiationStrategies.forEach(strat => contentHtml += `<li>${strat}</li>`);
             contentHtml += `</ul>`;
         }
-        if (options.showRPPMediaSumberBelajar && rpp.materials) {
-            contentHtml += `<h3>G. Media/Sumber Belajar</h3><p>${rpp.materials}</p>`;
+
+        const mediaHeading = rpp.curriculumType === "Kurikulum Merdeka" ? "G" : "H";
+        if (options.showRPPMaterials && rpp.materials) {
+            contentHtml += `<h3>${mediaHeading}. Media/Sumber Belajar</h3><p>${rpp.materials}</p>`;
         }
     } else if (item.type === 'PROTA') {
         const prota = item as AnnualProgram;
         contentHtml += `<p><strong>Tahun Ajaran:</strong> ${prota.year}</p>`;
-        if (options.showPROTAFokusP5 && prota.profilPelajarPancasilaFocus && prota.profilPelajarPancasilaFocus.length > 0) {
+        if (prota.curriculumType === "Kurikulum Merdeka" && options.showPROTAFokusP5 && prota.profilPelajarPancasilaFocus && prota.profilPelajarPancasilaFocus.length > 0) {
             contentHtml += `<p><strong>Fokus Profil Pelajar Pancasila:</strong> ${prota.profilPelajarPancasilaFocus.join(', ')}</p>`;
         }
         
+        const elemenKdHeading = prota.curriculumType === "Kurikulum Merdeka" ? "Elemen Capaian Pembelajaran" : "Kompetensi Dasar";
         if (options.showPROTASemester1) {
             contentHtml += `<h3>Semester 1</h3>`;
             if (prota.semester1Components.length > 0) {
-                contentHtml += `<table class="component-table"><thead><tr><th>Topik</th><th>Elemen Capaian Pembelajaran</th><th>Alokasi Waktu</th></tr></thead><tbody>`;
+                contentHtml += `<table class="component-table"><thead><tr><th>Topik/Materi Pokok</th><th>${elemenKdHeading}</th><th>Alokasi Waktu</th></tr></thead><tbody>`;
                 prota.semester1Components.forEach(c => {
                     contentHtml += `<tr><td>${c.topic}</td><td>${(c.elemenCapaianPembelajaran && c.elemenCapaianPembelajaran.length > 0) ? c.elemenCapaianPembelajaran.join(', ') : '-'}</td><td>${c.alokasiWaktu}</td></tr>`;
                 });
@@ -212,7 +243,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
         if (options.showPROTASemester2) {
             contentHtml += `<h3>Semester 2</h3>`;
             if (prota.semester2Components.length > 0) {
-                contentHtml += `<table class="component-table"><thead><tr><th>Topik</th><th>Elemen Capaian Pembelajaran</th><th>Alokasi Waktu</th></tr></thead><tbody>`;
+                contentHtml += `<table class="component-table"><thead><tr><th>Topik/Materi Pokok</th><th>${elemenKdHeading}</th><th>Alokasi Waktu</th></tr></thead><tbody>`;
                 prota.semester2Components.forEach(c => {
                     contentHtml += `<tr><td>${c.topic}</td><td>${(c.elemenCapaianPembelajaran && c.elemenCapaianPembelajaran.length > 0) ? c.elemenCapaianPembelajaran.join(', ') : '-'}</td><td>${c.alokasiWaktu}</td></tr>`;
                 });
@@ -224,13 +255,16 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
     } else if (item.type === 'Promes') {
         const promes = item as SemesterProgram;
         contentHtml += `<p><strong>Tahun Ajaran:</strong> ${promes.year}, <strong>Semester:</strong> ${promes.semester === '1' ? 'Ganjil' : 'Genap'}</p>`;
+        
+        const cpSkKdHeading = promes.curriculumType === "Kurikulum Merdeka" ? "Capaian Pembelajaran Umum" : "Rangkuman SK/KD";
         if (options.showPromesCapaianUmum && promes.capaianPembelajaranUmum) {
-            contentHtml += `<p><strong>Capaian Pembelajaran Umum:</strong> ${promes.capaianPembelajaranUmum}</p>`;
+            contentHtml += `<p><strong>${cpSkKdHeading}:</strong> ${promes.capaianPembelajaranUmum}</p>`;
         }
         if (options.showPromesAlokasiTotal && promes.alokasiWaktuTotalSemester) {
             contentHtml += `<p><strong>Alokasi Waktu Total:</strong> ${promes.alokasiWaktuTotalSemester}</p>`;
         }
 
+        const materiTpHeading = promes.curriculumType === "Kurikulum Merdeka" ? "Tujuan Pembelajaran" : "Materi Pokok/Tema";
         if (options.showPromesKomponenMingguan) {
             contentHtml += `<h3>Rincian Mingguan</h3>`;
             if (promes.komponenMingguan.length > 0) {
@@ -239,12 +273,12 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
                         <tr>
                             <th>Minggu Ke</th>
                             <th>Bulan</th>
-                            <th>Materi Pokok/Tujuan Pembelajaran</th>
+                            <th>${materiTpHeading}</th>
                             <th>Alokasi Waktu</th>
                             <th>Metode/Strategi</th>
                             <th>Sumber Belajar</th>
                             <th>Rencana Asesmen</th>
-                            <th>Catatan Integrasi P5</th>
+                            <th>Catatan Integrasi P5/Karakter</th>
                         </tr>
                     </thead>
                     <tbody>`;
@@ -293,12 +327,12 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
             .component-table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 15px; font-size: 10pt;}
             .component-table th, .component-table td { border: 1px solid #333; padding: 6px; text-align: left; vertical-align: top; }
             .component-table th { background-color: #f0f0f0; font-weight: bold; }
-            .weekly-table td, .weekly-table th { font-size: 9pt; } /* Smaller font for dense table */
+            .weekly-table td, .weekly-table th { font-size: 9pt; } 
             .print-button-container { text-align: center; margin-top: 30px; }
             @media print {
-              body { margin: 0.75in; } /* Adjust margins for printing */
+              body { margin: 0.75in; } 
               .print-button-container { display: none; }
-              .kop-surat { border-bottom: 3px solid black !important; } /* Ensure border prints */
+              .kop-surat { border-bottom: 3px solid black !important; } 
               h1, h2, h3, h4 { page-break-after: avoid; }
               table, div, ul, p { page-break-inside: avoid; }
             }
@@ -317,25 +351,23 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
   const handlePreparePrint = (item: AnyCurriculumItem) => {
     if (!isClient) return;
     setItemToPrint(item);
-    setCurrentPrintOptions(defaultPrintOptions); // Reset to defaults each time
+    setCurrentPrintOptions(defaultPrintOptions); 
     setIsPrintOptionsOpen(true);
-    // Logging is done in generatePrintableHtml when options are confirmed
   };
   
   const handleFinalizePrint = (options: PrintOptions) => {
     if (!itemToPrint) return;
-    const logSource = `CurriculumPrint-${itemToPrint.type}`; // For this specific log
-    const printableHtml = generatePrintableHtml(itemToPrint, options); // This already logs preparation
+    const logSource = `CurriculumPrint-${itemToPrint.type}`; 
+    const printableHtml = generatePrintableHtml(itemToPrint, options); 
     
     const printWindow = window.open('', '_blank', 'width=1000,height=700,scrollbars=yes,resizable=yes');
     if (printWindow) {
       printWindow.document.write(printableHtml);
       printWindow.document.close();
       addLog("INFO", `Jendela cetak dibuka untuk ${itemToPrint.type} "${itemToPrint.title}".`, logSource);
-      // Adding a slight delay for content to render before print dialog
       setTimeout(() => {
-          if (printWindow && !printWindow.closed) { // Check if window is still open
-            // printWindow.print(); // Trigger print dialog directly
+          if (printWindow && !printWindow.closed) { 
+            // printWindow.print(); 
           }
       }, 500);
     } else {
@@ -369,34 +401,41 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
           assessment: rppInput.assessment || "Belum dirinci",
           differentiationStrategies: rppInput.differentiationStrategies || [],
           materials: rppInput.materials || "", 
+          // KTSP/K-13 fields need to be passed if they exist on rppInput
+          standarKompetensi: rppInput.standarKompetensi,
+          kompetensiInti: rppInput.kompetensiInti,
+          kompetensiDasar: rppInput.kompetensiDasar,
+          indikatorPencapaianKompetensi: rppInput.indikatorPencapaianKompetensi,
+          metodePembelajaran: rppInput.metodePembelajaran,
         };
-        addLog("INFO", `Memanggil alur Genkit 'exportRppToText' untuk RPP "${item.title}".`, logSource);
-        const result = await exportRppToText(inputForFlow);
+        addLog("INFO", `Memanggil alur Genkit 'exportRppToText' untuk RPP "${item.title}" (${item.curriculumType}).`, logSource);
+        const result = await exportRppToText(inputForFlow); // Assuming exportRppToText is updated for new fields
         documentContent = result.documentContent;
         addLog("INFO", `Konten teks berhasil dibuat oleh Genkit untuk RPP "${item.title}".`, logSource);
       } else if (item.type === 'PROTA') {
         const prota = item as AnnualProgram;
         let protaText = `**PROGRAM TAHUNAN (PROTA)**\n\n`;
         protaText += `**Judul:** ${prota.title}\n`;
+        protaText += `**Kurikulum:** ${prota.curriculumType}\n`;
         protaText += `**Mata Pelajaran:** ${prota.subject}\n`;
         protaText += `**Jenjang/Fase/Kelas:** ${prota.gradeLevel}\n`;
         protaText += `**Tahun Ajaran:** ${prota.year}\n`;
-        if (prota.profilPelajarPancasilaFocus && prota.profilPelajarPancasilaFocus.length > 0) {
+        if (prota.curriculumType === "Kurikulum Merdeka" && prota.profilPelajarPancasilaFocus && prota.profilPelajarPancasilaFocus.length > 0) {
             protaText += `**Fokus Profil Pelajar Pancasila:** ${prota.profilPelajarPancasilaFocus.join(', ')}\n`;
         }
         protaText += `\n---\n\n**SEMESTER 1**\n\n`;
         prota.semester1Components.forEach((c, i) => {
-            protaText += `${i+1}. **Topik:** ${c.topic}\n`;
+            protaText += `${i+1}. **Topik/Materi Pokok:** ${c.topic}\n`;
             if (c.elemenCapaianPembelajaran && c.elemenCapaianPembelajaran.length > 0) {
-                 protaText += `   - Elemen Capaian Pembelajaran: ${c.elemenCapaianPembelajaran.join(', ')}\n`;
+                 protaText += `   - ${prota.curriculumType === "Kurikulum Merdeka" ? "Elemen Capaian Pembelajaran" : "Kompetensi Dasar"}: ${c.elemenCapaianPembelajaran.join(', ')}\n`;
             }
             protaText += `   - Alokasi Waktu: ${c.alokasiWaktu}\n\n`;
         });
         protaText += `\n**SEMESTER 2**\n\n`;
         prota.semester2Components.forEach((c, i) => {
-            protaText += `${i+1}. **Topik:** ${c.topic}\n`;
+            protaText += `${i+1}. **Topik/Materi Pokok:** ${c.topic}\n`;
              if (c.elemenCapaianPembelajaran && c.elemenCapaianPembelajaran.length > 0) {
-                protaText += `   - Elemen Capaian Pembelajaran: ${c.elemenCapaianPembelajaran.join(', ')}\n`;
+                protaText += `   - ${prota.curriculumType === "Kurikulum Merdeka" ? "Elemen Capaian Pembelajaran" : "Kompetensi Dasar"}: ${c.elemenCapaianPembelajaran.join(', ')}\n`;
             }
             protaText += `   - Alokasi Waktu: ${c.alokasiWaktu}\n\n`;
         });
@@ -408,12 +447,13 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
         const promes = item as SemesterProgram;
         let promesText = `**PROGRAM SEMESTER (PROMES)**\n\n`;
         promesText += `**Judul:** ${promes.title}\n`;
+        promesText += `**Kurikulum:** ${promes.curriculumType}\n`;
         promesText += `**Mata Pelajaran:** ${promes.subject}\n`;
         promesText += `**Jenjang/Fase/Kelas:** ${promes.gradeLevel}\n`;
         promesText += `**Semester:** ${promes.semester === '1' ? 'Ganjil' : 'Genap'}\n`;
         promesText += `**Tahun Ajaran:** ${promes.year}\n`;
         if (promes.capaianPembelajaranUmum) {
-             promesText += `**Capaian Pembelajaran Umum:** ${promes.capaianPembelajaranUmum}\n`;
+             promesText += `**${promes.curriculumType === "Kurikulum Merdeka" ? "Capaian Pembelajaran Umum" : "Rangkuman SK/KD"}:** ${promes.capaianPembelajaranUmum}\n`;
         }
         if (promes.alokasiWaktuTotalSemester) {
              promesText += `**Alokasi Waktu Total Semester:** ${promes.alokasiWaktuTotalSemester}\n`;
@@ -421,7 +461,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
         promesText += `\n---\n\n**RINCIAN MINGGUAN**\n\n`;
         promes.komponenMingguan.forEach(w => {
             promesText += `**Minggu ke-${w.mingguKe} ${w.bulan ? `(${w.bulan})` : ''}**\n`;
-            promesText += `  - Materi Pokok/Tujuan Pembelajaran: ${w.materiPokokAtauTujuanPembelajaran}\n`;
+            promesText += `  - ${promes.curriculumType === "Kurikulum Merdeka" ? "Tujuan Pembelajaran" : "Materi Pokok/Tema"}: ${w.materiPokokAtauTujuanPembelajaran}\n`;
             promesText += `  - Alokasi Waktu: ${w.alokasiWaktu}\n`;
             if (w.metodeStrategi && w.metodeStrategi.length > 0) {
                 promesText += `  - Metode/Strategi: ${w.metodeStrategi.join(', ')}\n`;
@@ -433,7 +473,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
                 promesText += `  - Rencana Asesmen: ${w.rencanaAsesmen.join(', ')}\n`;
             }
             if (w.catatanIntegrasiP5) {
-                promesText += `  - Catatan Integrasi P5: ${w.catatanIntegrasiP5}\n`;
+                promesText += `  - Catatan Integrasi P5/Karakter: ${w.catatanIntegrasiP5}\n`;
             }
             promesText += `\n`;
         });
@@ -474,6 +514,19 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
     onView(item);
   };
 
+  const getCurriculumBadgeVariant = (curriculumType: CurriculumFramework): "default" | "secondary" | "outline" => {
+    switch (curriculumType) {
+      case "Kurikulum Merdeka":
+        return "default";
+      case "K-13":
+        return "secondary";
+      case "KTSP 2006":
+        return "outline";
+      default:
+        return "outline";
+    }
+  }
+
 
   return (
     <>
@@ -483,6 +536,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
             <TableRow>
               <TableHead className="min-w-[250px] w-2/5">Judul</TableHead>
               <TableHead>Jenis</TableHead>
+              <TableHead className="min-w-[150px]">Kurikulum</TableHead>
               <TableHead className="min-w-[150px]">Mata Pelajaran</TableHead>
               <TableHead className="min-w-[180px]">Jenjang/Kelas</TableHead>
               <TableHead className="min-w-[180px]">Nama Guru/Pembuat</TableHead>
@@ -493,7 +547,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
           <TableBody>
             {items.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="text-center h-24 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center h-24 text-muted-foreground">
                   Tidak ada item ditemukan.
                 </TableCell>
               </TableRow>
@@ -504,6 +558,12 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
                 <TableCell>
                   <Badge variant={item.type === 'RPP' ? 'default' : item.type === 'PROTA' ? 'secondary' : 'outline'}>
                     {item.type}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge variant={getCurriculumBadgeVariant(item.curriculumType)} className="whitespace-nowrap">
+                    <BookCopy className="mr-1.5 h-3.5 w-3.5"/>
+                    {item.curriculumType}
                   </Badge>
                 </TableCell>
                 <TableCell>{item.subject}</TableCell>
@@ -562,12 +622,12 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
             isOpen={isPrintOptionsOpen}
             onOpenChange={setIsPrintOptionsOpen}
             itemType={itemToPrint.type}
+            itemCurriculumType={itemToPrint.curriculumType} // Pass curriculum type of item
             defaultOptions={currentPrintOptions}
             onSubmit={handleFinalizePrint}
-            hasSchoolProfile={!!schoolProfile} // Pass whether profile exists
+            hasSchoolProfile={!!schoolProfile} 
         />
       )}
     </>
   );
 }
-

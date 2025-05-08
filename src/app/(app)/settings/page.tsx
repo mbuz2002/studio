@@ -1,19 +1,24 @@
 
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Cog, UserCircle, ShieldCheck, Database, Palette, Upload, Download, FileText, Users } from "lucide-react"; 
+import { Cog, UserCircle, ShieldCheck, Database, Palette, Upload, Download, FileText, Users, BookCopy } from "lucide-react"; 
 import { useAuth } from "@/contexts/AuthContext";
 import { SchoolProfileForm } from "@/components/settings/SchoolProfileForm";
 import { EditUserDialog } from "@/components/settings/EditUserDialog";
 import { AppPreferencesDialog } from "@/components/settings/AppPreferencesDialog"; 
-import type { User, SchoolProfile, ExportedCurriculumData, LessonPlan, AnnualProgram, SemesterProgram } from "@/types";
+import type { User, SchoolProfile, ExportedCurriculumData, LessonPlan, AnnualProgram, SemesterProgram, CurriculumFramework } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useLog } from "@/contexts/LogContext"; 
+import { useCurriculum } from "@/contexts/CurriculumContext"; // Import curriculum context
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Import Select
+import { Label } from "@/components/ui/label"; // Import Label
+
 
 const LESSON_PLANS_STORAGE_KEY = "appLessonPlans";
 const ANNUAL_PROGRAMS_STORAGE_KEY = "appAnnualPrograms";
@@ -26,6 +31,9 @@ export default function SettingsPage() {
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
   const { addLog } = useLog(); 
+  const { defaultCurriculum, setDefaultCurriculum, availableCurriculums } = useCurriculum(); // Use curriculum context
+  const [selectedGlobalCurriculum, setSelectedGlobalCurriculum] = useState<CurriculumFramework>(defaultCurriculum);
+
   const [isEditUserDialogOpen, setIsEditUserDialogOpen] = useState(false);
   const [isAppPreferencesDialogOpen, setIsAppPreferencesDialogOpen] = useState(false); 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -35,7 +43,8 @@ export default function SettingsPage() {
     if (user) { 
       addLog("INFO", `Pengguna ${user.email} mengakses halaman Pengaturan Akun.`, "SettingsPage");
     }
-  }, [user, addLog]);
+    setSelectedGlobalCurriculum(defaultCurriculum); // Sync with context on mount/change
+  }, [user, addLog, defaultCurriculum]);
 
   if (!user) {
     return (
@@ -52,6 +61,7 @@ export default function SettingsPage() {
 
   const canSeeProfileSettings = ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"].includes(user.role);
   const canSeeAppSettings = ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"].includes(user.role);
+  const canManageCurriculumSettings = ["Admin", "WakaKurikulum"].includes(user.role);
   
   const canManageSchoolProfile = ["Admin", "TataUsaha"].includes(user.role);
   const canManageUsers = ["Admin", "TataUsaha"].includes(user.role); 
@@ -174,6 +184,17 @@ export default function SettingsPage() {
     reader.readAsText(file);
   };
 
+  const handleCurriculumChange = (value: CurriculumFramework) => {
+    setSelectedGlobalCurriculum(value);
+    setDefaultCurriculum(value); // This updates context and localStorage
+    toast({
+      title: "Pengaturan Kurikulum Disimpan",
+      description: `Kurikulum default untuk item baru telah diatur ke ${value}.`,
+    });
+    addLog("INFO", `Pengguna ${user?.email} mengubah kurikulum default menjadi: ${value}.`, "SettingsPage-Curriculum");
+  };
+
+
   return (
     <div className="space-y-8 py-4 md:py-8">
       <Card className="shadow-lg rounded-lg">
@@ -181,9 +202,9 @@ export default function SettingsPage() {
           <div className="flex items-center gap-4">
               <Cog className="h-10 w-10 text-primary-foreground drop-shadow-lg flex-shrink-0" />
               <div>
-                <CardTitle className="text-3xl md:text-4xl font-bold">Pengaturan Akun</CardTitle>
+                <CardTitle className="text-3xl md:text-4xl font-bold">Pengaturan Aplikasi</CardTitle>
                 <CardDescription className="text-lg md:text-xl text-primary-foreground/90 mt-1">
-                    Kelola preferensi aplikasi dan pengaturan akun Anda.
+                    Kelola preferensi aplikasi dan pengaturan umum.
                 </CardDescription>
               </div>
           </div>
@@ -198,7 +219,7 @@ export default function SettingsPage() {
       
       <Card className="mt-6 shadow-md rounded-lg">
         <CardHeader className="p-6">
-            <CardTitle className="text-2xl font-semibold">Pengaturan Umum & Akun</CardTitle>
+            <CardTitle className="text-2xl font-semibold">Pengaturan Akun & Aplikasi</CardTitle>
         </CardHeader>
         <CardContent className="p-6 pt-0">
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -227,16 +248,47 @@ export default function SettingsPage() {
                 <CardHeader className="p-5">
                  <div className="flex items-center gap-3">
                     <Palette className="h-7 w-7 text-primary" /> 
-                    <CardTitle className="text-xl font-semibold">Preferensi Aplikasi</CardTitle>
+                    <CardTitle className="text-xl font-semibold">Preferensi Tampilan</CardTitle>
                   </div>
-                  <CardDescription className="text-base text-muted-foreground">Sesuaikan tema tampilan aplikasi Anda.</CardDescription> 
+                  <CardDescription className="text-base text-muted-foreground">Sesuaikan tema visual aplikasi.</CardDescription> 
                 </CardHeader>
                 <CardContent className="p-5 pt-0">
-                  <p className="text-base text-muted-foreground mb-3">Atur tema visual aplikasi (Terang, Gelap, atau Sistem).</p>
+                  <p className="text-base text-muted-foreground mb-3">Atur tema visual (Terang, Gelap, atau Sistem).</p>
                    <Button variant="outline" className="text-base" onClick={() => setIsAppPreferencesDialogOpen(true)}>Atur Preferensi Tampilan</Button>
                 </CardContent>
               </Card>
             )}
+            
+            {canManageCurriculumSettings && (
+              <Card className="shadow-sm rounded-md">
+                <CardHeader className="p-5">
+                  <div className="flex items-center gap-3">
+                    <BookCopy className="h-7 w-7 text-primary" />
+                    <CardTitle className="text-xl font-semibold">Pengaturan Kurikulum</CardTitle>
+                  </div>
+                  <CardDescription className="text-base text-muted-foreground">Pilih kurikulum default untuk item baru.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3 p-5 pt-0">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="defaultCurriculum" className="text-base font-medium">Kurikulum Default</Label>
+                    <Select value={selectedGlobalCurriculum} onValueChange={handleCurriculumChange}>
+                        <SelectTrigger id="defaultCurriculum" className="text-base">
+                            <SelectValue placeholder="Pilih Kurikulum Default" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {availableCurriculums.map(curr => (
+                                <SelectItem key={curr.value} value={curr.value}>{curr.label}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Pengaturan ini akan menentukan template awal saat Anda membuat RPP, PROTA, atau Promes baru.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
 
             {canManageData && (
               <Card className="shadow-sm rounded-md">
@@ -312,7 +364,7 @@ export default function SettingsPage() {
             )}
             
           </div>
-           {!(canSeeProfileSettings || canSeeAppSettings || canManageData || canSeeSystemSettings || canManageUsers) && 
+           {!(canSeeProfileSettings || canSeeAppSettings || canManageData || canSeeSystemSettings || canManageUsers || canManageCurriculumSettings) && 
             !canManageSchoolProfile && ( 
               <p className="text-base text-muted-foreground">Tidak ada pengaturan yang tersedia untuk peran Anda saat ini.</p>
             )}

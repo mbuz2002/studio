@@ -11,11 +11,13 @@ import { Button } from "@/components/ui/button";
 import { FileUp, Filter, Search, Loader2, BookOpenText } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useCurriculum } from "@/contexts/CurriculumContext"; // Import curriculum context
 
 const initialLessonPlansData: LessonPlan[] = [
   {
     id: "rpp1",
     type: "RPP",
+    curriculumType: "Kurikulum Merdeka",
     title: "Pengenalan Aljabar Kurikulum Merdeka",
     subject: "Matematika",
     gradeLevel: "Fase D (Kelas 7-9 SMP)",
@@ -38,20 +40,23 @@ const initialLessonPlansData: LessonPlan[] = [
   {
     id: "rpp2",
     type: "RPP",
-    title: "Proses Fotosintesis dalam Ekosistem",
+    curriculumType: "K-13",
+    title: "Proses Fotosintesis (K-13)",
     subject: "IPA",
-    gradeLevel: "Fase D (Kelas 7-9 SMP)",
-    topic: "Memahami Fotosintesis dan Perannya",
-    learningObjectives: ["Menjelaskan proses fotosintesis secara rinci", "Mengidentifikasi komponen kunci yang terlibat dalam fotosintesis", "Menganalisis peran fotosintesis dalam jaring-jaring makanan"],
-    pemahamanBermakna: ["Tumbuhan membuat makanannya sendiri melalui fotosintesis.", "Fotosintesis adalah dasar kehidupan di Bumi."],
-    pertanyaanPemantik: ["Dari mana tumbuhan mendapatkan makanannya?", "Apa yang akan terjadi jika tidak ada tumbuhan?"],
+    gradeLevel: "Kelas VII SMP",
+    topic: "Fotosintesis",
+    kompetensiInti: ["KI-3: Memahami pengetahuan (faktual, konseptual, dan prosedural) berdasarkan rasa ingin tahunya tentang ilmu pengetahuan...", "KI-4: Mencoba, mengolah, dan menyaji dalam ranah konkret..."],
+    kompetensiDasar: ["3.7 Menganalisis konsep energi, berbagai sumber energi, dan perubahan bentuk energi dalam kehidupan sehari-hari termasuk fotosintesis", "4.7 Menyajikan hasil penyelidikan tentang perubahan bentuk energi termasuk fotosintesis"],
+    indikatorPencapaianKompetensi: ["Menjelaskan proses fotosintesis", "Mengidentifikasi faktor-faktor yang mempengaruhi fotosintesis"],
+    learningObjectives: ["Setelah pembelajaran, siswa dapat menjelaskan proses fotosintesis dengan benar.", "Setelah pembelajaran, siswa dapat mengidentifikasi minimal 3 faktor yang mempengaruhi fotosintesis."],
+    metodePembelajaran: ["Diskusi", "Eksperimen", "Tanya Jawab"],
     langkahPembelajaran: {
-      pendahuluan: ["Salam, doa, presensi", "Menunjukkan gambar ekosistem, bertanya tentang sumber energi", "Menyampaikan tujuan dan pentingnya materi"],
-      kegiatanInti: ["Studi literatur: Proses fotosintesis", "Diskusi kelompok: Bahan dan hasil fotosintesis", "Membuat diagram alur fotosintesis", "Presentasi hasil diskusi"],
-      penutup: ["Kuis interaktif tentang fotosintesis", "Refleksi: Bagaimana fotosintesis mempengaruhi kita?", "Tugas: Mengamati tumbuhan di sekitar rumah"],
+      pendahuluan: ["Salam, doa, presensi", "Apersepsi: Menanyakan tumbuhan di sekitar", "Menyampaikan KD dan tujuan"],
+      kegiatanInti: ["Mengamati video fotosintesis", "Diskusi kelompok tentang bahan dan hasil fotosintesis", "Melakukan percobaan sederhana (opsional)", "Presentasi kelompok"],
+      penutup: ["Kesimpulan", "Refleksi", "Pemberian tugas"],
     },
-    assessment: "Laporan praktikum (jika ada), presentasi kelompok, partisipasi diskusi, kuis.",
-    materials: "Buku teks IPA, video animasi fotosintesis, gambar ekosistem, kertas plano, spidol",
+    assessment: "Penilaian sikap (observasi), Penilaian pengetahuan (tes tulis), Penilaian keterampilan (laporan praktikum/presentasi).",
+    materials: "Buku teks IPA K-13, Video animasi fotosintesis, Gambar/Charta, Alat dan bahan praktikum (jika ada)",
     createdAt: new Date("2023-10-10T09:00:00Z").toISOString(),
     updatedAt: new Date("2023-10-12T11:00:00Z").toISOString(),
     createdByUserId: "user-4" 
@@ -63,6 +68,7 @@ const LESSON_PLANS_STORAGE_KEY = "appLessonPlans";
 export default function LessonPlansPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { defaultCurriculum } = useCurriculum(); // Get default curriculum
   const [lessonPlans, setLessonPlans] = useState<LessonPlan[]>([]);
   const [editingItem, setEditingItem] = useState<LessonPlan | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -124,6 +130,7 @@ export default function LessonPlansPage() {
     if (!newItem.id) { 
         newItem.id = `rpp-${Date.now()}`;
         newItem.createdAt = new Date().toISOString();
+        newItem.curriculumType = newItem.curriculumType || defaultCurriculum; // Set default curriculum for new items
     }
     newItem.updatedAt = new Date().toISOString();
 
@@ -181,7 +188,8 @@ export default function LessonPlansPage() {
   const filteredLessonPlans = isClient ? lessonPlans.filter(lp =>
     lp.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     lp.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    lp.gradeLevel.toLowerCase().includes(searchTerm.toLowerCase())
+    lp.gradeLevel.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    lp.curriculumType.toLowerCase().includes(searchTerm.toLowerCase())
   ) : [];
 
   if (!isClient || !user) {
@@ -213,7 +221,7 @@ export default function LessonPlansPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 type="search"
-                placeholder="Cari rencana pembelajaran..."
+                placeholder="Cari rencana (judul, mapel, jenjang, kurikulum)..."
                 className="pl-10 w-full text-base sm:text-sm"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -237,7 +245,7 @@ export default function LessonPlansPage() {
                     dialogDescription="Isi rincian untuk rencana pembelajaran baru Anda (RPP/Modul Ajar)."
                     itemType="RPP"
                     onSubmit={handleCreateOrUpdate}
-                    initialData={null}
+                    initialData={null} // Will use defaultCurriculum from context
                     />
                 </div>
              )}
@@ -255,10 +263,9 @@ export default function LessonPlansPage() {
       </Card>
       {editingItem && canEditItem(editingItem) && ( 
         <>
-            {/* Overlay removed for brevity, handled by Dialog component internally */}
             <CurriculumFormDialog
                 triggerButtonText="Pemicu Edit Tersembunyi" 
-                dialogTitle={`Edit Rencana Pembelajaran`} // Title will be set by the form itself
+                dialogTitle={`Edit Rencana Pembelajaran`} 
                 dialogDescription="Perbarui rincian untuk rencana pembelajaran ini."
                 itemType="RPP"
                 initialData={editingItem}

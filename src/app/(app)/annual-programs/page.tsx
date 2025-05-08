@@ -11,12 +11,14 @@ import { Button } from "@/components/ui/button";
 import { FileUp, Filter, Search, Loader2, CalendarDays } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useCurriculum } from "@/contexts/CurriculumContext"; // Import curriculum context
 
 const initialAnnualProgramsData: AnnualProgram[] = [
   {
     id: "prota1",
     type: "PROTA",
-    title: "PROTA Matematika Fase D 2024/2025",
+    curriculumType: "Kurikulum Merdeka",
+    title: "PROTA Matematika Fase D 2024/2025 (Merdeka)",
     subject: "Matematika",
     gradeLevel: "Fase D (Kelas 7-9 SMP)",
     year: "2024/2025",
@@ -36,21 +38,19 @@ const initialAnnualProgramsData: AnnualProgram[] = [
   {
     id: "prota2",
     type: "PROTA",
-    title: "PROTA IPA Fase E 2024/2025",
+    curriculumType: "K-13",
+    title: "PROTA IPA Kelas X 2024/2025 (K-13)",
     subject: "IPA (Fisika, Kimia, Biologi)",
-    gradeLevel: "Fase E (Kelas 10 SMA/SMK)",
+    gradeLevel: "Kelas X SMA/SMK",
     year: "2024/2025",
     semester1Components: [
-      { topic: "Fisika: Pengukuran dan Kinematika", elemenCapaianPembelajaran: ["Besaran dan satuan", "Gerak lurus"], alokasiWaktu: "24 JP" },
-      { topic: "Kimia: Struktur Atom dan Ikatan Kimia", elemenCapaianPembelajaran: ["Model atom", "Jenis ikatan"], alokasiWaktu: "20 JP" },
-      { topic: "Biologi: Keanekaragaman Hayati", elemenCapaianPembelajaran: ["Klasifikasi makhluk hidup", "Peran ekosistem"], alokasiWaktu: "20 JP" },
+      { topic: "Fisika: Pengukuran dan Kinematika", elemenCapaianPembelajaran: ["KD 3.1 Menerapkan hakikat ilmu Fisika...", "KD 3.2 Menganalisis gerak lurus..."], alokasiWaktu: "24 JP" },
+      { topic: "Kimia: Struktur Atom dan Ikatan Kimia", elemenCapaianPembelajaran: ["KD 3.1 Memahami perkembangan model atom...", "KD 3.2 Menganalisis proses pembentukan ikatan kimia..."], alokasiWaktu: "20 JP" },
     ],
     semester2Components: [
-      { topic: "Fisika: Dinamika dan Usaha Energi", elemenCapaianPembelajaran: ["Hukum Newton", "Konsep energi"], alokasiWaktu: "24 JP" },
-      { topic: "Kimia: Stoikiometri dan Larutan", elemenCapaianPembelajaran: ["Konsep mol", "Sifat larutan"], alokasiWaktu: "20 JP" },
-      { topic: "Biologi: Ekologi dan Perubahan Lingkungan", elemenCapaianPembelajaran: ["Interaksi dalam ekosistem", "Dampak aktivitas manusia"], alokasiWaktu: "20 JP" },
+      { topic: "Fisika: Dinamika dan Usaha Energi", elemenCapaianPembelajaran: ["KD 3.3 Menganalisis interaksi pada gaya...", "KD 3.4 Menganalisis konsep energi..."], alokasiWaktu: "24 JP" },
+      { topic: "Kimia: Stoikiometri dan Larutan", elemenCapaianPembelajaran: ["KD 3.5 Menerapkan hukum-hukum dasar kimia...", "KD 3.6 Membedakan sifat koligatif larutan..."], alokasiWaktu: "20 JP" },
     ],
-    profilPelajarPancasilaFocus: ["Gotong Royong", "Mandiri"],
     createdAt: new Date("2024-07-02T00:00:00Z").toISOString(),
     updatedAt: new Date("2024-07-06T00:00:00Z").toISOString(),
     createdByUserId: "user-1" 
@@ -62,6 +62,7 @@ const ANNUAL_PROGRAMS_STORAGE_KEY = "appAnnualPrograms";
 export default function AnnualProgramsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { defaultCurriculum } = useCurriculum(); // Get default curriculum
   const [annualPrograms, setAnnualPrograms] = useState<AnnualProgram[]>([]);
   const [editingItem, setEditingItem] = useState<AnnualProgram | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -107,6 +108,7 @@ export default function AnnualProgramsPage() {
      if (!newItem.id) {
         newItem.id = `prota-${Date.now()}`;
         newItem.createdAt = new Date().toISOString();
+        newItem.curriculumType = newItem.curriculumType || defaultCurriculum; // Set default curriculum for new items
     }
     newItem.updatedAt = new Date().toISOString();
 
@@ -166,7 +168,8 @@ export default function AnnualProgramsPage() {
   const filteredAnnualPrograms = isClient ? annualPrograms.filter(ap =>
     ap.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     ap.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    ap.year.toLowerCase().includes(searchTerm.toLowerCase())
+    ap.year.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    ap.curriculumType.toLowerCase().includes(searchTerm.toLowerCase())
   ) : [];
 
   if (!isClient || !user) {
@@ -199,7 +202,7 @@ export default function AnnualProgramsPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 type="search"
-                placeholder="Cari program tahunan..."
+                placeholder="Cari PROTA (judul, mapel, tahun, kurikulum)..."
                 className="pl-10 w-full text-base sm:text-sm"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -220,13 +223,13 @@ export default function AnnualProgramsPage() {
                   <CurriculumFormDialog
                   triggerButtonText="Buat Program Baru"
                   dialogTitle="Buat Program Tahunan Baru (PROTA)"
-                  dialogDescription="Definisikan struktur untuk seluruh tahun ajaran sesuai Kurikulum Merdeka."
+                  dialogDescription="Definisikan struktur untuk seluruh tahun ajaran."
                   itemType="PROTA"
                   onSubmit={handleCreateOrUpdate}
-                  initialData={null}
+                  initialData={null} // Will use defaultCurriculum from context
                   forceOpen={isFormOpen && !editingItem}
                   onOpenChange={(open) => {
-                    if (!open && editingItem) { // Clear editingItem only if form closed AND it was for editing
+                    if (!open && editingItem) { 
                       setEditingItem(null);
                     }
                     setIsFormOpen(open);
@@ -249,7 +252,7 @@ export default function AnnualProgramsPage() {
       {editingItem && canEdit && (
          <CurriculumFormDialog
             triggerButtonText="Pemicu Edit Tersembunyi"
-            dialogTitle={`Edit Program Tahunan`} // Actual title set in form
+            dialogTitle={`Edit Program Tahunan`} 
             dialogDescription="Perbarui rincian untuk program tahunan ini."
             itemType="PROTA"
             initialData={editingItem}

@@ -11,12 +11,14 @@ import { Button } from "@/components/ui/button";
 import { FileUp, Filter, Search, Loader2, CalendarClock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useCurriculum } from "@/contexts/CurriculumContext"; // Import curriculum context
 
 const initialSemesterProgramsData: SemesterProgram[] = [
   {
     id: "promes1",
     type: "Promes",
-    title: "Promes Matematika Fase D - Semester Ganjil 2024/2025",
+    curriculumType: "Kurikulum Merdeka",
+    title: "Promes Matematika Fase D - Semester Ganjil 2024/2025 (Merdeka)",
     subject: "Matematika",
     gradeLevel: "Fase D (Kelas 7-9 SMP)",
     semester: "1",
@@ -26,7 +28,6 @@ const initialSemesterProgramsData: SemesterProgram[] = [
     komponenMingguan: [
       { mingguKe: 1, bulan: "Juli", materiPokokAtauTujuanPembelajaran: "Orientasi dan Asesmen Diagnostik Awal", alokasiWaktu: "4 JP", metodeStrategi: ["Diskusi", "Tes diagnostik"], sumberBelajar: ["Modul Ajar"], rencanaAsesmen: ["Observasi", "Hasil tes"], catatanIntegrasiP5: "Pengenalan nilai-nilai P5."},
       { mingguKe: 2, bulan: "Juli", materiPokokAtauTujuanPembelajaran: "Bilangan: Membaca dan Menulis Bilangan Cacah", alokasiWaktu: "4 JP", metodeStrategi: ["Permainan kartu angka", "Latihan terbimbing"], sumberBelajar: ["Buku Siswa Bab 1"], rencanaAsesmen: ["Kinerja membaca bilangan", "Lembar kerja"], catatanIntegrasiP5: "Ketelitian (Mandiri)"},
-      { mingguKe: 3, bulan: "Agustus", materiPokokAtauTujuanPembelajaran: "Bilangan: Nilai Tempat", alokasiWaktu: "4 JP", metodeStrategi: ["Media blok Dienes", "Diskusi kelompok"], sumberBelajar: ["Buku Siswa Bab 1"], rencanaAsesmen: ["Presentasi kelompok", "Tugas individu"], catatanIntegrasiP5: "Kerja sama (Gotong Royong)"},
     ],
     createdAt: new Date("2024-07-10T00:00:00Z").toISOString(),
     updatedAt: new Date("2024-07-12T00:00:00Z").toISOString(),
@@ -35,16 +36,17 @@ const initialSemesterProgramsData: SemesterProgram[] = [
   {
     id: "promes2",
     type: "Promes",
-    title: "Promes IPA Fase D - Semester Genap 2024/2025",
+    curriculumType: "KTSP 2006",
+    title: "Promes IPA Kelas VIII - Semester Genap 2024/2025 (KTSP)",
     subject: "IPA",
-    gradeLevel: "Fase D (Kelas 7-9 SMP)",
+    gradeLevel: "Kelas VIII SMP",
     semester: "2",
     year: "2024/2025",
-    capaianPembelajaranUmum: "Peserta didik mampu melakukan klasifikasi makhluk hidup dan benda berdasarkan karakteristik yang diamati.",
+    capaianPembelajaranUmum: "SK 5: Memahami peranan usaha, gaya, dan energi dalam kehidupan sehari-hari.", // Example SK
     alokasiWaktuTotalSemester: "16 Minggu Efektif x 5 JP/Minggu = 80 JP",
     komponenMingguan: [
-      { mingguKe: 1, bulan: "Januari", materiPokokAtauTujuanPembelajaran: "Klasifikasi Materi: Unsur, Senyawa, Campuran", alokasiWaktu: "5 JP", metodeStrategi: ["Eksperimen sederhana", "Pengamatan"], sumberBelajar: ["Modul IPA", "Alat lab"], rencanaAsesmen: ["Laporan praktikum", "Kuis"], catatanIntegrasiP5: "Bernalar kritis saat menganalisis hasil eksperimen."},
-      { mingguKe: 2, bulan: "Januari", materiPokokAtauTujuanPembelajaran: "Sistem Organisasi Kehidupan: Sel sebagai Unit Terkecil", alokasiWaktu: "5 JP", metodeStrategi: ["Studi gambar/video mikroskopis", "Membuat model sel"], sumberBelajar: ["Buku Teks Biologi"], rencanaAsesmen: ["Penilaian model sel", "Partisipasi diskusi"], catatanIntegrasiP5: "Kreatif dalam membuat model sel."},
+      { mingguKe: 1, bulan: "Januari", materiPokokAtauTujuanPembelajaran: "Materi Pokok: Gaya dan Penerapannya (KD 5.1 Mengidentifikasi jenis-jenis gaya...)", alokasiWaktu: "5 JP", metodeStrategi: ["Eksperimen sederhana", "Pengamatan"], sumberBelajar: ["Modul IPA KTSP"], rencanaAsesmen: ["Laporan praktikum", "Kuis"], catatanIntegrasiP5: "Sikap ilmiah saat eksperimen."},
+      { mingguKe: 2, bulan: "Januari", materiPokokAtauTujuanPembelajaran: "Materi Pokok: Usaha dan Energi (KD 5.2 Menghitung besar energi potensial dan kinetik)", alokasiWaktu: "5 JP", metodeStrategi: ["Studi kasus", "Problem solving"], sumberBelajar: ["Buku Teks IPA"], rencanaAsesmen: ["Penyelesaian soal", "Partisipasi diskusi"]},
     ],
     createdAt: new Date("2024-07-11T00:00:00Z").toISOString(),
     updatedAt: new Date("2024-07-15T00:00:00Z").toISOString(),
@@ -57,6 +59,7 @@ const SEMESTER_PROGRAMS_STORAGE_KEY = "appSemesterPrograms";
 export default function SemesterProgramsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { defaultCurriculum } = useCurriculum(); // Get default curriculum
   const [semesterPrograms, setSemesterPrograms] = useState<SemesterProgram[]>([]);
   const [editingItem, setEditingItem] = useState<SemesterProgram | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -103,6 +106,7 @@ export default function SemesterProgramsPage() {
     if (!newItem.id) { 
         newItem.id = `promes-${Date.now()}`;
         newItem.createdAt = new Date().toISOString();
+        newItem.curriculumType = newItem.curriculumType || defaultCurriculum; // Set default curriculum for new items
     }
     newItem.updatedAt = new Date().toISOString();
 
@@ -162,7 +166,8 @@ export default function SemesterProgramsPage() {
   const filteredSemesterPrograms = isClient ? semesterPrograms.filter(sp =>
     sp.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     sp.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    `Semester ${sp.semester}`.toLowerCase().includes(searchTerm.toLowerCase())
+    `Semester ${sp.semester}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    sp.curriculumType.toLowerCase().includes(searchTerm.toLowerCase())
   ) : [];
 
 
@@ -196,7 +201,7 @@ export default function SemesterProgramsPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input
                   type="search"
-                  placeholder="Cari program semester..."
+                  placeholder="Cari Promes (judul, mapel, semester, kurikulum)..."
                   className="pl-10 w-full text-base sm:text-sm"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -217,10 +222,10 @@ export default function SemesterProgramsPage() {
                   <CurriculumFormDialog
                   triggerButtonText="Buat Program Baru"
                   dialogTitle="Buat Program Semester Baru (Promes)"
-                  dialogDescription="Rancang kurikulum Anda untuk semester tertentu sesuai Kurikulum Merdeka."
+                  dialogDescription="Rancang kurikulum Anda untuk semester tertentu."
                   itemType="Promes"
                   onSubmit={handleCreateOrUpdate}
-                  initialData={null}
+                  initialData={null} // Will use defaultCurriculum from context
                   forceOpen={isFormOpen && !editingItem}
                   onOpenChange={(open) => {
                      if (!open && editingItem) {
@@ -246,7 +251,7 @@ export default function SemesterProgramsPage() {
       {editingItem && canEdit && (
         <CurriculumFormDialog
             triggerButtonText="Pemicu Edit Tersembunyi"
-            dialogTitle={`Edit Program Semester`} // Title set in form
+            dialogTitle={`Edit Program Semester`} 
             dialogDescription="Perbarui rincian untuk program semester ini."
             itemType="Promes"
             initialData={editingItem}

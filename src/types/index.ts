@@ -1,6 +1,7 @@
 
 
 export type UserRole = "Admin" | "KepalaSekolah" | "WakaKurikulum" | "TataUsaha" | "Guru";
+export type CurriculumFramework = "Kurikulum Merdeka" | "K-13" | "KTSP 2006";
 
 export interface User {
   id: string;
@@ -8,8 +9,8 @@ export interface User {
   name: string;
   role: UserRole;
   avatarUrl?: string;
-  schoolId?: string; // Optional: to associate user with a specific school profile
-  updatedAt?: string; // ISO date string, optional
+  schoolId?: string; 
+  updatedAt?: string; 
 }
 
 export interface SchoolProfile {
@@ -19,8 +20,8 @@ export interface SchoolProfile {
   nomorTelepon: string;
   emailSekolah: string;
   namaKepalaSekolah: string;
-  npsn?: string; // Nomor Pokok Sekolah Nasional (Optional)
-  logoUrl?: string; // URL to school logo (Optional)
+  npsn?: string; 
+  logoUrl?: string; 
   updatedAt: string;
 }
 
@@ -28,59 +29,71 @@ export interface CurriculumItem {
   id: string;
   title: string;
   subject: string;
-  gradeLevel: string; // e.g., "Fase A (Kelas 1-2 SD)", "PAUD", "Kelas 10 SMA"
-  createdAt: string; // ISO date string
-  updatedAt: string; // ISO date string
-  createdByUserId?: string; // Optional: to track who created the item
+  gradeLevel: string; 
+  createdAt: string; 
+  updatedAt: string; 
+  createdByUserId?: string; 
+  curriculumType: CurriculumFramework; // Added curriculum type
 }
 
 export interface LessonPlan extends CurriculumItem {
-  type: 'RPP'; // Rencana Pelaksanaan Pembelajaran
-  topic: string; // Topik atau Materi Pembelajaran
-  learningObjectives: string[]; // Tujuan Pembelajaran / Capaian Pembelajaran
-  pemahamanBermakna?: string[]; // Pemahaman Bermakna yang akan dibangun
-  pertanyaanPemantik?: string[]; // Pertanyaan Pemantik untuk memantik rasa ingin tahu
-  langkahPembelajaran: { // Menggantikan suggestedActivities
-    pendahuluan: string[]; // Kegiatan pendahuluan
-    kegiatanInti: string[]; // Kegiatan inti pembelajaran
-    penutup: string[]; // Kegiatan penutup
+  type: 'RPP'; 
+  topic: string; 
+  learningObjectives: string[]; 
+  
+  // Kurikulum Merdeka specific
+  pemahamanBermakna?: string[]; 
+  pertanyaanPemantik?: string[]; 
+  differentiationStrategies?: string[]; 
+  
+  // KTSP 2006 / K-13 specific
+  standarKompetensi?: string[]; // SK (KTSP)
+  kompetensiInti?: string[]; // KI (K-13)
+  kompetensiDasar?: string[]; // KD (KTSP, K-13)
+  indikatorPencapaianKompetensi?: string[]; // IPK (KTSP, K-13)
+  metodePembelajaran?: string[]; // Metode (KTSP, K-13)
+  
+  // Common
+  langkahPembelajaran: { 
+    pendahuluan: string[]; 
+    kegiatanInti: string[]; 
+    penutup: string[]; 
   };
-  assessment: string; // Asesmen / Penilaian (bisa diubah jadi array jika perlu rincian)
-  differentiationStrategies?: string[]; // Strategi Diferensiasi (opsional)
-  materials?: string; // Media / Sumber Belajar (opsional)
+  assessment: string; 
+  materials?: string; 
 }
 
 export interface AnnualProgramComponent {
-  topic: string;
-  elemenCapaianPembelajaran?: string[]; // Elemen Capaian Pembelajaran, e.g., ["Bilangan", "Aljabar"]
-  alokasiWaktu: string; // e.g., "24 JP" (Jam Pelajaran)
+  topic: string; // Materi Pokok/Tema for KTSP/K13
+  elemenCapaianPembelajaran?: string[]; // CP (Merdeka) / KD (KTSP/K13) - AI will adapt
+  alokasiWaktu: string; 
 }
 
 export interface AnnualProgram extends CurriculumItem {
-  type: 'PROTA'; // Program Tahunan
-  year: string; // Tahun Ajaran, e.g., "2023/2024"
+  type: 'PROTA'; 
+  year: string; 
   semester1Components: AnnualProgramComponent[];
   semester2Components: AnnualProgramComponent[];
-  profilPelajarPancasilaFocus?: string[]; // Fokus dimensi P5, e.g., ["Gotong Royong", "Kreatif"]
+  profilPelajarPancasilaFocus?: string[]; // Primarily Merdeka, but can be adapted
 }
 
 export interface WeeklyUnit {
   mingguKe: number;
-  bulan?: string; // Optional: e.g., "Juli Minggu ke-3"
-  materiPokokAtauTujuanPembelajaran: string; // Bisa Materi Pokok atau Tujuan Pembelajaran dari ATP
-  alokasiWaktu: string; // e.g., "3 JP x 2 Pertemuan"
-  metodeStrategi?: string[]; // e.g., ["Diskusi Kelompok", "Project Based Learning"]
-  sumberBelajar?: string[]; // e.g., ["Buku Siswa Hal. 10-15", "Video YouTube XYZ"]
-  rencanaAsesmen?: string[]; // e.g., ["Formatif: Observasi Diskusi", "Sumatif: Ulangan Harian Bab 1"]
-  catatanIntegrasiP5?: string; // Catatan bagaimana P5 diintegrasikan, e.g., "Diskusi kelompok menekankan gotong royong."
+  bulan?: string; 
+  materiPokokAtauTujuanPembelajaran: string; // Materi Pokok (KTSP/K13) / TP (Merdeka)
+  alokasiWaktu: string; 
+  metodeStrategi?: string[]; 
+  sumberBelajar?: string[]; 
+  rencanaAsesmen?: string[]; 
+  catatanIntegrasiP5?: string; 
 }
 
 export interface SemesterProgram extends CurriculumItem {
-  type: 'Promes'; // Program Semester
-  semester: '1' | '2'; // 1 for Ganjil, 2 for Genap
-  year: string; // Tahun Ajaran, e.g. "2023/2024"
-  capaianPembelajaranUmum?: string; // Deskripsi CP umum untuk semester tersebut (opsional)
-  alokasiWaktuTotalSemester?: string; // e.g., "18 Minggu Efektif x 6 JP/Minggu = 108 JP"
+  type: 'Promes'; 
+  semester: '1' | '2'; 
+  year: string; 
+  capaianPembelajaranUmum?: string; // CP (Merdeka) / SK-KD Rangkuman (KTSP/K13)
+  alokasiWaktuTotalSemester?: string; 
   komponenMingguan: WeeklyUnit[];
 }
 
@@ -95,21 +108,33 @@ export type { GenerateTeachingMaterialInput, GenerateTeachingMaterialOutput, Sug
 
 export interface PrintOptions {
   showKopSurat: boolean;
-  // RPP specific
-  showRPPTujuanPembelajaran: boolean;
-  showRPPPemahamanBermakna: boolean;
-  showRPPPertanyaanPemantik: boolean;
+  
+  // RPP common
+  showRPPLearningObjectives: boolean; // For Tujuan Pembelajaran
   showRPPLangkahPendahuluan: boolean;
   showRPPLangkahKegiatanInti: boolean;
   showRPPLangkahPenutup: boolean;
-  showRPPAsesmen: boolean;
-  showRPPStrategiDiferensiasi: boolean;
-  showRPPMediaSumberBelajar: boolean;
-  // PROTA specific
-  showPROTAFokusP5: boolean;
+  showRPPAssessment: boolean;
+  showRPPMaterials: boolean;
+
+  // RPP Kurikulum Merdeka specific
+  showRPPPemahamanBermakna: boolean;
+  showRPPPertanyaanPemantik: boolean;
+  showRPPDifferentiationStrategies: boolean;
+  
+  // RPP KTSP/K-13 specific
+  showRPPSK?: boolean; // Standar Kompetensi (KTSP)
+  showRPPKI?: boolean; // Kompetensi Inti (K-13)
+  showRPPKD?: boolean; // Kompetensi Dasar (KTSP, K-13)
+  showRPPIPK?: boolean; // Indikator Pencapaian Kompetensi (KTSP, K-13)
+  showRPPMetodePembelajaran?: boolean;
+
+  // PROTA specific (mostly generic, content varies by curriculum)
+  showPROTAFokusP5: boolean; // More for Merdeka, but can be adapted
   showPROTASemester1: boolean;
   showPROTASemester2: boolean;
-  // Promes specific
+  
+  // Promes specific (mostly generic, content varies by curriculum)
   showPromesCapaianUmum: boolean;
   showPromesAlokasiTotal: boolean;
   showPromesKomponenMingguan: boolean;
@@ -117,18 +142,26 @@ export interface PrintOptions {
 
 export const defaultPrintOptions: PrintOptions = {
   showKopSurat: true,
-  showRPPTujuanPembelajaran: true,
-  showRPPPemahamanBermakna: true,
-  showRPPPertanyaanPemantik: true,
+  // RPP
+  showRPPLearningObjectives: true,
   showRPPLangkahPendahuluan: true,
   showRPPLangkahKegiatanInti: true,
   showRPPLangkahPenutup: true,
-  showRPPAsesmen: true,
-  showRPPStrategiDiferensiasi: true,
-  showRPPMediaSumberBelajar: true,
+  showRPPAssessment: true,
+  showRPPMaterials: true,
+  showRPPPemahamanBermakna: true,
+  showRPPPertanyaanPemantik: true,
+  showRPPDifferentiationStrategies: true,
+  showRPPSK: true,
+  showRPPKI: true,
+  showRPPKD: true,
+  showRPPIPK: true,
+  showRPPMetodePembelajaran: true,
+  // PROTA
   showPROTAFokusP5: true,
   showPROTASemester1: true,
   showPROTASemester2: true,
+  // Promes
   showPromesCapaianUmum: true,
   showPromesAlokasiTotal: true,
   showPromesKomponenMingguan: true,
@@ -141,5 +174,9 @@ export interface ExportedCurriculumData {
   semesterPrograms: SemesterProgram[];
   schoolProfile: SchoolProfile | null;
   appUsers: User[];
+  // Add global curriculum setting if needed for export/import
+  // defaultCurriculum?: CurriculumFramework; 
 }
 
+// Default data structures will be updated in their respective page files.
+// For example, in lesson-plans/page.tsx, initialLessonPlansData will add curriculumType.

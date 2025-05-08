@@ -1,4 +1,5 @@
 
+
 import type { Metadata } from 'next';
 import { Roboto } from 'next/font/google'; // Changed font
 import './globals.css';
@@ -7,6 +8,7 @@ import { QueryClientProvider } from '@/lib/query-provider';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { LogProvider } from '@/contexts/LogContext';
+import { CurriculumProvider } from '@/contexts/CurriculumContext'; // Added CurriculumProvider
 
 // Instantiate Roboto font
 const roboto = Roboto({
@@ -31,10 +33,12 @@ export default function RootLayout({
       <body className={`${roboto.variable} antialiased`}>
         <ThemeProvider>
           <QueryClientProvider>
-            <LogProvider> {/* LogProvider now wraps AuthProvider */}
+            <LogProvider> 
               <AuthProvider>
-                {children}
-                <Toaster />
+                <CurriculumProvider> {/* Added CurriculumProvider */}
+                  {children}
+                  <Toaster />
+                </CurriculumProvider>
               </AuthProvider>
             </LogProvider>
           </QueryClientProvider>

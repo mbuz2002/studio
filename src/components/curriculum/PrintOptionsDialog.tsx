@@ -16,30 +16,31 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { PrintOptions, AnyCurriculumItem } from "@/types";
+import type { PrintOptions, AnyCurriculumItem, CurriculumFramework } from "@/types";
 import { Settings2, Printer } from "lucide-react";
 
 interface PrintOptionsDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   itemType: AnyCurriculumItem['type'];
+  itemCurriculumType: CurriculumFramework; // Added prop for item's curriculum type
   defaultOptions: PrintOptions;
   onSubmit: (options: PrintOptions) => void;
-  hasSchoolProfile: boolean; // New prop
+  hasSchoolProfile: boolean; 
 }
 
 export function PrintOptionsDialog({
   isOpen,
   onOpenChange,
   itemType,
+  itemCurriculumType, // Use item's curriculum type
   defaultOptions,
   onSubmit,
-  hasSchoolProfile, // Use new prop
+  hasSchoolProfile, 
 }: PrintOptionsDialogProps) {
   const [options, setOptions] = useState<PrintOptions>(defaultOptions);
 
   useEffect(() => {
-    // Ensure showKopSurat is false if hasSchoolProfile is false when dialog opens
     const initialOpts = {...defaultOptions};
     if (!hasSchoolProfile) {
       initialOpts.showKopSurat = false;
@@ -62,17 +63,56 @@ export function PrintOptionsDialog({
   const renderRPPOptions = () => (
     <>
       <div className="flex items-center space-x-2">
-        <Checkbox id="showRPPTujuanPembelajaran" checked={options.showRPPTujuanPembelajaran} onCheckedChange={() => handleCheckboxChange("showRPPTujuanPembelajaran")} />
-        <Label htmlFor="showRPPTujuanPembelajaran">Tujuan Pembelajaran</Label>
+        <Checkbox id="showRPPLearningObjectives" checked={options.showRPPLearningObjectives} onCheckedChange={() => handleCheckboxChange("showRPPLearningObjectives")} />
+        <Label htmlFor="showRPPLearningObjectives">Tujuan Pembelajaran</Label>
       </div>
-      <div className="flex items-center space-x-2">
-        <Checkbox id="showRPPPemahamanBermakna" checked={options.showRPPPemahamanBermakna} onCheckedChange={() => handleCheckboxChange("showRPPPemahamanBermakna")} />
-        <Label htmlFor="showRPPPemahamanBermakna">Pemahaman Bermakna</Label>
-      </div>
-      <div className="flex items-center space-x-2">
-        <Checkbox id="showRPPPertanyaanPemantik" checked={options.showRPPPertanyaanPemantik} onCheckedChange={() => handleCheckboxChange("showRPPPertanyaanPemantik")} />
-        <Label htmlFor="showRPPPertanyaanPemantik">Pertanyaan Pemantik</Label>
-      </div>
+
+      {itemCurriculumType === "Kurikulum Merdeka" && (
+        <>
+          <div className="flex items-center space-x-2">
+            <Checkbox id="showRPPPemahamanBermakna" checked={options.showRPPPemahamanBermakna} onCheckedChange={() => handleCheckboxChange("showRPPPemahamanBermakna")} />
+            <Label htmlFor="showRPPPemahamanBermakna">Pemahaman Bermakna</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox id="showRPPPertanyaanPemantik" checked={options.showRPPPertanyaanPemantik} onCheckedChange={() => handleCheckboxChange("showRPPPertanyaanPemantik")} />
+            <Label htmlFor="showRPPPertanyaanPemantik">Pertanyaan Pemantik</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox id="showRPPDifferentiationStrategies" checked={options.showRPPDifferentiationStrategies} onCheckedChange={() => handleCheckboxChange("showRPPDifferentiationStrategies")} />
+            <Label htmlFor="showRPPDifferentiationStrategies">Strategi Diferensiasi</Label>
+          </div>
+        </>
+      )}
+      
+      {(itemCurriculumType === "K-13" || itemCurriculumType === "KTSP 2006") && (
+          <>
+            {itemCurriculumType === "KTSP 2006" && (
+                <div className="flex items-center space-x-2">
+                    <Checkbox id="showRPPSK" checked={options.showRPPSK} onCheckedChange={() => handleCheckboxChange("showRPPSK")} />
+                    <Label htmlFor="showRPPSK">Standar Kompetensi (SK)</Label>
+                </div>
+            )}
+            {itemCurriculumType === "K-13" && (
+                <div className="flex items-center space-x-2">
+                    <Checkbox id="showRPPKI" checked={options.showRPPKI} onCheckedChange={() => handleCheckboxChange("showRPPKI")} />
+                    <Label htmlFor="showRPPKI">Kompetensi Inti (KI)</Label>
+                </div>
+            )}
+            <div className="flex items-center space-x-2">
+                <Checkbox id="showRPPKD" checked={options.showRPPKD} onCheckedChange={() => handleCheckboxChange("showRPPKD")} />
+                <Label htmlFor="showRPPKD">Kompetensi Dasar (KD)</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+                <Checkbox id="showRPPIPK" checked={options.showRPPIPK} onCheckedChange={() => handleCheckboxChange("showRPPIPK")} />
+                <Label htmlFor="showRPPIPK">Indikator Pencapaian Kompetensi (IPK)</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+                <Checkbox id="showRPPMetodePembelajaran" checked={options.showRPPMetodePembelajaran} onCheckedChange={() => handleCheckboxChange("showRPPMetodePembelajaran")} />
+                <Label htmlFor="showRPPMetodePembelajaran">Metode Pembelajaran</Label>
+            </div>
+          </>
+      )}
+
       <div className="flex items-center space-x-2">
         <Checkbox id="showRPPLangkahPendahuluan" checked={options.showRPPLangkahPendahuluan} onCheckedChange={() => handleCheckboxChange("showRPPLangkahPendahuluan")} />
         <Label htmlFor="showRPPLangkahPendahuluan">Langkah: Pendahuluan</Label>
@@ -86,26 +126,24 @@ export function PrintOptionsDialog({
         <Label htmlFor="showRPPLangkahPenutup">Langkah: Penutup</Label>
       </div>
       <div className="flex items-center space-x-2">
-        <Checkbox id="showRPPAsesmen" checked={options.showRPPAsesmen} onCheckedChange={() => handleCheckboxChange("showRPPAsesmen")} />
-        <Label htmlFor="showRPPAsesmen">Asesmen/Penilaian</Label>
+        <Checkbox id="showRPPAssessment" checked={options.showRPPAssessment} onCheckedChange={() => handleCheckboxChange("showRPPAssessment")} />
+        <Label htmlFor="showRPPAssessment">Asesmen/Penilaian</Label>
       </div>
       <div className="flex items-center space-x-2">
-        <Checkbox id="showRPPStrategiDiferensiasi" checked={options.showRPPStrategiDiferensiasi} onCheckedChange={() => handleCheckboxChange("showRPPStrategiDiferensiasi")} />
-        <Label htmlFor="showRPPStrategiDiferensiasi">Strategi Diferensiasi</Label>
-      </div>
-      <div className="flex items-center space-x-2">
-        <Checkbox id="showRPPMediaSumberBelajar" checked={options.showRPPMediaSumberBelajar} onCheckedChange={() => handleCheckboxChange("showRPPMediaSumberBelajar")} />
-        <Label htmlFor="showRPPMediaSumberBelajar">Media/Sumber Belajar</Label>
+        <Checkbox id="showRPPMaterials" checked={options.showRPPMaterials} onCheckedChange={() => handleCheckboxChange("showRPPMaterials")} />
+        <Label htmlFor="showRPPMaterials">Media/Sumber Belajar</Label>
       </div>
     </>
   );
 
   const renderPROTAOptions = () => (
     <>
-      <div className="flex items-center space-x-2">
-        <Checkbox id="showPROTAFokusP5" checked={options.showPROTAFokusP5} onCheckedChange={() => handleCheckboxChange("showPROTAFokusP5")} />
-        <Label htmlFor="showPROTAFokusP5">Fokus Profil Pelajar Pancasila</Label>
-      </div>
+      {itemCurriculumType === "Kurikulum Merdeka" && (
+        <div className="flex items-center space-x-2">
+          <Checkbox id="showPROTAFokusP5" checked={options.showPROTAFokusP5} onCheckedChange={() => handleCheckboxChange("showPROTAFokusP5")} />
+          <Label htmlFor="showPROTAFokusP5">Fokus Profil Pelajar Pancasila</Label>
+        </div>
+      )}
       <div className="flex items-center space-x-2">
         <Checkbox id="showPROTASemester1" checked={options.showPROTASemester1} onCheckedChange={() => handleCheckboxChange("showPROTASemester1")} />
         <Label htmlFor="showPROTASemester1">Komponen Semester 1</Label>
@@ -121,7 +159,9 @@ export function PrintOptionsDialog({
     <>
        <div className="flex items-center space-x-2">
         <Checkbox id="showPromesCapaianUmum" checked={options.showPromesCapaianUmum} onCheckedChange={() => handleCheckboxChange("showPromesCapaianUmum")} />
-        <Label htmlFor="showPromesCapaianUmum">Capaian Pembelajaran Umum</Label>
+        <Label htmlFor="showPromesCapaianUmum">
+            {itemCurriculumType === "Kurikulum Merdeka" ? "Capaian Pembelajaran Umum" : "Rangkuman SK/KD Utama"}
+        </Label>
       </div>
        <div className="flex items-center space-x-2">
         <Checkbox id="showPromesAlokasiTotal" checked={options.showPromesAlokasiTotal} onCheckedChange={() => handleCheckboxChange("showPromesAlokasiTotal")} />
@@ -140,7 +180,7 @@ export function PrintOptionsDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Settings2 className="h-5 w-5 text-primary" />
-            Atur Opsi Cetak Dokumen
+            Atur Opsi Cetak Dokumen ({itemType} - {itemCurriculumType})
           </DialogTitle>
           <DialogDescription>
             Pilih bagian mana saja dari {itemType} yang ingin Anda sertakan dalam hasil cetak.
@@ -153,7 +193,7 @@ export function PrintOptionsDialog({
                   id="showKopSurat" 
                   checked={options.showKopSurat} 
                   onCheckedChange={() => handleCheckboxChange("showKopSurat")}
-                  disabled={!hasSchoolProfile} // Disable if no profile
+                  disabled={!hasSchoolProfile} 
                 />
                 <Label htmlFor="showKopSurat" className={!hasSchoolProfile ? "text-muted-foreground" : ""}>
                   Tampilkan Kop Surat Sekolah {!hasSchoolProfile && "(Profil Sekolah belum diatur)"}
@@ -180,4 +220,3 @@ export function PrintOptionsDialog({
     </Dialog>
   );
 }
-
