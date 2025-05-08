@@ -2,7 +2,7 @@
 "use client";
 import type { PropsWithChildren } from 'react';
 import { useEffect, useMemo } from 'react';
-import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset } from '@/components/ui/sidebar'; // SidebarTrigger removed as it's implicitly handled by MobileBottomNav or a dedicated "More" item if added
+import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset } from '@/components/ui/sidebar';
 import { AppLogo } from '@/components/layout/AppLogo';
 import { UserProfile } from '@/components/layout/UserProfile';
 import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, ShieldCheck } from 'lucide-react';
@@ -11,7 +11,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
 import type { UserRole } from '@/types';
-import { MobileBottomNav } from '@/components/layout/MobileBottomNav'; // Import MobileBottomNav
+import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
 
 interface NavItem {
   href: string;
@@ -103,13 +103,13 @@ export default function AppLayout({ children }: PropsWithChildren) {
           </SidebarMenu>
         </SidebarContent>
         </ScrollArea>
-        <SidebarFooter className="border-t p-3 mt-auto"> {/* Added mt-auto here */}
+        <SidebarFooter className="border-t p-3 mt-auto">
           <UserProfile />
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
-        <MobileBottomNav /> {/* Added mobile bottom navigation */}
-        <main className="flex-1 overflow-auto p-4 pb-20 sm:px-6 sm:pb-4"> {/* pb-20 for mobile bottom nav clearance, sm:pb-4 for desktop */}
+        <MobileBottomNav />
+        <main className="flex-1 overflow-auto p-4 sm:p-6 pb-20 sm:pb-6"> {/* Adjusted padding */}
           {children}
         </main>
       </SidebarInset>

@@ -1,20 +1,17 @@
 
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Plus_Jakarta_Sans } from 'next/font/google'; // Changed font
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { QueryClientProvider } from '@/lib/query-provider';
 import { AuthProvider } from '@/contexts/AuthContext';
-import { ThemeProvider } from '@/contexts/ThemeContext'; // Import ThemeProvider
+import { ThemeProvider } from '@/contexts/ThemeContext';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+// Instantiate Plus Jakarta Sans
+const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ['latin'],
-});
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
+  variable: '--font-plus-jakarta-sans',
+  weight: ['300', '400', '500', '600', '700', '800'] // Added common weights
 });
 
 export const metadata: Metadata = {
@@ -29,8 +26,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <ThemeProvider> {/* Wrap AuthProvider and children with ThemeProvider */}
+      {/* Applied the new font variable to the body */}
+      <body className={`${plusJakartaSans.variable} antialiased`}>
+        <ThemeProvider>
           <QueryClientProvider>
             <AuthProvider>
               {children}

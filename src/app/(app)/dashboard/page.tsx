@@ -54,25 +54,6 @@ const featureCardsConfig: {
     aiHint: "kecerdasan buatan",
     roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"]
   },
-  // Example Admin/Kepsek specific cards (conceptual, link to settings for now)
-  // {
-  //   title: "Manajemen Pengguna",
-  //   description: "Kelola akun pengguna sistem.",
-  //   icon: Users,
-  //   href: "/settings", // Placeholder
-  //   image: "https://picsum.photos/seed/users/600/400",
-  //   aiHint: "tim kolaborasi",
-  //   roles: ["Admin"]
-  // },
-  // {
-  //   title: "Laporan Sekolah",
-  //   description: "Lihat laporan dan analitik terkait progres pembelajaran.",
-  //   icon: FileText,
-  //   href: "/settings", // Placeholder
-  //   image: "https://picsum.photos/seed/reports/600/400",
-  //   aiHint: "grafik data",
-  //   roles: ["Admin", "KepalaSekolah"]
-  // },
 ];
 
 export default function DashboardPage() {
@@ -83,23 +64,23 @@ export default function DashboardPage() {
   const visibleFeatureCards = user ? featureCardsConfig.filter(card => card.roles.includes(user.role)) : [];
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto py-6 md:py-8">
       <Card className="mb-8 shadow-lg">
         <CardHeader>
-          <CardTitle className="text-3xl font-bold">Selamat Datang di EduAI Planner!</CardTitle>
-          <CardDescription className="text-lg">
+          <CardTitle className="text-2xl md:text-3xl font-bold">Selamat Datang di EduAI Planner!</CardTitle>
+          <CardDescription className="text-md md:text-lg">
             Asisten cerdas Anda untuk perencanaan dan manajemen kurikulum yang efisien.
             Peran Anda: <span className="font-semibold text-primary">{user?.role}</span>
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="mb-4">
+          <p className="mb-6 text-base">
             Buat, atur, dan tingkatkan Rencana Pelaksanaan Pembelajaran (RPP), Program Tahunan (PROTA), dan Program Semester (Promes) Anda secara efisien dengan kekuatan AI. 
             Mulai dengan menjelajahi fitur di bawah atau buat item kurikulum baru.
           </p>
           {canCreateNewPlan && (
             <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground">
-              <Link href="/lesson-plans"> {/* Or a generic "create new" page */}
+              <Link href="/lesson-plans"> 
                 <PlusCircle className="mr-2 h-5 w-5" /> Buat Rencana Baru
               </Link>
             </Button>
@@ -107,27 +88,28 @@ export default function DashboardPage() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2 lg:gap-8">
         {visibleFeatureCards.map((feature) => (
-          <Card key={feature.title} className="flex flex-col overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300">
-            <div className="relative h-48 w-full">
+          <Card key={feature.title} className="flex flex-col overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300 rounded-lg">
+            <div className="relative h-52 w-full"> {/* Increased height slightly */}
               <Image 
                 src={feature.image} 
                 alt={feature.title} 
                 fill
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 style={{objectFit:"cover"}}
+                className="rounded-t-lg"
                 data-ai-hint={feature.aiHint}
               />
             </div>
             <CardHeader>
               <div className="flex items-center gap-3 mb-2">
-                <feature.icon className="h-8 w-8 text-primary" />
-                <CardTitle className="text-2xl">{feature.title}</CardTitle>
+                <feature.icon className="h-7 w-7 text-primary" /> {/* Slightly larger icon */}
+                <CardTitle className="text-xl md:text-2xl">{feature.title}</CardTitle>
               </div>
-              <CardDescription>{feature.description}</CardDescription>
+              <CardDescription className="text-sm md:text-base">{feature.description}</CardDescription>
             </CardHeader>
-            <CardContent className="flex-grow flex items-end">
+            <CardContent className="flex-grow flex items-end mt-auto pt-4"> {/* Added mt-auto and pt-4 for spacing */}
               <Button asChild variant="outline" className="w-full">
                 <Link href={feature.href}>
                   Buka {feature.title}
@@ -137,10 +119,10 @@ export default function DashboardPage() {
           </Card>
         ))}
          {visibleFeatureCards.length === 0 && (
-           <Card>
+           <Card className="rounded-lg">
             <CardHeader>
-              <CardTitle>Tidak Ada Fitur Tersedia</CardTitle>
-              <CardDescription>Saat ini tidak ada fitur yang dapat diakses untuk peran Anda.</CardDescription>
+              <CardTitle className="text-xl md:text-2xl">Tidak Ada Fitur Tersedia</CardTitle>
+              <CardDescription className="text-sm md:text-base">Saat ini tidak ada fitur yang dapat diakses untuk peran Anda.</CardDescription>
             </CardHeader>
           </Card>
         )}
