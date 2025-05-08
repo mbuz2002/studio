@@ -14,10 +14,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { User } from "@/types";
-import { Save, UserCircle2, KeyRound } from "lucide-react";
+import { Save, UserCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface EditUserDialogProps {
   isOpen: boolean;
@@ -108,16 +109,16 @@ export function EditUserDialog({ isOpen, onOpenChange, user, onUserUpdated }: Ed
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-md flex flex-col max-h-[90vh]">
+        <DialogHeader className="px-6 pt-6">
           <DialogTitle className="flex items-center gap-2">
             <UserCircle2 className="h-6 w-6 text-primary" />
             Edit Profil Pengguna
           </DialogTitle>
           <DialogDescription>Perbarui informasi profil Anda. Perubahan akan diterapkan setelah disimpan.</DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4">
+        <ScrollArea className="flex-grow overflow-y-auto px-6">
+          <form onSubmit={handleSubmit} className="grid gap-4 py-4">
             <div className="flex flex-col items-center space-y-2">
                 <Avatar className="h-24 w-24">
                     <AvatarImage src={avatarUrl || `https://picsum.photos/seed/${email}/100/100`} alt={name} data-ai-hint="user avatar" />
@@ -159,17 +160,17 @@ export function EditUserDialog({ isOpen, onOpenChange, user, onUserUpdated }: Ed
                 <Label htmlFor="confirmNewPassword">Konfirmasi Kata Sandi Baru</Label>
                 <Input id="confirmNewPassword" type="password" value={confirmNewPassword} onChange={(e) => setConfirmNewPassword(e.target.value)} placeholder="Ulangi kata sandi baru" />
             </div>
-          </div>
-          <DialogFooter className="mt-4 pt-4 border-t">
-            <DialogClose asChild>
-                <Button type="button" variant="outline">Batal</Button>
-            </DialogClose>
-            <Button type="submit" disabled={isLoading}>
-              <Save className="mr-2 h-4 w-4" />
-              {isLoading ? "Menyimpan..." : "Simpan Perubahan"}
-            </Button>
-          </DialogFooter>
-        </form>
+          </form>
+        </ScrollArea>
+        <DialogFooter className="mt-auto px-6 pb-6 pt-4 border-t sm:justify-end">
+          <DialogClose asChild>
+              <Button type="button" variant="outline" className="w-full sm:w-auto">Batal</Button>
+          </DialogClose>
+          <Button type="submit" disabled={isLoading} onClick={handleSubmit} className="w-full sm:w-auto">
+            <Save className="mr-2 h-4 w-4" />
+            {isLoading ? "Menyimpan..." : "Simpan Perubahan"}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
