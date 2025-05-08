@@ -8,10 +8,11 @@ import type { AnnualProgram, AnyCurriculumItem } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { FileUp, Filter, Search, PlusCircle } from "lucide-react";
+import { FileUp, Filter, Search } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
-const initialAnnualPrograms: AnnualProgram[] = [
+const initialAnnualProgramsData: AnnualProgram[] = [
   {
     id: "prota1",
     type: "PROTA",
@@ -30,7 +31,7 @@ const initialAnnualPrograms: AnnualProgram[] = [
     profilPelajarPancasilaFocus: ["Bernalar Kritis", "Kreatif"],
     createdAt: new Date("2024-07-01T00:00:00Z").toISOString(),
     updatedAt: new Date("2024-07-05T00:00:00Z").toISOString(),
-    createdByUserId: "user-3" // Waka Kurikulum
+    createdByUserId: "user-3" 
   },
   {
     id: "prota2",
@@ -52,24 +53,43 @@ const initialAnnualPrograms: AnnualProgram[] = [
     profilPelajarPancasilaFocus: ["Gotong Royong", "Mandiri"],
     createdAt: new Date("2024-07-02T00:00:00Z").toISOString(),
     updatedAt: new Date("2024-07-06T00:00:00Z").toISOString(),
-    createdByUserId: "user-1" // Admin
+    createdByUserId: "user-1" 
   },
 ];
 
+const ANNUAL_PROGRAMS_STORAGE_KEY = "appAnnualPrograms";
+
 export default function AnnualProgramsPage() {
   const { user } = useAuth();
-  const [annualPrograms, setAnnualPrograms] = useState<AnnualProgram[]>(initialAnnualPrograms);
+  const { toast } = useToast();
+  const [annualPrograms, setAnnualPrograms] = useState<AnnualProgram[]>([]);
   const [editingItem, setEditingItem] = useState<AnnualProgram | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [isClient, setIsClient] = useState(false);
-  const [isFormOpen, setIsFormOpen] = useState(false); // Control dialog visibility
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
-     if (user) { // All relevant roles see all PROTA for now
-        setAnnualPrograms(initialAnnualPrograms);
+    if (typeof window !== 'undefined') {
+      try {
+        const storedAnnualPrograms = localStorage.getItem(ANNUAL_PROGRAMS_STORAGE_KEY);
+        if (storedAnnualPrograms) {
+          setAnnualPrograms(JSON.parse(storedAnnualPrograms));
+        } else {
+          setAnnualPrograms(initialAnnualProgramsData);
+          localStorage.setItem(ANNUAL_PROGRAMS_STORAGE_KEY, JSON.stringify(initialAnnualProgramsData));
+        }
+      } catch (error) {
+        console.error("Failed to access or parse localStorage for annual programs:", error);
+        setAnnualPrograms(initialAnnualProgramsData); // Fallback
+        toast({
+          title: "Gagal Memuat Data Lokal",
+          description: "Menggunakan data PROTA standar. Perubahan mungkin tidak tersimpan dengan benar.",
+          variant: "destructive",
+        });
+      }
     }
-  }, [user]);
+  }, [toast]);
 
   const canCreate = user && (user.role === "Admin" || user.role === "WakaKurikulum");
   const canEdit = user && (user.role === "Admin" || user.role === "WakaKurikulum");
@@ -78,7 +98,9 @@ export default function AnnualProgramsPage() {
 
   const handleCreateOrUpdate = (itemData: AnyCurriculumItem) => {
     const newItem = itemData as AnnualProgram;
-     if (!newItem.id) { // New item
+    let updatedAnnualPrograms;
+
+     if (!newItem.id) {
         newItem.id = `prota-${Date.now()}`;
         newItem.createdAt = new Date().toISOString();
     }
@@ -90,37 +112,43 @@ export default function AnnualProgramsPage() {
 
     if (editingItem) {
       if (!canEdit) { 
-        alert("Anda tidak memiliki izin untuk mengedit PROTA.");
+        toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengedit PROTA.", variant: "destructive" });
         return;
       }
-      setAnnualPrograms(annualPrograms.map(ap => ap.id === newItem.id ? newItem : ap));
+      updatedAnnualPrograms = annualPrograms.map(ap => ap.id === newItem.id ? newItem : ap);
     } else {
       if (!canCreate) { 
-        alert("Anda tidak memiliki izin untuk membuat PROTA baru.");
+        toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk membuat PROTA baru.", variant: "destructive" });
         return;
       }
-      setAnnualPrograms([newItem, ...annualPrograms]);
+      updatedAnnualPrograms = [newItem, ...annualPrograms];
     }
+    setAnnualPrograms(updatedAnnualPrograms);
+    localStorage.setItem(ANNUAL_PROGRAMS_STORAGE_KEY, JSON.stringify(updatedAnnualPrograms));
     setEditingItem(null);
-    setIsFormOpen(false); // Close dialog
+    setIsFormOpen(false);
+    toast({ title: editingItem ? "PROTA Diperbarui" : "PROTA Dibuat", description: `"${newItem.title}" telah berhasil disimpan.`});
   };
 
   const handleEdit = (item: AnyCurriculumItem) => {
     if (!canEdit) { 
-        alert("Anda tidak memiliki izin untuk mengedit PROTA.");
+        toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengedit PROTA.", variant: "destructive" });
         return;
     }
     setEditingItem(item as AnnualProgram);
-    setIsFormOpen(true); // Open dialog
+    setIsFormOpen(true);
   };
 
   const handleDelete = (itemToDelete: AnyCurriculumItem) => {
     if (!canDelete) { 
-        alert("Anda tidak memiliki izin untuk menghapus PROTA.");
+        toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk menghapus PROTA.", variant: "destructive" });
         return;
     }
      if (window.confirm(`Apakah Anda yakin ingin menghapus "${itemToDelete.title}"?`)) {
-      setAnnualPrograms(annualPrograms.filter(ap => ap.id !== itemToDelete.id));
+      const updatedAnnualPrograms = annualPrograms.filter(ap => ap.id !== itemToDelete.id);
+      setAnnualPrograms(updatedAnnualPrograms);
+      localStorage.setItem(ANNUAL_PROGRAMS_STORAGE_KEY, JSON.stringify(updatedAnnualPrograms));
+      toast({ title: "PROTA Dihapus", description: `"${itemToDelete.title}" telah berhasil dihapus.`});
     }
   };
 
@@ -181,7 +209,7 @@ export default function AnnualProgramsPage() {
                 <Filter className="mr-2 h-4 w-4" /> Filter
                 </Button>
                 {canImport && (
-                  <Button variant="outline" className="flex-1 sm:flex-none" onClick={() => alert("Fitur impor belum diimplementasikan.")}>
+                  <Button variant="outline" className="flex-1 sm:flex-none" onClick={() => toast({title: "Fitur Belum Tersedia", description: "Impor PROTA akan segera hadir!"})}>
                       <FileUp className="mr-2 h-4 w-4" /> Impor
                   </Button>
                 )}
@@ -195,10 +223,10 @@ export default function AnnualProgramsPage() {
                   itemType="PROTA"
                   onSubmit={handleCreateOrUpdate}
                   initialData={null}
-                  forceOpen={isFormOpen && !editingItem} // Open for new item
+                  forceOpen={isFormOpen && !editingItem}
                   onOpenChange={(open) => {
                     if (!open) {
-                      setEditingItem(null); // Reset editing item when dialog closes
+                      setEditingItem(null);
                     }
                     setIsFormOpen(open);
                   }}
@@ -218,18 +246,17 @@ export default function AnnualProgramsPage() {
         </CardContent>
       </Card>
       {editingItem && canEdit && (
-        // The dialog for editing is now controlled by isFormOpen and initialData
          <CurriculumFormDialog
-            triggerButtonText="Pemicu Edit Tersembunyi" // This button is not actually shown
+            triggerButtonText="Pemicu Edit Tersembunyi"
             dialogTitle={`Edit Program Tahunan: ${editingItem.title}`}
             dialogDescription="Perbarui rincian untuk program tahunan ini."
             itemType="PROTA"
             initialData={editingItem}
             onSubmit={handleCreateOrUpdate}
-            forceOpen={isFormOpen && !!editingItem} // Open when editingItem is set
+            forceOpen={isFormOpen && !!editingItem}
             onOpenChange={(open) => {
               if (!open) {
-                setEditingItem(null); // Reset on close
+                setEditingItem(null);
               }
               setIsFormOpen(open);
             }}
@@ -238,4 +265,3 @@ export default function AnnualProgramsPage() {
     </div>
   );
 }
-

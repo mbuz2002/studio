@@ -8,10 +8,11 @@ import type { LessonPlan, AnyCurriculumItem } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { FileUp, Filter, Search, PlusCircle } from "lucide-react";
+import { FileUp, Filter, Search } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
-const initialLessonPlans: LessonPlan[] = [
+const initialLessonPlansData: LessonPlan[] = [
   {
     id: "rpp1",
     type: "RPP",
@@ -32,7 +33,7 @@ const initialLessonPlans: LessonPlan[] = [
     materials: "Papan tulis, spidol, lembar kerja, kartu pola bilangan",
     createdAt: new Date("2023-09-01T10:00:00Z").toISOString(),
     updatedAt: new Date("2023-09-05T14:30:00Z").toISOString(),
-    createdByUserId: "user-4" // Updated to match a user in UserManagementSection
+    createdByUserId: "user-4" 
   },
   {
     id: "rpp2",
@@ -53,48 +54,62 @@ const initialLessonPlans: LessonPlan[] = [
     materials: "Buku teks IPA, video animasi fotosintesis, gambar ekosistem, kertas plano, spidol",
     createdAt: new Date("2023-10-10T09:00:00Z").toISOString(),
     updatedAt: new Date("2023-10-12T11:00:00Z").toISOString(),
-    createdByUserId: "user-4" // Updated to match a user in UserManagementSection
+    createdByUserId: "user-4" 
   },
 ];
 
+const LESSON_PLANS_STORAGE_KEY = "appLessonPlans";
+
 export default function LessonPlansPage() {
   const { user } = useAuth();
-  const [lessonPlans, setLessonPlans] = useState<LessonPlan[]>(initialLessonPlans);
+  const { toast } = useToast();
+  const [lessonPlans, setLessonPlans] = useState<LessonPlan[]>([]);
   const [editingItem, setEditingItem] = useState<LessonPlan | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
-    // In a real app, fetch lesson plans based on user role.
-    // For KepalaSekolah/WakaKurikulum/TataUsaha, fetch all. For Guru, fetch their own.
-    // For this demo, all users see the initial global list.
-    if (user && (user.role === "KepalaSekolah" || user.role === "WakaKurikulum" || user.role === "TataUsaha" || user.role === "Admin")) {
-        // Logic to fetch all RPPs (using initialLessonPlans for demo)
-        setLessonPlans(initialLessonPlans);
-    } else if (user && user.role === "Guru") {
-        // For demo, Guru sees all RPPs. In a real app, filter by createdByUserId or other logic.
-        setLessonPlans(initialLessonPlans); 
+    if (typeof window !== 'undefined') {
+      try {
+        const storedLessonPlans = localStorage.getItem(LESSON_PLANS_STORAGE_KEY);
+        if (storedLessonPlans) {
+          setLessonPlans(JSON.parse(storedLessonPlans));
+        } else {
+          setLessonPlans(initialLessonPlansData);
+          localStorage.setItem(LESSON_PLANS_STORAGE_KEY, JSON.stringify(initialLessonPlansData));
+        }
+      } catch (error) {
+        console.error("Failed to access or parse localStorage for lesson plans:", error);
+        setLessonPlans(initialLessonPlansData); // Fallback to initial data
+        toast({
+          title: "Gagal Memuat Data Lokal",
+          description: "Menggunakan data RPP standar. Perubahan mungkin tidak tersimpan dengan benar.",
+          variant: "destructive",
+        });
+      }
     }
-  }, [user]);
+  }, [toast]);
+
 
   // Role-based permissions
   const canCreate = user && (user.role === "Admin" || user.role === "WakaKurikulum" || user.role === "Guru");
   
   const canEditItem = (item: LessonPlan): boolean => {
     if (!user) return false;
-    if (user.role === "Admin" || user.role === "WakaKurikulum") return true; // Admin/Waka can edit any
-    if (user.role === "Guru" && item.createdByUserId === user.id) return true; // Guru can edit their own
-    // For demo purposes, allow Guru to edit any of the initial RPPs if their ID isn't directly matched
-    // This simplifies demo data management. A real app would be stricter.
-    if (user.role === "Guru" && initialLessonPlans.some(lp => lp.id === item.id)) return true; 
+    if (user.role === "Admin" || user.role === "WakaKurikulum") return true;
+    if (user.role === "Guru" && item.createdByUserId === user.id) return true; 
+    // For demo, allow Guru to edit initial data not explicitly created by them IF it's part of the initial set.
+    // In a real app, this might be stricter.
+    if (user.role === "Guru" && initialLessonPlansData.some(lp => lp.id === item.id && !item.createdByUserId)) return true;
     return false;
   };
 
   const canDeleteItem = (item: LessonPlan): boolean => {
      if (!user) return false;
-    if (user.role === "Admin" || user.role === "WakaKurikulum") return true; // Admin/Waka can delete any
-    if (user.role === "Guru" && item.createdByUserId === user.id) return true; // Guru can delete their own
+    if (user.role === "Admin" || user.role === "WakaKurikulum") return true;
+    if (user.role === "Guru" && item.createdByUserId === user.id) return true;
+    if (user.role === "Guru" && initialLessonPlansData.some(lp => lp.id === item.id && !item.createdByUserId)) return true;
     return false;
   };
 
@@ -103,7 +118,9 @@ export default function LessonPlansPage() {
 
   const handleCreateOrUpdate = (itemData: AnyCurriculumItem) => {
     const newItem = itemData as LessonPlan; 
-    if (!newItem.id) { // New item
+    let updatedLessonPlans;
+
+    if (!newItem.id) { 
         newItem.id = `rpp-${Date.now()}`;
         newItem.createdAt = new Date().toISOString();
     }
@@ -115,23 +132,26 @@ export default function LessonPlansPage() {
 
     if (editingItem) {
       if (!canEditItem(editingItem)) {
-        alert("Anda tidak memiliki izin untuk mengedit item ini.");
+        toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengedit RPP ini.", variant: "destructive" });
         return;
       }
-      setLessonPlans(lessonPlans.map(lp => lp.id === newItem.id ? newItem : lp));
+      updatedLessonPlans = lessonPlans.map(lp => lp.id === newItem.id ? newItem : lp);
     } else {
       if (!canCreate) {
-        alert("Anda tidak memiliki izin untuk membuat item baru.");
+        toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk membuat RPP baru.", variant: "destructive" });
         return;
       }
-      setLessonPlans([newItem, ...lessonPlans]);
+      updatedLessonPlans = [newItem, ...lessonPlans];
     }
+    setLessonPlans(updatedLessonPlans);
+    localStorage.setItem(LESSON_PLANS_STORAGE_KEY, JSON.stringify(updatedLessonPlans));
     setEditingItem(null);
+    toast({ title: editingItem ? "RPP Diperbarui" : "RPP Dibuat", description: `"${newItem.title}" telah berhasil disimpan.`});
   };
 
   const handleEdit = (item: AnyCurriculumItem) => {
     if (!canEditItem(item as LessonPlan)) { 
-        alert("Anda tidak memiliki izin untuk mengedit item ini.");
+        toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengedit RPP ini.", variant: "destructive" });
         return;
     }
     setEditingItem(item as LessonPlan);
@@ -139,11 +159,14 @@ export default function LessonPlansPage() {
 
   const handleDelete = (itemToDelete: AnyCurriculumItem) => {
     if (!canDeleteItem(itemToDelete as LessonPlan)) { 
-        alert("Anda tidak memiliki izin untuk menghapus item ini.");
+        toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk menghapus RPP ini.", variant: "destructive" });
         return;
     }
     if (window.confirm(`Apakah Anda yakin ingin menghapus "${itemToDelete.title}"?`)) {
-      setLessonPlans(lessonPlans.filter(lp => lp.id !== itemToDelete.id));
+      const updatedLessonPlans = lessonPlans.filter(lp => lp.id !== itemToDelete.id);
+      setLessonPlans(updatedLessonPlans);
+      localStorage.setItem(LESSON_PLANS_STORAGE_KEY, JSON.stringify(updatedLessonPlans));
+      toast({ title: "RPP Dihapus", description: `"${itemToDelete.title}" telah berhasil dihapus.`});
     }
   };
   
@@ -203,7 +226,7 @@ export default function LessonPlansPage() {
                 <Filter className="mr-2 h-4 w-4" /> Filter
               </Button>
               {canImport && (
-                <Button variant="outline" className="flex-1 sm:flex-none" onClick={() => alert("Fitur impor belum diimplementasikan.")}>
+                <Button variant="outline" className="flex-1 sm:flex-none" onClick={() => toast({title: "Fitur Belum Tersedia", description: "Impor RPP akan segera hadir!"})}>
                     <FileUp className="mr-2 h-4 w-4" /> Impor
                 </Button>
               )}
@@ -243,7 +266,7 @@ export default function LessonPlansPage() {
                     itemType="RPP"
                     initialData={editingItem}
                     onSubmit={handleCreateOrUpdate}
-                    forceOpen={!!editingItem} // To control dialog externally
+                    forceOpen={!!editingItem} 
                     onOpenChange={(open) => { if (!open) setEditingItem(null); }}
                 />
             </div>
@@ -253,4 +276,3 @@ export default function LessonPlansPage() {
     </div>
   );
 }
-

@@ -133,3 +133,13 @@ export const defaultPrintOptions: PrintOptions = {
   showPromesKomponenMingguan: true,
 };
 
+
+export interface ExportedCurriculumData {
+  lessonPlans: LessonPlan[];
+  annualPrograms: AnnualProgram[];
+  semesterPrograms: SemesterProgram[];
+  schoolProfile: SchoolProfile | null;
+  appUsers: User[];
+}
+
+```

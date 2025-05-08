@@ -8,10 +8,11 @@ import type { SemesterProgram, AnyCurriculumItem } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { FileUp, Filter, Search, PlusCircle } from "lucide-react";
+import { FileUp, Filter, Search } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
-const initialSemesterPrograms: SemesterProgram[] = [
+const initialSemesterProgramsData: SemesterProgram[] = [
   {
     id: "promes1",
     type: "Promes",
@@ -29,7 +30,7 @@ const initialSemesterPrograms: SemesterProgram[] = [
     ],
     createdAt: new Date("2024-07-10T00:00:00Z").toISOString(),
     updatedAt: new Date("2024-07-12T00:00:00Z").toISOString(),
-    createdByUserId: "user-3" // Waka Kurikulum
+    createdByUserId: "user-3"
   },
   {
     id: "promes2",
@@ -47,24 +48,43 @@ const initialSemesterPrograms: SemesterProgram[] = [
     ],
     createdAt: new Date("2024-07-11T00:00:00Z").toISOString(),
     updatedAt: new Date("2024-07-15T00:00:00Z").toISOString(),
-    createdByUserId: "user-1" // Admin
+    createdByUserId: "user-1"
   },
 ];
 
+const SEMESTER_PROGRAMS_STORAGE_KEY = "appSemesterPrograms";
+
 export default function SemesterProgramsPage() {
   const { user } = useAuth();
-  const [semesterPrograms, setSemesterPrograms] = useState<SemesterProgram[]>(initialSemesterPrograms);
+  const { toast } = useToast();
+  const [semesterPrograms, setSemesterPrograms] = useState<SemesterProgram[]>([]);
   const [editingItem, setEditingItem] = useState<SemesterProgram | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [isClient, setIsClient] = useState(false);
-  const [isFormOpen, setIsFormOpen] = useState(false); // Control dialog visibility
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
-    if (user) { // All relevant roles see all Promes for now
-        setSemesterPrograms(initialSemesterPrograms);
+    if (typeof window !== 'undefined') {
+      try {
+        const storedSemesterPrograms = localStorage.getItem(SEMESTER_PROGRAMS_STORAGE_KEY);
+        if (storedSemesterPrograms) {
+          setSemesterPrograms(JSON.parse(storedSemesterPrograms));
+        } else {
+          setSemesterPrograms(initialSemesterProgramsData);
+          localStorage.setItem(SEMESTER_PROGRAMS_STORAGE_KEY, JSON.stringify(initialSemesterProgramsData));
+        }
+      } catch (error) {
+        console.error("Failed to access or parse localStorage for semester programs:", error);
+        setSemesterPrograms(initialSemesterProgramsData); // Fallback
+        toast({
+          title: "Gagal Memuat Data Lokal",
+          description: "Menggunakan data Promes standar. Perubahan mungkin tidak tersimpan dengan benar.",
+          variant: "destructive",
+        });
+      }
     }
-  }, [user]);
+  }, [toast]);
 
   const canCreate = user && (user.role === "Admin" || user.role === "WakaKurikulum");
   const canEdit = user && (user.role === "Admin" || user.role === "WakaKurikulum");
@@ -74,7 +94,9 @@ export default function SemesterProgramsPage() {
 
   const handleCreateOrUpdate = (itemData: AnyCurriculumItem) => {
     const newItem = itemData as SemesterProgram;
-    if (!newItem.id) { // New item
+    let updatedSemesterPrograms;
+
+    if (!newItem.id) { 
         newItem.id = `promes-${Date.now()}`;
         newItem.createdAt = new Date().toISOString();
     }
@@ -86,37 +108,43 @@ export default function SemesterProgramsPage() {
 
     if (editingItem) {
       if (!canEdit) { 
-        alert("Anda tidak memiliki izin untuk mengedit Promes.");
+        toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengedit Promes.", variant: "destructive" });
         return;
       }
-      setSemesterPrograms(semesterPrograms.map(sp => sp.id === newItem.id ? newItem : sp));
+      updatedSemesterPrograms = semesterPrograms.map(sp => sp.id === newItem.id ? newItem : sp);
     } else {
        if (!canCreate) { 
-        alert("Anda tidak memiliki izin untuk membuat Promes baru.");
+        toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk membuat Promes baru.", variant: "destructive" });
         return;
       }
-      setSemesterPrograms([newItem, ...semesterPrograms]);
+      updatedSemesterPrograms = [newItem, ...semesterPrograms];
     }
+    setSemesterPrograms(updatedSemesterPrograms);
+    localStorage.setItem(SEMESTER_PROGRAMS_STORAGE_KEY, JSON.stringify(updatedSemesterPrograms));
     setEditingItem(null);
-    setIsFormOpen(false); // Close dialog
+    setIsFormOpen(false);
+    toast({ title: editingItem ? "Promes Diperbarui" : "Promes Dibuat", description: `"${newItem.title}" telah berhasil disimpan.`});
   };
 
   const handleEdit = (item: AnyCurriculumItem) => {
     if (!canEdit) { 
-        alert("Anda tidak memiliki izin untuk mengedit Promes.");
+        toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengedit Promes.", variant: "destructive" });
         return;
     }
     setEditingItem(item as SemesterProgram);
-    setIsFormOpen(true); // Open dialog
+    setIsFormOpen(true);
   };
 
   const handleDelete = (itemToDelete: AnyCurriculumItem) => {
      if (!canDelete) { 
-        alert("Anda tidak memiliki izin untuk menghapus Promes.");
+        toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk menghapus Promes.", variant: "destructive" });
         return;
     }
     if (window.confirm(`Apakah Anda yakin ingin menghapus "${itemToDelete.title}"?`)) {
-      setSemesterPrograms(semesterPrograms.filter(sp => sp.id !== itemToDelete.id));
+      const updatedSemesterPrograms = semesterPrograms.filter(sp => sp.id !== itemToDelete.id);
+      setSemesterPrograms(updatedSemesterPrograms);
+      localStorage.setItem(SEMESTER_PROGRAMS_STORAGE_KEY, JSON.stringify(updatedSemesterPrograms));
+      toast({ title: "Promes Dihapus", description: `"${itemToDelete.title}" telah berhasil dihapus.`});
     }
   };
 
@@ -178,7 +206,7 @@ export default function SemesterProgramsPage() {
                     <Filter className="mr-2 h-4 w-4" /> Filter
                 </Button>
                  {canImport && (
-                  <Button variant="outline" className="flex-1 sm:flex-none" onClick={() => alert("Fitur impor belum diimplementasikan.")}>
+                  <Button variant="outline" className="flex-1 sm:flex-none" onClick={() => toast({title: "Fitur Belum Tersedia", description: "Impor Promes akan segera hadir!"})}>
                       <FileUp className="mr-2 h-4 w-4" /> Impor
                   </Button>
                  )}
@@ -192,10 +220,10 @@ export default function SemesterProgramsPage() {
                   itemType="Promes"
                   onSubmit={handleCreateOrUpdate}
                   initialData={null}
-                  forceOpen={isFormOpen && !editingItem} // Open for new item
+                  forceOpen={isFormOpen && !editingItem}
                   onOpenChange={(open) => {
                      if (!open) {
-                      setEditingItem(null); // Reset editing item when dialog closes
+                      setEditingItem(null);
                     }
                     setIsFormOpen(open);
                   }}
@@ -216,16 +244,16 @@ export default function SemesterProgramsPage() {
       </Card>
       {editingItem && canEdit && (
         <CurriculumFormDialog
-            triggerButtonText="Pemicu Edit Tersembunyi" // Not shown
+            triggerButtonText="Pemicu Edit Tersembunyi"
             dialogTitle={`Edit Program Semester: ${editingItem.title}`}
             dialogDescription="Perbarui rincian untuk program semester ini."
             itemType="Promes"
             initialData={editingItem}
             onSubmit={handleCreateOrUpdate}
-            forceOpen={isFormOpen && !!editingItem} // Open when editingItem is set
+            forceOpen={isFormOpen && !!editingItem}
             onOpenChange={(open) => {
               if (!open) {
-                setEditingItem(null); // Reset on close
+                setEditingItem(null);
               }
               setIsFormOpen(open);
             }}
@@ -234,4 +262,3 @@ export default function SemesterProgramsPage() {
     </div>
   );
 }
-
