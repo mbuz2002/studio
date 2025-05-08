@@ -10,8 +10,7 @@ export default {
   theme: {
   	extend: {
       fontFamily: {
-        sans: ["var(--font-plus-jakarta-sans)"], // Updated to Plus Jakarta Sans
-        // mono: ["var(--font-geist-mono)"], // Optionally remove or set to a system mono
+        sans: ["var(--font-roboto)"], // Updated to Roboto
       },
   		colors: {
   			background: 'hsl(var(--background))',

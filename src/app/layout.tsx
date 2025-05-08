@@ -1,18 +1,18 @@
 
 import type { Metadata } from 'next';
-import { Plus_Jakarta_Sans } from 'next/font/google'; // Changed font
+import { Roboto } from 'next/font/google'; // Changed font
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { QueryClientProvider } from '@/lib/query-provider';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
-import { LogProvider } from '@/contexts/LogContext'; // Import LogProvider
+import { LogProvider } from '@/contexts/LogContext';
 
-// Instantiate Plus Jakarta Sans
-const plusJakartaSans = Plus_Jakarta_Sans({
+// Instantiate Roboto font
+const roboto = Roboto({
   subsets: ['latin'],
-  variable: '--font-plus-jakarta-sans',
-  weight: ['300', '400', '500', '600', '700', '800'] // Added common weights
+  variable: '--font-roboto', // CSS variable for Roboto
+  weight: ['300', '400', '500', '700', '900'] // Common weights for Roboto
 });
 
 export const metadata: Metadata = {
@@ -27,8 +27,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id" suppressHydrationWarning>
-      {/* Applied the new font variable to the body */}
-      <body className={`${plusJakartaSans.variable} antialiased`}>
+      {/* Applied the new Roboto font variable to the body */}
+      <body className={`${roboto.variable} antialiased`}>
         <ThemeProvider>
           <QueryClientProvider>
             <LogProvider> {/* LogProvider now wraps AuthProvider */}

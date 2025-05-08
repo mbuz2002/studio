@@ -199,7 +199,7 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-plus-jakarta-sans); /* Updated to Plus Jakarta Sans */
+    font-family: var(--font-roboto); /* Updated to Roboto */
   }
 }
 
