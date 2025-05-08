@@ -1,9 +1,10 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Cog, UserCircle, ShieldCheck, Database, Palette, Upload, Download, FileText, Users, BookCopy } from "lucide-react"; 
+import { Cog, UserCircle, ShieldCheck, Database, Palette, Upload, Download, FileText, Users, BookCopy, LogOut } from "lucide-react"; 
 import { useAuth } from "@/contexts/AuthContext";
 import { SchoolProfileForm } from "@/components/settings/SchoolProfileForm";
 import { EditUserDialog } from "@/components/settings/EditUserDialog";
@@ -26,7 +27,7 @@ const APP_USERS_STORAGE_KEY = "appUsers";
 
 
 export default function SettingsPage() {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, logout } = useAuth(); // Added logout
   const { toast } = useToast();
   const { addLog } = useLog(); 
   const { defaultCurriculum, setDefaultCurriculum, availableCurriculums } = useCurriculum(); // Use curriculum context
@@ -362,6 +363,22 @@ export default function SettingsPage() {
             )}
             
           </div>
+          
+          {/* Mobile Only Sign Out Button */}
+          <div className="mt-8 sm:hidden">
+            <Button
+              variant="destructive"
+              className="w-full text-base"
+              onClick={() => {
+                addLog("INFO", `Pengguna ${user?.email} keluar dari aplikasi (via tombol mobile).`, "SettingsPage-MobileLogout");
+                logout();
+              }}
+            >
+              <LogOut className="mr-2 h-5 w-5" /> Keluar dari Aplikasi
+            </Button>
+          </div>
+
+
            {!(canSeeProfileSettings || canSeeAppSettings || canManageData || canSeeSystemSettings || canManageUsers || canManageCurriculumSettings) && 
             !canManageSchoolProfile && ( 
               <p className="text-base text-muted-foreground">Tidak ada pengaturan yang tersedia untuk peran Anda saat ini.</p>
