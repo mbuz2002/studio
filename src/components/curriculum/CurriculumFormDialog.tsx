@@ -16,12 +16,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { AnyCurriculumItem, LessonPlan, AnnualProgram, SemesterProgram, AnnualProgramComponent, WeeklyUnit, GenerateLessonPlanInput, User } from "@/types";
+import type { AnyCurriculumItem, LessonPlan, AnnualProgram, SemesterProgram, AnnualProgramComponent, WeeklyUnit, User } from "@/types"; // Removed GenerateLessonPlanInput as it's from types/index.ts
 import { PlusCircle, Save, Trash2, Wand2, Loader2, Sparkles } from "lucide-react";
 import type { FormEvent } from 'react';
 import { useState, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { generateLessonPlanFromTopic, type GenerateLessonPlanOutput } from "@/ai/flows/generate-lesson-plan-from-topic";
+import { generateLessonPlanFromTopic, type GenerateLessonPlanInput, type GenerateLessonPlanOutput } from "@/ai/flows/generate-lesson-plan-from-topic";
 import { generateAnnualProgram, type GenerateAnnualProgramInput, type GenerateAnnualProgramOutput } from "@/ai/flows/generate-annual-program";
 import { generateSemesterProgram, type GenerateSemesterProgramInput, type GenerateSemesterProgramOutput } from "@/ai/flows/generate-semester-program";
 import { useToast } from "@/hooks/use-toast";
@@ -658,3 +658,4 @@ Minggu ke: 2
     </Dialog>
   );
 }
+

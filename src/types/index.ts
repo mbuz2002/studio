@@ -87,9 +87,10 @@ export interface SemesterProgram extends CurriculumItem {
 
 export type AnyCurriculumItem = LessonPlan | AnnualProgram | SemesterProgram;
 
-// For AI flow outputs - already defined in AI flow files, but useful to have centralized if expanded
+// For AI flow outputs
 export type { GenerateLessonPlanInput, GenerateLessonPlanOutput } from '@/ai/flows/generate-lesson-plan-from-topic';
 export type { SuggestLessonPlanImprovementsOutput } from '@/ai/flows/suggest-lesson-plan-improvements';
+export type { GenerateTeachingMaterialInput, GenerateTeachingMaterialOutput, SuggestedSourceSchema as AISuggestedSource } from '@/ai/flows/generate-teaching-material';
 
 
 export interface PrintOptions {
@@ -141,3 +142,4 @@ export interface ExportedCurriculumData {
   schoolProfile: SchoolProfile | null;
   appUsers: User[];
 }
+
