@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -70,7 +69,7 @@ export default function EditSemesterProgramPage() {
   const [selectedCurriculum, setSelectedCurriculum] = useState<CurriculumFramework>("Kurikulum Merdeka");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
-  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [isGeneratingAI, setIsGeneratingAI] = false);
 
   useEffect(() => {
     if (!user) {
@@ -113,6 +112,10 @@ export default function EditSemesterProgramPage() {
 
   const handleSelectChange = (name: string, value: string) => {
     if (name === 'curriculumType') {
+      if (user?.role === 'Guru') {
+        toast({ title: "Informasi", description: "Jenis kurikulum tidak dapat diubah oleh Guru.", variant: "default" });
+        return;
+      }
       setSelectedCurriculum(value as CurriculumFramework);
       // No specific fields to clear for Promes based on curriculum type for now beyond default form structure
       setFormData(prev => ({...prev, [name]: value}));
@@ -151,6 +154,7 @@ export default function EditSemesterProgramPage() {
             ...prev,
             title: result.title || prev.title,
             capaianPembelajaranUmum: result.capaianPembelajaranUmum || '', // Note: AI returns 'capaianPembelajaranUmum' not '_textarea'
+            capaianPembelajaranUmum_textarea: result.capaianPembelajaranUmum || '', // Sync with textarea
             alokasiWaktuTotalSemester_input: result.alokasiWaktuTotalSemester || '',
             komponenMingguan_textarea: formatWeeklyUnitsToString(result.komponenMingguan || []),
         }));
@@ -261,6 +265,7 @@ export default function EditSemesterProgramPage() {
               availableCurriculums={availableCurriculums}
               isGeneratingAI={isGeneratingAI}
               handleGenerateWithAI={handleGenerateWithAI}
+              userRole={user.role}
             />
             <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-6 border-t">
               <Button type="button" variant="outline" onClick={() => router.back()} className="w-full sm:w-auto">
@@ -277,3 +282,4 @@ export default function EditSemesterProgramPage() {
     </div>
   );
 }
+

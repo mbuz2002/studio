@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useMemo } from "react";
@@ -6,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { AnnualProgram, CurriculumFramework } from "@/types";
+import type { AnnualProgram, CurriculumFramework, UserRole } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Loader2, Wand2 } from "lucide-react";
 
@@ -27,6 +26,7 @@ interface AnnualProgramFormFieldsProps {
   availableCurriculums: { value: CurriculumFramework; label: string }[];
   isGeneratingAI: boolean;
   handleGenerateWithAI: () => Promise<void>;
+  userRole: UserRole;
 }
 
 const merdekaGradeLevels = [
@@ -68,6 +68,7 @@ export function AnnualProgramFormFields({
   availableCurriculums,
   isGeneratingAI,
   handleGenerateWithAI,
+  userRole,
 }: AnnualProgramFormFieldsProps) {
 
   const currentGradeLevelOptions = useMemo(() => {
@@ -120,7 +121,7 @@ export function AnnualProgramFormFields({
         <div className="space-y-1">
           <Label htmlFor="curriculumType">Jenis Kurikulum</Label>
           <Select name="curriculumType" value={selectedCurriculum} onValueChange={(value) => handleSelectChange('curriculumType', value)}>
-            <SelectTrigger id="curriculumType">
+            <SelectTrigger id="curriculumType" disabled={userRole === 'Guru'}>
               <SelectValue placeholder="Pilih Jenis Kurikulum" />
             </SelectTrigger>
             <SelectContent>
@@ -129,6 +130,9 @@ export function AnnualProgramFormFields({
               ))}
             </SelectContent>
           </Select>
+           {userRole === 'Guru' && (
+            <p className="text-xs text-muted-foreground mt-1">Jenis kurikulum ditentukan oleh pengaturan global.</p>
+          )}
         </div>
         <div className="space-y-1">
           <Label htmlFor="subject">Mata Pelajaran</Label>
@@ -215,3 +219,4 @@ export function AnnualProgramFormFields({
     </>
   );
 }
+

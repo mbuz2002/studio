@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -89,6 +88,10 @@ export default function EditAnnualProgramPage() {
 
   const handleSelectChange = (name: string, value: string) => {
     if (name === 'curriculumType') {
+      if (user?.role === 'Guru') {
+        toast({ title: "Informasi", description: "Jenis kurikulum tidak dapat diubah oleh Guru.", variant: "default" });
+        return;
+      }
       setSelectedCurriculum(value as CurriculumFramework);
       setFormData(prev => ({
         ...prev,
@@ -227,6 +230,7 @@ export default function EditAnnualProgramPage() {
       </div>
     );
   }
+
   if (!formData.id) { 
       return (
         <div className="flex h-screen items-center justify-center">
@@ -265,6 +269,7 @@ export default function EditAnnualProgramPage() {
               availableCurriculums={availableCurriculums}
               isGeneratingAI={isGeneratingAI}
               handleGenerateWithAI={handleGenerateWithAI}
+              userRole={user.role}
             />
             <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-6 border-t">
               <Button type="button" variant="outline" onClick={() => router.back()} className="w-full sm:w-auto">
@@ -281,3 +286,4 @@ export default function EditAnnualProgramPage() {
     </div>
   );
 }
+

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -104,6 +103,10 @@ export default function NewSemesterProgramPage() {
 
   const handleSelectChange = (name: string, value: string) => {
     if (name === 'curriculumType') {
+       if (user?.role === 'Guru') {
+        toast({ title: "Informasi", description: "Jenis kurikulum ditentukan oleh pengaturan global dan tidak dapat diubah oleh Guru.", variant: "default" });
+        return;
+      }
       setSelectedCurriculum(value as CurriculumFramework);
       setFormData(prev => ({
         ...basePromesData, // Reset to base, then apply new curriculum type and common fields
@@ -235,6 +238,7 @@ export default function NewSemesterProgramPage() {
               availableCurriculums={availableCurriculums}
               isGeneratingAI={isGeneratingAI}
               handleGenerateWithAI={handleGenerateWithAI}
+              userRole={user.role}
             />
             <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-6 border-t">
               <Button type="button" variant="outline" onClick={() => router.back()} className="w-full sm:w-auto">

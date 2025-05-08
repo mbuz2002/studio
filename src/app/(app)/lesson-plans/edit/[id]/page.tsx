@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -68,6 +67,10 @@ export default function EditLessonPlanPage() {
 
   const handleSelectChange = (name: string, value: string) => {
     if (name === 'curriculumType') {
+       if (user?.role === 'Guru') {
+        toast({ title: "Informasi", description: "Jenis kurikulum tidak dapat diubah oleh Guru.", variant: "default" });
+        return;
+      }
       setSelectedCurriculum(value as CurriculumFramework);
        // Clear curriculum-specific fields when curriculum type changes
       setFormData(prev => ({
@@ -261,6 +264,7 @@ export default function EditLessonPlanPage() {
               availableCurriculums={availableCurriculums}
               isGeneratingAI={isGeneratingAI}
               handleGenerateWithAI={handleGenerateWithAI}
+              userRole={user.role}
             />
             <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-6 border-t">
               <Button type="button" variant="outline" onClick={() => router.back()} className="w-full sm:w-auto">
