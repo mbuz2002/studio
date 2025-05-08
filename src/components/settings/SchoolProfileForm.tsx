@@ -33,7 +33,13 @@ export function SchoolProfileForm() {
     // In a real app, fetch this from a backend
     const fetchedProfile = localStorage.getItem("schoolProfile");
     if (fetchedProfile) {
-      setProfile(JSON.parse(fetchedProfile));
+      try {
+        setProfile(JSON.parse(fetchedProfile));
+      } catch (error) {
+        console.error("Failed to parse school profile from localStorage", error);
+        // Optionally, clear the corrupted item or handle error
+        localStorage.removeItem("schoolProfile");
+      }
     }
   }, []);
 
@@ -61,9 +67,11 @@ export function SchoolProfileForm() {
       <CardHeader>
         <div className="flex items-center gap-2">
           <Building className="h-6 w-6 text-primary" />
-          <CardTitle>Profil Sekolah</CardTitle>
+          <CardTitle>Profil Sekolah dan Pengaturan Kop Surat</CardTitle>
         </div>
-        <CardDescription>Kelola informasi umum mengenai sekolah Anda.</CardDescription>
+        <CardDescription>
+          Kelola informasi umum mengenai sekolah Anda. Informasi ini juga akan digunakan untuk Kop Surat (Letterhead) pada dokumen yang dicetak.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -96,7 +104,7 @@ export function SchoolProfileForm() {
             <Input id="namaKepalaSekolah" name="namaKepalaSekolah" value={profile.namaKepalaSekolah} onChange={handleChange} />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="logoUrl">URL Logo Sekolah (Opsional)</Label>
+            <Label htmlFor="logoUrl">URL Logo Sekolah (Untuk Kop Surat)</Label>
             <Input id="logoUrl" name="logoUrl" type="url" value={profile.logoUrl || ""} onChange={handleChange} placeholder="https://contoh.com/logo.png" />
             {profile.logoUrl && (
                 <div className="mt-2">
@@ -113,3 +121,4 @@ export function SchoolProfileForm() {
     </Card>
   );
 }
+
