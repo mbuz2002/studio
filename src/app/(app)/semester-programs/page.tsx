@@ -198,29 +198,29 @@ export default function SemesterProgramsPage() {
           </div>
         </CardHeader>
         <CardContent className="p-4 sm:p-6">
-          <div className="flex flex-col sm:flex-row gap-3 mb-6 items-stretch sm:items-center">
+          <div className="flex flex-col md:flex-row gap-3 mb-6 items-stretch md:items-center">
             <div className="flex-grow relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input
                   type="search"
                   placeholder="Cari Promes (judul, mapel, semester, kurikulum)..."
-                  className="pl-10 w-full text-base sm:text-sm h-10"
+                  className="pl-10 w-full text-base md:text-sm h-10"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                <Button variant="outline" className="w-full sm:w-auto text-base sm:text-sm h-10">
+              <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                <Button variant="outline" className="w-full sm:w-auto text-base md:text-sm h-10">
                     <Filter className="mr-2 h-4 w-4" /> Filter
                 </Button>
                  {canImport && (
-                  <Button variant="outline" className="w-full sm:w-auto text-base sm:text-sm h-10" onClick={() => toast({title: "Fitur Belum Tersedia", description: "Impor Promes akan segera hadir!"})}>
+                  <Button variant="outline" className="w-full sm:w-auto text-base md:text-sm h-10" onClick={() => toast({title: "Fitur Belum Tersedia", description: "Impor Promes akan segera hadir!"})}>
                       <FileUp className="mr-2 h-4 w-4" /> Impor
                   </Button>
                  )}
               </div>
               {canCreate && (
-                <div className="w-full sm:w-auto">
+                <div className="w-full md:w-auto">
                   <CurriculumFormDialog
                   triggerButtonText="Buat Program Baru"
                   dialogTitle="Buat Program Semester Baru (Promes)"

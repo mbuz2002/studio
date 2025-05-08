@@ -118,7 +118,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
         </Sidebar>
         <SidebarInset>
           <MobileBottomNav />
-          <main className="flex-1 overflow-auto p-4 sm:p-6 pb-24 sm:pb-6 flex flex-col"> {/* Adjusted padding and flex */}
+          <main className="flex-1 overflow-auto p-4 md:p-6 pb-24 sm:pb-6 flex flex-col min-h-screen"> {/* Adjusted padding and flex, min-h-screen */}
             <div className="flex-grow">
                 {children}
             </div>
@@ -130,4 +130,3 @@ export default function AppLayout({ children }: PropsWithChildren) {
       </SidebarProvider>
   );
 }
-
