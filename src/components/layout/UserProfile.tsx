@@ -20,12 +20,16 @@ export function UserProfile() {
   const { user, logout } = useAuth();
 
   if (!user) {
-    return null; // Or a login button if preferred in this state
+    return null; 
   }
 
   const getInitials = (name: string) => {
+    if (!name) return '';
     return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
   }
+
+  const avatarSrc = user.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || user.email)}&background=random&color=fff`;
+
 
   return (
     <div className="mt-auto p-2 group-data-[state=collapsed]:md:p-0 group-data-[state=collapsed]:md:flex group-data-[state=collapsed]:md:justify-center">
@@ -33,7 +37,7 @@ export function UserProfile() {
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="w-full justify-start gap-2 p-2 group-data-[state=collapsed]:md:size-8 group-data-[state=collapsed]:md:justify-center group-data-[state=collapsed]:md:p-0">
             <Avatar className="h-8 w-8">
-              <AvatarImage src={user.avatarUrl || `https://picsum.photos/seed/${user.id}/100/100`} alt={user.name} data-ai-hint="user avatar" />
+              <AvatarImage src={avatarSrc} alt={user.name} data-ai-hint="user avatar" />
               <AvatarFallback>
                 {user.name ? getInitials(user.name) : <UserCircle size={32} />}
               </AvatarFallback>
@@ -64,3 +68,5 @@ export function UserProfile() {
     </div>
   );
 }
+
+    

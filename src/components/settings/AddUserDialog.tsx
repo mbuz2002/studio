@@ -19,8 +19,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { User, UserRole } from "@/types";
 import { PlusCircle, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useLog } from "@/contexts/LogContext"; // Import useLog
-import { useAuth } from "@/contexts/AuthContext"; // Import useAuth for current admin user
+import { useLog } from "@/contexts/LogContext"; 
+import { useAuth } from "@/contexts/AuthContext"; 
 
 
 interface AddUserDialogProps {
@@ -40,7 +40,7 @@ export function AddUserDialog({ onUserAdded }: AddUserDialogProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<UserRole>("Guru");
-  const [password, setPassword] = useState(""); // Dummy password
+  const [password, setPassword] = useState(""); 
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { addLog } = useLog();
@@ -51,7 +51,6 @@ export function AddUserDialog({ onUserAdded }: AddUserDialogProps) {
     e.preventDefault();
     setIsLoading(true);
 
-    // Basic validation
     if (!name || !email || !role || !password) {
       toast({ title: "Data Tidak Lengkap", description: "Harap isi semua kolom.", variant: "destructive" });
       addLog("WARN", `Gagal menambahkan pengguna baru: Data tidak lengkap. Nama: ${name}, Email: ${email}, Peran: ${role}. Oleh: ${adminUser?.email}.`, logSource);
@@ -59,7 +58,6 @@ export function AddUserDialog({ onUserAdded }: AddUserDialogProps) {
       return;
     }
     
-    // Simulate API call
     addLog("INFO", `Memulai penambahan pengguna baru. Nama: ${name}, Email: ${email}, Peran: ${role}. Oleh: ${adminUser?.email}.`, logSource);
     await new Promise(resolve => setTimeout(resolve, 1000));
     
@@ -68,19 +66,17 @@ export function AddUserDialog({ onUserAdded }: AddUserDialogProps) {
       name,
       email,
       role,
-      avatarUrl: `https://picsum.photos/seed/${email}/100/100`, // Generate avatar based on email/name
+      avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(name || email)}&background=random&color=fff`, 
     };
 
-    onUserAdded(newUser); // This will be logged by UserManagementSection
+    onUserAdded(newUser); 
     setIsLoading(false);
     setIsOpen(false);
-    // Reset form
     setName("");
     setEmail("");
     setRole("Guru");
     setPassword("");
     toast({ title: "Pengguna Ditambahkan", description: `${name} telah berhasil ditambahkan.` });
-    // No need for separate addLog here as UserManagementSection handles it after onUserAdded.
   };
 
   return (
@@ -138,3 +134,5 @@ export function AddUserDialog({ onUserAdded }: AddUserDialogProps) {
     </Dialog>
   );
 }
+
+    
