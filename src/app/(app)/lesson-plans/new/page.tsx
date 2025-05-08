@@ -109,7 +109,7 @@ export default function NewLessonPlanPage() {
             assessment: result.assessmentStrategies.join('\n- ') || '',
             pemahamanBermakna: result.pemahamanBermakna || (selectedCurriculum === "Kurikulum Merdeka" ? [] : undefined),
             pertanyaanPemantik: result.pertanyaanPemantik || (selectedCurriculum === "Kurikulum Merdeka" ? [] : undefined),
-            differentiationStrategies: result.differentiationStrategies || (selectedCurikulum === "Kurikulum Merdeka" ? [] : undefined),
+            differentiationStrategies: result.differentiationStrategies || (selectedCurriculum === "Kurikulum Merdeka" ? [] : undefined),
             standarKompetensi: result.standarKompetensi || (selectedCurriculum === "KTSP 2006" ? [] : undefined),
             kompetensiInti: result.kompetensiInti || (selectedCurriculum === "K-13" ? [] : undefined),
             kompetensiDasar: result.kompetensiDasar || (selectedCurriculum !== "Kurikulum Merdeka" ? [] : undefined),
@@ -225,3 +225,4 @@ export default function NewLessonPlanPage() {
     </div>
   );
 }
+
