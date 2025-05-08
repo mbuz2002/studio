@@ -1,3 +1,4 @@
+
 export type UserRole = "Admin" | "KepalaSekolah" | "WakaKurikulum" | "TataUsaha" | "Guru";
 
 export interface User {
@@ -7,6 +8,7 @@ export interface User {
   role: UserRole;
   avatarUrl?: string;
   schoolId?: string; // Optional: to associate user with a specific school profile
+  updatedAt?: string; // ISO date string, optional
 }
 
 export interface SchoolProfile {
@@ -129,3 +131,4 @@ export const defaultPrintOptions: PrintOptions = {
   showPromesAlokasiTotal: true,
   showPromesKomponenMingguan: true,
 };
+

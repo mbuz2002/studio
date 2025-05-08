@@ -1,15 +1,23 @@
 
 "use client";
 
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Cog, UserCircle, ShieldCheck, Database, Building, Users as UsersIcon } from "lucide-react";
+import { Cog, UserCircle, ShieldCheck, Database, Users as UsersIcon } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { SchoolProfileForm } from "@/components/settings/SchoolProfileForm";
 import { UserManagementSection } from "@/components/settings/UserManagementSection";
+import { EditUserDialog } from "@/components/settings/EditUserDialog"; // Import the new dialog
+import type { User } from "@/types";
+import { useToast } from "@/hooks/use-toast";
+
 
 export default function SettingsPage() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
+  const { toast } = useToast();
+  const [isEditUserDialogOpen, setIsEditUserDialogOpen] = useState(false);
+
 
   if (!user) {
     return (
@@ -31,6 +39,15 @@ export default function SettingsPage() {
   
   const canSeeDataManagement = ["Admin", "WakaKurikulum"].includes(user.role);
   const canSeeSystemSettings = user.role === "Admin";
+
+  const handleUserUpdate = (updatedUserData: Partial<User>) => {
+    updateUser(updatedUserData);
+    toast({
+      title: "Profil Diperbarui",
+      description: "Informasi profil Anda telah berhasil diperbarui.",
+    });
+    setIsEditUserDialogOpen(false); // Close dialog on successful update
+  };
 
   return (
     <div className="space-y-6 py-4 md:py-8">
@@ -77,7 +94,9 @@ export default function SettingsPage() {
                   <p><strong>Nama:</strong> {user.name}</p>
                   <p><strong>Email:</strong> {user.email}</p>
                   <p><strong>Peran:</strong> {user.role}</p>
-                  <Button variant="outline" className="mt-2" onClick={() => alert("Fitur edit profil pengguna belum diimplementasikan.")}>Edit Profil (Contoh)</Button>
+                  <Button variant="outline" className="mt-2" onClick={() => setIsEditUserDialogOpen(true)}>
+                    Edit Profil
+                  </Button>
                 </CardContent>
               </Card>
             )}
@@ -135,11 +154,20 @@ export default function SettingsPage() {
             
           </div>
            {!(canSeeProfileSettings || canSeeAppSettings || canSeeDataManagement || canSeeSystemSettings) && 
-            !canManageSchoolProfile && !canManageUsers && ( // Check if no settings sections are visible at all
+            !canManageSchoolProfile && !canManageUsers && ( 
               <p className="text-muted-foreground">Tidak ada pengaturan yang tersedia untuk peran Anda saat ini.</p>
             )}
         </CardContent>
       </Card>
+
+      {user && (
+         <EditUserDialog
+            isOpen={isEditUserDialogOpen}
+            onOpenChange={setIsEditUserDialogOpen}
+            user={user}
+            onUserUpdated={handleUserUpdate}
+          />
+      )}
     </div>
   );
 }

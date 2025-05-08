@@ -2,7 +2,7 @@
 "use client";
 
 import type { PropsWithChildren} from 'react';
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { User, UserRole } from '@/types';
 import { useRouter } from 'next/navigation';
 
@@ -11,6 +11,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (email: string, role: UserRole) => void;
   logout: () => void;
+  updateUser: (updatedUserData: Partial<User>) => void;
   loading: boolean;
 }
 
@@ -21,7 +22,7 @@ const mockUsers: Record<UserRole, Omit<User, 'id' | 'email' | 'role'>> = {
   KepalaSekolah: { name: "Kepala Sekolah", avatarUrl: "https://picsum.photos/seed/kepsek/100/100" },
   WakaKurikulum: { name: "Waka Kurikulum", avatarUrl: "https://picsum.photos/seed/waka/100/100" },
   TataUsaha: { name: "Staff Tata Usaha", avatarUrl: "https://picsum.photos/seed/tu/100/100" },
-  Guru: { name: "Guru Pengajar", avatarUrl: "https://picsum.photos/seed/guru/100/100" }, // Default/fallback
+  Guru: { name: "Guru Pengajar", avatarUrl: "https://picsum.photos/seed/guru/100/100" }, 
 };
 
 
@@ -31,7 +32,6 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   const router = useRouter();
 
   useEffect(() => {
-    // Check for stored user session (e.g., in localStorage)
     try {
       const storedUser = localStorage.getItem('currentUser');
       if (storedUser) {
@@ -45,12 +45,13 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   }, []);
 
   const login = (email: string, role: UserRole) => {
-    const baseUser = mockUsers[role] || mockUsers.Guru;
+    const baseUser = mockUsers[role] || mockUsers.Guru; // Fallback to Guru if role not in mock
     const loggedInUser: User = {
-      id: Date.now().toString(), // simple unique ID
+      id: `user-${Date.now()}-${Math.random().toString(36).substring(2,9)}`, 
       email,
       role,
       ...baseUser,
+      avatarUrl: baseUser.avatarUrl || `https://picsum.photos/seed/${email}/100/100` // Ensure avatar URL exists
     };
     setUser(loggedInUser);
     localStorage.setItem('currentUser', JSON.stringify(loggedInUser));
@@ -63,8 +64,19 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     router.push('/login');
   };
 
+  const updateUser = useCallback((updatedUserData: Partial<User>) => {
+    setUser(currentUser => {
+      if (currentUser) {
+        const newUser = { ...currentUser, ...updatedUserData, updatedAt: new Date().toISOString() };
+        localStorage.setItem('currentUser', JSON.stringify(newUser));
+        return newUser;
+      }
+      return null;
+    });
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, logout, updateUser, loading }}>
       {children}
     </AuthContext.Provider>
   );
@@ -77,3 +89,4 @@ export const useAuth = () => {
   }
   return context;
 };
+
