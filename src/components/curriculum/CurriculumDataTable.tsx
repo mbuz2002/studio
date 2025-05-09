@@ -110,8 +110,8 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
                   ${schoolProfile.logoUrl ? `<img src="${schoolProfile.logoUrl}" alt="Logo Sekolah" class="logo-sekolah" data-ai-hint="school logo">` : '<div class="logo-placeholder">Logo Sekolah</div>'}
                   <div class="kop-text">
                     <h1>${schoolProfile.namaSekolah || 'Nama Sekolah Belum Diatur'}</h1>
-                    <p>${schoolProfile.alamat || 'Alamat Sekolah Belum Diatur'}</p>
-                    <p>
+                    <p class="kop-address">${schoolProfile.alamat || 'Alamat Sekolah Belum Diatur'}</p>
+                    <p class="kop-contact">
                       ${schoolProfile.npsn ? `NPSN: ${schoolProfile.npsn}` : ''}
                       ${schoolProfile.nomorTelepon ? `${schoolProfile.npsn ? ' | ' : ''}Telp: ${schoolProfile.nomorTelepon}` : ''}
                       ${schoolProfile.emailSekolah ? `${(schoolProfile.npsn || schoolProfile.nomorTelepon) ? ' | ' : ''}Email: ${schoolProfile.emailSekolah}` : ''}
@@ -126,8 +126,8 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
                   <div class="logo-placeholder">Logo Sekolah</div>
                   <div class="kop-text">
                     <h1>Nama Sekolah Belum Diatur</h1>
-                    <p>Alamat Sekolah Belum Diatur</p>
-                    <p>NPSN: Belum Diatur</p>
+                    <p class="kop-address">Alamat Sekolah Belum Diatur</p>
+                    <p class="kop-contact">NPSN: Belum Diatur</p>
                   </div>
                 </div>
             `;
@@ -137,20 +137,22 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
     if (item.type === 'RPP' && item.curriculumType === "Kurikulum Merdeka") {
       const atp = item as LessonPlan;
       contentHtml += `<div class="doc-info atp-header">
-        <h2 class="atp-main-title">ALUR TUJUAN PEMBELAJARAN</h2>
-        ${atp.programKeahlian ? `<h2 class="atp-sub-title">KONSENTRASI KEAHLIAN ${atp.programKeahlian.toUpperCase()}</h2>` : (atp.topic ? `<h2 class="atp-sub-title">KONSENTRASI KEAHLIAN ${atp.topic.toUpperCase()}</h2>` : '')}
+        <h2 class="atp-main-title">${atp.title}</h2>
       </div>`;
       contentHtml += `<table class="info-table atp-info-table">`;
       if (options.showRPPBidangKeahlian && atp.bidangKeahlian) contentHtml += `<tr><td>BIDANG KEAHLIAN</td><td>: ${atp.bidangKeahlian.toUpperCase()}</td></tr>`;
       if (options.showRPPProgramKeahlian && atp.programKeahlian) contentHtml += `<tr><td>PROGRAM KEAHLIAN</td><td>: ${atp.programKeahlian.toUpperCase()}</td></tr>`;
       contentHtml += `<tr><td>MATA PELAJARAN</td><td>: ${atp.subject.toUpperCase()}</td></tr>
                       <tr><td>FASE</td><td>: ${atp.gradeLevel.toUpperCase()}</td></tr>
+                      ${atp.alokasiWaktuJP && options.showRPPAlokasiWaktu ? `<tr><td>ALOKASI WAKTU</td><td>: ${atp.alokasiWaktuJP}</td></tr>` : ''}
                       <tr><td>NAMA PENYUSUN</td><td>: ${creatorName.toUpperCase()}</td></tr>
                       <tr><td>INSTANSI</td><td>: ${(schoolProfile?.namaSekolah || 'Belum Diatur').toUpperCase()}</td></tr>
+                      <tr><td>TAHUN PENYUSUNAN</td><td>: ${new Date(atp.createdAt).getFullYear()}</td></tr>
                       </table><hr class="content-hr">`;
     } else {
         contentHtml += `<div class="doc-info">
-            <h2>${item.title} (${documentTypeDisplay})</h2>
+            <h2>${item.title}</h2>
+            <p class="doc-subtitle">${documentTypeDisplay}</p>
             <table class="info-table">
                 <tr><td>Kurikulum</td><td>: ${item.curriculumType}</td></tr>
                 <tr><td>Mata Pelajaran</td><td>: ${item.subject}</td></tr>
@@ -171,65 +173,65 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
 
         if (rpp.curriculumType === "Kurikulum Merdeka") {
             if (options.showRPPCapaianPembelajaran && rpp.capaianPembelajaran && rpp.capaianPembelajaran.length > 0) {
-                contentHtml += `<h3>${nextLetter()}. Capaian Pembelajaran (CP)</h3><ul>`;
+                contentHtml += `<h3>${nextLetter()}. CAPAIAN PEMBELAJARAN (CP)</h3><ul>`;
                 rpp.capaianPembelajaran.forEach(cp => contentHtml += `<li>${cp}</li>`);
                 contentHtml += `</ul>`;
             }
              if (options.showRPPLearningObjectives && rpp.learningObjectives && rpp.learningObjectives.length > 0) {
-                contentHtml += `<h3>${nextLetter()}. Tujuan Pembelajaran (TP)</h3><ol class="tp-list">`;
+                contentHtml += `<h3>${nextLetter()}. TUJUAN PEMBELAJARAN (TP)</h3><ol class="tp-list">`;
                 rpp.learningObjectives.forEach(tp => contentHtml += `<li>${tp}</li>`);
                 contentHtml += `</ol>`;
             }
             if (options.showRPPProfilPelajarPancasila && rpp.profilPelajarPancasilaFocus && rpp.profilPelajarPancasilaFocus.length > 0) {
-                contentHtml += `<h3>${nextLetter()}. Profil Pelajar Pancasila yang Dikembangkan</h3><ul>`;
+                contentHtml += `<h3>${nextLetter()}. PROFIL PELAJAR PANCASILA</h3><ul>`;
                 rpp.profilPelajarPancasilaFocus.forEach(p5 => contentHtml += `<li>${p5}</li>`);
                 contentHtml += `</ul>`;
             }
             if (options.showRPPPemahamanBermakna && rpp.pemahamanBermakna && rpp.pemahamanBermakna.length > 0) {
-                contentHtml += `<h3>${nextLetter()}. Pemahaman Bermakna</h3><ul>`;
+                contentHtml += `<h3>${nextLetter()}. PEMAHAMAN BERMAKNA</h3><ul>`;
                 rpp.pemahamanBermakna.forEach(pm => contentHtml += `<li>${pm}</li>`);
                 contentHtml += `</ul>`;
             }
             if (options.showRPPPertanyaanPemantik && rpp.pertanyaanPemantik && rpp.pertanyaanPemantik.length > 0) {
-                contentHtml += `<h3>${nextLetter()}. Pertanyaan Pemantik</h3><ul>`;
+                contentHtml += `<h3>${nextLetter()}. PERTANYAAN PEMANTIK</h3><ul>`;
                 rpp.pertanyaanPemantik.forEach(pp => contentHtml += `<li>${pp}</li>`);
                 contentHtml += `</ul>`;
             }
         } else { 
             if (options.showRPPLearningObjectives && rpp.learningObjectives && rpp.learningObjectives.length > 0) {
-                contentHtml += `<h3>${nextLetter()}. Tujuan Pembelajaran</h3><ul>`;
+                contentHtml += `<h3>${nextLetter()}. TUJUAN PEMBELAJARAN</h3><ul>`;
                 rpp.learningObjectives.forEach(obj => contentHtml += `<li>${obj}</li>`);
                 contentHtml += `</ul>`;
             }
             if (options.showRPPSK && rpp.standarKompetensi && rpp.standarKompetensi.length > 0 && rpp.curriculumType === "KTSP 2006") {
-                contentHtml += `<h3>${nextLetter()}. Standar Kompetensi (SK)</h3><ul>`;
+                contentHtml += `<h3>${nextLetter()}. STANDAR KOMPETENSI (SK)</h3><ul>`;
                 rpp.standarKompetensi.forEach(sk => contentHtml += `<li>${sk}</li>`);
                 contentHtml += `</ul>`;
             }
             if (options.showRPPKI && rpp.kompetensiInti && rpp.kompetensiInti.length > 0 && rpp.curriculumType === "K-13") {
-                 contentHtml += `<h3>${nextLetter()}. Kompetensi Inti (KI)</h3><ul>`;
+                 contentHtml += `<h3>${nextLetter()}. KOMPETENSI INTI (KI)</h3><ul>`;
                  rpp.kompetensiInti.forEach(ki => contentHtml += `<li>${ki}</li>`);
                  contentHtml += `</ul>`;
             }
             if (options.showRPPKD && rpp.kompetensiDasar && rpp.kompetensiDasar.length > 0) {
-                 contentHtml += `<h3>${nextLetter()}. Kompetensi Dasar (KD)</h3><ul>`;
+                 contentHtml += `<h3>${nextLetter()}. KOMPETENSI DASAR (KD)</h3><ul>`;
                  rpp.kompetensiDasar.forEach(kd => contentHtml += `<li>${kd}</li>`);
                  contentHtml += `</ul>`;
             }
             if (options.showRPPIPK && rpp.indikatorPencapaianKompetensi && rpp.indikatorPencapaianKompetensi.length > 0) {
-                contentHtml += `<h3>${nextLetter()}. Indikator Pencapaian Kompetensi (IPK)</h3><ul>`;
+                contentHtml += `<h3>${nextLetter()}. INDIKATOR PENCAPAIAN KOMPETENSI (IPK)</h3><ul>`;
                 rpp.indikatorPencapaianKompetensi.forEach(ipk => contentHtml += `<li>${ipk}</li>`);
                 contentHtml += `</ul>`;
             }
              if (options.showRPPMetodePembelajaran && rpp.metodePembelajaran && rpp.metodePembelajaran.length > 0) {
-                contentHtml += `<h3>${nextLetter()}. Metode Pembelajaran</h3><ul>`;
+                contentHtml += `<h3>${nextLetter()}. METODE PEMBELAJARAN</h3><ul>`;
                 rpp.metodePembelajaran.forEach(metode => contentHtml += `<li>${metode}</li>`);
                 contentHtml += `</ul>`;
             }
         }
         
         if (options.showRPPLangkahPendahuluan || options.showRPPLangkahKegiatanInti || options.showRPPLangkahPenutup) {
-            contentHtml += `<h3>${nextLetter()}. Langkah-langkah Pembelajaran</h3>`;
+            contentHtml += `<h3>${nextLetter()}. LANGKAH-LANGKAH PEMBELAJARAN</h3>`;
             if (options.showRPPLangkahPendahuluan && rpp.langkahPembelajaran?.pendahuluan?.length > 0) {
                 contentHtml += `<h4>1. Pendahuluan:</h4><ul>`;
                 rpp.langkahPembelajaran.pendahuluan.forEach(act => contentHtml += `<li>${act}</li>`);
@@ -248,37 +250,37 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
         }
         
         if (options.showRPPAssessment && rpp.assessment) {
-            contentHtml += `<h3>${nextLetter()}. Asesmen/Penilaian</h3><p>${rpp.assessment.replace(/\n/g, '<br>')}</p>`;
+            contentHtml += `<h3>${nextLetter()}. ASESMEN/PENILAIAN</h3><div>${rpp.assessment.replace(/\n/g, '<br>')}</div>`;
         }
 
         if (rpp.curriculumType === "Kurikulum Merdeka" && options.showRPPDifferentiationStrategies && rpp.differentiationStrategies && rpp.differentiationStrategies.length > 0) {
-            contentHtml += `<h3>${nextLetter()}. Strategi Diferensiasi</h3><ul>`;
+            contentHtml += `<h3>${nextLetter()}. STRATEGI DIFERENSIASI</h3><ul>`;
             rpp.differentiationStrategies.forEach(strat => contentHtml += `<li>${strat}</li>`);
             contentHtml += `</ul>`;
         }
 
         if (options.showRPPMaterials && rpp.materials) {
-            contentHtml += `<h3>${nextLetter()}. Media/Sumber Belajar</h3><p>${rpp.materials.replace(/\n/g, '<br>')}</p>`;
+            contentHtml += `<h3>${nextLetter()}. MEDIA/SUMBER BELAJAR</h3><div>${rpp.materials.replace(/\n/g, '<br>')}</div>`;
         }
     } else if (item.type === 'PROTA') {
         const prota = item as AnnualProgram;
-        contentHtml += `<p><strong>Tahun Ajaran:</strong> ${prota.year}</p>`;
+        contentHtml += `<p><strong>TAHUN AJARAN:</strong> ${prota.year}</p>`;
         if (prota.curriculumType === "Kurikulum Merdeka" && options.showPROTACapaianPembelajaran && prota.capaianPembelajaran && prota.capaianPembelajaran.length > 0) {
-             contentHtml += `<p><strong>Capaian Pembelajaran Umum Tahunan:</strong></p><ul>`;
+             contentHtml += `<h3>A. CAPAIAN PEMBELAJARAN (CP) UMUM TAHUNAN</h3><ul>`;
              prota.capaianPembelajaran.forEach(cp => contentHtml += `<li>${cp}</li>`);
              contentHtml += `</ul>`;
         }
         if (prota.curriculumType === "Kurikulum Merdeka" && options.showPROTAFokusP5 && prota.profilPelajarPancasilaFocus && prota.profilPelajarPancasilaFocus.length > 0) {
-            contentHtml += `<p><strong>Fokus Profil Pelajar Pancasila:</strong> ${prota.profilPelajarPancasilaFocus.join(', ')}</p>`;
+            contentHtml += `<h3>B. FOKUS PROFIL PELAJAR PANCASILA</h3><p>${prota.profilPelajarPancasilaFocus.join(', ')}</p>`;
         }
         
-        const elemenKdHeading = prota.curriculumType === "Kurikulum Merdeka" ? "Elemen Capaian Pembelajaran" : "Kompetensi Dasar";
+        const elemenKdHeading = prota.curriculumType === "Kurikulum Merdeka" ? "ELEMEN CAPAIAN PEMBELAJARAN" : "KOMPETENSI DASAR";
         if (options.showPROTASemester1) {
-            contentHtml += `<h3>Semester 1</h3>`;
+            contentHtml += `<h3>${prota.curriculumType === "Kurikulum Merdeka" && (options.showPROTACapaianPembelajaran || options.showPROTAFokusP5) ? 'C' : 'A'}. ALOKASI WAKTU SEMESTER 1</h3>`;
             if (prota.semester1Components.length > 0) {
-                contentHtml += `<table class="component-table"><thead><tr><th>Topik/Materi Pokok</th><th>${elemenKdHeading}</th><th>Alokasi Waktu</th></tr></thead><tbody>`;
-                prota.semester1Components.forEach(c => {
-                    contentHtml += `<tr><td>${c.topic}</td><td>${(c.elemenCapaianPembelajaran && c.elemenCapaianPembelajaran.length > 0) ? c.elemenCapaianPembelajaran.join(', ') : '-'}</td><td>${c.alokasiWaktu}</td></tr>`;
+                contentHtml += `<table class="component-table"><thead><tr><th>NO</th><th>TOPIK/MATERI POKOK</th><th>${elemenKdHeading}</th><th>ALOKASI WAKTU</th></tr></thead><tbody>`;
+                prota.semester1Components.forEach((c, index) => {
+                    contentHtml += `<tr><td>${index+1}</td><td>${c.topic}</td><td>${(c.elemenCapaianPembelajaran && c.elemenCapaianPembelajaran.length > 0) ? c.elemenCapaianPembelajaran.join('<br>') : '-'}</td><td>${c.alokasiWaktu}</td></tr>`;
                 });
                 contentHtml += `</tbody></table>`;
             } else {
@@ -287,11 +289,11 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
         }
         
         if (options.showPROTASemester2) {
-            contentHtml += `<h3>Semester 2</h3>`;
+            contentHtml += `<h3>${prota.curriculumType === "Kurikulum Merdeka" && (options.showPROTACapaianPembelajaran || options.showPROTAFokusP5 || options.showPROTASemester1) ? 'D' : (options.showPROTASemester1 ? 'B' : 'A')}. ALOKASI WAKTU SEMESTER 2</h3>`;
             if (prota.semester2Components.length > 0) {
-                contentHtml += `<table class="component-table"><thead><tr><th>Topik/Materi Pokok</th><th>${elemenKdHeading}</th><th>Alokasi Waktu</th></tr></thead><tbody>`;
-                prota.semester2Components.forEach(c => {
-                    contentHtml += `<tr><td>${c.topic}</td><td>${(c.elemenCapaianPembelajaran && c.elemenCapaianPembelajaran.length > 0) ? c.elemenCapaianPembelajaran.join(', ') : '-'}</td><td>${c.alokasiWaktu}</td></tr>`;
+                contentHtml += `<table class="component-table"><thead><tr><th>NO</th><th>TOPIK/MATERI POKOK</th><th>${elemenKdHeading}</th><th>ALOKASI WAKTU</th></tr></thead><tbody>`;
+                prota.semester2Components.forEach((c, index) => {
+                    contentHtml += `<tr><td>${index+1}</td><td>${c.topic}</td><td>${(c.elemenCapaianPembelajaran && c.elemenCapaianPembelajaran.length > 0) ? c.elemenCapaianPembelajaran.join('<br>') : '-'}</td><td>${c.alokasiWaktu}</td></tr>`;
                 });
                 contentHtml += `</tbody></table>`;
             } else {
@@ -300,31 +302,31 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
         }
     } else if (item.type === 'Promes') {
         const promes = item as SemesterProgram;
-        contentHtml += `<p><strong>Tahun Ajaran:</strong> ${promes.year}, <strong>Semester:</strong> ${promes.semester === '1' ? 'Ganjil' : 'Genap'}</p>`;
+        contentHtml += `<p><strong>TAHUN AJARAN:</strong> ${promes.year}, <strong>SEMESTER:</strong> ${promes.semester === '1' ? 'GANJIL' : 'GENAP'}</p>`;
         
-        const cpSkKdHeading = promes.curriculumType === "Kurikulum Merdeka" ? "Capaian Pembelajaran Umum" : "Rangkuman SK/KD";
+        const cpSkKdHeading = promes.curriculumType === "Kurikulum Merdeka" ? "CAPAIAN PEMBELAJARAN UMUM" : "RANGKUMAN SK/KD";
         if (options.showPromesCapaianUmum && promes.capaianPembelajaranUmum) {
-            contentHtml += `<p><strong>${cpSkKdHeading}:</strong> ${promes.capaianPembelajaranUmum}</p>`;
+            contentHtml += `<h3>A. ${cpSkKdHeading}</h3><p>${promes.capaianPembelajaranUmum}</p>`;
         }
         if (options.showPromesAlokasiTotal && promes.alokasiWaktuTotalSemester) {
-            contentHtml += `<p><strong>Alokasi Waktu Total:</strong> ${promes.alokasiWaktuTotalSemester}</p>`;
+            contentHtml += `<h3>B. ALOKASI WAKTU TOTAL</h3><p>${promes.alokasiWaktuTotalSemester}</p>`;
         }
 
-        const materiTpHeading = promes.curriculumType === "Kurikulum Merdeka" ? "Tujuan Pembelajaran" : "Materi Pokok/Tema";
+        const materiTpHeading = promes.curriculumType === "Kurikulum Merdeka" ? "TUJUAN PEMBELAJARAN" : "MATERI POKOK/TEMA";
         if (options.showPromesKomponenMingguan) {
-            contentHtml += `<h3>Rincian Mingguan</h3>`;
+            contentHtml += `<h3>C. RINCIAN MINGGUAN</h3>`;
             if (promes.komponenMingguan.length > 0) {
                 contentHtml += `<table class="component-table weekly-table">
                     <thead>
                         <tr>
-                            <th>Minggu Ke</th>
-                            <th>Bulan</th>
+                            <th>MINGGU KE</th>
+                            <th>BULAN</th>
                             <th>${materiTpHeading}</th>
-                            <th>Alokasi Waktu</th>
-                            <th>Metode/Strategi</th>
-                            <th>Sumber Belajar</th>
-                            <th>Rencana Asesmen</th>
-                            <th>Catatan Integrasi P5/Karakter</th>
+                            <th>ALOKASI WAKTU</th>
+                            <th>METODE/STRATEGI</th>
+                            <th>SUMBER BELAJAR</th>
+                            <th>RENCANA ASESMEN</th>
+                            <th>${promes.curriculumType === "Kurikulum Merdeka" ? "CATATAN INTEGRASI P5" : "CATATAN KARAKTER"}</th>
                         </tr>
                     </thead>
                     <tbody>`;
@@ -334,9 +336,9 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
                         <td>${w.bulan || '-'}</td>
                         <td>${w.materiPokokAtauTujuanPembelajaran}</td>
                         <td>${w.alokasiWaktu}</td>
-                        <td>${(w.metodeStrategi && w.metodeStrategi.length > 0) ? w.metodeStrategi.join(', ') : '-'}</td>
-                        <td>${(w.sumberBelajar && w.sumberBelajar.length > 0) ? w.sumberBelajar.join(', ') : '-'}</td>
-                        <td>${(w.rencanaAsesmen && w.rencanaAsesmen.length > 0) ? w.rencanaAsesmen.join(', ') : '-'}</td>
+                        <td>${(w.metodeStrategi && w.metodeStrategi.length > 0) ? w.metodeStrategi.join('<br>') : '-'}</td>
+                        <td>${(w.sumberBelajar && w.sumberBelajar.length > 0) ? w.sumberBelajar.join('<br>') : '-'}</td>
+                        <td>${(w.rencanaAsesmen && w.rencanaAsesmen.length > 0) ? w.rencanaAsesmen.join('<br>') : '-'}</td>
                         <td>${w.catatanIntegrasiP5 || '-'}</td>
                     </tr>`;
                 });
@@ -352,42 +354,69 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
         <head>
           <title>Cetak: ${item.title}</title>
           <style>
-            body { font-family: 'Times New Roman', Times, serif; margin: 20px; line-height: 1.4; font-size: 12pt; }
-            .kop-surat { display: flex; align-items: center; margin-bottom: 10px; border-bottom: 3px solid black; padding-bottom: 10px; min-height: 100px; }
-            .logo-sekolah { max-height: 80px; max-width: 80px; margin-right: 20px; object-fit: contain; }
-            .logo-placeholder { width: 80px; height: 80px; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 10pt; color: #777; margin-right: 20px;}
+            @page { 
+              size: 21cm 33cm; /* F4 Paper Size */
+              margin: 0.75in; 
+            }
+            body { 
+              font-family: 'Times New Roman', Times, serif; 
+              margin: 0; /* Margin handled by @page */
+              line-height: 1.4; 
+              font-size: 11pt; 
+              color: #333;
+            }
+            .kop-surat { display: flex; align-items: center; margin-bottom: 15px; border-bottom: 4px double black; padding-bottom: 10px; min-height: 80px; }
+            .logo-sekolah { max-height: 75px; max-width: 75px; margin-right: 15px; object-fit: contain; }
+            .logo-placeholder { width: 75px; height: 75px; border: 1px dashed #999; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 9pt; color: #666; margin-right: 15px;}
             .kop-text { text-align: center; flex-grow: 1; }
-            .kop-text h1 { font-size: 16pt; margin: 0; font-weight: bold; text-transform: uppercase; }
-            .kop-text p { font-size: 10pt; margin: 2px 0; }
-            .doc-info { margin-top: 20px; margin-bottom: 15px; }
-            .doc-info h2 { font-size: 14pt; text-align: center; margin-bottom: 15px; font-weight: bold; text-transform: uppercase; }
-            .atp-header { text-align: center; margin-bottom: 20px; }
-            .atp-main-title { font-size: 16pt; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
-            .atp-sub-title { font-size: 14pt; font-weight: bold; margin-bottom: 20px; text-transform: uppercase; }
-            .info-table { width: auto; margin-bottom: 15px; font-size: 11pt;}
-            .info-table td { padding: 2px 5px; vertical-align: top;}
-            .info-table td:first-child { font-weight: normal; width: 180px; }
-            .atp-info-table { width: 100%; max-width: 600px; margin: 0 auto 20px auto; border: 1px solid #ccc; padding: 10px; border-radius: 8px; background-color: #f9f9f9; }
-            .atp-info-table td { padding: 4px 8px; vertical-align: top; font-size: 11pt;}
+            .kop-text h1 { font-size: 16pt; margin: 0 0 2px 0; font-weight: bold; text-transform: uppercase; }
+            .kop-text p { font-size: 10pt; margin: 1px 0; }
+            .kop-text .kop-address { font-size: 9pt; }
+            .kop-text .kop-contact { font-size: 9pt; }
+
+            .doc-info { margin-top: 15px; margin-bottom: 10px; text-align: center; }
+            .doc-info h2 { font-size: 14pt; margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
+            .doc-info .doc-subtitle { font-size: 12pt; margin-bottom: 15px; font-weight: bold; text-transform: uppercase; }
+            
+            .info-table { width: auto; margin: 0 auto 15px auto; font-size: 11pt; border-collapse: collapse;}
+            .info-table td { padding: 3px 8px; vertical-align: top;}
+            .info-table td:first-child { font-weight: normal; width: 180px; text-align: left; }
+            .info-table td:nth-child(2) { font-weight: normal; text-align: left; }
+
+            .atp-header { text-align: center; margin-bottom: 15px; }
+            .atp-main-title { font-size: 14pt; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
+            .atp-sub-title { font-size: 13pt; font-weight: bold; margin-bottom: 15px; text-transform: uppercase; }
+            .atp-info-table { width: 100%; max-width: 700px; margin: 0 auto 20px auto; font-size: 11pt; }
+            .atp-info-table td { padding: 4px 8px; vertical-align: top;}
             .atp-info-table td:first-child { font-weight: bold; width: 30%; }
-            .content-hr { border: 0; border-top: 1px solid #ccc; margin: 15px 0; }
-            h3 { font-size: 13pt; margin-top: 20px; margin-bottom: 8px; font-weight: bold; }
-            h4 { font-size: 12pt; margin-top: 15px; margin-bottom: 5px; font-weight: bold; }
-            ul, ol.tp-list { padding-left: 20px; margin-top: 0; margin-bottom: 10px; }
+            
+            .content-hr { border: 0; border-top: 1.5px solid #888; margin: 20px 0; }
+            
+            h3 { font-size: 12pt; margin-top: 18px; margin-bottom: 8px; font-weight: bold; text-transform: uppercase; }
+            h4 { font-size: 11pt; margin-top: 12px; margin-bottom: 6px; font-weight: bold; }
+            
+            ul, ol.tp-list { padding-left: 25px; margin-top: 5px; margin-bottom: 12px; }
             ol.tp-list { list-style-type: decimal; }
-            li { margin-bottom: 4px; }
-            p { margin-bottom: 8px; }
+            li { margin-bottom: 5px; text-align: justify; }
+            
+            p { margin-bottom: 10px; text-align: justify; }
+            div > p { margin-bottom: 0; } /* For simple paragraph content inside a div from AI */
+            div > ul > li, div > ol > li { margin-bottom: 3px; } /* Tighter lists from AI */
+            
             .component-table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 15px; font-size: 10pt;}
-            .component-table th, .component-table td { border: 1px solid #333; padding: 6px; text-align: left; vertical-align: top; }
-            .component-table th { background-color: #f0f0f0; font-weight: bold; }
-            .weekly-table td, .weekly-table th { font-size: 9pt; } 
+            .component-table th, .component-table td { border: 1px solid #555; padding: 5px 8px; text-align: left; vertical-align: top; }
+            .component-table th { background-color: #e9e9e9; font-weight: bold; text-align: center; }
+            .component-table td:first-child { text-align: center; width: 30px; } /* For NO column */
+            
+            .weekly-table td, .weekly-table th { font-size: 9.5pt; } 
             .print-button-container { text-align: center; margin-top: 30px; }
+            
             @media print {
-              body { margin: 0.75in; } 
+              body { margin: 0.75in; font-size: 11pt; } 
               .print-button-container { display: none; }
-              .kop-surat { border-bottom: 3px solid black !important; } 
-              h1, h2, h3, h4 { page-break-after: avoid; }
-              table, div, ul, p { page-break-inside: avoid; }
+              .kop-surat { border-bottom: 4px double black !important; } 
+              h1, h2, h3, h4, table, ul, ol, p, div { page-break-inside: avoid; }
+              h3, h4 { page-break-after: avoid; }
             }
           </style>
         </head>
@@ -578,7 +607,6 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
               <TableHead className="min-w-[200px] sm:min-w-[250px] w-2/5 px-3 sm:px-4 py-3 text-sm">Judul</TableHead>
               <TableHead className="min-w-[120px] px-3 sm:px-4 py-3 text-sm hidden md:table-cell">Jenis Dokumen</TableHead>
               <TableHead className="min-w-[150px] sm:min-w-[180px] px-3 sm:px-4 py-3 text-sm">Kurikulum</TableHead>
-              <TableHead className="min-w-[120px] sm:min-w-[150px] px-3 sm:px-4 py-3 text-sm hidden lg:table-cell">Mata Pelajaran</TableHead>
               <TableHead className="min-w-[150px] sm:min-w-[180px] px-3 sm:px-4 py-3 text-sm hidden md:table-cell">Jenjang/Fase/Kelas</TableHead>
               <TableHead className="min-w-[150px] sm:min-w-[180px] px-3 sm:px-4 py-3 text-sm">Penyusun</TableHead>
               <TableHead className="min-w-[150px] sm:min-w-[180px] px-3 sm:px-4 py-3 text-sm hidden lg:table-cell">Terakhir Diperbarui</TableHead>
@@ -588,7 +616,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
           <TableBody>
             {items.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} className="text-center h-24 text-muted-foreground px-3 sm:px-4 py-3 text-base">
+                <TableCell colSpan={7} className="text-center h-24 text-muted-foreground px-3 sm:px-4 py-3 text-base">
                   Tidak ada item ditemukan.
                 </TableCell>
               </TableRow>
@@ -622,7 +650,6 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
                     {item.curriculumType}
                   </Badge>
                 </TableCell>
-                <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top text-sm hidden lg:table-cell">{item.subject}</TableCell>
                 <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top text-sm hidden md:table-cell">{item.gradeLevel}</TableCell>
                 <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top">
                   <div className="flex items-center gap-1.5 sm:gap-2">

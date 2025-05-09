@@ -217,7 +217,7 @@ export default function SemesterProgramsPage() {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                   <Input
                     type="search"
-                    placeholder="Cari Promes (judul, mapel, semester, kurikulum)..."
+                    placeholder="Cari Promes (judul, semester, kurikulum)..."
                     className="pl-10 w-full text-base md:text-sm h-10"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
