@@ -99,35 +99,37 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
     addLog("INFO", `Mempersiapkan pratinjau cetak untuk ${documentTypeDisplay} "${item.title}" (ID: ${item.id}) oleh ${currentUser?.email}. Opsi: ${JSON.stringify(options)}`, logSource);
 
     let contentHtml = ``;
-    const tutWuriLogoUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/Logo_Tut_Wuri_Handayani.svg/100px-Logo_Tut_Wuri_Handayani.svg.png"; // Smaller size for better layout
-
-    if (options.showKopSurat && schoolProfile) {
-      contentHtml += `
-        <div class="kop-surat">
-          ${item.curriculumType === "Kurikulum Merdeka" && item.type === 'RPP' ? `<img src="${tutWuriLogoUrl}" alt="Logo Tut Wuri Handayani" class="logo-tutwuri" data-ai-hint="tut wuri handayani logo">` : (schoolProfile.logoUrl ? `<img src="${schoolProfile.logoUrl}" alt="Logo Sekolah" class="logo-sekolah" data-ai-hint="school logo">` : '<div class="logo-placeholder">Logo Sekolah</div>')}
-          <div class="kop-text">
-            ${item.curriculumType === "Kurikulum Merdeka" && item.type === 'RPP' ? '' : `<h1>${schoolProfile.namaSekolah || 'Nama Sekolah Belum Diatur'}</h1>`}
-            ${item.curriculumType === "Kurikulum Merdeka" && item.type === 'RPP' ? '' : `<p>${schoolProfile.alamat || 'Alamat Sekolah Belum Diatur'}</p>`}
-            ${item.curriculumType === "Kurikulum Merdeka" && item.type === 'RPP' ? '' : `<p>
-              ${schoolProfile.npsn ? `NPSN: ${schoolProfile.npsn}` : ''}
-              ${schoolProfile.nomorTelepon ? `${schoolProfile.npsn ? ' | ' : ''}Telp: ${schoolProfile.nomorTelepon}` : ''}
-              ${schoolProfile.emailSekolah ? `${(schoolProfile.npsn || schoolProfile.nomorTelepon) ? ' | ' : ''}Email: ${schoolProfile.emailSekolah}` : ''}
-            </p>`}
-          </div>
-        </div>
-      `;
-    } else if (options.showKopSurat) {
-        addLog("WARN", `Kop surat diminta untuk ${documentTypeDisplay} "${item.title}" tapi profil sekolah tidak lengkap/tidak ada.`, logSource);
-        contentHtml += `
-        <div class="kop-surat">
-          ${item.curriculumType === "Kurikulum Merdeka" && item.type === 'RPP' ? `<img src="${tutWuriLogoUrl}" alt="Logo Tut Wuri Handayani" class="logo-tutwuri" data-ai-hint="tut wuri handayani logo">` : '<div class="logo-placeholder">Logo Sekolah</div>'}
-          <div class="kop-text">
-            ${item.curriculumType === "Kurikulum Merdeka" && item.type === 'RPP' ? '' : `<h1>Nama Sekolah Belum Diatur</h1>`}
-            ${item.curriculumType === "Kurikulum Merdeka" && item.type === 'RPP' ? '' : `<p>Alamat Sekolah Belum Diatur</p>`}
-            ${item.curriculumType === "Kurikulum Merdeka" && item.type === 'RPP' ? '' : `<p>NPSN: Belum Diatur</p>`}
-          </div>
-        </div>
-      `;
+    
+    // KOP Surat (Letterhead)
+    if (options.showKopSurat) {
+        if (schoolProfile) {
+            contentHtml += `
+                <div class="kop-surat">
+                  ${schoolProfile.logoUrl ? `<img src="${schoolProfile.logoUrl}" alt="Logo Sekolah" class="logo-sekolah" data-ai-hint="school logo">` : '<div class="logo-placeholder">Logo Sekolah</div>'}
+                  <div class="kop-text">
+                    <h1>${schoolProfile.namaSekolah || 'Nama Sekolah Belum Diatur'}</h1>
+                    <p>${schoolProfile.alamat || 'Alamat Sekolah Belum Diatur'}</p>
+                    <p>
+                      ${schoolProfile.npsn ? `NPSN: ${schoolProfile.npsn}` : ''}
+                      ${schoolProfile.nomorTelepon ? `${schoolProfile.npsn ? ' | ' : ''}Telp: ${schoolProfile.nomorTelepon}` : ''}
+                      ${schoolProfile.emailSekolah ? `${(schoolProfile.npsn || schoolProfile.nomorTelepon) ? ' | ' : ''}Email: ${schoolProfile.emailSekolah}` : ''}
+                    </p>
+                  </div>
+                </div>
+            `;
+        } else { // No schoolProfile, but showKopSurat is true
+            addLog("WARN", `Kop surat diminta untuk ${documentTypeDisplay} "${item.title}" tapi profil sekolah tidak lengkap/tidak ada.`, logSource);
+            contentHtml += `
+                <div class="kop-surat">
+                  <div class="logo-placeholder">Logo Sekolah</div>
+                  <div class="kop-text">
+                    <h1>Nama Sekolah Belum Diatur</h1>
+                    <p>Alamat Sekolah Belum Diatur</p>
+                    <p>NPSN: Belum Diatur</p>
+                  </div>
+                </div>
+            `;
+        }
     }
     
     // Document Title and Info
@@ -355,7 +357,6 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
             body { font-family: 'Times New Roman', Times, serif; margin: 20px; line-height: 1.4; font-size: 12pt; }
             .kop-surat { display: flex; align-items: center; margin-bottom: 10px; border-bottom: 3px solid black; padding-bottom: 10px; min-height: 100px; }
             .logo-sekolah { max-height: 80px; max-width: 80px; margin-right: 20px; object-fit: contain; }
-            .logo-tutwuri { max-height: 70px; width: auto; margin: 0 auto 10px auto; display: block; } /* Centered Tut Wuri Logo for ATP */
             .logo-placeholder { width: 80px; height: 80px; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 10pt; color: #777; margin-right: 20px;}
             .kop-text { text-align: center; flex-grow: 1; }
             .kop-text h1 { font-size: 16pt; margin: 0; font-weight: bold; text-transform: uppercase; }
@@ -694,3 +695,4 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
     </>
   );
 }
+
