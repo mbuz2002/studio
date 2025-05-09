@@ -15,13 +15,13 @@ import {z} from 'genkit';
 import type { CurriculumFramework } from '@/types';
 
 const AnnualProgramComponentSchema = z.object({
-  topic: z.string().describe('Judul topik atau unit pembelajaran utama (atau Materi Pokok/Tema untuk KTSP/K-13).'),
+  topic: z.string().describe('Judul topik atau unit pembelajaran utama (atau Materi Pokok/Tema untuk KTSP/K-13). Untuk SD Kurikulum Merdeka, bisa berupa tema besar atau mata pelajaran jika diajarkan terpisah.'),
   elemenCapaianPembelajaran: z.array(z.string()).optional().describe('Elemen-elemen Capaian Pembelajaran (CP) untuk Kurikulum Merdeka, atau daftar Kompetensi Dasar (KD) yang relevan untuk KTSP/K-13.'),
   alokasiWaktu: z.string().describe('Estimasi alokasi waktu untuk topik ini dalam Jam Pelajaran (JP), contoh: "24 JP" atau "4 Minggu x 6 JP".'),
 });
 
 const GenerateAnnualProgramInputSchema = z.object({
-  subject: z.string().describe('Mata pelajaran atau tema utama PROTA.'),
+  subject: z.string().describe('Mata pelajaran atau tema utama PROTA (misalnya Matematika, Bahasa Indonesia, atau "Tematik" untuk SD).'),
   jenjangFaseKelas: z.string().describe('Jenjang, fase, atau kelas sasaran.'),
   year: z.string().describe('Tahun ajaran, misalnya "2024/2025".'),
   curriculumType: z.enum(["Kurikulum Merdeka", "K-13", "KTSP 2006"]).describe("Jenis kurikulum yang digunakan sebagai acuan."),
@@ -31,7 +31,8 @@ export type GenerateAnnualProgramInput = z.infer<typeof GenerateAnnualProgramInp
 
 const PromptInputSchema = GenerateAnnualProgramInputSchema.extend({
     isKurikulumMerdeka: z.boolean(),
-    capaianPembelajaran: z.array(z.string()).optional(), // Ensure it's here for the prompt
+    isSekolahDasar: z.boolean().optional().describe("Menandakan apakah jenjang yang dipilih adalah Sekolah Dasar (Fase A, B, C)."),
+    capaianPembelajaran: z.array(z.string()).optional(), 
 });
 
 const GenerateAnnualProgramOutputSchema = z.object({
@@ -46,10 +47,15 @@ export async function generateAnnualProgram(input: GenerateAnnualProgramInput): 
   const curriculumFlags = {
       isKurikulumMerdeka: input.curriculumType === "Kurikulum Merdeka",
   };
+  
+  const jenjang = input.jenjangFaseKelas.toLowerCase();
+  const isSD = curriculumFlags.isKurikulumMerdeka && (jenjang.includes("sd/mi") || jenjang.includes("fase a") || jenjang.includes("fase b") || jenjang.includes("fase c"));
+
   const promptInputWithFlags = { 
       ...input, 
       ...curriculumFlags,
-      capaianPembelajaran: input.capaianPembelajaran || [] // Ensure array for prompt
+      isSekolahDasar: isSD,
+      capaianPembelajaran: input.capaianPembelajaran || [] 
   };
   return generateAnnualProgramFlow(promptInputWithFlags);
 }
@@ -65,13 +71,21 @@ Mata Pelajaran/Tema Utama: {{{subject}}}
 Jenjang/Fase/Kelas: {{{jenjangFaseKelas}}}
 Tahun Ajaran: {{{year}}}
 Kurikulum Acuan: {{{curriculumType}}}
+
 {{#if isKurikulumMerdeka}}
-{{#if capaianPembelajaran.length}}
-Capaian Pembelajaran (CP) Umum Tahunan yang diberikan (gunakan sebagai acuan utama):
-{{#each capaianPembelajaran}}
-- {{{this}}}
-{{/each}}
-{{/if}}
+  {{#if isSekolahDasar}}
+  Perhatian Khusus untuk Sekolah Dasar (Fase A, B, C) - Kurikulum Merdeka:
+  -   Topik/unit pembelajaran sebaiknya bersifat tematik dan terpadu, relevan dengan dunia anak-anak serta pengalaman sehari-hari mereka. Jika mata pelajaran diajarkan terpisah, pastikan topiknya sesuai.
+  -   Elemen Capaian Pembelajaran harus dirumuskan dengan bahasa yang sederhana dan konkret, sesuai dengan tingkat perkembangan kognitif anak usia SD, dan mencerminkan kompetensi yang diharapkan pada fase tersebut.
+  -   Pertimbangkan integrasi antar mata pelajaran dalam penyusunan topik/unit pembelajaran jika {{{subject}}} adalah "Tematik" atau mencakup beberapa muatan pelajaran.
+  -   Alokasi waktu harus realistis dan memperhatikan rentang konsentrasi anak SD.
+  {{/if}}
+  {{#if capaianPembelajaran.length}}
+  Capaian Pembelajaran (CP) Umum Tahunan yang diberikan (gunakan sebagai acuan utama):
+  {{#each capaianPembelajaran}}
+  - {{{this}}}
+  {{/each}}
+  {{/if}}
 {{/if}}
 
 PROTA harus mencakup:
@@ -79,7 +93,7 @@ PROTA harus mencakup:
 2.  **Komponen Semester 1**: Daftar topik/unit pembelajaran utama (atau Materi Pokok/Tema untuk KTSP/K-13) untuk semester ganjil. Untuk setiap komponen:
     *   Sebutkan topik/unitnya.
     *   {{#if isKurikulumMerdeka}}
-        Sebutkan elemen-elemen Capaian Pembelajaran (CP) yang terkait. {{#if capaianPembelajaran.length}}Cobalah untuk mengaitkan elemen CP ini dengan CP Umum Tahunan yang diberikan.{{else}}Jika CP Umum tidak diberikan, buatlah elemen CP yang sesuai.{{/if}}
+        Sebutkan elemen-elemen Capaian Pembelajaran (CP) yang terkait dengan topik/unit tersebut. {{#if capaianPembelajaran.length}}Cobalah untuk mengaitkan elemen CP ini dengan CP Umum Tahunan yang diberikan.{{else}}Jika CP Umum tidak diberikan, buatlah elemen CP yang sesuai dengan fase dan topik.{{/if}}
         {{else}}
         Sebutkan Kompetensi Dasar (KD) yang relevan dengan topik tersebut.
         {{/if}}
@@ -89,6 +103,7 @@ PROTA harus mencakup:
 
 Pastikan output yang dihasilkan sesuai dengan skema JSON yang diharapkan dan menggunakan Bahasa Indonesia yang baik dan benar. Buatlah minimal 2-3 komponen per semester sebagai contoh.
 Istilah "elemenCapaianPembelajaran" pada output akan berisi CP jika Kurikulum Merdeka, atau KD jika K-13/KTSP.
+Untuk SD Kurikulum Merdeka, jika subjeknya adalah mata pelajaran spesifik (misal, Matematika Fase A), maka topik dan elemen CP harus spesifik untuk mata pelajaran tersebut. Jika subjeknya "Tematik", maka topik bisa berupa tema-tema (misal, "Aku dan Kebutuhanku", "Lingkungan Sekitarku") dan elemen CP bisa mencakup beberapa mata pelajaran yang terintegrasi.
 `,
 });
 
@@ -98,7 +113,7 @@ const generateAnnualProgramFlow = ai.defineFlow(
     inputSchema: PromptInputSchema, 
     outputSchema: GenerateAnnualProgramOutputSchema,
   },
-  async (promptInputWithFlags: z.infer<typeof PromptInputSchema>) => { // Use correct input type
+  async (promptInputWithFlags: z.infer<typeof PromptInputSchema>) => { 
     const {output} = await prompt(promptInputWithFlags);
     
     if (output && promptInputWithFlags.curriculumType !== "Kurikulum Merdeka") {
