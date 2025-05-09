@@ -1,19 +1,20 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { CurriculumDataTable } from "@/components/curriculum/CurriculumDataTable";
-// import { CurriculumFormDialog } from "@/components/curriculum/CurriculumFormDialog"; // Removed
-import type { AnnualProgram, AnyCurriculumItem } from "@/types";
+import type { AnnualProgram, AnyCurriculumItem, CurriculumFramework } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { FileUp, Filter, Search, Loader2, CalendarDays, PlusCircle } from "lucide-react";
+import { FileUp, Filter, Search, Loader2, CalendarDays, PlusCircle, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCurriculum } from "@/contexts/CurriculumContext"; 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 const initialAnnualProgramsData: AnnualProgram[] = [
   {
@@ -65,9 +66,15 @@ export default function AnnualProgramsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
+  const { availableCurriculums } = useCurriculum();
   const [annualPrograms, setAnnualPrograms] = useState<AnnualProgram[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isClient, setIsClient] = useState(false);
+
+  const [curriculumFilter, setCurriculumFilter] = useState<CurriculumFramework | "ALL">("ALL");
+  const [gradeFilter, setGradeFilter] = useState<string | "ALL">("ALL");
+  const [yearFilter, setYearFilter] = useState<string | "ALL">("ALL");
+  const [subjectFilter, setSubjectFilter] = useState<string | "ALL">("ALL");
 
   useEffect(() => {
     setIsClient(true);
@@ -95,6 +102,25 @@ export default function AnnualProgramsPage() {
       }
     }
   }, [toast, user]);
+
+  const uniqueGradeLevels = useMemo(() => {
+    if (!isClient) return [];
+    const grades = new Set(annualPrograms.map(ap => ap.gradeLevel));
+    return Array.from(grades).sort();
+  }, [annualPrograms, isClient]);
+
+  const uniqueYears = useMemo(() => {
+    if (!isClient) return [];
+    const years = new Set(annualPrograms.map(ap => ap.year));
+    return Array.from(years).sort((a, b) => b.localeCompare(a)); // Sort descending for years
+  }, [annualPrograms, isClient]);
+
+  const uniqueSubjects = useMemo(() => {
+    if (!isClient) return [];
+    const subjects = new Set(annualPrograms.map(ap => ap.subject));
+    return Array.from(subjects).sort();
+  }, [annualPrograms, isClient]);
+
 
   const canCreate = user && (user.role === "Admin" || user.role === "WakaKurikulum" || user.role === "Guru");
   const canEdit = (item: AnnualProgram): boolean => {
@@ -142,13 +168,30 @@ export default function AnnualProgramsPage() {
     newWindow?.document.close();
   };
 
-  const filteredAnnualPrograms = isClient ? annualPrograms.filter(ap =>
-    (ap.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    ap.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    ap.year.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    ap.curriculumType.toLowerCase().includes(searchTerm.toLowerCase())) &&
-    (user?.role !== "Guru" || ap.createdByUserId === user?.id || initialAnnualProgramsData.some(initialAp => initialAp.id === ap.id && (!ap.createdByUserId || ap.createdByUserId === 'user-demo-fallback')))
-  ) : [];
+  const filteredAnnualPrograms = useMemo(() => {
+    return isClient ? annualPrograms.filter(ap =>
+      (ap.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ap.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ap.year.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ap.curriculumType.toLowerCase().includes(searchTerm.toLowerCase())) &&
+      (curriculumFilter === "ALL" || ap.curriculumType === curriculumFilter) &&
+      (gradeFilter === "ALL" || ap.gradeLevel === gradeFilter) &&
+      (yearFilter === "ALL" || ap.year === yearFilter) &&
+      (subjectFilter === "ALL" || ap.subject === subjectFilter) &&
+      (user?.role !== "Guru" || ap.createdByUserId === user?.id || initialAnnualProgramsData.some(initialAp => initialAp.id === ap.id && (!ap.createdByUserId || ap.createdByUserId === 'user-demo-fallback')))
+    ) : [];
+  }, [isClient, annualPrograms, searchTerm, curriculumFilter, gradeFilter, yearFilter, subjectFilter, user]);
+
+  const resetFilters = () => {
+    setSearchTerm("");
+    setCurriculumFilter("ALL");
+    setGradeFilter("ALL");
+    setYearFilter("ALL");
+    setSubjectFilter("ALL");
+    toast({ title: "Filter Direset", description: "Semua filter telah dikembalikan ke default." });
+  };
+
+  const activeFilterCount = [searchTerm, curriculumFilter, gradeFilter, yearFilter, subjectFilter].filter(f => f !== "" && f !== "ALL").length;
 
   if (!isClient || !user) {
     return (
@@ -177,36 +220,98 @@ export default function AnnualProgramsPage() {
           </div>
         </CardHeader>
         <CardContent className="p-4 sm:p-6">
-          <div className="flex flex-col md:flex-row gap-3 mb-6 md:items-center">
-             <div className="flex-grow relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Cari PROTA (judul, mapel, tahun, kurikulum)..."
-                className="pl-10 w-full text-base md:text-sm h-10"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-                <Button variant="outline" className="w-full sm:w-auto text-base md:text-sm h-10">
-                <Filter className="mr-2 h-4 w-4" /> Filter
-                </Button>
-                {canImport && (
-                  <Button variant="outline" className="w-full sm:w-auto text-base md:text-sm h-10" onClick={() => toast({title: "Fitur Belum Tersedia", description: "Impor PROTA akan segera hadir!"})}>
-                      <FileUp className="mr-2 h-4 w-4" /> Impor
-                  </Button>
-                )}
-            </div>
-            {canCreate && (
-              <div className="w-full md:w-auto">
-                 <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground w-full sm:w-auto">
-                    <Link href="/annual-programs/new">
-                        <PlusCircle className="mr-2 h-5 w-5" /> Buat Program Baru
-                    </Link>
-                  </Button>
+          <div className="flex flex-col gap-4 mb-6">
+            <div className="flex flex-col md:flex-row gap-3 md:items-center">
+              <div className="flex-grow relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Cari PROTA (judul, mapel, tahun, kurikulum)..."
+                  className="pl-10 w-full text-base md:text-sm h-10"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
               </div>
-            )}
+              <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                  {canImport && (
+                    <Button variant="outline" className="w-full sm:w-auto text-base md:text-sm h-10" onClick={() => toast({title: "Fitur Belum Tersedia", description: "Impor PROTA akan segera hadir!"})}>
+                        <FileUp className="mr-2 h-4 w-4" /> Impor
+                    </Button>
+                  )}
+                  {activeFilterCount > 0 && (
+                    <Button variant="outline" onClick={resetFilters} className="w-full sm:w-auto text-base md:text-sm h-10">
+                      <X className="mr-2 h-4 w-4" /> Reset Filter ({activeFilterCount})
+                    </Button>
+                  )}
+              </div>
+              {canCreate && (
+                <div className="w-full md:w-auto">
+                   <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground w-full sm:w-auto">
+                      <Link href="/annual-programs/new">
+                          <PlusCircle className="mr-2 h-5 w-5" /> Buat Program Baru
+                      </Link>
+                    </Button>
+                </div>
+              )}
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+              <div>
+                <Label htmlFor="curriculumFilter" className="text-xs">Kurikulum</Label>
+                <Select value={curriculumFilter} onValueChange={(value) => setCurriculumFilter(value as CurriculumFramework | "ALL")}>
+                  <SelectTrigger id="curriculumFilter" className="h-10 text-sm">
+                    <SelectValue placeholder="Filter Kurikulum" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">Semua Kurikulum</SelectItem>
+                    {availableCurriculums.map(curr => (
+                      <SelectItem key={curr.value} value={curr.value}>{curr.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="gradeFilter" className="text-xs">Jenjang/Fase</Label>
+                <Select value={gradeFilter} onValueChange={(value) => setGradeFilter(value)}>
+                  <SelectTrigger id="gradeFilter" className="h-10 text-sm">
+                    <SelectValue placeholder="Filter Jenjang/Fase" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">Semua Jenjang/Fase</SelectItem>
+                    {uniqueGradeLevels.map(grade => (
+                      <SelectItem key={grade} value={grade}>{grade}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="subjectFilter" className="text-xs">Mata Pelajaran</Label>
+                <Select value={subjectFilter} onValueChange={(value) => setSubjectFilter(value)}>
+                  <SelectTrigger id="subjectFilter" className="h-10 text-sm">
+                    <SelectValue placeholder="Filter Mata Pelajaran" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">Semua Mapel</SelectItem>
+                    {uniqueSubjects.map(subject => (
+                      <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="yearFilter" className="text-xs">Tahun Ajaran</Label>
+                <Select value={yearFilter} onValueChange={(value) => setYearFilter(value)}>
+                  <SelectTrigger id="yearFilter" className="h-10 text-sm">
+                    <SelectValue placeholder="Filter Tahun Ajaran" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">Semua Tahun</SelectItem>
+                    {uniqueYears.map(year => (
+                      <SelectItem key={year} value={year}>{year}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
           <div className="overflow-x-auto">
             <CurriculumDataTable

@@ -1,19 +1,20 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { CurriculumDataTable } from "@/components/curriculum/CurriculumDataTable";
-// import { CurriculumFormDialog } from "@/components/curriculum/CurriculumFormDialog"; // Removed
-import type { LessonPlan, AnyCurriculumItem } from "@/types";
+import type { LessonPlan, AnyCurriculumItem, CurriculumFramework } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { FileUp, Filter, Search, Loader2, BookOpenText, PlusCircle } from "lucide-react";
+import { FileUp, Filter, Search, Loader2, BookOpenText, PlusCircle, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCurriculum } from "@/contexts/CurriculumContext"; 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 
 const initialLessonPlansData: LessonPlan[] = [
@@ -24,7 +25,7 @@ const initialLessonPlansData: LessonPlan[] = [
     title: "ATP Dasar-Dasar Animasi Fase F",
     subject: "Animasi",
     gradeLevel: "Fase F (Kelas XI-XII SMK)",
-    topic: "Dasar-Dasar Keahlian Animasi", // Konsentrasi Keahlian
+    topic: "Dasar-Dasar Keahlian Animasi", 
     bidangKeahlian: "Seni dan Ekonomi Kreatif",
     programKeahlian: "Animasi",
     capaianPembelajaran: ["Pada akhir fase F, peserta didik mampu memahami prinsip dasar animasi.", "Peserta didik mampu membuat animasi sederhana menggunakan perangkat lunak."],
@@ -83,9 +84,15 @@ export default function LessonPlansPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
+  const { availableCurriculums } = useCurriculum();
   const [lessonPlans, setLessonPlans] = useState<LessonPlan[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isClient, setIsClient] = useState(false);
+
+  const [curriculumFilter, setCurriculumFilter] = useState<CurriculumFramework | "ALL">("ALL");
+  const [gradeFilter, setGradeFilter] = useState<string | "ALL">("ALL");
+  const [subjectFilter, setSubjectFilter] = useState<string | "ALL">("ALL");
+
 
   useEffect(() => {
     setIsClient(true);
@@ -113,6 +120,18 @@ export default function LessonPlansPage() {
       }
     }
   }, [toast, user]);
+
+  const uniqueGradeLevels = useMemo(() => {
+    if (!isClient) return [];
+    const grades = new Set(lessonPlans.map(lp => lp.gradeLevel));
+    return Array.from(grades).sort();
+  }, [lessonPlans, isClient]);
+
+  const uniqueSubjects = useMemo(() => {
+    if (!isClient) return [];
+    const subjects = new Set(lessonPlans.map(lp => lp.subject));
+    return Array.from(subjects).sort();
+  }, [lessonPlans, isClient]);
 
 
   const canCreate = user && (user.role === "Admin" || user.role === "WakaKurikulum" || user.role === "Guru");
@@ -164,15 +183,31 @@ export default function LessonPlansPage() {
     newWindow?.document.close();
   };
 
-  const filteredLessonPlans = isClient ? lessonPlans.filter(lp =>
-    (lp.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    lp.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    lp.gradeLevel.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    lp.curriculumType.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (lp.topic && lp.topic.toLowerCase().includes(searchTerm.toLowerCase()))
-    ) &&
-    (user?.role !== "Guru" || lp.createdByUserId === user?.id || initialLessonPlansData.some(initialLp => initialLp.id === lp.id && (!lp.createdByUserId || lp.createdByUserId === 'user-demo-fallback'))) 
-  ) : [];
+  const filteredLessonPlans = useMemo(() => {
+    return isClient ? lessonPlans.filter(lp =>
+      (lp.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lp.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lp.gradeLevel.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lp.curriculumType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (lp.topic && lp.topic.toLowerCase().includes(searchTerm.toLowerCase()))
+      ) &&
+      (curriculumFilter === "ALL" || lp.curriculumType === curriculumFilter) &&
+      (gradeFilter === "ALL" || lp.gradeLevel === gradeFilter) &&
+      (subjectFilter === "ALL" || lp.subject === subjectFilter) &&
+      (user?.role !== "Guru" || lp.createdByUserId === user?.id || initialLessonPlansData.some(initialLp => initialLp.id === lp.id && (!lp.createdByUserId || lp.createdByUserId === 'user-demo-fallback'))) 
+    ) : [];
+  }, [isClient, lessonPlans, searchTerm, curriculumFilter, gradeFilter, subjectFilter, user]);
+
+  const resetFilters = () => {
+    setSearchTerm("");
+    setCurriculumFilter("ALL");
+    setGradeFilter("ALL");
+    setSubjectFilter("ALL");
+    toast({ title: "Filter Direset", description: "Semua filter telah dikembalikan ke default." });
+  };
+
+  const activeFilterCount = [searchTerm, curriculumFilter, gradeFilter, subjectFilter].filter(f => f !== "" && f !== "ALL").length;
+
 
   if (!isClient || !user) {
     return (
@@ -200,36 +235,84 @@ export default function LessonPlansPage() {
           </div>
         </CardHeader>
         <CardContent className="p-4 sm:p-6">
-          <div className="flex flex-col md:flex-row gap-3 mb-6 md:items-center">
-            <div className="flex-grow relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Cari (judul, mapel, jenjang, kurikulum, topik)..."
-                className="pl-10 w-full text-base md:text-sm h-10"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+          <div className="flex flex-col gap-4 mb-6">
+            <div className="flex flex-col md:flex-row gap-3 md:items-center">
+              <div className="flex-grow relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Cari (judul, mapel, jenjang, kurikulum, topik)..."
+                  className="pl-10 w-full text-base md:text-sm h-10"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                {canImport && (
+                  <Button variant="outline" className="w-full sm:w-auto text-base md:text-sm h-10" onClick={() => toast({title: "Fitur Belum Tersedia", description: "Impor dokumen akan segera hadir!"})}>
+                      <FileUp className="mr-2 h-4 w-4" /> Impor
+                  </Button>
+                )}
+                {activeFilterCount > 0 && (
+                  <Button variant="outline" onClick={resetFilters} className="w-full sm:w-auto text-base md:text-sm h-10">
+                    <X className="mr-2 h-4 w-4" /> Reset Filter ({activeFilterCount})
+                  </Button>
+                )}
+              </div>
+              {canCreate && (
+                  <div className="w-full md:w-auto">
+                      <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground w-full sm:w-auto">
+                        <Link href="/lesson-plans/new">
+                          <PlusCircle className="mr-2 h-5 w-5" /> Buat Dokumen Baru
+                        </Link>
+                      </Button>
+                  </div>
+               )}
             </div>
-            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-              <Button variant="outline" className="w-full sm:w-auto text-base md:text-sm h-10">
-                <Filter className="mr-2 h-4 w-4" /> Filter
-              </Button>
-              {canImport && (
-                <Button variant="outline" className="w-full sm:w-auto text-base md:text-sm h-10" onClick={() => toast({title: "Fitur Belum Tersedia", description: "Impor dokumen akan segera hadir!"})}>
-                    <FileUp className="mr-2 h-4 w-4" /> Impor
-                </Button>
-              )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              <div>
+                <Label htmlFor="curriculumFilterLp" className="text-xs">Kurikulum</Label>
+                <Select value={curriculumFilter} onValueChange={(value) => setCurriculumFilter(value as CurriculumFramework | "ALL")}>
+                  <SelectTrigger id="curriculumFilterLp" className="h-10 text-sm">
+                    <SelectValue placeholder="Filter Kurikulum" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">Semua Kurikulum</SelectItem>
+                    {availableCurriculums.map(curr => (
+                      <SelectItem key={curr.value} value={curr.value}>{curr.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="gradeFilterLp" className="text-xs">Jenjang/Fase</Label>
+                <Select value={gradeFilter} onValueChange={(value) => setGradeFilter(value)}>
+                  <SelectTrigger id="gradeFilterLp" className="h-10 text-sm">
+                    <SelectValue placeholder="Filter Jenjang/Fase" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">Semua Jenjang/Fase</SelectItem>
+                    {uniqueGradeLevels.map(grade => (
+                      <SelectItem key={grade} value={grade}>{grade}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="subjectFilterLp" className="text-xs">Mata Pelajaran</Label>
+                <Select value={subjectFilter} onValueChange={(value) => setSubjectFilter(value)}>
+                  <SelectTrigger id="subjectFilterLp" className="h-10 text-sm">
+                    <SelectValue placeholder="Filter Mata Pelajaran" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">Semua Mapel</SelectItem>
+                    {uniqueSubjects.map(subject => (
+                      <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-             {canCreate && (
-                <div className="w-full md:w-auto">
-                    <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground w-full sm:w-auto">
-                      <Link href="/lesson-plans/new">
-                        <PlusCircle className="mr-2 h-5 w-5" /> Buat Dokumen Baru
-                      </Link>
-                    </Button>
-                </div>
-             )}
           </div>
           <div className="overflow-x-auto">
             <CurriculumDataTable
@@ -239,7 +322,7 @@ export default function LessonPlansPage() {
                 onDelete={handleDelete} 
                 canEdit={(item) => canEditItem(item as LessonPlan)} 
                 canDelete={(item) => canDeleteItem(item as LessonPlan)} 
-                itemTypeForExport="RPP" // This indicates it's a lesson plan type document for export logic
+                itemTypeForExport="RPP" 
             />
           </div>
         </CardContent>
@@ -247,3 +330,4 @@ export default function LessonPlansPage() {
     </div>
   );
 }
+
