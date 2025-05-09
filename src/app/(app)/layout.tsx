@@ -12,10 +12,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
 import type { UserRole } from '@/types';
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
+import { useCurriculum } from '@/contexts/CurriculumContext'; // Import CurriculumContext
 
 interface NavItem {
   href: string;
   label: string;
+  originalLabel?: string; // To store the base label
   icon: React.ElementType;
   roles: UserRole[]; 
   isSystemSetting?: boolean; 
@@ -23,19 +25,20 @@ interface NavItem {
 }
 
 const allNavItems: NavItem[] = [
-  { href: "/dashboard", label: "Dasbor", icon: LayoutDashboard, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
-  { href: "/lesson-plans", label: "Rencana Pembelajaran", icon: BookOpenText, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
-  { href: "/annual-programs", label: "Program Tahunan", icon: CalendarDays, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
-  { href: "/semester-programs", label: "Program Semester", icon: CalendarClock, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
-  { href: "/ai-assistant", label: "Asisten AI", icon: Sparkles, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"] },
-  { href: "/admin/user-management", label: "Manajemen Pengguna", icon: Users, roles: ["Admin", "TataUsaha"], isSystemSetting: false }, 
-  { href: "/settings", label: "Pengaturan Akun", icon: SettingsIcon, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
-  { href: "/admin/system-settings", label: "Pengaturan Sistem", icon: ShieldCheck, roles: ["Admin"], isSystemSetting: true },
-  { href: "/admin/system-logs", label: "Log Sistem", icon: Activity, roles: ["Admin"], isSystemSetting: true, isHiddenFromSidebar: true },
+  { href: "/dashboard", label: "Dasbor", originalLabel: "Dasbor", icon: LayoutDashboard, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+  { href: "/lesson-plans", label: "Rencana Pembelajaran", originalLabel: "Rencana Pembelajaran", icon: BookOpenText, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+  { href: "/annual-programs", label: "Program Tahunan", originalLabel: "Program Tahunan", icon: CalendarDays, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+  { href: "/semester-programs", label: "Program Semester", originalLabel: "Program Semester", icon: CalendarClock, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+  { href: "/ai-assistant", label: "Asisten AI", originalLabel: "Asisten AI", icon: Sparkles, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"] },
+  { href: "/admin/user-management", label: "Manajemen Pengguna", originalLabel: "Manajemen Pengguna", icon: Users, roles: ["Admin", "TataUsaha"], isSystemSetting: false }, 
+  { href: "/settings", label: "Pengaturan Akun", originalLabel: "Pengaturan Akun", icon: SettingsIcon, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+  { href: "/admin/system-settings", label: "Pengaturan Sistem", originalLabel: "Pengaturan Sistem", icon: ShieldCheck, roles: ["Admin"], isSystemSetting: true },
+  { href: "/admin/system-logs", label: "Log Sistem", originalLabel: "Log Sistem", icon: Activity, roles: ["Admin"], isSystemSetting: true, isHiddenFromSidebar: true },
 ];
 
 export default function AppLayout({ children }: PropsWithChildren) {
   const { user, isAuthenticated, loading, logout } = useAuth();
+  const { defaultCurriculum } = useCurriculum(); // Get defaultCurriculum
   const router = useRouter();
   const pathname = usePathname();
 
@@ -47,7 +50,14 @@ export default function AppLayout({ children }: PropsWithChildren) {
 
   const filteredNavItems = useMemo(() => {
     if (!user) return [];
-    return allNavItems.filter(item => 
+    return allNavItems
+      .map(item => {
+        if (item.href === "/lesson-plans" && defaultCurriculum === "Kurikulum Merdeka") {
+          return { ...item, label: "ATP" };
+        }
+        return { ...item, label: item.originalLabel || item.label }; // Reset to originalLabel or current label
+      })
+      .filter(item => 
         item.roles.includes(user.role) && 
         !item.isHiddenFromSidebar &&
         (item.isSystemSetting === false || (item.isSystemSetting === true && user.role === 'Admin') || item.roles.includes(user.role) )
@@ -63,7 +73,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
 
         return 0;
     });
-  }, [user]);
+  }, [user, defaultCurriculum]); // Add defaultCurriculum to dependency array
 
    useEffect(() => {
     if (!loading && isAuthenticated && user) {

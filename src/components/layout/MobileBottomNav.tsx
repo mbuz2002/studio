@@ -7,30 +7,39 @@ import { cn } from '@/lib/utils';
 import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, Users } from 'lucide-react'; 
 import type { UserRole } from '@/types';
 import { useAuth } from '@/contexts/AuthContext'; 
+import { useCurriculum } from '@/contexts/CurriculumContext'; // Import CurriculumContext
 
 interface MobileNavItemData {
   href: string;
   label: string;
+  originalLabel?: string; // To store the base label
   icon: React.ElementType;
   roles?: UserRole[]; 
 }
 
 const mobileNavItemsData: MobileNavItemData[] = [
-  { href: "/dashboard", label: "Dasbor", icon: LayoutDashboard, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
-  { href: "/lesson-plans", label: "RPP", icon: BookOpenText, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
-  { href: "/annual-programs", label: "PROTA", icon: CalendarDays, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
-  { href: "/semester-programs", label: "Promes", icon: CalendarClock, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
-  { href: "/ai-assistant", label: "AI", icon: Sparkles, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"] },
-  { href: "/settings", label: "Atur", icon: SettingsIcon, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] }, 
+  { href: "/dashboard", label: "Dasbor", originalLabel: "Dasbor", icon: LayoutDashboard, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+  { href: "/lesson-plans", label: "RPP", originalLabel: "RPP", icon: BookOpenText, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+  { href: "/annual-programs", label: "PROTA", originalLabel: "PROTA", icon: CalendarDays, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+  { href: "/semester-programs", label: "Promes", originalLabel: "Promes", icon: CalendarClock, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+  { href: "/ai-assistant", label: "AI", originalLabel: "AI", icon: Sparkles, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"] },
+  { href: "/settings", label: "Atur", originalLabel: "Atur", icon: SettingsIcon, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] }, 
 ];
 
 
 export function MobileBottomNav() {
   const pathname = usePathname();
   const { user } = useAuth();
+  const { defaultCurriculum } = useCurriculum(); // Get defaultCurriculum
 
   const visibleNavItems = user 
     ? mobileNavItemsData
+        .map(item => {
+          if (item.href === "/lesson-plans" && defaultCurriculum === "Kurikulum Merdeka") {
+            return { ...item, label: "ATP" };
+          }
+          return { ...item, label: item.originalLabel || item.label }; // Reset to originalLabel or current label
+        })
         .filter(item => !item.roles || item.roles.includes(user.role))
     : [];
 
