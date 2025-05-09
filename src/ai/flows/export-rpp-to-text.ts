@@ -14,7 +14,7 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import type { LessonPlan, CurriculumFramework } from '@/types'; 
 import { format } from 'date-fns';
-import { id as indonesianLocale } from 'date-fns';
+import { id as indonesianLocale } from 'date-fns/locale';
 
 const LessonPlanSchema = z.object({
   id: z.string(),
@@ -189,7 +189,7 @@ KONSENTRASI KEAHLIAN: {{{programKeahlian}}}
 
 {{#if langkahPembelajaran}}
 **{{#if isKurikulumMerdeka}}
-  {{#if capaianPembelajaran.length}}{{#if learningObjectives.length}}{{#if profilPelajarPancasilaFocus.length}}{{#if pemahamanBermakna.length}}{{#if pertanyaanPemantik.length}}F{{else}}E{{/if}}{{else}}E{{/if}}{{else}}E{{/if}}{{else}}E{{/if}}{{else}}E{{/if}}
+  {{#if capaianPembelajaran.length}}{{#if learningObjectives.length}}{{#if profilPelajarPancasilaFocus.length}}{{#if pemahamanBermakna.length}}{{#if pertanyaanPemantik.length}}F{{else}}E{{/if}}{{else}}E{{/if}}{{else}}E{{/if}}{{else}}E{{/if}}
 {{else}}
   F
 {{/if}}. LANGKAH-LANGKAH PEMBELAJARAN (jika ada)**
@@ -291,3 +291,4 @@ const exportRppToTextFlow = ai.defineFlow(
     return output!;
   }
 );
+
