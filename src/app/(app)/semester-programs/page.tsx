@@ -70,7 +70,6 @@ export default function SemesterProgramsPage() {
 
   const [curriculumFilter, setCurriculumFilter] = useState<CurriculumFramework | "ALL">("ALL");
   const [gradeFilter, setGradeFilter] = useState<string | "ALL">("ALL");
-  const [subjectFilter, setSubjectFilter] = useState<string | "ALL">("ALL");
   const [yearFilter, setYearFilter] = useState<string | "ALL">("ALL");
   const [semesterFilter, setSemesterFilter] = useState<"1" | "2" | "ALL">("ALL");
 
@@ -105,12 +104,6 @@ export default function SemesterProgramsPage() {
     if (!isClient) return [];
     const grades = new Set(semesterPrograms.map(sp => sp.gradeLevel));
     return Array.from(grades).sort();
-  }, [semesterPrograms, isClient]);
-
-  const uniqueSubjects = useMemo(() => {
-    if (!isClient) return [];
-    const subjects = new Set(semesterPrograms.map(sp => sp.subject));
-    return Array.from(subjects).sort();
   }, [semesterPrograms, isClient]);
   
   const uniqueYears = useMemo(() => {
@@ -173,24 +166,22 @@ export default function SemesterProgramsPage() {
       sp.curriculumType.toLowerCase().includes(searchTerm.toLowerCase())) &&
       (curriculumFilter === "ALL" || sp.curriculumType === curriculumFilter) &&
       (gradeFilter === "ALL" || sp.gradeLevel === gradeFilter) &&
-      (subjectFilter === "ALL" || sp.subject === subjectFilter) &&
       (yearFilter === "ALL" || sp.year === yearFilter) &&
       (semesterFilter === "ALL" || sp.semester === semesterFilter) &&
       (user?.role !== "Guru" || sp.createdByUserId === user?.id || initialSemesterProgramsData.some(initialSp => initialSp.id === sp.id && (!sp.createdByUserId || sp.createdByUserId === 'user-demo-fallback')))
     ) : [];
-  }, [isClient, semesterPrograms, searchTerm, curriculumFilter, gradeFilter, subjectFilter, yearFilter, semesterFilter, user]);
+  }, [isClient, semesterPrograms, searchTerm, curriculumFilter, gradeFilter, yearFilter, semesterFilter, user]);
 
   const resetFilters = () => {
     setSearchTerm("");
     setCurriculumFilter("ALL");
     setGradeFilter("ALL");
-    setSubjectFilter("ALL");
     setYearFilter("ALL");
     setSemesterFilter("ALL");
     toast({ title: "Filter Direset", description: "Semua filter telah dikembalikan ke default." });
   };
 
-  const activeFilterCount = [searchTerm, curriculumFilter, gradeFilter, subjectFilter, yearFilter, semesterFilter].filter(f => f !== "" && f !== "ALL").length;
+  const activeFilterCount = [searchTerm, curriculumFilter, gradeFilter, yearFilter, semesterFilter].filter(f => f !== "" && f !== "ALL").length;
 
 
   if (!isClient || !user) {
@@ -254,7 +245,7 @@ export default function SemesterProgramsPage() {
                   </div>
                 )}
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
               <div>
                 <Label htmlFor="curriculumFilterSp" className="text-xs">Kurikulum</Label>
                 <Select value={curriculumFilter} onValueChange={(value) => setCurriculumFilter(value as CurriculumFramework | "ALL")}>
@@ -279,20 +270,6 @@ export default function SemesterProgramsPage() {
                     <SelectItem value="ALL">Semua Jenjang/Fase</SelectItem>
                     {uniqueGradeLevels.map(grade => (
                       <SelectItem key={grade} value={grade}>{grade}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="subjectFilterSp" className="text-xs">Mata Pelajaran</Label>
-                <Select value={subjectFilter} onValueChange={(value) => setSubjectFilter(value)}>
-                  <SelectTrigger id="subjectFilterSp" className="h-10 text-sm">
-                    <SelectValue placeholder="Filter Mata Pelajaran" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ALL">Semua Mapel</SelectItem>
-                    {uniqueSubjects.map(subject => (
-                      <SelectItem key={subject} value={subject}>{subject}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

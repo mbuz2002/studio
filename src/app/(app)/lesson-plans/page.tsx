@@ -84,14 +84,13 @@ export default function LessonPlansPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
-  const { availableCurriculums } = useCurriculum();
+  const { availableCurriculums, defaultCurriculum } = useCurriculum();
   const [lessonPlans, setLessonPlans] = useState<LessonPlan[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isClient, setIsClient] = useState(false);
 
   const [curriculumFilter, setCurriculumFilter] = useState<CurriculumFramework | "ALL">("ALL");
   const [gradeFilter, setGradeFilter] = useState<string | "ALL">("ALL");
-  const [subjectFilter, setSubjectFilter] = useState<string | "ALL">("ALL");
 
 
   useEffect(() => {
@@ -125,12 +124,6 @@ export default function LessonPlansPage() {
     if (!isClient) return [];
     const grades = new Set(lessonPlans.map(lp => lp.gradeLevel));
     return Array.from(grades).sort();
-  }, [lessonPlans, isClient]);
-
-  const uniqueSubjects = useMemo(() => {
-    if (!isClient) return [];
-    const subjects = new Set(lessonPlans.map(lp => lp.subject));
-    return Array.from(subjects).sort();
   }, [lessonPlans, isClient]);
 
 
@@ -193,20 +186,18 @@ export default function LessonPlansPage() {
       ) &&
       (curriculumFilter === "ALL" || lp.curriculumType === curriculumFilter) &&
       (gradeFilter === "ALL" || lp.gradeLevel === gradeFilter) &&
-      (subjectFilter === "ALL" || lp.subject === subjectFilter) &&
       (user?.role !== "Guru" || lp.createdByUserId === user?.id || initialLessonPlansData.some(initialLp => initialLp.id === lp.id && (!lp.createdByUserId || lp.createdByUserId === 'user-demo-fallback'))) 
     ) : [];
-  }, [isClient, lessonPlans, searchTerm, curriculumFilter, gradeFilter, subjectFilter, user]);
+  }, [isClient, lessonPlans, searchTerm, curriculumFilter, gradeFilter, user]);
 
   const resetFilters = () => {
     setSearchTerm("");
     setCurriculumFilter("ALL");
     setGradeFilter("ALL");
-    setSubjectFilter("ALL");
     toast({ title: "Filter Direset", description: "Semua filter telah dikembalikan ke default." });
   };
 
-  const activeFilterCount = [searchTerm, curriculumFilter, gradeFilter, subjectFilter].filter(f => f !== "" && f !== "ALL").length;
+  const activeFilterCount = [searchTerm, curriculumFilter, gradeFilter].filter(f => f !== "" && f !== "ALL").length;
 
 
   if (!isClient || !user) {
@@ -217,6 +208,8 @@ export default function LessonPlansPage() {
       </div>
     );
   }
+  
+  const pageTitle = defaultCurriculum === "Kurikulum Merdeka" ? "Alur Tujuan Pembelajaran (ATP) / Modul Ajar" : "Rencana Pelaksanaan Pembelajaran (RPP)";
 
   return (
     <div className="space-y-6 py-4 md:py-8">
@@ -225,9 +218,9 @@ export default function LessonPlansPage() {
            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
             <BookOpenText className="h-10 w-10 text-primary-foreground drop-shadow-lg flex-shrink-0" />
             <div>
-                <CardTitle className="text-2xl md:text-3xl font-bold">Modul Ajar / RPP / ATP</CardTitle>
+                <CardTitle className="text-2xl md:text-3xl font-bold">{pageTitle}</CardTitle>
                 <CardDescription className="text-base md:text-lg text-primary-foreground/90 mt-1">
-                    Kelola Modul Ajar (Kurikulum Merdeka), Rencana Pelaksanaan Pembelajaran (RPP K13/KTSP), atau Alur Tujuan Pembelajaran (ATP).
+                    Kelola {pageTitle} Anda.
                     {user.role === "KepalaSekolah" || user.role === "WakaKurikulum" || user.role === "TataUsaha" ? " Anda dapat melihat semua dokumen yang dibuat." : ""}
                     {user.role === "Guru" ? " Buat baru, edit, atau lihat rincian dokumen Anda." : ""}
                 </CardDescription>
@@ -241,7 +234,7 @@ export default function LessonPlansPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input
                   type="search"
-                  placeholder="Cari (judul, mapel, jenjang, kurikulum, topik)..."
+                  placeholder={`Cari ${pageTitle} (judul, mapel, jenjang, kurikulum, topik)...`}
                   className="pl-10 w-full text-base md:text-sm h-10"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -269,7 +262,7 @@ export default function LessonPlansPage() {
                   </div>
                )}
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label htmlFor="curriculumFilterLp" className="text-xs">Kurikulum</Label>
                 <Select value={curriculumFilter} onValueChange={(value) => setCurriculumFilter(value as CurriculumFramework | "ALL")}>
@@ -294,20 +287,6 @@ export default function LessonPlansPage() {
                     <SelectItem value="ALL">Semua Jenjang/Fase</SelectItem>
                     {uniqueGradeLevels.map(grade => (
                       <SelectItem key={grade} value={grade}>{grade}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="subjectFilterLp" className="text-xs">Mata Pelajaran</Label>
-                <Select value={subjectFilter} onValueChange={(value) => setSubjectFilter(value)}>
-                  <SelectTrigger id="subjectFilterLp" className="h-10 text-sm">
-                    <SelectValue placeholder="Filter Mata Pelajaran" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ALL">Semua Mapel</SelectItem>
-                    {uniqueSubjects.map(subject => (
-                      <SelectItem key={subject} value={subject}>{subject}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

@@ -74,7 +74,6 @@ export default function AnnualProgramsPage() {
   const [curriculumFilter, setCurriculumFilter] = useState<CurriculumFramework | "ALL">("ALL");
   const [gradeFilter, setGradeFilter] = useState<string | "ALL">("ALL");
   const [yearFilter, setYearFilter] = useState<string | "ALL">("ALL");
-  const [subjectFilter, setSubjectFilter] = useState<string | "ALL">("ALL");
 
   useEffect(() => {
     setIsClient(true);
@@ -113,12 +112,6 @@ export default function AnnualProgramsPage() {
     if (!isClient) return [];
     const years = new Set(annualPrograms.map(ap => ap.year));
     return Array.from(years).sort((a, b) => b.localeCompare(a)); // Sort descending for years
-  }, [annualPrograms, isClient]);
-
-  const uniqueSubjects = useMemo(() => {
-    if (!isClient) return [];
-    const subjects = new Set(annualPrograms.map(ap => ap.subject));
-    return Array.from(subjects).sort();
   }, [annualPrograms, isClient]);
 
 
@@ -177,21 +170,19 @@ export default function AnnualProgramsPage() {
       (curriculumFilter === "ALL" || ap.curriculumType === curriculumFilter) &&
       (gradeFilter === "ALL" || ap.gradeLevel === gradeFilter) &&
       (yearFilter === "ALL" || ap.year === yearFilter) &&
-      (subjectFilter === "ALL" || ap.subject === subjectFilter) &&
       (user?.role !== "Guru" || ap.createdByUserId === user?.id || initialAnnualProgramsData.some(initialAp => initialAp.id === ap.id && (!ap.createdByUserId || ap.createdByUserId === 'user-demo-fallback')))
     ) : [];
-  }, [isClient, annualPrograms, searchTerm, curriculumFilter, gradeFilter, yearFilter, subjectFilter, user]);
+  }, [isClient, annualPrograms, searchTerm, curriculumFilter, gradeFilter, yearFilter, user]);
 
   const resetFilters = () => {
     setSearchTerm("");
     setCurriculumFilter("ALL");
     setGradeFilter("ALL");
     setYearFilter("ALL");
-    setSubjectFilter("ALL");
     toast({ title: "Filter Direset", description: "Semua filter telah dikembalikan ke default." });
   };
 
-  const activeFilterCount = [searchTerm, curriculumFilter, gradeFilter, yearFilter, subjectFilter].filter(f => f !== "" && f !== "ALL").length;
+  const activeFilterCount = [searchTerm, curriculumFilter, gradeFilter, yearFilter].filter(f => f !== "" && f !== "ALL").length;
 
   if (!isClient || !user) {
     return (
@@ -254,7 +245,7 @@ export default function AnnualProgramsPage() {
                 </div>
               )}
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
               <div>
                 <Label htmlFor="curriculumFilter" className="text-xs">Kurikulum</Label>
                 <Select value={curriculumFilter} onValueChange={(value) => setCurriculumFilter(value as CurriculumFramework | "ALL")}>
@@ -279,20 +270,6 @@ export default function AnnualProgramsPage() {
                     <SelectItem value="ALL">Semua Jenjang/Fase</SelectItem>
                     {uniqueGradeLevels.map(grade => (
                       <SelectItem key={grade} value={grade}>{grade}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="subjectFilter" className="text-xs">Mata Pelajaran</Label>
-                <Select value={subjectFilter} onValueChange={(value) => setSubjectFilter(value)}>
-                  <SelectTrigger id="subjectFilter" className="h-10 text-sm">
-                    <SelectValue placeholder="Filter Mata Pelajaran" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ALL">Semua Mapel</SelectItem>
-                    {uniqueSubjects.map(subject => (
-                      <SelectItem key={subject} value={subject}>{subject}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
