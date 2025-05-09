@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useMemo } from "react";
@@ -75,21 +76,46 @@ export function LessonPlanFormFields({
     return k13KtspGradeLevels;
   }, [selectedCurriculum]);
 
+  const isPAUDSelected = useMemo(() => selectedCurriculum === "Kurikulum Merdeka" && formData.gradeLevel?.toUpperCase().includes("PAUD"), [selectedCurriculum, formData.gradeLevel]);
+  const isSMKSelected = useMemo(() => selectedCurriculum === "Kurikulum Merdeka" && formData.gradeLevel?.toUpperCase().includes("SMK"), [selectedCurriculum, formData.gradeLevel]);
+
   useEffect(() => {
-    // Reset gradeLevel if current selection is not valid for the new curriculum
     if (formData.gradeLevel && !currentGradeLevelOptions.find(opt => opt.value === formData.gradeLevel)) {
-      handleSelectChange('gradeLevel', ''); // Clear the grade level
+      handleSelectChange('gradeLevel', ''); 
     }
   }, [selectedCurriculum, currentGradeLevelOptions, formData.gradeLevel, handleSelectChange]);
   
-  const documentTypeLabel = selectedCurriculum === "Kurikulum Merdeka" ? "Modul Ajar / ATP" : "RPP";
+  const documentTypeLabel = selectedCurriculum === "Kurikulum Merdeka" 
+    ? (isPAUDSelected ? "Modul Ajar PAUD" : "ATP / Modul Ajar") 
+    : "RPP";
+
+  const topicLabel = selectedCurriculum === "Kurikulum Merdeka" 
+    ? (isPAUDSelected ? "Tema Pembelajaran (PAUD)" : "Konsentrasi Keahlian / Tema Utama") 
+    : "Topik/Materi Pembelajaran";
+
+  const topicPlaceholder = selectedCurriculum === "Kurikulum Merdeka"
+    ? (isPAUDSelected ? "cth., Aku Sayang Bumi" : (isSMKSelected ? "cth., Teknik Animasi 2D (SMK)" : "cth., Perubahan Iklim Global"))
+    : "cth., Fotosintesis";
+
+  const learningObjectivesLabel = selectedCurriculum === "Kurikulum Merdeka"
+    ? (isPAUDSelected ? "Tujuan Kegiatan (TK) (satu per baris)" : "Tujuan Pembelajaran (TP) (satu TP per baris untuk ATP)")
+    : "Tujuan Pembelajaran (satu per baris)";
+  
+  const learningObjectivesPlaceholder = selectedCurriculum === "Kurikulum Merdeka"
+    ? (isPAUDSelected ? "TK 1: Anak mampu menyebutkan...\nTK 2: Anak dapat bekerja sama..." : "TP 1: Peserta didik dapat menjelaskan...\nTP 2: Peserta didik dapat mengidentifikasi...")
+    : "Tujuan 1: Setelah pembelajaran, siswa dapat...\nTujuan 2: Siswa mampu...";
+
+  const langkahPembelajaranLabel = selectedCurriculum === "Kurikulum Merdeka"
+    ? (isPAUDSelected ? "Rencana Kegiatan (Pembuka, Inti, Penutup)" : "Langkah-langkah Pembelajaran (opsional untuk ATP murni)")
+    : "Langkah-langkah Pembelajaran";
+
 
   const commonAIButton = (
       <div className="my-4">
         <Button
             type="button"
             onClick={handleGenerateWithAI}
-            disabled={isGeneratingAI || !formData.gradeLevel || !selectedCurriculum || !formData.topic || (selectedCurriculum === "Kurikulum Merdeka" && (!formData.capaianPembelajaran || formData.capaianPembelajaran.length === 0))}
+            disabled={isGeneratingAI || !formData.gradeLevel || !selectedCurriculum || !formData.topic || (selectedCurriculum === "Kurikulum Merdeka" && !isPAUDSelected && (!formData.capaianPembelajaran || formData.capaianPembelajaran.length === 0))}
             variant="outline"
             className="w-full border-primary text-primary hover:bg-primary/10"
         >
@@ -98,12 +124,12 @@ export function LessonPlanFormFields({
         </Button>
         {(!formData.topic || !formData.gradeLevel || !selectedCurriculum) && !isGeneratingAI && (
             <p className="text-xs text-muted-foreground mt-1">
-                Isi Jenis Kurikulum, {selectedCurriculum === "Kurikulum Merdeka" ? "Konsentrasi Keahlian" : "Topik"}, dan Jenjang untuk mengaktifkan tombol AI.
+                Isi Jenis Kurikulum, {topicLabel}, dan Jenjang/Fase untuk mengaktifkan tombol AI.
             </p>
         )}
-         {(selectedCurriculum === "Kurikulum Merdeka" && (!formData.capaianPembelajaran || formData.capaianPembelajaran.length === 0) && !isGeneratingAI) && (
+         {(selectedCurriculum === "Kurikulum Merdeka" && !isPAUDSelected && (!formData.capaianPembelajaran || formData.capaianPembelajaran.length === 0) && !isGeneratingAI) && (
             <p className="text-xs text-muted-foreground mt-1">
-                Untuk Kurikulum Merdeka, isi juga Capaian Pembelajaran untuk hasil AI yang lebih baik.
+                Untuk Kurikulum Merdeka (selain PAUD), isi juga Capaian Pembelajaran untuk hasil AI yang lebih baik.
             </p>
         )}
       </div>
@@ -114,7 +140,7 @@ export function LessonPlanFormFields({
       {/* Common Fields */}
       <div className="space-y-1">
         <Label htmlFor="title">Judul {documentTypeLabel}</Label>
-        <Input id="title" name="title" value={formData.title || ''} onChange={handleChange} placeholder={selectedCurriculum === "Kurikulum Merdeka" ? "Contoh: ATP Animasi Fase F" : "Contoh: RPP Fotosintesis Kelas VII"} required />
+        <Input id="title" name="title" value={formData.title || ''} onChange={handleChange} placeholder={selectedCurriculum === "Kurikulum Merdeka" ? (isPAUDSelected ? "Modul Ajar Tema Aku dan Sekolahku" : "ATP Animasi Fase F") : "RPP Fotosintesis Kelas VII"} required />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-1">
@@ -162,57 +188,51 @@ export function LessonPlanFormFields({
 
       {/* RPP/Modul Ajar/ATP Specific Fields */}
       <div className="space-y-1">
-        <Label htmlFor="topic">{selectedCurriculum === "Kurikulum Merdeka" ? "Konsentrasi Keahlian / Tema Utama" : "Topik/Materi Pembelajaran"}</Label>
-        <Input id="topic" name="topic" value={formData.topic || ''} onChange={handleChange} placeholder={selectedCurriculum === "Kurikulum Merdeka" ? "cth., Animasi 2D" : "cth., Fotosintesis"} required />
+        <Label htmlFor="topic">{topicLabel}</Label>
+        <Input id="topic" name="topic" value={formData.topic || ''} onChange={handleChange} placeholder={topicPlaceholder} required />
       </div>
 
       {selectedCurriculum === "Kurikulum Merdeka" && (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
-              <Label htmlFor="bidangKeahlian">Bidang Keahlian (Opsional)</Label>
+              <Label htmlFor="bidangKeahlian">Bidang Keahlian (Opsional, utamanya SMK)</Label>
               <Input id="bidangKeahlian" name="bidangKeahlian" value={formData.bidangKeahlian || ''} onChange={handleChange} placeholder="cth., Seni dan Ekonomi Kreatif" />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="programKeahlian">Program Keahlian (Opsional)</Label>
+              <Label htmlFor="programKeahlian">Program Keahlian (Opsional, utamanya SMK)</Label>
               <Input id="programKeahlian" name="programKeahlian" value={formData.programKeahlian || ''} onChange={handleChange} placeholder="cth., Animasi" />
             </div>
           </div>
-          <div className="space-y-1">
-            <Label htmlFor="capaianPembelajaran">Capaian Pembelajaran (CP) (satu per baris)</Label>
-            <Textarea 
-              id="capaianPembelajaran" 
-              name="capaianPembelajaran" 
-              value={formData.capaianPembelajaran?.join('\n') || ''} 
-              onChange={(e) => handleArrayChange('capaianPembelajaran', e.target.value)} 
-              placeholder="Contoh: Pada akhir Fase F, peserta didik dapat..." 
-            />
-            <p className="text-xs text-muted-foreground">Masukkan CP yang relevan. AI akan menggunakan CP ini untuk merumuskan Tujuan Pembelajaran (TP) untuk ATP.</p>
-          </div>
+          {!isPAUDSelected && (
+            <div className="space-y-1">
+              <Label htmlFor="capaianPembelajaran">Capaian Pembelajaran (CP) (satu per baris)</Label>
+              <Textarea 
+                id="capaianPembelajaran" 
+                name="capaianPembelajaran" 
+                value={formData.capaianPembelajaran?.join('\n') || ''} 
+                onChange={(e) => handleArrayChange('capaianPembelajaran', e.target.value)} 
+                placeholder={`Contoh: Pada akhir ${formData.gradeLevel || 'Fase'}, peserta didik dapat...`}
+              />
+              <p className="text-xs text-muted-foreground">Masukkan CP yang relevan. AI akan menggunakan CP ini untuk merumuskan Tujuan Pembelajaran (TP) untuk ATP.</p>
+            </div>
+          )}
         </>
       )}
       
       {commonAIButton}
 
       <div className="space-y-1">
-        <Label htmlFor="learningObjectives">
-          {selectedCurriculum === "Kurikulum Merdeka" 
-            ? "Tujuan Pembelajaran (TP) (satu TP per baris untuk ATP)" 
-            : "Tujuan Pembelajaran (satu per baris)"}
-        </Label>
+        <Label htmlFor="learningObjectives">{learningObjectivesLabel}</Label>
         <Textarea 
           id="learningObjectives" 
           name="learningObjectives" 
           value={formData.learningObjectives?.join('\n') || ''} 
           onChange={(e) => handleArrayChange('learningObjectives', e.target.value)} 
-          placeholder={
-            selectedCurriculum === "Kurikulum Merdeka"
-            ? "TP 1: Peserta didik dapat menjelaskan...\nTP 2: Peserta didik dapat mengidentifikasi...\nTP 3: Peserta didik dapat menerapkan..."
-            : "Tujuan 1: Setelah pembelajaran, siswa dapat...\nTujuan 2: Siswa mampu..."
-          } 
-          rows={selectedCurriculum === "Kurikulum Merdeka" ? 5 : 3}
+          placeholder={learningObjectivesPlaceholder}
+          rows={selectedCurriculum === "Kurikulum Merdeka" && !isPAUDSelected ? 5 : 3}
         />
-         {selectedCurriculum === "Kurikulum Merdeka" && (
+         {selectedCurriculum === "Kurikulum Merdeka" && !isPAUDSelected && (
             <p className="text-xs text-muted-foreground">Masukkan Tujuan Pembelajaran (TP) secara berurutan untuk membentuk Alur Tujuan Pembelajaran (ATP). AI akan membantu menyusunnya dari CP yang diberikan.</p>
          )}
       </div>
@@ -267,19 +287,25 @@ export function LessonPlanFormFields({
         </>
       )}
 
-      <Label>Langkah-langkah Pembelajaran (opsional untuk ATP murni, satu per baris untuk tiap bagian)</Label>
+      <Label>{langkahPembelajaranLabel}</Label>
       <div className="space-y-2 rounded-md border p-4">
         <div className="space-y-1">
-          <Label htmlFor="langkahPendahuluan" className="text-sm font-medium">Pendahuluan</Label>
-          <Textarea id="langkahPendahuluan" value={formData.langkahPembelajaran?.pendahuluan?.join('\n') || ''} onChange={(e) => handleLangkahPembelajaranChange('pendahuluan', e.target.value)} placeholder="Kegiatan pendahuluan 1&#10;Kegiatan pendahuluan 2" />
+          <Label htmlFor="langkahPendahuluan" className="text-sm font-medium">
+            {isPAUDSelected ? "Kegiatan Pembuka" : "Pendahuluan"}
+          </Label>
+          <Textarea id="langkahPendahuluan" value={formData.langkahPembelajaran?.pendahuluan?.join('\n') || ''} onChange={(e) => handleLangkahPembelajaranChange('pendahuluan', e.target.value)} placeholder={`${isPAUDSelected ? "Kegiatan pembuka 1" : "Kegiatan pendahuluan 1"}\n${isPAUDSelected ? "Kegiatan pembuka 2" : "Kegiatan pendahuluan 2"}`} />
         </div>
         <div className="space-y-1">
-          <Label htmlFor="langkahInti" className="text-sm font-medium">Kegiatan Inti</Label>
-          <Textarea id="langkahInti" value={formData.langkahPembelajaran?.kegiatanInti?.join('\n') || ''} onChange={(e) => handleLangkahPembelajaranChange('kegiatanInti', e.target.value)} placeholder="Kegiatan inti 1&#10;Kegiatan inti 2" />
+          <Label htmlFor="langkahInti" className="text-sm font-medium">
+            {isPAUDSelected ? "Kegiatan Inti (Bermain Belajar)" : "Kegiatan Inti"}
+          </Label>
+          <Textarea id="langkahInti" value={formData.langkahPembelajaran?.kegiatanInti?.join('\n') || ''} onChange={(e) => handleLangkahPembelajaranChange('kegiatanInti', e.target.value)} placeholder={`${isPAUDSelected ? "Kegiatan inti 1" : "Kegiatan inti 1"}\n${isPAUDSelected ? "Kegiatan inti 2" : "Kegiatan inti 2"}`} />
         </div>
         <div className="space-y-1">
-          <Label htmlFor="langkahPenutup" className="text-sm font-medium">Penutup</Label>
-          <Textarea id="langkahPenutup" value={formData.langkahPembelajaran?.penutup?.join('\n') || ''} onChange={(e) => handleLangkahPembelajaranChange('penutup', e.target.value)} placeholder="Kegiatan penutup 1&#10;Kegiatan penutup 2" />
+          <Label htmlFor="langkahPenutup" className="text-sm font-medium">
+            {isPAUDSelected ? "Kegiatan Penutup" : "Penutup"}
+          </Label>
+          <Textarea id="langkahPenutup" value={formData.langkahPembelajaran?.penutup?.join('\n') || ''} onChange={(e) => handleLangkahPembelajaranChange('penutup', e.target.value)} placeholder={`${isPAUDSelected ? "Kegiatan penutup 1" : "Kegiatan penutup 1"}\n${isPAUDSelected ? "Kegiatan penutup 2" : "Kegiatan penutup 2"}`} />
         </div>
       </div>
 
@@ -289,7 +315,7 @@ export function LessonPlanFormFields({
       </div>
       <div className="space-y-1">
         <Label htmlFor="materials">Media/Sumber Belajar (opsional untuk ATP murni)</Label>
-        <Input id="materials" name="materials" value={formData.materials || ''} onChange={handleChange} />
+        <Input id="materials" name="materials" value={formData.materials || ''} onChange={handleChange} placeholder="cth., Buku paket, video YouTube, alat peraga" />
       </div>
     </>
   );

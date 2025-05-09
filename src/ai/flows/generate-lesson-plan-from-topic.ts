@@ -17,9 +17,9 @@ import type { CurriculumFramework } from '@/types';
 
 const GenerateLessonPlanInputSchema = z.object({
   topic: z.string().describe('Untuk Kurikulum Merdeka: Konsentrasi Keahlian atau Tema Utama ATP/Modul Ajar. Untuk kurikulum lain: Topik atau materi pembelajaran RPP.'),
-  jenjangFaseKelas: z.string().describe('Jenjang, fase, atau kelas sasaran (misalnya, "Fase F (Kelas 11-12 SMA/MA/SMK/MAK)", "Kelas VII SMP").'),
+  jenjangFaseKelas: z.string().describe('Jenjang, fase, atau kelas sasaran (misalnya, "Fase F (Kelas 11-12 SMA/MA/SMK/MAK)", "Kelas VII SMP", "PAUD (Kurikulum Merdeka)").'),
   curriculumType: z.enum(["Kurikulum Merdeka", "K-13", "KTSP 2006"]).describe("Jenis kurikulum yang digunakan sebagai acuan."),
-  subject: z.string().optional().describe("Mata pelajaran."), // Added subject as optional input
+  subject: z.string().optional().describe("Mata pelajaran."), 
   bidangKeahlian: z.string().optional().describe("Bidang Keahlian (khususnya untuk SMK di Kurikulum Merdeka, contoh: Teknologi Informasi)."),
   programKeahlian: z.string().optional().describe("Program Keahlian (khususnya untuk SMK di Kurikulum Merdeka, contoh: Rekayasa Perangkat Lunak). Ini akan menjadi bagian dari judul ATP."),
   capaianPembelajaran: z.array(z.string()).optional().describe("Capaian Pembelajaran (CP) yang relevan. Untuk Kurikulum Merdeka, ini akan menjadi dasar utama untuk merumuskan Alur Tujuan Pembelajaran (ATP).")
@@ -105,23 +105,25 @@ Capaian Pembelajaran (CP) yang diberikan (gunakan sebagai acuan utama):
 Topik/Materi Pembelajaran: {{{topic}}}
 {{/if}}
 
+Sesuaikan kedalaman dan kompleksitas konten dengan \`{{{jenjangFaseKelas}}}\` yang diberikan. Misalnya, untuk PAUD, fokus pada kegiatan bermain dan aspek perkembangan. Untuk SMK (Fase E/F), pastikan relevansi dengan bidang/program keahlian jika ada.
+
 Spesifikasi Output:
 {{#if isKurikulumMerdeka}}
 1.  **Dokumen Utama**: ALUR TUJUAN PEMBELAJARAN (ATP) / MODUL AJAR SEDERHANA.
-2.  **Judul Dokumen**: Format sebagai "ALUR TUJUAN PEMBELAJARAN KONSENTRASI KEAHLIAN {{{programKeahlian}}}" jika programKeahlian diisi, atau "MODUL AJAR {{{topic}}}" jika tidak. Sesuaikan dengan konteks SMK atau umum.
+2.  **Judul Dokumen**: Format sebagai "ALUR TUJUAN PEMBELAJARAN KONSENTRASI KEAHLIAN {{{programKeahlian}}}" jika programKeahlian diisi, atau "MODUL AJAR {{{topic}}}" jika tidak. Sesuaikan dengan konteks SMK atau umum. Jika \`{{{jenjangFaseKelas}}}\` adalah PAUD, judulnya bisa berupa "MODUL AJAR TEMA {{{topic}}} (PAUD)".
 3.  **Identitas Dokumen**:
     *   Sertakan "Mata Pelajaran: {{{subject}}}" (jika diberikan).
-    *   Sertakan "Bidang Keahlian: {{{bidangKeahlian}}}" (jika diberikan dan relevan).
-    *   Sertakan "Program Keahlian: {{{programKeahlian}}}" (jika diberikan dan relevan).
-4.  **Tujuan Pembelajaran (TP)** (field 'learningObjectives'): Rumuskan serangkaian Tujuan Pembelajaran (TP) yang membentuk Alur Tujuan Pembelajaran (ATP). TP ini harus merupakan turunan dari Capaian Pembelajaran (CP) yang diberikan. Jika CP tidak diberikan, buatlah TP yang relevan dengan Konsentrasi Keahlian/Tema dan Fase. Minimal 3-5 TP.
-5.  **Alokasi Waktu (JP)** (field 'alokasiWaktuJP'): Estimasi total alokasi waktu untuk ATP/Modul Ajar ini (misal "72 JP" atau "3 JP per pertemuan").
+    *   Sertakan "Bidang Keahlian: {{{bidangKeahlian}}}" (jika diberikan dan relevan, utamanya untuk SMK).
+    *   Sertakan "Program Keahlian: {{{programKeahlian}}}" (jika diberikan dan relevan, utamanya untuk SMK).
+4.  **Tujuan Pembelajaran (TP)** (field 'learningObjectives'): Rumuskan serangkaian Tujuan Pembelajaran (TP) yang membentuk Alur Tujuan Pembelajaran (ATP). TP ini harus merupakan turunan dari Capaian Pembelajaran (CP) yang diberikan. Jika CP tidak diberikan, buatlah TP yang relevan dengan Konsentrasi Keahlian/Tema dan Fase. Untuk PAUD, ini bisa berupa "Tujuan Kegiatan". Minimal 3-5 TP/Tujuan Kegiatan.
+5.  **Alokasi Waktu (JP)** (field 'alokasiWaktuJP'): Estimasi total alokasi waktu untuk ATP/Modul Ajar ini (misal "72 JP" untuk ATP atau "3 JP per pertemuan").
 6.  **Fokus Profil Pelajar Pancasila** (field 'profilPelajarPancasilaFocus'): Sebutkan beberapa dimensi yang relevan (opsional).
-7.  **Komponen Modul Ajar Tambahan (Opsional, buat ringkas jika fokus ATP)**:
+7.  **Komponen Modul Ajar Tambahan (Opsional, buat ringkas jika fokus ATP, atau sesuaikan untuk PAUD)**:
     *   Pemahaman Bermakna (field 'pemahamanBermakna').
     *   Pertanyaan Pemantik (field 'pertanyaanPemantik').
     *   Strategi Asesmen (field 'assessmentStrategies', berupa daftar ide).
     *   Strategi Diferensiasi (field 'differentiationStrategies').
-    *   Langkah Pembelajaran (field 'langkahPembelajaran', buat sangat ringkas jika fokus ATP, misal hanya poin utama).
+    *   Langkah Pembelajaran (field 'langkahPembelajaran', buat sangat ringkas jika fokus ATP. Untuk PAUD, sebutkan sebagai "Rencana Kegiatan Pembuka, Inti, Penutup").
     *   Media/Sumber Belajar (field 'materials').
 {{else}}
 1.  **Dokumen Utama**: RENCANA PELAKSANAAN PEMBELAJARAN (RPP).
@@ -141,6 +143,7 @@ Spesifikasi Output:
 
 Pastikan output yang dihasilkan sesuai dengan skema JSON yang diharapkan, menggunakan Bahasa Indonesia yang baik dan benar, serta istilah-istilah yang lazim dalam kurikulum yang dipilih. Kosongkan field opsional jika tidak relevan atau tidak dapat dihasilkan.
 Untuk Kurikulum Merdeka, jika fokusnya adalah ATP murni, komponen Modul Ajar tambahan seperti Pemahaman Bermakna, Langkah Pembelajaran, dll., dapat dibuat sangat ringkas atau diisi dengan placeholder yang menandakan perlu dikembangkan lebih lanjut. Namun, TP (learningObjectives) dan identitas ATP (judul, bidang, program, fase) harus lengkap.
+Untuk PAUD (Kurikulum Merdeka), sesuaikan istilah "Tujuan Pembelajaran" menjadi "Tujuan Kegiatan", dan "Langkah Pembelajaran" menjadi "Rencana Kegiatan" dengan komponen Pembuka, Inti, dan Penutup yang fokus pada bermain.
 `,
 });
 
@@ -169,10 +172,8 @@ const generateLessonPlanFromTopicFlow = ai.defineFlow(
             delete output.bidangKeahlian;
             delete output.programKeahlian;
             delete output.profilPelajarPancasilaFocus;
-            delete output.pemahamanBermakna; // Pemahaman Bermakna is more KM specific
-            delete output.pertanyaanPemantik; // Pertanyaan Pemantik is more KM specific
-            // differentiationStrategies can be relevant for K13 too, so we might keep it or make it conditional based on more nuanced K13 RPP Plus
-            // For now, let's remove if not KM, to simplify.
+            delete output.pemahamanBermakna; 
+            delete output.pertanyaanPemantik; 
             delete output.differentiationStrategies; 
 
             if (promptInputWithFlags.curriculumType !== "KTSP 2006") {
@@ -186,3 +187,4 @@ const generateLessonPlanFromTopicFlow = ai.defineFlow(
     return output!;
   }
 );
+
