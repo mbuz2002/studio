@@ -99,7 +99,9 @@ export default function EditLessonPlanPage() {
   };
 
   const handleArrayChange = (name: keyof LessonPlan, value: string) => {
-    const valuesArray = value.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+    // Simpler split, preserves all lines including empty ones or lines with only spaces.
+    // Trimming and filtering of genuinely empty lines can be done at the point of data submission/use.
+    const valuesArray = value.split('\n');
     setFormData(prev => ({ ...prev, [name]: valuesArray as any }));
   };
 
