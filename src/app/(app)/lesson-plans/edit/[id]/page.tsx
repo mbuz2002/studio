@@ -43,7 +43,7 @@ export default function EditLessonPlanPage() {
         const plans: LessonPlan[] = JSON.parse(storedPlans);
         const planToEdit = plans.find(p => p.id === lessonPlanId);
         if (planToEdit) {
-          const canEdit = user.role === "Admin" || user.role === "WakaKurikulum" || (user.role === "Guru" && planToEdit.createdByUserId === user.id);
+          const canEdit = user.role === "Admin" || user.role === "WakaKurikulum" || (user.role === "Guru" && planToEdit.createdByUserId === user.id) || (user.role === "Guru" && initialLessonPlansData.some(lp => lp.id === planToEdit.id && (!planToEdit.createdByUserId || planToEdit.createdByUserId === 'user-demo-fallback')));
           if (!canEdit) {
             toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengedit item ini.", variant: "destructive" });
             router.push("/lesson-plans");
@@ -99,14 +99,12 @@ export default function EditLessonPlanPage() {
   };
 
   const handleArrayChange = (name: keyof LessonPlan, value: string) => {
-    // Simpler split, preserves all lines including empty ones or lines with only spaces.
-    // Trimming and filtering of genuinely empty lines can be done at the point of data submission/use.
     const valuesArray = value.split('\n');
     setFormData(prev => ({ ...prev, [name]: valuesArray as any }));
   };
 
   const handleLangkahPembelajaranChange = (part: 'pendahuluan' | 'kegiatanInti' | 'penutup', value: string) => {
-    const valuesArray = value.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+    const valuesArray = value.split('\n').filter(s => s.trim().length > 0); // Preserve internal spaces, filter out lines that are only whitespace
     setFormData(prev => {
       const currentLangkah = prev.langkahPembelajaran || { pendahuluan: [], kegiatanInti: [], penutup: [] };
       return {
@@ -302,3 +300,5 @@ export default function EditLessonPlanPage() {
     </div>
   );
 }
+// Dummy initial data for canEdit logic, replace with actual check or remove if not needed
+const initialLessonPlansData: Partial<LessonPlan>[] = [ {id: "rpp1"}, {id: "rpp2"}];

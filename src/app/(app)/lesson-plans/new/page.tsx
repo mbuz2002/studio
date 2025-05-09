@@ -125,14 +125,12 @@ export default function NewLessonPlanPage() {
   };
 
   const handleArrayChange = (name: keyof LessonPlan, value: string) => {
-    // Simpler split, preserves all lines including empty ones or lines with only spaces.
-    // Trimming and filtering of genuinely empty lines can be done at the point of data submission/use.
     const valuesArray = value.split('\n');
     setFormData(prev => ({ ...prev, [name]: valuesArray as any }));
   };
 
   const handleLangkahPembelajaranChange = (part: 'pendahuluan' | 'kegiatanInti' | 'penutup', value: string) => {
-    const valuesArray = value.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+    const valuesArray = value.split('\n').filter(s => s.trim().length > 0); // Preserve internal spaces, filter out lines that are only whitespace
     setFormData(prev => {
       const currentLangkah = prev.langkahPembelajaran || { pendahuluan: [], kegiatanInti: [], penutup: [] };
       return {
@@ -324,3 +322,4 @@ export default function NewLessonPlanPage() {
     </div>
   );
 }
+
