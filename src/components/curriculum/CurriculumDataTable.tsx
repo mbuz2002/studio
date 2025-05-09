@@ -25,7 +25,7 @@ interface CurriculumDataTableProps {
   onDelete?: (item: AnyCurriculumItem) => void;
   canEdit: (item: AnyCurriculumItem) => boolean; 
   canDelete: (item: AnyCurriculumItem) => boolean; 
-  itemTypeForExport?: 'RPP' | 'PROTA' | 'Promes'; // RPP here means general lesson plan document type
+  itemTypeForExport?: 'RPP' | 'PROTA' | 'Promes'; 
 }
 
 export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, canDelete, itemTypeForExport }: CurriculumDataTableProps) {
@@ -51,6 +51,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
             setSchoolProfile(JSON.parse(storedProfile));
         } catch (e) {
             console.error("Failed to parse school profile from localStorage", e);
+            addLog("ERROR", `Gagal memuat profil sekolah dari penyimpanan lokal untuk cetak: ${e instanceof Error ? e.message : String(e)}`, "CurriculumDataTable");
             localStorage.removeItem("schoolProfile"); 
         }
       }
@@ -60,25 +61,27 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
             setAppUsers(JSON.parse(storedUsers));
         } catch (e) {
             console.error("Failed to parse app users from localStorage", e);
+            addLog("ERROR", `Gagal memuat data pengguna dari penyimpanan lokal: ${e instanceof Error ? e.message : String(e)}`, "CurriculumDataTable");
             localStorage.removeItem("appUsers"); 
         }
       } else {
-        if (currentUser) {
+        if (currentUser) { // Fallback if no users in local storage, use current logged in user
           setAppUsers([currentUser]); 
         }
       }
     }
-  }, [currentUser]);
+  }, [currentUser, addLog]);
 
   const getCreatorName = (userId?: string): string => {
     if (!userId) return 'Tidak diketahui';
     const user = appUsers.find(u => u.id === userId);
-    return user ? user.name : userId; 
+    return user ? user.name : userId; // Fallback to userId if name not found
   };
 
   const getCreatorAvatar = (userId?: string): string | undefined => {
     if (!userId) return undefined;
     const user = appUsers.find(u => u.id === userId);
+    // Generate UI Avatar URL if no avatarUrl and name exists
     if (user && !user.avatarUrl && user.name) {
       return `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random&color=fff&font-size=0.45`;
     }
@@ -100,7 +103,6 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
 
     let contentHtml = ``;
     
-    // KOP Surat (Letterhead)
     if (options.showKopSurat) {
         if (schoolProfile) {
             contentHtml += `
@@ -117,7 +119,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
                   </div>
                 </div>
             `;
-        } else { // No schoolProfile, but showKopSurat is true
+        } else { 
             addLog("WARN", `Kop surat diminta untuk ${documentTypeDisplay} "${item.title}" tapi profil sekolah tidak lengkap/tidak ada.`, logSource);
             contentHtml += `
                 <div class="kop-surat">
@@ -132,7 +134,6 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
         }
     }
     
-    // Document Title and Info
     if (item.type === 'RPP' && item.curriculumType === "Kurikulum Merdeka") {
       const atp = item as LessonPlan;
       contentHtml += `<div class="doc-info atp-header">
@@ -194,7 +195,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
                 rpp.pertanyaanPemantik.forEach(pp => contentHtml += `<li>${pp}</li>`);
                 contentHtml += `</ul>`;
             }
-        } else { // KTSP or K-13
+        } else { 
             if (options.showRPPLearningObjectives && rpp.learningObjectives && rpp.learningObjectives.length > 0) {
                 contentHtml += `<h3>${nextLetter()}. Tujuan Pembelajaran</h3><ul>`;
                 rpp.learningObjectives.forEach(obj => contentHtml += `<li>${obj}</li>`);
@@ -227,7 +228,6 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
             }
         }
         
-        // Common RPP/Modul Ajar components
         if (options.showRPPLangkahPendahuluan || options.showRPPLangkahKegiatanInti || options.showRPPLangkahPenutup) {
             contentHtml += `<h3>${nextLetter()}. Langkah-langkah Pembelajaran</h3>`;
             if (options.showRPPLangkahPendahuluan && rpp.langkahPembelajaran?.pendahuluan?.length > 0) {
@@ -261,7 +261,6 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
             contentHtml += `<h3>${nextLetter()}. Media/Sumber Belajar</h3><p>${rpp.materials.replace(/\n/g, '<br>')}</p>`;
         }
     } else if (item.type === 'PROTA') {
-        // ... (PROTA print logic remains largely the same)
         const prota = item as AnnualProgram;
         contentHtml += `<p><strong>Tahun Ajaran:</strong> ${prota.year}</p>`;
         if (prota.curriculumType === "Kurikulum Merdeka" && options.showPROTACapaianPembelajaran && prota.capaianPembelajaran && prota.capaianPembelajaran.length > 0) {
@@ -300,7 +299,6 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
             }
         }
     } else if (item.type === 'Promes') {
-        // ... (Promes print logic remains largely the same)
         const promes = item as SemesterProgram;
         contentHtml += `<p><strong>Tahun Ajaran:</strong> ${promes.year}, <strong>Semester:</strong> ${promes.semester === '1' ? 'Ganjil' : 'Genap'}</p>`;
         
@@ -441,17 +439,16 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
       let documentContent = "";
       let fileName = `${item.title.replace(/[\\/:*?"<>|]/g, '_').replace(/\s+/g, '_')}_${docTypeDisplay}.txt`;
 
-      if (item.type === 'RPP') { // This flow handles both RPP and ATP based on curriculumType
+      if (item.type === 'RPP' && itemTypeForExport === 'RPP') { 
         const rppInput = item as LessonPlan;
-        const inputForFlow: ExportRppToTextInput = { // Schema for exportRppToText includes all potential fields
+        const inputForFlow: ExportRppToTextInput = { 
           ...rppInput,
         };
         addLog("INFO", `Memanggil alur Genkit 'exportRppToText' untuk ${docTypeDisplay} "${item.title}" (${item.curriculumType}).`, logSource);
         const result = await exportRppToText(inputForFlow); 
         documentContent = result.documentContent;
         addLog("INFO", `Konten teks berhasil dibuat oleh Genkit untuk ${docTypeDisplay} "${item.title}".`, logSource);
-      } else if (item.type === 'PROTA') {
-        // ... (PROTA export logic remains largely the same)
+      } else if (item.type === 'PROTA' && itemTypeForExport === 'PROTA') {
         const prota = item as AnnualProgram;
         let protaText = `**PROGRAM TAHUNAN (PROTA)**\n\n`;
         protaText += `**Judul:** ${prota.title}\n`;
@@ -482,12 +479,11 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
             }
             protaText += `   - Alokasi Waktu: ${c.alokasiWaktu}\n\n`;
         });
-        protaText += `\n\n*Dokumen ini terakhir diperbarui pada: ${format(new Date(prota.updatedAt), "PPpp", { locale: indonesianLocale })}*`;
+        protaText += `\n\n*Dokumen ini terakhir diperbarui pada: ${isClient ? format(new Date(prota.updatedAt), "PPpp", { locale: indonesianLocale }) : prota.updatedAt}*`;
         documentContent = protaText;
         addLog("INFO", `Konten teks berhasil dibuat secara manual untuk PROTA "${item.title}".`, logSource);
 
-      } else if (item.type === 'Promes') {
-        // ... (Promes export logic remains largely the same)
+      } else if (item.type === 'Promes' && itemTypeForExport === 'Promes') {
         const promes = item as SemesterProgram;
         let promesText = `**PROGRAM SEMESTER (PROMES)**\n\n`;
         promesText += `**Judul:** ${promes.title}\n`;
@@ -521,17 +517,17 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
             }
             promesText += `\n`;
         });
-        promesText += `\n\n*Dokumen ini terakhir diperbarui pada: ${format(new Date(promes.updatedAt), "PPpp", { locale: indonesianLocale })}*`;
+        promesText += `\n\n*Dokumen ini terakhir diperbarui pada: ${isClient ? format(new Date(promes.updatedAt), "PPpp", { locale: indonesianLocale }) : promes.updatedAt}*`;
         documentContent = promesText;
         addLog("INFO", `Konten teks berhasil dibuat secara manual untuk Promes "${item.title}".`, logSource);
       }
        else {
-        documentContent = `Rincian untuk ${docTypeDisplay}: ${item.title}\n\n(Fungsi ekspor detail untuk jenis ini belum diimplementasikan.)\n\n${JSON.stringify(item, null, 2)}`;
+        documentContent = `Rincian untuk ${docTypeDisplay}: ${item.title}\n\n(Fungsi ekspor detail untuk jenis ini belum diimplementasikan atau itemTypeForExport tidak cocok.)\n\n${JSON.stringify(item, null, 2)}`;
         toast({
-          title: "Fitur Dalam Pengembangan",
-          description: `Ekspor detail untuk ${docTypeDisplay} belum tersedia. Unduhan berisi data JSON dasar.`,
+          title: "Fitur Dalam Pengembangan/Kesalahan Tipe",
+          description: `Ekspor detail untuk ${docTypeDisplay} belum tersedia atau tipe item tidak cocok. Unduhan berisi data JSON dasar.`,
         });
-        addLog("WARN", `Ekspor detail untuk ${docTypeDisplay} "${item.title}" belum diimplementasikan. Mengekspor data JSON mentah.`, logSource);
+        addLog("WARN", `Ekspor detail untuk ${docTypeDisplay} "${item.title}" belum diimplementasikan atau itemTypeForExport (${itemTypeForExport}) tidak cocok dengan item.type (${item.type}). Mengekspor data JSON mentah.`, logSource);
       }
 
       const blob = new Blob([documentContent], { type: 'text/plain;charset=utf-8' });
@@ -636,7 +632,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
                           alt={getCreatorName(item.createdByUserId)} 
                           data-ai-hint="user avatar"
                         />
-                        <AvatarFallback className="text-xs">
+                        <AvatarFallback className="text-xs bg-muted text-muted-foreground">
                           {getInitials(getCreatorName(item.createdByUserId)) || <UserIcon size={14}/>}
                         </AvatarFallback>
                     </Avatar>
@@ -696,3 +692,4 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
   );
 }
 
+    
