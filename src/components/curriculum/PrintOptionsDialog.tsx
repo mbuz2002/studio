@@ -46,50 +46,65 @@ export function PrintOptionsDialog({
       initialOpts.showKopSurat = false;
     }
     
-    if (itemType === 'RPP') {
+    // Reset all RPP specific to false initially
+    initialOpts.showRPPCapaianPembelajaran = false;
+    initialOpts.showRPPPemahamanBermakna = false;
+    initialOpts.showRPPPertanyaanPemantik = false;
+    initialOpts.showRPPDifferentiationStrategies = false;
+    initialOpts.showRPPProfilPelajarPancasila = false;
+    initialOpts.showRPPBidangKeahlian = false;
+    initialOpts.showRPPProgramKeahlian = false;
+    initialOpts.showRPPSK = false;
+    initialOpts.showRPPKI = false;
+    initialOpts.showRPPKD = false;
+    initialOpts.showRPPIPK = false;
+    initialOpts.showRPPMetodePembelajaran = false;
+
+    if (itemType === 'RPP') { // Covers RPP, Modul Ajar, ATP
+        initialOpts.showRPPAlokasiWaktu = true; 
+        initialOpts.showRPPLearningObjectives = true; // Always show TP for ATP or objectives for RPP
+
         if (itemCurriculumType === "Kurikulum Merdeka") {
-            initialOpts.showRPPSK = false;
-            initialOpts.showRPPKI = false;
-            initialOpts.showRPPKD = false; 
-            initialOpts.showRPPIPK = false;
-            initialOpts.showRPPMetodePembelajaran = false; 
-            initialOpts.showRPPCapaianPembelajaran = true; // Default true for KM
-            initialOpts.showRPPPemahamanBermakna = true;
+            initialOpts.showRPPBidangKeahlian = true;
+            initialOpts.showRPPProgramKeahlian = true;
+            initialOpts.showRPPCapaianPembelajaran = true;
+            initialOpts.showRPPProfilPelajarPancasila = true;
+            // These are more Modul Ajar specific, can be optional for pure ATP print
+            initialOpts.showRPPPemahamanBermakna = true; 
             initialOpts.showRPPPertanyaanPemantik = true;
             initialOpts.showRPPDifferentiationStrategies = true;
+            initialOpts.showRPPLangkahPendahuluan = true;
+            initialOpts.showRPPLangkahKegiatanInti = true;
+            initialOpts.showRPPLangkahPenutup = true;
+            initialOpts.showRPPAssessment = true;
+            initialOpts.showRPPMaterials = true;
         } else if (itemCurriculumType === "K-13") {
-            initialOpts.showRPPSK = false; 
-            initialOpts.showRPPCapaianPembelajaran = false; // Not typical for K13
-            initialOpts.showRPPPemahamanBermakna = false;
-            initialOpts.showRPPPertanyaanPemantik = false;
-            initialOpts.showRPPDifferentiationStrategies = false;
             initialOpts.showRPPKI = true;
             initialOpts.showRPPKD = true;
             initialOpts.showRPPIPK = true;
             initialOpts.showRPPMetodePembelajaran = true;
+            initialOpts.showRPPLangkahPendahuluan = true;
+            initialOpts.showRPPLangkahKegiatanInti = true;
+            initialOpts.showRPPLangkahPenutup = true;
+            initialOpts.showRPPAssessment = true;
+            initialOpts.showRPPMaterials = true;
         } else if (itemCurriculumType === "KTSP 2006") {
-            initialOpts.showRPPKI = false; 
-            initialOpts.showRPPCapaianPembelajaran = false; // Not typical for KTSP
-            initialOpts.showRPPPemahamanBermakna = false;
-            initialOpts.showRPPPertanyaanPemantik = false;
-            initialOpts.showRPPDifferentiationStrategies = false;
             initialOpts.showRPPSK = true;
             initialOpts.showRPPKD = true;
             initialOpts.showRPPIPK = true;
             initialOpts.showRPPMetodePembelajaran = true;
+            initialOpts.showRPPLangkahPendahuluan = true;
+            initialOpts.showRPPLangkahKegiatanInti = true;
+            initialOpts.showRPPLangkahPenutup = true;
+            initialOpts.showRPPAssessment = true;
+            initialOpts.showRPPMaterials = true;
         }
-        initialOpts.showRPPAlokasiWaktu = true; // Always enable for RPP by default
     } else if (itemType === 'PROTA') {
         if (itemCurriculumType === "Kurikulum Merdeka") {
             initialOpts.showPROTACapaianPembelajaran = true;
             initialOpts.showPROTAFokusP5 = true;
-        } else {
-            initialOpts.showPROTACapaianPembelajaran = false;
-            initialOpts.showPROTAFokusP5 = false; // Or adapt for karakter
         }
     }
-
-
     setOptions(initialOpts);
   }, [defaultOptions, isOpen, hasSchoolProfile, itemType, itemCurriculumType]);
 
@@ -110,7 +125,7 @@ export function PrintOptionsDialog({
       <div className="flex items-center space-x-2">
         <Checkbox id="showRPPLearningObjectives" checked={options.showRPPLearningObjectives} onCheckedChange={() => handleCheckboxChange("showRPPLearningObjectives")} />
         <Label htmlFor="showRPPLearningObjectives">
-            {itemCurriculumType === "Kurikulum Merdeka" ? "Alur Tujuan Pembelajaran (ATP)" : "Tujuan Pembelajaran"}
+            {itemCurriculumType === "Kurikulum Merdeka" ? "Tujuan Pembelajaran (TP) dalam ATP" : "Tujuan Pembelajaran"}
         </Label>
       </div>
       <div className="flex items-center space-x-2">
@@ -121,8 +136,20 @@ export function PrintOptionsDialog({
       {itemCurriculumType === "Kurikulum Merdeka" && (
         <>
           <div className="flex items-center space-x-2">
+            <Checkbox id="showRPPBidangKeahlian" checked={options.showRPPBidangKeahlian} onCheckedChange={() => handleCheckboxChange("showRPPBidangKeahlian")} />
+            <Label htmlFor="showRPPBidangKeahlian">Bidang Keahlian</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox id="showRPPProgramKeahlian" checked={options.showRPPProgramKeahlian} onCheckedChange={() => handleCheckboxChange("showRPPProgramKeahlian")} />
+            <Label htmlFor="showRPPProgramKeahlian">Program Keahlian</Label>
+          </div>
+          <div className="flex items-center space-x-2">
             <Checkbox id="showRPPCapaianPembelajaran" checked={options.showRPPCapaianPembelajaran} onCheckedChange={() => handleCheckboxChange("showRPPCapaianPembelajaran")} />
             <Label htmlFor="showRPPCapaianPembelajaran">Capaian Pembelajaran (CP)</Label>
+          </div>
+           <div className="flex items-center space-x-2">
+            <Checkbox id="showRPPProfilPelajarPancasila" checked={options.showRPPProfilPelajarPancasila} onCheckedChange={() => handleCheckboxChange("showRPPProfilPelajarPancasila")} />
+            <Label htmlFor="showRPPProfilPelajarPancasila">Fokus Profil Pelajar Pancasila</Label>
           </div>
           <div className="flex items-center space-x-2">
             <Checkbox id="showRPPPemahamanBermakna" checked={options.showRPPPemahamanBermakna} onCheckedChange={() => handleCheckboxChange("showRPPPemahamanBermakna")} />
@@ -167,20 +194,22 @@ export function PrintOptionsDialog({
             </div>
           </>
       )}
-
-      <div className="flex items-center space-x-2">
-        <Checkbox id="showRPPLangkahPendahuluan" checked={options.showRPPLangkahPendahuluan} onCheckedChange={() => handleCheckboxChange("showRPPLangkahPendahuluan")} />
-        <Label htmlFor="showRPPLangkahPendahuluan">Langkah: Pendahuluan</Label>
+      <Label className="font-medium text-sm pt-2 block">Langkah Pembelajaran (Modul Ajar/RPP):</Label>
+      <div className="pl-4 space-y-2">
+        <div className="flex items-center space-x-2">
+            <Checkbox id="showRPPLangkahPendahuluan" checked={options.showRPPLangkahPendahuluan} onCheckedChange={() => handleCheckboxChange("showRPPLangkahPendahuluan")} />
+            <Label htmlFor="showRPPLangkahPendahuluan">Pendahuluan</Label>
+        </div>
+        <div className="flex items-center space-x-2">
+            <Checkbox id="showRPPLangkahKegiatanInti" checked={options.showRPPLangkahKegiatanInti} onCheckedChange={() => handleCheckboxChange("showRPPLangkahKegiatanInti")} />
+            <Label htmlFor="showRPPLangkahKegiatanInti">Kegiatan Inti</Label>
+        </div>
+        <div className="flex items-center space-x-2">
+            <Checkbox id="showRPPLangkahPenutup" checked={options.showRPPLangkahPenutup} onCheckedChange={() => handleCheckboxChange("showRPPLangkahPenutup")} />
+            <Label htmlFor="showRPPLangkahPenutup">Penutup</Label>
+        </div>
       </div>
-      <div className="flex items-center space-x-2">
-        <Checkbox id="showRPPLangkahKegiatanInti" checked={options.showRPPLangkahKegiatanInti} onCheckedChange={() => handleCheckboxChange("showRPPLangkahKegiatanInti")} />
-        <Label htmlFor="showRPPLangkahKegiatanInti">Langkah: Kegiatan Inti</Label>
-      </div>
-      <div className="flex items-center space-x-2">
-        <Checkbox id="showRPPLangkahPenutup" checked={options.showRPPLangkahPenutup} onCheckedChange={() => handleCheckboxChange("showRPPLangkahPenutup")} />
-        <Label htmlFor="showRPPLangkahPenutup">Langkah: Penutup</Label>
-      </div>
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-2 pt-2">
         <Checkbox id="showRPPAssessment" checked={options.showRPPAssessment} onCheckedChange={() => handleCheckboxChange("showRPPAssessment")} />
         <Label htmlFor="showRPPAssessment">Asesmen/Penilaian</Label>
       </div>
@@ -235,16 +264,18 @@ export function PrintOptionsDialog({
     </>
   );
 
+  const documentName = itemType === 'RPP' ? (itemCurriculumType === "Kurikulum Merdeka" ? "ATP/Modul Ajar" : "RPP") : itemType;
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Settings2 className="h-5 w-5 text-primary" />
-            Atur Opsi Cetak Dokumen ({itemType} - {itemCurriculumType})
+            Atur Opsi Cetak {documentName} ({itemCurriculumType})
           </DialogTitle>
           <DialogDescription>
-            Pilih bagian mana saja dari {itemType} yang ingin Anda sertakan dalam hasil cetak.
+            Pilih bagian mana saja dari {documentName} yang ingin Anda sertakan dalam hasil cetak.
           </DialogDescription>
         </DialogHeader>
         <ScrollArea className="max-h-[60vh] py-4 pr-3">
@@ -281,4 +312,3 @@ export function PrintOptionsDialog({
     </Dialog>
   );
 }
-

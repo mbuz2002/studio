@@ -1,5 +1,4 @@
 
-
 export type UserRole = "Admin" | "KepalaSekolah" | "WakaKurikulum" | "TataUsaha" | "Guru";
 export type CurriculumFramework = "Kurikulum Merdeka" | "K-13" | "KTSP 2006";
 
@@ -27,9 +26,9 @@ export interface SchoolProfile {
 
 export interface CurriculumItem {
   id: string;
-  title: string;
-  subject: string;
-  gradeLevel: string; 
+  title: string; // For ATP, this will be "ALUR TUJUAN PEMBELAJARAN KONSENTRASI KEAHLIAN..."
+  subject: string; // Mata Pelajaran
+  gradeLevel: string; // Fase for Kurikulum Merdeka
   createdAt: string; 
   updatedAt: string; 
   createdByUserId?: string; 
@@ -37,17 +36,20 @@ export interface CurriculumItem {
 }
 
 export interface LessonPlan extends CurriculumItem {
-  type: 'RPP'; 
-  topic: string; 
-  learningObjectives: string[]; // For Kurikulum Merdeka, this is an array of Tujuan Pembelajaran (TP) forming the ATP. For K-13/KTSP, these are standard learning objectives derived from IPK.
+  type: 'RPP'; // Remains RPP, but content structure changes for Kurikulum Merdeka to ATP/Modul Ajar
+  topic: string; // For ATP (Kurikulum Merdeka): Konsentrasi Keahlian or main theme. For RPP: Topic.
+  learningObjectives: string[]; // For Kurikulum Merdeka (ATP): Array of Tujuan Pembelajaran (TP). For K-13/KTSP: Standard learning objectives.
   alokasiWaktuJP?: string; 
   
-  // Kurikulum Merdeka specific
-  capaianPembelajaran?: string[]; // Capaian Pembelajaran (CP) relevant to the RPP/Modul Ajar.
+  // Kurikulum Merdeka specific (for Modul Ajar / ATP context)
+  bidangKeahlian?: string; // e.g., Seni dan Ekonomi Kreatif
+  programKeahlian?: string; // e.g., Animasi (also used in ATP title for Konsentrasi Keahlian)
+  capaianPembelajaran?: string[]; // Capaian Pembelajaran (CP) relevant to the Modul Ajar/ATP.
   pemahamanBermakna?: string[]; 
   pertanyaanPemantik?: string[]; 
   differentiationStrategies?: string[]; 
-  
+  profilPelajarPancasilaFocus?: string[]; // Profil Pelajar Pancasila focus areas
+
   // KTSP 2006 / K-13 specific
   standarKompetensi?: string[]; // SK (KTSP)
   kompetensiInti?: string[]; // KI (K-13)
@@ -55,7 +57,7 @@ export interface LessonPlan extends CurriculumItem {
   indikatorPencapaianKompetensi?: string[]; // IPK (KTSP, K-13)
   metodePembelajaran?: string[]; // Metode (KTSP, K-13)
   
-  // Common
+  // Common for Modul Ajar / RPP (can be brief for ATP context)
   langkahPembelajaran: { 
     pendahuluan: string[]; 
     kegiatanInti: string[]; 
@@ -112,27 +114,33 @@ export type { GenerateTeachingMaterialInput, GenerateTeachingMaterialOutput, Sug
 export interface PrintOptions {
   showKopSurat: boolean;
   
-  // RPP common
-  showRPPLearningObjectives: boolean; // This will show TPs (ATP) for Kurikulum Merdeka
-  showRPPLangkahPendahuluan: boolean;
-  showRPPLangkahKegiatanInti: boolean;
-  showRPPLangkahPenutup: boolean;
-  showRPPAssessment: boolean;
-  showRPPMaterials: boolean;
+  // RPP/Modul Ajar/ATP common
+  showRPPLearningObjectives: boolean; // TPs for ATP, Objectives for RPP
   showRPPAlokasiWaktu?: boolean;
 
-  // RPP Kurikulum Merdeka specific
+  // RPP/Modul Ajar (Kurikulum Merdeka) specific
   showRPPCapaianPembelajaran?: boolean; 
   showRPPPemahamanBermakna: boolean;
   showRPPPertanyaanPemantik: boolean;
   showRPPDifferentiationStrategies: boolean;
-  
+  showRPPProfilPelajarPancasila?: boolean;
+  showRPPBidangKeahlian?: boolean; // For ATP
+  showRPPProgramKeahlian?: boolean; // For ATP
+
+
   // RPP KTSP/K-13 specific
   showRPPSK?: boolean; 
   showRPPKI?: boolean; 
   showRPPKD?: boolean; 
   showRPPIPK?: boolean; 
   showRPPMetodePembelajaran?: boolean;
+
+  // Common for RPP/Modul Ajar, maybe less for pure ATP print
+  showRPPLangkahPendahuluan: boolean;
+  showRPPLangkahKegiatanInti: boolean;
+  showRPPLangkahPenutup: boolean;
+  showRPPAssessment: boolean;
+  showRPPMaterials: boolean;
 
   // PROTA specific 
   showPROTACapaianPembelajaran?: boolean; 
@@ -148,7 +156,7 @@ export interface PrintOptions {
 
 export const defaultPrintOptions: PrintOptions = {
   showKopSurat: true,
-  // RPP
+  // RPP/Modul Ajar/ATP
   showRPPLearningObjectives: true,
   showRPPAlokasiWaktu: true, 
   showRPPCapaianPembelajaran: true, 
@@ -160,6 +168,9 @@ export const defaultPrintOptions: PrintOptions = {
   showRPPPemahamanBermakna: true,
   showRPPPertanyaanPemantik: true,
   showRPPDifferentiationStrategies: true,
+  showRPPProfilPelajarPancasila: true,
+  showRPPBidangKeahlian: true,
+  showRPPProgramKeahlian: true,
   showRPPSK: true,
   showRPPKI: true,
   showRPPKD: true,
@@ -184,4 +195,3 @@ export interface ExportedCurriculumData {
   schoolProfile: SchoolProfile | null;
   appUsers: User[];
 }
-

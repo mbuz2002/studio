@@ -1,3 +1,4 @@
+
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
@@ -24,7 +25,13 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'ui-avatars.com', // Added for UserManagementSection avatar fallback
+        hostname: 'ui-avatars.com', 
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'upload.wikimedia.org', // For Tut Wuri Handayani Logo
         port: '',
         pathname: '/**',
       }

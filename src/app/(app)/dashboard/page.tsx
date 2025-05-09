@@ -19,8 +19,8 @@ const featureCardsConfig: {
   roles: UserRole[];
 }[] = [
   {
-    title: "Rencana Pembelajaran (RPP)",
-    description: "Buat, edit, dan kelola rencana pembelajaran harian atau mingguan Anda dengan mudah dan terstruktur.",
+    title: "Modul Ajar / RPP / ATP",
+    description: "Buat, edit, dan kelola Modul Ajar (KM), RPP (K13/KTSP), atau Alur Tujuan Pembelajaran (ATP) Anda.",
     icon: BookOpenText,
     href: "/lesson-plans",
     image: "https://picsum.photos/seed/rppmodern/800/600",
@@ -82,12 +82,12 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent className="p-6 md:p-8 pt-6">
           <p className="mb-6 text-base md:text-lg leading-relaxed text-foreground/90">
-            Maksimalkan potensi pengajaran Anda dengan EduAI Planner. Buat, atur, dan tingkatkan kualitas Rencana Pelaksanaan Pembelajaran (RPP), Program Tahunan (PROTA), serta Program Semester (Promes) Anda dengan dukungan AI. Mulai jelajahi fitur-fitur unggulan di bawah ini atau langsung buat perangkat ajar baru.
+            Maksimalkan potensi pengajaran Anda dengan EduAI Planner. Buat, atur, dan tingkatkan kualitas dokumen pembelajaran Anda dengan dukungan AI. Mulai jelajahi fitur-fitur unggulan di bawah ini atau langsung buat dokumen baru.
           </p>
           {canCreateNewPlan && (
             <Button asChild size="lg" className="bg-gradient-to-r from-accent to-primary hover:from-accent/90 hover:to-primary/90 text-accent-foreground text-lg py-3 px-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 rounded-md">
               <Link href="/lesson-plans"> 
-                <PlusCircle className="mr-2.5 h-5 w-5" /> Buat Rencana Baru
+                <PlusCircle className="mr-2.5 h-5 w-5" /> Buat Dokumen Baru
               </Link>
             </Button>
           )}
@@ -106,7 +106,7 @@ export default function DashboardPage() {
                 style={{objectFit:"cover"}}
                 className="rounded-t-lg group-hover:scale-105 transition-transform duration-500 ease-in-out"
                 data-ai-hint={feature.aiHint}
-                priority={feature.href === "/lesson-plans"} // Prioritize first image or most important one
+                priority={feature.href === "/lesson-plans"} 
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
             </div>
@@ -120,7 +120,7 @@ export default function DashboardPage() {
             <CardContent className="flex-grow flex items-end mt-auto pt-3 pb-5 px-5"> 
               <Button asChild variant="outline" className="w-full text-base border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground transition-colors duration-300 rounded-md">
                 <Link href={feature.href}>
-                  Buka {feature.title}
+                  Buka {feature.title.split(" (")[0]} {/* Keep button text shorter */}
                 </Link>
               </Button>
             </CardContent>

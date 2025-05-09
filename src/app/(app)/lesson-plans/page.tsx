@@ -21,21 +21,31 @@ const initialLessonPlansData: LessonPlan[] = [
     id: "rpp1",
     type: "RPP",
     curriculumType: "Kurikulum Merdeka",
-    title: "Pengenalan Aljabar Kurikulum Merdeka",
-    subject: "Matematika",
-    gradeLevel: "Fase D (Kelas 7-9 SMP)",
-    topic: "Ekspresi Aljabar Dasar dan Pola Bilangan",
-    learningObjectives: ["Memahami konsep variabel, koefisien, dan konstanta", "Mengidentifikasi dan melanjutkan pola bilangan", "Menyelesaikan persamaan linear satu variabel sederhana"],
-    pemahamanBermakna: ["Aljabar membantu kita memodelkan situasi dunia nyata.", "Pola bilangan ada di sekitar kita dan dapat diprediksi."],
-    pertanyaanPemantik: ["Apa yang terjadi jika kita tidak tahu suatu nilai?", "Bagaimana kita bisa menemukan angka berikutnya dalam suatu barisan?"],
+    title: "ATP Dasar-Dasar Animasi Fase F",
+    subject: "Animasi",
+    gradeLevel: "Fase F (Kelas XI-XII SMK)",
+    topic: "Dasar-Dasar Keahlian Animasi", // Konsentrasi Keahlian
+    bidangKeahlian: "Seni dan Ekonomi Kreatif",
+    programKeahlian: "Animasi",
+    capaianPembelajaran: ["Pada akhir fase F, peserta didik mampu memahami prinsip dasar animasi.", "Peserta didik mampu membuat animasi sederhana menggunakan perangkat lunak."],
+    learningObjectives: [
+        "Memahami 12 prinsip dasar animasi.", 
+        "Mengidentifikasi jenis-jenis software animasi.",
+        "Mempraktikkan pembuatan storyboard untuk animasi pendek.",
+        "Membuat animasi objek bergerak sederhana (bola memantul)."
+    ],
+    profilPelajarPancasilaFocus: ["Kreatif", "Bernalar Kritis"],
+    pemahamanBermakna: ["Animasi adalah media komunikasi visual yang kuat.", "Prinsip dasar animasi adalah kunci menghasilkan gerakan yang alami dan menarik."],
+    pertanyaanPemantik: ["Bagaimana benda mati bisa terlihat hidup di layar?", "Apa saja langkah-langkah membuat film animasi pendek?"],
     langkahPembelajaran: {
-      pendahuluan: ["Salam dan doa", "Apersepsi: Mengaitkan dengan teka-teki angka", "Menyampaikan tujuan pembelajaran"],
-      kegiatanInti: ["Diskusi kelompok: Mengidentifikasi variabel dalam soal cerita", "Eksplorasi: Menemukan pola pada barisan bilangan", "Latihan individu: Menyelesaikan persamaan sederhana"],
-      penutup: ["Refleksi: Apa yang paling menarik hari ini?", "Kesimpulan bersama", "Informasi tugas proyek kecil"],
+      pendahuluan: ["Salam dan doa", "Apersepsi: Menampilkan contoh animasi pendek", "Menyampaikan tujuan dan alur pembelajaran ATP"],
+      kegiatanInti: ["Diskusi kelompok: Menganalisis 12 prinsip animasi dari contoh video.", "Eksplorasi mandiri: Mencoba fitur dasar software animasi.", "Praktik terbimbing: Membuat storyboard.", "Proyek mini: Animasi bola memantul."],
+      penutup: ["Refleksi: Apa tantangan terbesar dalam membuat animasi?", "Presentasi hasil proyek mini (sampling).", "Umpan balik dan kesimpulan."],
     },
-    assessment: "Observasi selama diskusi, lembar kerja individu, kuis singkat di akhir sesi.",
-    differentiationStrategies: ["Memberikan soal tantangan untuk siswa yang cepat paham", "Memberikan bantuan scaffolding untuk siswa yang kesulitan"],
-    materials: "Papan tulis, spidol, lembar kerja, kartu pola bilangan",
+    assessment: "Observasi keaktifan diskusi, Penilaian storyboard, Penilaian hasil animasi bola memantul (rubrik).",
+    differentiationStrategies: ["Memberikan contoh storyboard yang lebih kompleks untuk siswa mahir.", "Memberikan template storyboard untuk siswa yang membutuhkan."],
+    materials: "Komputer dengan software animasi (Blender/Adobe Animate), Proyektor, Video contoh animasi, Referensi 12 Prinsip Animasi.",
+    alokasiWaktuJP: "72 JP (Untuk keseluruhan ATP)",
     createdAt: new Date("2023-09-01T10:00:00Z").toISOString(),
     updatedAt: new Date("2023-09-05T14:30:00Z").toISOString(),
     createdByUserId: "user-4" 
@@ -44,7 +54,7 @@ const initialLessonPlansData: LessonPlan[] = [
     id: "rpp2",
     type: "RPP",
     curriculumType: "K-13",
-    title: "Proses Fotosintesis (K-13)",
+    title: "RPP Proses Fotosintesis (K-13)",
     subject: "IPA",
     gradeLevel: "Kelas VII SMP",
     topic: "Fotosintesis",
@@ -60,6 +70,7 @@ const initialLessonPlansData: LessonPlan[] = [
     },
     assessment: "Penilaian sikap (observasi), Penilaian pengetahuan (tes tulis), Penilaian keterampilan (laporan praktikum/presentasi).",
     materials: "Buku teks IPA K-13, Video animasi fotosintesis, Gambar/Charta, Alat dan bahan praktikum (jika ada)",
+    alokasiWaktuJP: "3 JP",
     createdAt: new Date("2023-10-10T09:00:00Z").toISOString(),
     updatedAt: new Date("2023-10-12T11:00:00Z").toISOString(),
     createdByUserId: "user-4" 
@@ -96,7 +107,7 @@ export default function LessonPlansPage() {
         setLessonPlans(initialLessonPlansData); 
         toast({
           title: "Gagal Memuat Data Lokal",
-          description: "Menggunakan data RPP standar. Perubahan mungkin tidak tersimpan dengan benar.",
+          description: "Menggunakan data standar. Perubahan mungkin tidak tersimpan dengan benar.",
           variant: "destructive",
         });
       }
@@ -126,7 +137,7 @@ export default function LessonPlansPage() {
 
   const handleEdit = (item: AnyCurriculumItem) => {
     if (!canEditItem(item as LessonPlan)) { 
-        toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengedit RPP ini.", variant: "destructive" });
+        toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengedit dokumen ini.", variant: "destructive" });
         return;
     }
     router.push(`/lesson-plans/edit/${item.id}`);
@@ -134,14 +145,15 @@ export default function LessonPlansPage() {
 
   const handleDelete = (itemToDelete: AnyCurriculumItem) => {
     if (!canDeleteItem(itemToDelete as LessonPlan)) { 
-        toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk menghapus RPP ini.", variant: "destructive" });
+        toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk menghapus dokumen ini.", variant: "destructive" });
         return;
     }
-    if (window.confirm(`Apakah Anda yakin ingin menghapus "${itemToDelete.title}"?`)) {
+    const docType = (itemToDelete as LessonPlan).curriculumType === "Kurikulum Merdeka" ? "ATP/Modul Ajar" : "RPP";
+    if (window.confirm(`Apakah Anda yakin ingin menghapus ${docType} "${itemToDelete.title}"?`)) {
       const updatedLessonPlans = lessonPlans.filter(lp => lp.id !== itemToDelete.id);
       setLessonPlans(updatedLessonPlans);
       localStorage.setItem(LESSON_PLANS_STORAGE_KEY, JSON.stringify(updatedLessonPlans));
-      toast({ title: "RPP Dihapus", description: `"${itemToDelete.title}" telah berhasil dihapus.`});
+      toast({ title: `${docType} Dihapus`, description: `"${itemToDelete.title}" telah berhasil dihapus.`});
     }
   };
   
@@ -156,15 +168,17 @@ export default function LessonPlansPage() {
     (lp.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     lp.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
     lp.gradeLevel.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    lp.curriculumType.toLowerCase().includes(searchTerm.toLowerCase())) &&
-    (user?.role !== "Guru" || lp.createdByUserId === user?.id || initialLessonPlansData.some(initialLp => initialLp.id === lp.id && (!lp.createdByUserId || lp.createdByUserId === 'user-demo-fallback'))) // Show initial data or user's own
+    lp.curriculumType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (lp.topic && lp.topic.toLowerCase().includes(searchTerm.toLowerCase()))
+    ) &&
+    (user?.role !== "Guru" || lp.createdByUserId === user?.id || initialLessonPlansData.some(initialLp => initialLp.id === lp.id && (!lp.createdByUserId || lp.createdByUserId === 'user-demo-fallback'))) 
   ) : [];
 
   if (!isClient || !user) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="ml-2">Memuat Rencana Pembelajaran...</p>
+        <p className="ml-2">Memuat Dokumen Pembelajaran...</p>
       </div>
     );
   }
@@ -176,11 +190,11 @@ export default function LessonPlansPage() {
            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
             <BookOpenText className="h-10 w-10 text-primary-foreground drop-shadow-lg flex-shrink-0" />
             <div>
-                <CardTitle className="text-2xl md:text-3xl font-bold">Rencana Pembelajaran (RPP/Modul Ajar)</CardTitle>
+                <CardTitle className="text-2xl md:text-3xl font-bold">Modul Ajar / RPP / ATP</CardTitle>
                 <CardDescription className="text-base md:text-lg text-primary-foreground/90 mt-1">
-                    Kelola rencana pembelajaran Anda. 
-                    {user.role === "KepalaSekolah" || user.role === "WakaKurikulum" || user.role === "TataUsaha" ? " Anda dapat melihat semua RPP yang dibuat." : ""}
-                    {user.role === "Guru" ? " Buat baru, edit, atau lihat rincian RPP Anda." : ""}
+                    Kelola Modul Ajar (Kurikulum Merdeka), Rencana Pelaksanaan Pembelajaran (RPP K13/KTSP), atau Alur Tujuan Pembelajaran (ATP).
+                    {user.role === "KepalaSekolah" || user.role === "WakaKurikulum" || user.role === "TataUsaha" ? " Anda dapat melihat semua dokumen yang dibuat." : ""}
+                    {user.role === "Guru" ? " Buat baru, edit, atau lihat rincian dokumen Anda." : ""}
                 </CardDescription>
             </div>
           </div>
@@ -191,7 +205,7 @@ export default function LessonPlansPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 type="search"
-                placeholder="Cari rencana (judul, mapel, jenjang, kurikulum)..."
+                placeholder="Cari (judul, mapel, jenjang, kurikulum, topik)..."
                 className="pl-10 w-full text-base md:text-sm h-10"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -202,7 +216,7 @@ export default function LessonPlansPage() {
                 <Filter className="mr-2 h-4 w-4" /> Filter
               </Button>
               {canImport && (
-                <Button variant="outline" className="w-full sm:w-auto text-base md:text-sm h-10" onClick={() => toast({title: "Fitur Belum Tersedia", description: "Impor RPP akan segera hadir!"})}>
+                <Button variant="outline" className="w-full sm:w-auto text-base md:text-sm h-10" onClick={() => toast({title: "Fitur Belum Tersedia", description: "Impor dokumen akan segera hadir!"})}>
                     <FileUp className="mr-2 h-4 w-4" /> Impor
                 </Button>
               )}
@@ -211,7 +225,7 @@ export default function LessonPlansPage() {
                 <div className="w-full md:w-auto">
                     <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground w-full sm:w-auto">
                       <Link href="/lesson-plans/new">
-                        <PlusCircle className="mr-2 h-5 w-5" /> Buat Rencana Baru
+                        <PlusCircle className="mr-2 h-5 w-5" /> Buat Dokumen Baru
                       </Link>
                     </Button>
                 </div>
@@ -225,7 +239,7 @@ export default function LessonPlansPage() {
                 onDelete={handleDelete} 
                 canEdit={(item) => canEditItem(item as LessonPlan)} 
                 canDelete={(item) => canDeleteItem(item as LessonPlan)} 
-                itemTypeForExport="RPP"
+                itemTypeForExport="RPP" // This indicates it's a lesson plan type document for export logic
             />
           </div>
         </CardContent>
@@ -233,4 +247,3 @@ export default function LessonPlansPage() {
     </div>
   );
 }
-

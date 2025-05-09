@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useMemo } from "react";
@@ -82,6 +83,8 @@ export function LessonPlanFormFields({
     }
   }, [selectedCurriculum, currentGradeLevelOptions, formData.gradeLevel, handleSelectChange]);
   
+  const documentTypeLabel = selectedCurriculum === "Kurikulum Merdeka" ? "Modul Ajar / ATP" : "RPP";
+
   const commonAIButton = (
       <div className="my-4">
         <Button
@@ -92,11 +95,11 @@ export function LessonPlanFormFields({
             className="w-full border-primary text-primary hover:bg-primary/10"
         >
             {isGeneratingAI ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
-            Buat Draf Konten RPP dengan AI (Kurikulum: {availableCurriculums.find(c=>c.value === selectedCurriculum)?.label || selectedCurriculum})
+            Buat Draf Konten {documentTypeLabel} dengan AI (Kurikulum: {availableCurriculums.find(c=>c.value === selectedCurriculum)?.label || selectedCurriculum})
         </Button>
         {(!formData.topic || !formData.gradeLevel || !selectedCurriculum) && !isGeneratingAI && (
             <p className="text-xs text-muted-foreground mt-1">
-                Isi Jenis Kurikulum, Topik dan Jenjang untuk mengaktifkan tombol AI.
+                Isi Jenis Kurikulum, {selectedCurriculum === "Kurikulum Merdeka" ? "Konsentrasi Keahlian" : "Topik"}, dan Jenjang untuk mengaktifkan tombol AI.
             </p>
         )}
          {(selectedCurriculum === "Kurikulum Merdeka" && (!formData.capaianPembelajaran || formData.capaianPembelajaran.length === 0) && !isGeneratingAI) && (
@@ -111,8 +114,8 @@ export function LessonPlanFormFields({
     <>
       {/* Common Fields */}
       <div className="space-y-1">
-        <Label htmlFor="title">Judul RPP/Modul Ajar</Label>
-        <Input id="title" name="title" value={formData.title || ''} onChange={handleChange} required />
+        <Label htmlFor="title">Judul {documentTypeLabel}</Label>
+        <Input id="title" name="title" value={formData.title || ''} onChange={handleChange} placeholder={selectedCurriculum === "Kurikulum Merdeka" ? "Contoh: ATP Animasi Fase F" : "Contoh: RPP Fotosintesis Kelas VII"} required />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-1">
@@ -138,13 +141,13 @@ export function LessonPlanFormFields({
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-1">
-            <Label htmlFor="gradeLevel">Jenjang/Fase/Kelas</Label>
+            <Label htmlFor="gradeLevel">{selectedCurriculum === "Kurikulum Merdeka" ? "Fase" : "Jenjang/Kelas"}</Label>
             <Select value={formData.gradeLevel || ''} onValueChange={(value) => handleSelectChange('gradeLevel', value === "placeholder-grade" ? "" : value)}>
                 <SelectTrigger id="gradeLevel">
-                    <SelectValue placeholder="Pilih Jenjang/Fase/Kelas" />
+                    <SelectValue placeholder={selectedCurriculum === "Kurikulum Merdeka" ? "Pilih Fase" : "Pilih Jenjang/Kelas"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="placeholder-grade" disabled>Pilih Jenjang/Fase/Kelas</SelectItem>
+                  <SelectItem value="placeholder-grade" disabled>{selectedCurriculum === "Kurikulum Merdeka" ? "Pilih Fase" : "Pilih Jenjang/Kelas"}</SelectItem>
                     {currentGradeLevelOptions.map(option => (
                         <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
                     ))}
@@ -158,24 +161,36 @@ export function LessonPlanFormFields({
       </div>
 
 
-      {/* RPP Specific Fields */}
+      {/* RPP/Modul Ajar/ATP Specific Fields */}
       <div className="space-y-1">
-        <Label htmlFor="topic">Topik/Materi Pembelajaran</Label>
-        <Input id="topic" name="topic" value={formData.topic || ''} onChange={handleChange} required />
+        <Label htmlFor="topic">{selectedCurriculum === "Kurikulum Merdeka" ? "Konsentrasi Keahlian / Tema Utama" : "Topik/Materi Pembelajaran"}</Label>
+        <Input id="topic" name="topic" value={formData.topic || ''} onChange={handleChange} placeholder={selectedCurriculum === "Kurikulum Merdeka" ? "cth., Animasi 2D" : "cth., Fotosintesis"} required />
       </div>
 
       {selectedCurriculum === "Kurikulum Merdeka" && (
-        <div className="space-y-1">
-          <Label htmlFor="capaianPembelajaran">Capaian Pembelajaran (CP) (satu per baris)</Label>
-          <Textarea 
-            id="capaianPembelajaran" 
-            name="capaianPembelajaran" 
-            value={formData.capaianPembelajaran?.join('\n') || ''} 
-            onChange={(e) => handleArrayChange('capaianPembelajaran', e.target.value)} 
-            placeholder="Contoh: Peserta didik mampu memahami konsep X dan Y dari elemen Z." 
-          />
-          <p className="text-xs text-muted-foreground">Masukkan CP yang relevan dengan topik ini. AI akan menggunakan CP ini untuk merumuskan Alur Tujuan Pembelajaran (ATP).</p>
-        </div>
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <Label htmlFor="bidangKeahlian">Bidang Keahlian (Opsional)</Label>
+              <Input id="bidangKeahlian" name="bidangKeahlian" value={formData.bidangKeahlian || ''} onChange={handleChange} placeholder="cth., Seni dan Ekonomi Kreatif" />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="programKeahlian">Program Keahlian (Opsional)</Label>
+              <Input id="programKeahlian" name="programKeahlian" value={formData.programKeahlian || ''} onChange={handleChange} placeholder="cth., Animasi" />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="capaianPembelajaran">Capaian Pembelajaran (CP) (satu per baris)</Label>
+            <Textarea 
+              id="capaianPembelajaran" 
+              name="capaianPembelajaran" 
+              value={formData.capaianPembelajaran?.join('\n') || ''} 
+              onChange={(e) => handleArrayChange('capaianPembelajaran', e.target.value)} 
+              placeholder="Contoh: Pada akhir Fase F, peserta didik dapat..." 
+            />
+            <p className="text-xs text-muted-foreground">Masukkan CP yang relevan. AI akan menggunakan CP ini untuk merumuskan Tujuan Pembelajaran (TP) untuk ATP.</p>
+          </div>
+        </>
       )}
       
       {commonAIButton}
@@ -183,7 +198,7 @@ export function LessonPlanFormFields({
       <div className="space-y-1">
         <Label htmlFor="learningObjectives">
           {selectedCurriculum === "Kurikulum Merdeka" 
-            ? "Tujuan Pembelajaran (TP) - Alur Tujuan Pembelajaran (ATP) (satu TP per baris)" 
+            ? "Tujuan Pembelajaran (TP) (satu TP per baris untuk ATP)" 
             : "Tujuan Pembelajaran (satu per baris)"}
         </Label>
         <Textarea 
@@ -196,6 +211,7 @@ export function LessonPlanFormFields({
             ? "TP 1: Peserta didik dapat menjelaskan...\nTP 2: Peserta didik dapat mengidentifikasi...\nTP 3: Peserta didik dapat menerapkan..."
             : "Tujuan 1: Setelah pembelajaran, siswa dapat...\nTujuan 2: Siswa mampu..."
           } 
+          rows={selectedCurriculum === "Kurikulum Merdeka" ? 5 : 3}
         />
          {selectedCurriculum === "Kurikulum Merdeka" && (
             <p className="text-xs text-muted-foreground">Masukkan Tujuan Pembelajaran (TP) secara berurutan untuk membentuk Alur Tujuan Pembelajaran (ATP). AI akan membantu menyusunnya dari CP yang diberikan.</p>
@@ -205,11 +221,15 @@ export function LessonPlanFormFields({
       {selectedCurriculum === "Kurikulum Merdeka" && (
         <>
           <div className="space-y-1">
-            <Label htmlFor="pemahamanBermakna">Pemahaman Bermakna (satu per baris)</Label>
+            <Label htmlFor="profilPelajarPancasilaFocus">Fokus Profil Pelajar Pancasila (satu per baris, opsional)</Label>
+            <Textarea id="profilPelajarPancasilaFocus" name="profilPelajarPancasilaFocus" value={formData.profilPelajarPancasilaFocus?.join('\n') || ''} onChange={(e) => handleArrayChange('profilPelajarPancasilaFocus', e.target.value)} placeholder="Bernalar Kritis&#10;Kreatif" />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="pemahamanBermakna">Pemahaman Bermakna (satu per baris, opsional untuk ATP murni)</Label>
             <Textarea id="pemahamanBermakna" name="pemahamanBermakna" value={formData.pemahamanBermakna?.join('\n') || ''} onChange={(e) => handleArrayChange('pemahamanBermakna', e.target.value)} placeholder="Pemahaman 1&#10;Pemahaman 2" />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="pertanyaanPemantik">Pertanyaan Pemantik (satu per baris)</Label>
+            <Label htmlFor="pertanyaanPemantik">Pertanyaan Pemantik (satu per baris, opsional untuk ATP murni)</Label>
             <Textarea id="pertanyaanPemantik" name="pertanyaanPemantik" value={formData.pertanyaanPemantik?.join('\n') || ''} onChange={(e) => handleArrayChange('pertanyaanPemantik', e.target.value)} placeholder="Pertanyaan 1&#10;Pertanyaan 2" />
           </div>
             <div className="space-y-1">
@@ -248,7 +268,7 @@ export function LessonPlanFormFields({
         </>
       )}
 
-      <Label>Langkah-langkah Pembelajaran (satu per baris untuk tiap bagian)</Label>
+      <Label>Langkah-langkah Pembelajaran (opsional untuk ATP murni, satu per baris untuk tiap bagian)</Label>
       <div className="space-y-2 rounded-md border p-4">
         <div className="space-y-1">
           <Label htmlFor="langkahPendahuluan" className="text-sm font-medium">Pendahuluan</Label>
@@ -265,14 +285,13 @@ export function LessonPlanFormFields({
       </div>
 
       <div className="space-y-1">
-        <Label htmlFor="assessment">Asesmen/Penilaian</Label>
+        <Label htmlFor="assessment">Asesmen/Penilaian (opsional untuk ATP murni)</Label>
         <Textarea id="assessment" name="assessment" value={formData.assessment || ''} onChange={handleChange} placeholder="Jelaskan strategi dan bentuk asesmen" />
       </div>
       <div className="space-y-1">
-        <Label htmlFor="materials">Media/Sumber Belajar (opsional)</Label>
+        <Label htmlFor="materials">Media/Sumber Belajar (opsional untuk ATP murni)</Label>
         <Input id="materials" name="materials" value={formData.materials || ''} onChange={handleChange} />
       </div>
     </>
   );
 }
-

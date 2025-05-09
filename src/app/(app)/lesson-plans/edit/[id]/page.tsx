@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -44,15 +45,16 @@ export default function EditLessonPlanPage() {
         if (planToEdit) {
           const canEdit = user.role === "Admin" || user.role === "WakaKurikulum" || (user.role === "Guru" && planToEdit.createdByUserId === user.id);
           if (!canEdit) {
-            toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengedit RPP ini.", variant: "destructive" });
+            toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengedit item ini.", variant: "destructive" });
             router.push("/lesson-plans");
             return;
           }
           setFormData(planToEdit);
           setSelectedCurriculum(planToEdit.curriculumType);
-          addLog("INFO", `Memuat RPP "${planToEdit.title}" (ID: ${lessonPlanId}) untuk diedit oleh ${user.email}.`, "EditLessonPlanPage");
+          const docType = planToEdit.curriculumType === "Kurikulum Merdeka" ? "ATP/Modul Ajar" : "RPP";
+          addLog("INFO", `Memuat ${docType} "${planToEdit.title}" (ID: ${lessonPlanId}) untuk diedit oleh ${user.email}.`, "EditLessonPlanPage");
         } else {
-          toast({ title: "RPP Tidak Ditemukan", description: "Rencana pembelajaran yang Anda cari tidak ada.", variant: "destructive" });
+          toast({ title: "Dokumen Tidak Ditemukan", description: "Dokumen pembelajaran yang Anda cari tidak ada.", variant: "destructive" });
           router.push("/lesson-plans");
         }
       }
@@ -71,20 +73,25 @@ export default function EditLessonPlanPage() {
         toast({ title: "Informasi", description: "Jenis kurikulum tidak dapat diubah oleh Guru.", variant: "default" });
         return;
       }
-      setSelectedCurriculum(value as CurriculumFramework);
-       // Clear curriculum-specific fields when curriculum type changes
+      const newCurriculum = value as CurriculumFramework;
+      setSelectedCurriculum(newCurriculum);
       setFormData(prev => ({
         ...prev,
-        [name]: value,
-        capaianPembelajaran: value === "Kurikulum Merdeka" ? prev.capaianPembelajaran || [] : undefined,
-        pemahamanBermakna: value === "Kurikulum Merdeka" ? prev.pemahamanBermakna || [] : undefined,
-        pertanyaanPemantik: value === "Kurikulum Merdeka" ? prev.pertanyaanPemantik || [] : undefined,
-        differentiationStrategies: value === "Kurikulum Merdeka" ? prev.differentiationStrategies || [] : undefined,
-        standarKompetensi: value === "KTSP 2006" ? prev.standarKompetensi || [] : undefined,
-        kompetensiInti: value === "K-13" ? prev.kompetensiInti || [] : undefined,
-        kompetensiDasar: value !== "Kurikulum Merdeka" ? prev.kompetensiDasar || [] : undefined,
-        indikatorPencapaianKompetensi: value !== "Kurikulum Merdeka" ? prev.indikatorPencapaianKompetensi || [] : undefined,
-        metodePembelajaran: value !== "Kurikulum Merdeka" ? prev.metodePembelajaran || [] : undefined,
+        curriculumType: newCurriculum,
+        // Kurikulum Merdeka specific
+        bidangKeahlian: newCurriculum === "Kurikulum Merdeka" ? prev.bidangKeahlian || '' : undefined,
+        programKeahlian: newCurriculum === "Kurikulum Merdeka" ? prev.programKeahlian || '' : undefined,
+        capaianPembelajaran: newCurriculum === "Kurikulum Merdeka" ? prev.capaianPembelajaran || [] : undefined,
+        pemahamanBermakna: newCurriculum === "Kurikulum Merdeka" ? prev.pemahamanBermakna || [] : undefined,
+        pertanyaanPemantik: newCurriculum === "Kurikulum Merdeka" ? prev.pertanyaanPemantik || [] : undefined,
+        differentiationStrategies: newCurriculum === "Kurikulum Merdeka" ? prev.differentiationStrategies || [] : undefined,
+        profilPelajarPancasilaFocus: newCurriculum === "Kurikulum Merdeka" ? prev.profilPelajarPancasilaFocus || [] : undefined,
+        // KTSP/K-13 specific
+        standarKompetensi: newCurriculum === "KTSP 2006" ? prev.standarKompetensi || [] : undefined,
+        kompetensiInti: newCurriculum === "K-13" ? prev.kompetensiInti || [] : undefined,
+        kompetensiDasar: newCurriculum !== "Kurikulum Merdeka" ? prev.kompetensiDasar || [] : undefined,
+        indikatorPencapaianKompetensi: newCurriculum !== "Kurikulum Merdeka" ? prev.indikatorPencapaianKompetensi || [] : undefined,
+        metodePembelajaran: newCurriculum !== "Kurikulum Merdeka" ? prev.metodePembelajaran || [] : undefined,
       }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
@@ -112,62 +119,70 @@ export default function EditLessonPlanPage() {
   
   const handleGenerateWithAI = async () => {
     const source = `EditLessonPlanPage-AI`;
+    const docType = selectedCurriculum === "Kurikulum Merdeka" ? "ATP/Modul Ajar" : "RPP";
     if (!formData.gradeLevel || !selectedCurriculum || !formData.topic) {
          toast({
             title: "Informasi Kurang",
-            description: `Harap isi Jenis Kurikulum, Topik dan Jenjang terlebih dahulu untuk menggunakan AI.`,
+            description: `Harap isi Jenis Kurikulum, ${selectedCurriculum === "Kurikulum Merdeka" ? "Konsentrasi Keahlian/Tema Utama" : "Topik"}, dan Jenjang/Fase terlebih dahulu untuk menggunakan AI.`,
             variant: "destructive",
          });
-         addLog("WARN", `Gagal membuat draf RPP dengan AI: Informasi kurang (Topik/Jenjang/Kurikulum). RPP ID: ${lessonPlanId}`, source);
+         addLog("WARN", `Gagal membuat draf ${docType} dengan AI: Informasi kurang. ID: ${lessonPlanId}`, source);
          return;
     }
     if (selectedCurriculum === "Kurikulum Merdeka" && (!formData.capaianPembelajaran || formData.capaianPembelajaran.length === 0)) {
         toast({
             title: "Informasi Kurang untuk Kurikulum Merdeka",
-            description: "Harap isi Capaian Pembelajaran untuk hasil AI yang lebih optimal dengan Kurikulum Merdeka.",
+            description: "Harap isi Capaian Pembelajaran untuk hasil AI yang lebih optimal.",
             variant: "destructive"
         });
-        addLog("WARN", `Gagal membuat draf RPP dengan AI (Kurikulum Merdeka): Capaian Pembelajaran kosong. RPP ID: ${lessonPlanId}`, source);
+        addLog("WARN", `Gagal membuat draf ${docType} dengan AI (Kurikulum Merdeka): Capaian Pembelajaran kosong. ID: ${lessonPlanId}`, source);
         return;
     }
 
-
     setIsGeneratingAI(true);
-    addLog("INFO", `Memulai pembuatan draf RPP dengan AI untuk RPP ID: ${lessonPlanId}. Kurikulum: ${selectedCurriculum}. Jenjang: "${formData.gradeLevel}". Topik: "${formData.topic}". CP: ${selectedCurriculum === "Kurikulum Merdeka" ? formData.capaianPembelajaran?.join(', ') : 'N/A'}.`, source);
+    addLog("INFO", `Memulai pembuatan draf ${docType} dengan AI untuk ID: ${lessonPlanId}. Kurikulum: ${selectedCurriculum}. Jenjang: "${formData.gradeLevel}". ${selectedCurriculum === "Kurikulum Merdeka" ? "Konsentrasi Keahlian/Tema: " : "Topik: "}"${formData.topic}".`, source);
     try {
         const aiInput: GenerateLessonPlanInput = {
           topic: formData.topic as string,
           jenjangFaseKelas: formData.gradeLevel as string,
           curriculumType: selectedCurriculum,
+          subject: formData.subject,
+          bidangKeahlian: formData.bidangKeahlian,
+          programKeahlian: formData.programKeahlian,
           capaianPembelajaran: selectedCurriculum === "Kurikulum Merdeka" ? formData.capaianPembelajaran || [] : undefined,
         };
         const result: GenerateLessonPlanOutput = await generateLessonPlanFromTopic(aiInput);
         setFormData(prev => ({
             ...prev,
             title: result.title && prev.title !== result.title ? result.title : prev.title,
+            subject: result.subject || prev.subject,
+            bidangKeahlian: result.bidangKeahlian || (selectedCurriculum === "Kurikulum Merdeka" ? prev.bidangKeahlian : undefined),
+            programKeahlian: result.programKeahlian || (selectedCurriculum === "Kurikulum Merdeka" ? prev.programKeahlian : undefined),
             learningObjectives: result.learningObjectives,
             alokasiWaktuJP: result.alokasiWaktuJP || prev.alokasiWaktuJP,
-            langkahPembelajaran: result.langkahPembelajaran,
-            assessment: result.assessmentStrategies.join('\n- ') || '',
-            pemahamanBermakna: result.pemahamanBermakna || (selectedCurriculum === "Kurikulum Merdeka" ? [] : undefined),
-            pertanyaanPemantik: result.pertanyaanPemantik || (selectedCurriculum === "Kurikulum Merdeka" ? [] : undefined),
-            differentiationStrategies: result.differentiationStrategies || (selectedCurriculum === "Kurikulum Merdeka" ? [] : undefined),
-            standarKompetensi: result.standarKompetensi || (selectedCurriculum === "KTSP 2006" ? [] : undefined),
-            kompetensiInti: result.kompetensiInti || (selectedCurriculum === "K-13" ? [] : undefined),
-            kompetensiDasar: result.kompetensiDasar || (selectedCurriculum !== "Kurikulum Merdeka" ? [] : undefined),
-            indikatorPencapaianKompetensi: result.indikatorPencapaianKompetensi || (selectedCurriculum !== "Kurikulum Merdeka" ? [] : undefined),
-            metodePembelajaran: result.metodePembelajaran || (selectedCurriculum !== "Kurikulum Merdeka" ? [] : undefined),
+            profilPelajarPancasilaFocus: result.profilPelajarPancasilaFocus || (selectedCurriculum === "Kurikulum Merdeka" ? prev.profilPelajarPancasilaFocus : undefined),
+            pemahamanBermakna: result.pemahamanBermakna || (selectedCurriculum === "Kurikulum Merdeka" ? prev.pemahamanBermakna : undefined),
+            pertanyaanPemantik: result.pertanyaanPemantik || (selectedCurriculum === "Kurikulum Merdeka" ? prev.pertanyaanPemantik : undefined),
+            langkahPembelajaran: result.langkahPembelajaran || prev.langkahPembelajaran,
+            assessment: result.assessmentStrategies?.join('\n- ') || prev.assessment,
+            materials: result.materials || prev.materials,
+            differentiationStrategies: result.differentiationStrategies || (selectedCurriculum === "Kurikulum Merdeka" ? prev.differentiationStrategies : undefined),
+            standarKompetensi: result.standarKompetensi || (selectedCurriculum === "KTSP 2006" ? prev.standarKompetensi : undefined),
+            kompetensiInti: result.kompetensiInti || (selectedCurriculum === "K-13" ? prev.kompetensiInti : undefined),
+            kompetensiDasar: result.kompetensiDasar || (selectedCurriculum !== "Kurikulum Merdeka" ? prev.kompetensiDasar : undefined),
+            indikatorPencapaianKompetensi: result.indikatorPencapaianKompetensi || (selectedCurriculum !== "Kurikulum Merdeka" ? prev.indikatorPencapaianKompetensi : undefined),
+            metodePembelajaran: result.metodePembelajaran || (selectedCurriculum !== "Kurikulum Merdeka" ? prev.metodePembelajaran : undefined),
         }));
-        toast({ title: "Konten RPP Diperbarui oleh AI!", description: "AI telah memperbarui draf konten. Silakan tinjau." });
-        addLog("INFO", `Konten RPP ID: ${lessonPlanId} berhasil diperbarui AI. Judul baru mungkin: "${result.title}".`, source);
+        toast({ title: `Konten ${docType} Diperbarui oleh AI!`, description: "AI telah memperbarui draf konten. Silakan tinjau." });
+        addLog("INFO", `Konten ${docType} ID: ${lessonPlanId} berhasil diperbarui AI. Judul baru mungkin: "${result.title}".`, source);
     } catch (error) {
-      console.error(`Error generating RPP with AI:`, error);
+      console.error(`Error generating ${docType} with AI:`, error);
       toast({
-        title: `Pembuatan AI RPP Gagal`,
+        title: `Pembuatan AI ${docType} Gagal`,
         description: "Tidak dapat menghasilkan konten. Silakan coba lagi.",
         variant: "destructive",
       });
-      addLog("ERROR", `Gagal membuat draf RPP dengan AI untuk ID ${lessonPlanId}. Kesalahan: ${error instanceof Error ? error.message : String(error)}`, source);
+      addLog("ERROR", `Gagal membuat draf ${docType} dengan AI untuk ID ${lessonPlanId}. Kesalahan: ${error instanceof Error ? error.message : String(error)}`, source);
     } finally {
       setIsGeneratingAI(false);
     }
@@ -189,28 +204,31 @@ export default function EditLessonPlanPage() {
       const existingPlans = JSON.parse(localStorage.getItem(LESSON_PLANS_STORAGE_KEY) || "[]") as LessonPlan[];
       const updatedPlans = existingPlans.map(p => p.id === lessonPlanId ? updatedLessonPlan : p);
       localStorage.setItem(LESSON_PLANS_STORAGE_KEY, JSON.stringify(updatedPlans));
-      toast({ title: "RPP Diperbarui", description: `"${updatedLessonPlan.title}" telah berhasil diperbarui.` });
-      addLog("INFO", `RPP "${updatedLessonPlan.title}" (ID: ${lessonPlanId}) berhasil diperbarui oleh ${user?.email}.`, "EditLessonPlanPage");
+      const docType = selectedCurriculum === "Kurikulum Merdeka" ? "ATP/Modul Ajar" : "RPP";
+      toast({ title: `${docType} Diperbarui`, description: `"${updatedLessonPlan.title}" telah berhasil diperbarui.` });
+      addLog("INFO", `${docType} "${updatedLessonPlan.title}" (ID: ${lessonPlanId}) berhasil diperbarui oleh ${user?.email}.`, "EditLessonPlanPage");
       router.push("/lesson-plans");
     } catch (error) {
-      toast({ title: "Gagal Memperbarui", description: "Terjadi kesalahan saat memperbarui RPP.", variant: "destructive" });
-      addLog("ERROR", `Gagal memperbarui RPP "${updatedLessonPlan.title}" (ID: ${lessonPlanId}). Kesalahan: ${error instanceof Error ? error.message : String(error)}`, "EditLessonPlanPage");
+      const docType = selectedCurriculum === "Kurikulum Merdeka" ? "ATP/Modul Ajar" : "RPP";
+      toast({ title: "Gagal Memperbarui", description: `Terjadi kesalahan saat memperbarui ${docType}.`, variant: "destructive" });
+      addLog("ERROR", `Gagal memperbarui ${docType} "${updatedLessonPlan.title}" (ID: ${lessonPlanId}). Kesalahan: ${error instanceof Error ? error.message : String(error)}`, "EditLessonPlanPage");
       setIsSubmitting(false);
     }
   };
 
   const handleDelete = () => {
-    if (window.confirm(`Apakah Anda yakin ingin menghapus RPP "${formData.title}"?`)) {
+    const docType = selectedCurriculum === "Kurikulum Merdeka" ? "ATP/Modul Ajar" : "RPP";
+    if (window.confirm(`Apakah Anda yakin ingin menghapus ${docType} "${formData.title}"?`)) {
       try {
         const existingPlans = JSON.parse(localStorage.getItem(LESSON_PLANS_STORAGE_KEY) || "[]") as LessonPlan[];
         const updatedPlans = existingPlans.filter(p => p.id !== lessonPlanId);
         localStorage.setItem(LESSON_PLANS_STORAGE_KEY, JSON.stringify(updatedPlans));
-        toast({ title: "RPP Dihapus", description: `"${formData.title}" telah berhasil dihapus.` });
-        addLog("WARN", `RPP "${formData.title}" (ID: ${lessonPlanId}) dihapus oleh ${user?.email}.`, "EditLessonPlanPage");
+        toast({ title: `${docType} Dihapus`, description: `"${formData.title}" telah berhasil dihapus.` });
+        addLog("WARN", `${docType} "${formData.title}" (ID: ${lessonPlanId}) dihapus oleh ${user?.email}.`, "EditLessonPlanPage");
         router.push("/lesson-plans");
       } catch (error) {
-        toast({ title: "Gagal Menghapus", description: "Terjadi kesalahan saat menghapus RPP.", variant: "destructive" });
-         addLog("ERROR", `Gagal menghapus RPP "${formData.title}" (ID: ${lessonPlanId}). Kesalahan: ${error instanceof Error ? error.message : String(error)}`, "EditLessonPlanPage");
+        toast({ title: "Gagal Menghapus", description: `Terjadi kesalahan saat menghapus ${docType}.`, variant: "destructive" });
+         addLog("ERROR", `Gagal menghapus ${docType} "${formData.title}" (ID: ${lessonPlanId}). Kesalahan: ${error instanceof Error ? error.message : String(error)}`, "EditLessonPlanPage");
       }
     }
   };
@@ -219,7 +237,7 @@ export default function EditLessonPlanPage() {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="ml-2">Memuat data RPP...</p>
+        <p className="ml-2">Memuat data dokumen...</p>
       </div>
     );
   }
@@ -227,11 +245,12 @@ export default function EditLessonPlanPage() {
   if (!formData.id) { 
       return (
         <div className="flex h-screen items-center justify-center">
-            <p className="text-destructive text-lg">RPP tidak ditemukan atau gagal dimuat.</p>
+            <p className="text-destructive text-lg">Dokumen tidak ditemukan atau gagal dimuat.</p>
         </div>
     );
   }
 
+  const documentTypeForTitle = selectedCurriculum === "Kurikulum Merdeka" ? "Alur Tujuan Pembelajaran (ATP) / Modul Ajar" : "Rencana Pelaksanaan Pembelajaran (RPP)";
 
   return (
     <div className="space-y-6 py-4 md:py-8">
@@ -241,14 +260,14 @@ export default function EditLessonPlanPage() {
             <div className="flex items-center gap-3">
               <BookOpenText className="h-10 w-10 text-primary-foreground drop-shadow-lg flex-shrink-0" />
               <div>
-                <CardTitle className="text-2xl md:text-3xl font-bold">Edit Rencana Pembelajaran</CardTitle>
+                <CardTitle className="text-2xl md:text-3xl font-bold">Edit {documentTypeForTitle}</CardTitle>
                 <CardDescription className="text-base md:text-lg text-primary-foreground/90 mt-1 truncate max-w-md sm:max-w-lg md:max-w-xl">
                   {formData.title || "Memuat judul..."}
                 </CardDescription>
               </div>
             </div>
             <Button variant="destructive" onClick={handleDelete} className="w-full mt-2 sm:mt-0 sm:w-auto">
-              <Trash2 className="mr-2 h-4 w-4" /> Hapus RPP Ini
+              <Trash2 className="mr-2 h-4 w-4" /> Hapus Dokumen Ini
             </Button>
           </div>
         </CardHeader>
@@ -281,4 +300,3 @@ export default function EditLessonPlanPage() {
     </div>
   );
 }
-

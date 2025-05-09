@@ -25,7 +25,7 @@ interface CurriculumDataTableProps {
   onDelete?: (item: AnyCurriculumItem) => void;
   canEdit: (item: AnyCurriculumItem) => boolean; 
   canDelete: (item: AnyCurriculumItem) => boolean; 
-  itemTypeForExport?: 'RPP' | 'PROTA' | 'Promes';
+  itemTypeForExport?: 'RPP' | 'PROTA' | 'Promes'; // RPP here means general lesson plan document type
 }
 
 export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, canDelete, itemTypeForExport }: CurriculumDataTableProps) {
@@ -33,7 +33,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
   const [isExporting, setIsExporting] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
   const { addLog } = useLog();
-  const { user: currentUser } = useAuth();
+  const { user: currentUser } = useAuth(); 
   const [schoolProfile, setSchoolProfile] = useState<SchoolProfile | null>(null);
   const [appUsers, setAppUsers] = useState<User[]>([]);
 
@@ -79,7 +79,6 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
   const getCreatorAvatar = (userId?: string): string | undefined => {
     if (!userId) return undefined;
     const user = appUsers.find(u => u.id === userId);
-    // Fallback to ui-avatars if user.avatarUrl is not set but user.name exists
     if (user && !user.avatarUrl && user.name) {
       return `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random&color=fff&font-size=0.45`;
     }
@@ -95,74 +94,94 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
  const generatePrintableHtml = (item: AnyCurriculumItem, options: PrintOptions): string => {
     const creatorUser = appUsers.find(u => u.id === item.createdByUserId);
     const creatorName = creatorUser ? creatorUser.name : item.createdByUserId || 'Tidak diketahui';
+    const documentTypeDisplay = item.type === 'RPP' ? (item.curriculumType === "Kurikulum Merdeka" ? "ALUR TUJUAN PEMBELAJARAN" : "RENCANA PELAKSANAAN PEMBELAJARAN") : item.type.toUpperCase();
     const logSource = `CurriculumPrint-${item.type}`;
-    addLog("INFO", `Mempersiapkan pratinjau cetak untuk ${item.type} "${item.title}" (ID: ${item.id}) oleh ${currentUser?.email}. Opsi: ${JSON.stringify(options)}`, logSource);
-
+    addLog("INFO", `Mempersiapkan pratinjau cetak untuk ${documentTypeDisplay} "${item.title}" (ID: ${item.id}) oleh ${currentUser?.email}. Opsi: ${JSON.stringify(options)}`, logSource);
 
     let contentHtml = ``;
+    const tutWuriLogoUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/Logo_Tut_Wuri_Handayani.svg/100px-Logo_Tut_Wuri_Handayani.svg.png"; // Smaller size for better layout
 
     if (options.showKopSurat && schoolProfile) {
       contentHtml += `
         <div class="kop-surat">
-          ${schoolProfile.logoUrl ? `<img src="${schoolProfile.logoUrl}" alt="Logo Sekolah" class="logo-sekolah" data-ai-hint="school logo">` : '<div class="logo-placeholder">Logo Sekolah</div>'}
+          ${item.curriculumType === "Kurikulum Merdeka" && item.type === 'RPP' ? `<img src="${tutWuriLogoUrl}" alt="Logo Tut Wuri Handayani" class="logo-tutwuri" data-ai-hint="tut wuri handayani logo">` : (schoolProfile.logoUrl ? `<img src="${schoolProfile.logoUrl}" alt="Logo Sekolah" class="logo-sekolah" data-ai-hint="school logo">` : '<div class="logo-placeholder">Logo Sekolah</div>')}
           <div class="kop-text">
-            <h1>${schoolProfile.namaSekolah || 'Nama Sekolah Belum Diatur'}</h1>
-            <p>${schoolProfile.alamat || 'Alamat Sekolah Belum Diatur'}</p>
-            <p>
-              ${schoolProfile.npsn ? `NPSN: ${schoolProfile.npsn}` : 'NPSN: Belum Diatur'}
-              ${schoolProfile.nomorTelepon ? ` | Telp: ${schoolProfile.nomorTelepon}` : ''}
-              ${schoolProfile.emailSekolah ? ` | Email: ${schoolProfile.emailSekolah}` : ''}
-            </p>
+            ${item.curriculumType === "Kurikulum Merdeka" && item.type === 'RPP' ? '' : `<h1>${schoolProfile.namaSekolah || 'Nama Sekolah Belum Diatur'}</h1>`}
+            ${item.curriculumType === "Kurikulum Merdeka" && item.type === 'RPP' ? '' : `<p>${schoolProfile.alamat || 'Alamat Sekolah Belum Diatur'}</p>`}
+            ${item.curriculumType === "Kurikulum Merdeka" && item.type === 'RPP' ? '' : `<p>
+              ${schoolProfile.npsn ? `NPSN: ${schoolProfile.npsn}` : ''}
+              ${schoolProfile.nomorTelepon ? `${schoolProfile.npsn ? ' | ' : ''}Telp: ${schoolProfile.nomorTelepon}` : ''}
+              ${schoolProfile.emailSekolah ? `${(schoolProfile.npsn || schoolProfile.nomorTelepon) ? ' | ' : ''}Email: ${schoolProfile.emailSekolah}` : ''}
+            </p>`}
           </div>
         </div>
       `;
     } else if (options.showKopSurat) {
-        addLog("WARN", `Kop surat diminta untuk ${item.type} "${item.title}" tapi profil sekolah tidak lengkap/tidak ada.`, logSource);
+        addLog("WARN", `Kop surat diminta untuk ${documentTypeDisplay} "${item.title}" tapi profil sekolah tidak lengkap/tidak ada.`, logSource);
         contentHtml += `
         <div class="kop-surat">
-          <div class="logo-placeholder">Logo Sekolah</div>
+          ${item.curriculumType === "Kurikulum Merdeka" && item.type === 'RPP' ? `<img src="${tutWuriLogoUrl}" alt="Logo Tut Wuri Handayani" class="logo-tutwuri" data-ai-hint="tut wuri handayani logo">` : '<div class="logo-placeholder">Logo Sekolah</div>'}
           <div class="kop-text">
-            <h1>Nama Sekolah Belum Diatur</h1>
-            <p>Alamat Sekolah Belum Diatur</p>
-            <p>NPSN: Belum Diatur</p>
+            ${item.curriculumType === "Kurikulum Merdeka" && item.type === 'RPP' ? '' : `<h1>Nama Sekolah Belum Diatur</h1>`}
+            ${item.curriculumType === "Kurikulum Merdeka" && item.type === 'RPP' ? '' : `<p>Alamat Sekolah Belum Diatur</p>`}
+            ${item.curriculumType === "Kurikulum Merdeka" && item.type === 'RPP' ? '' : `<p>NPSN: Belum Diatur</p>`}
           </div>
         </div>
       `;
     }
     
-    contentHtml += `<div class="doc-info">
-        <h2>${item.title} (${item.type === 'RPP' && item.curriculumType === 'Kurikulum Merdeka' ? 'Modul Ajar' : item.type})</h2>
-        <table class="info-table">
-            <tr><td>Kurikulum</td><td>: ${item.curriculumType}</td></tr>
-            <tr><td>Mata Pelajaran</td><td>: ${item.subject}</td></tr>
-            <tr><td>Jenjang/Fase/Kelas</td><td>: ${item.gradeLevel}</td></tr>
-             ${item.type === 'RPP' && (item as LessonPlan).alokasiWaktuJP && options.showRPPAlokasiWaktu ? `<tr><td>Alokasi Waktu</td><td>: ${(item as LessonPlan).alokasiWaktuJP}</td></tr>` : ''}
-            <tr><td>Penyusun</td><td>: ${creatorName}</td></tr>
-            <tr><td>Terakhir Diperbarui</td><td>: ${isClient ? format(new Date(item.updatedAt), "dd MMMM yyyy, HH:mm", { locale: indonesianLocale }) : item.updatedAt}</td></tr>
-        </table>
-    </div>
-    <hr class="content-hr">
-    `;
+    // Document Title and Info
+    if (item.type === 'RPP' && item.curriculumType === "Kurikulum Merdeka") {
+      const atp = item as LessonPlan;
+      contentHtml += `<div class="doc-info atp-header">
+        <h2 class="atp-main-title">ALUR TUJUAN PEMBELAJARAN</h2>
+        ${atp.programKeahlian ? `<h2 class="atp-sub-title">KONSENTRASI KEAHLIAN ${atp.programKeahlian.toUpperCase()}</h2>` : (atp.topic ? `<h2 class="atp-sub-title">KONSENTRASI KEAHLIAN ${atp.topic.toUpperCase()}</h2>` : '')}
+      </div>`;
+      contentHtml += `<table class="info-table atp-info-table">`;
+      if (options.showRPPBidangKeahlian && atp.bidangKeahlian) contentHtml += `<tr><td>BIDANG KEAHLIAN</td><td>: ${atp.bidangKeahlian.toUpperCase()}</td></tr>`;
+      if (options.showRPPProgramKeahlian && atp.programKeahlian) contentHtml += `<tr><td>PROGRAM KEAHLIAN</td><td>: ${atp.programKeahlian.toUpperCase()}</td></tr>`;
+      contentHtml += `<tr><td>MATA PELAJARAN</td><td>: ${atp.subject.toUpperCase()}</td></tr>
+                      <tr><td>FASE</td><td>: ${atp.gradeLevel.toUpperCase()}</td></tr>
+                      <tr><td>NAMA PENYUSUN</td><td>: ${creatorName.toUpperCase()}</td></tr>
+                      <tr><td>INSTANSI</td><td>: ${(schoolProfile?.namaSekolah || 'Belum Diatur').toUpperCase()}</td></tr>
+                      </table><hr class="content-hr">`;
+    } else {
+        contentHtml += `<div class="doc-info">
+            <h2>${item.title} (${documentTypeDisplay})</h2>
+            <table class="info-table">
+                <tr><td>Kurikulum</td><td>: ${item.curriculumType}</td></tr>
+                <tr><td>Mata Pelajaran</td><td>: ${item.subject}</td></tr>
+                <tr><td>${item.curriculumType === "Kurikulum Merdeka" && item.type === 'RPP' ? 'Fase' : 'Jenjang/Kelas'}</td><td>: ${item.gradeLevel}</td></tr>
+                ${item.type === 'RPP' && (item as LessonPlan).alokasiWaktuJP && options.showRPPAlokasiWaktu ? `<tr><td>Alokasi Waktu</td><td>: ${(item as LessonPlan).alokasiWaktuJP}</td></tr>` : ''}
+                <tr><td>Penyusun</td><td>: ${creatorName}</td></tr>
+                <tr><td>Terakhir Diperbarui</td><td>: ${isClient ? format(new Date(item.updatedAt), "dd MMMM yyyy, HH:mm", { locale: indonesianLocale }) : item.updatedAt}</td></tr>
+            </table>
+        </div>
+        <hr class="content-hr">`;
+    }
+
 
     if (item.type === 'RPP') {
         const rpp = item as LessonPlan;
         let sectionCounter = 0;
         const nextLetter = () => String.fromCharCode(65 + sectionCounter++);
 
-        if (rpp.curriculumType === "Kurikulum Merdeka" && options.showRPPCapaianPembelajaran && rpp.capaianPembelajaran && rpp.capaianPembelajaran.length > 0) {
-            contentHtml += `<h3>${nextLetter()}. Capaian Pembelajaran (CP)</h3><ul>`;
-            rpp.capaianPembelajaran.forEach(cp => contentHtml += `<li>${cp}</li>`);
-            contentHtml += `</ul>`;
-        }
-        
-        if (options.showRPPLearningObjectives) {
-            const heading = rpp.curriculumType === "Kurikulum Merdeka" ? "Alur Tujuan Pembelajaran (ATP) / Tujuan Pembelajaran (TP)" : "Tujuan Pembelajaran";
-            contentHtml += `<h3>${nextLetter()}. ${heading}</h3><ul>`;
-            rpp.learningObjectives.forEach(obj => contentHtml += `<li>${obj}</li>`);
-            contentHtml += `</ul>`;
-        }
-
         if (rpp.curriculumType === "Kurikulum Merdeka") {
+            if (options.showRPPCapaianPembelajaran && rpp.capaianPembelajaran && rpp.capaianPembelajaran.length > 0) {
+                contentHtml += `<h3>${nextLetter()}. Capaian Pembelajaran (CP)</h3><ul>`;
+                rpp.capaianPembelajaran.forEach(cp => contentHtml += `<li>${cp}</li>`);
+                contentHtml += `</ul>`;
+            }
+             if (options.showRPPLearningObjectives && rpp.learningObjectives && rpp.learningObjectives.length > 0) {
+                contentHtml += `<h3>${nextLetter()}. Tujuan Pembelajaran (TP)</h3><ol class="tp-list">`;
+                rpp.learningObjectives.forEach(tp => contentHtml += `<li>${tp}</li>`);
+                contentHtml += `</ol>`;
+            }
+            if (options.showRPPProfilPelajarPancasila && rpp.profilPelajarPancasilaFocus && rpp.profilPelajarPancasilaFocus.length > 0) {
+                contentHtml += `<h3>${nextLetter()}. Profil Pelajar Pancasila yang Dikembangkan</h3><ul>`;
+                rpp.profilPelajarPancasilaFocus.forEach(p5 => contentHtml += `<li>${p5}</li>`);
+                contentHtml += `</ul>`;
+            }
             if (options.showRPPPemahamanBermakna && rpp.pemahamanBermakna && rpp.pemahamanBermakna.length > 0) {
                 contentHtml += `<h3>${nextLetter()}. Pemahaman Bermakna</h3><ul>`;
                 rpp.pemahamanBermakna.forEach(pm => contentHtml += `<li>${pm}</li>`);
@@ -174,23 +193,28 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
                 contentHtml += `</ul>`;
             }
         } else { // KTSP or K-13
+            if (options.showRPPLearningObjectives && rpp.learningObjectives && rpp.learningObjectives.length > 0) {
+                contentHtml += `<h3>${nextLetter()}. Tujuan Pembelajaran</h3><ul>`;
+                rpp.learningObjectives.forEach(obj => contentHtml += `<li>${obj}</li>`);
+                contentHtml += `</ul>`;
+            }
             if (options.showRPPSK && rpp.standarKompetensi && rpp.standarKompetensi.length > 0 && rpp.curriculumType === "KTSP 2006") {
-                contentHtml += `<h3>${nextLetter()}. Standar Kompetensi</h3><ul>`;
+                contentHtml += `<h3>${nextLetter()}. Standar Kompetensi (SK)</h3><ul>`;
                 rpp.standarKompetensi.forEach(sk => contentHtml += `<li>${sk}</li>`);
                 contentHtml += `</ul>`;
             }
             if (options.showRPPKI && rpp.kompetensiInti && rpp.kompetensiInti.length > 0 && rpp.curriculumType === "K-13") {
-                 contentHtml += `<h3>${nextLetter()}. Kompetensi Inti</h3><ul>`;
+                 contentHtml += `<h3>${nextLetter()}. Kompetensi Inti (KI)</h3><ul>`;
                  rpp.kompetensiInti.forEach(ki => contentHtml += `<li>${ki}</li>`);
                  contentHtml += `</ul>`;
             }
             if (options.showRPPKD && rpp.kompetensiDasar && rpp.kompetensiDasar.length > 0) {
-                 contentHtml += `<h3>${nextLetter()}. Kompetensi Dasar</h3><ul>`;
+                 contentHtml += `<h3>${nextLetter()}. Kompetensi Dasar (KD)</h3><ul>`;
                  rpp.kompetensiDasar.forEach(kd => contentHtml += `<li>${kd}</li>`);
                  contentHtml += `</ul>`;
             }
             if (options.showRPPIPK && rpp.indikatorPencapaianKompetensi && rpp.indikatorPencapaianKompetensi.length > 0) {
-                contentHtml += `<h3>${nextLetter()}. Indikator Pencapaian Kompetensi</h3><ul>`;
+                contentHtml += `<h3>${nextLetter()}. Indikator Pencapaian Kompetensi (IPK)</h3><ul>`;
                 rpp.indikatorPencapaianKompetensi.forEach(ipk => contentHtml += `<li>${ipk}</li>`);
                 contentHtml += `</ul>`;
             }
@@ -201,25 +225,28 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
             }
         }
         
-        contentHtml += `<h3>${nextLetter()}. Langkah-langkah Pembelajaran</h3>`;
-        if (options.showRPPLangkahPendahuluan) {
-            contentHtml += `<h4>1. Pendahuluan:</h4><ul>`;
-            rpp.langkahPembelajaran.pendahuluan.forEach(act => contentHtml += `<li>${act}</li>`);
-            contentHtml += `</ul>`;
-        }
-        if (options.showRPPLangkahKegiatanInti) {
-            contentHtml += `<h4>2. Kegiatan Inti:</h4><ul>`;
-            rpp.langkahPembelajaran.kegiatanInti.forEach(act => contentHtml += `<li>${act}</li>`);
-            contentHtml += `</ul>`;
-        }
-        if (options.showRPPLangkahPenutup) {
-            contentHtml += `<h4>3. Penutup:</h4><ul>`;
-            rpp.langkahPembelajaran.penutup.forEach(act => contentHtml += `<li>${act}</li>`);
-            contentHtml += `</ul>`;
+        // Common RPP/Modul Ajar components
+        if (options.showRPPLangkahPendahuluan || options.showRPPLangkahKegiatanInti || options.showRPPLangkahPenutup) {
+            contentHtml += `<h3>${nextLetter()}. Langkah-langkah Pembelajaran</h3>`;
+            if (options.showRPPLangkahPendahuluan && rpp.langkahPembelajaran?.pendahuluan?.length > 0) {
+                contentHtml += `<h4>1. Pendahuluan:</h4><ul>`;
+                rpp.langkahPembelajaran.pendahuluan.forEach(act => contentHtml += `<li>${act}</li>`);
+                contentHtml += `</ul>`;
+            }
+            if (options.showRPPLangkahKegiatanInti && rpp.langkahPembelajaran?.kegiatanInti?.length > 0) {
+                contentHtml += `<h4>2. Kegiatan Inti:</h4><ul>`;
+                rpp.langkahPembelajaran.kegiatanInti.forEach(act => contentHtml += `<li>${act}</li>`);
+                contentHtml += `</ul>`;
+            }
+            if (options.showRPPLangkahPenutup && rpp.langkahPembelajaran?.penutup?.length > 0) {
+                contentHtml += `<h4>3. Penutup:</h4><ul>`;
+                rpp.langkahPembelajaran.penutup.forEach(act => contentHtml += `<li>${act}</li>`);
+                contentHtml += `</ul>`;
+            }
         }
         
-        if (options.showRPPAssessment) {
-            contentHtml += `<h3>${nextLetter()}. Asesmen/Penilaian</h3><p>${rpp.assessment}</p>`;
+        if (options.showRPPAssessment && rpp.assessment) {
+            contentHtml += `<h3>${nextLetter()}. Asesmen/Penilaian</h3><p>${rpp.assessment.replace(/\n/g, '<br>')}</p>`;
         }
 
         if (rpp.curriculumType === "Kurikulum Merdeka" && options.showRPPDifferentiationStrategies && rpp.differentiationStrategies && rpp.differentiationStrategies.length > 0) {
@@ -229,9 +256,10 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
         }
 
         if (options.showRPPMaterials && rpp.materials) {
-            contentHtml += `<h3>${nextLetter()}. Media/Sumber Belajar</h3><p>${rpp.materials}</p>`;
+            contentHtml += `<h3>${nextLetter()}. Media/Sumber Belajar</h3><p>${rpp.materials.replace(/\n/g, '<br>')}</p>`;
         }
     } else if (item.type === 'PROTA') {
+        // ... (PROTA print logic remains largely the same)
         const prota = item as AnnualProgram;
         contentHtml += `<p><strong>Tahun Ajaran:</strong> ${prota.year}</p>`;
         if (prota.curriculumType === "Kurikulum Merdeka" && options.showPROTACapaianPembelajaran && prota.capaianPembelajaran && prota.capaianPembelajaran.length > 0) {
@@ -270,6 +298,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
             }
         }
     } else if (item.type === 'Promes') {
+        // ... (Promes print logic remains largely the same)
         const promes = item as SemesterProgram;
         contentHtml += `<p><strong>Tahun Ajaran:</strong> ${promes.year}, <strong>Semester:</strong> ${promes.semester === '1' ? 'Ganjil' : 'Genap'}</p>`;
         
@@ -324,21 +353,29 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
           <title>Cetak: ${item.title}</title>
           <style>
             body { font-family: 'Times New Roman', Times, serif; margin: 20px; line-height: 1.4; font-size: 12pt; }
-            .kop-surat { display: flex; align-items: center; margin-bottom: 10px; border-bottom: 3px solid black; padding-bottom: 10px; }
+            .kop-surat { display: flex; align-items: center; margin-bottom: 10px; border-bottom: 3px solid black; padding-bottom: 10px; min-height: 100px; }
             .logo-sekolah { max-height: 80px; max-width: 80px; margin-right: 20px; object-fit: contain; }
+            .logo-tutwuri { max-height: 70px; width: auto; margin: 0 auto 10px auto; display: block; } /* Centered Tut Wuri Logo for ATP */
             .logo-placeholder { width: 80px; height: 80px; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 10pt; color: #777; margin-right: 20px;}
             .kop-text { text-align: center; flex-grow: 1; }
             .kop-text h1 { font-size: 16pt; margin: 0; font-weight: bold; text-transform: uppercase; }
             .kop-text p { font-size: 10pt; margin: 2px 0; }
             .doc-info { margin-top: 20px; margin-bottom: 15px; }
             .doc-info h2 { font-size: 14pt; text-align: center; margin-bottom: 15px; font-weight: bold; text-transform: uppercase; }
+            .atp-header { text-align: center; margin-bottom: 20px; }
+            .atp-main-title { font-size: 16pt; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
+            .atp-sub-title { font-size: 14pt; font-weight: bold; margin-bottom: 20px; text-transform: uppercase; }
             .info-table { width: auto; margin-bottom: 15px; font-size: 11pt;}
             .info-table td { padding: 2px 5px; vertical-align: top;}
             .info-table td:first-child { font-weight: normal; width: 180px; }
+            .atp-info-table { width: 100%; max-width: 600px; margin: 0 auto 20px auto; border: 1px solid #ccc; padding: 10px; border-radius: 8px; background-color: #f9f9f9; }
+            .atp-info-table td { padding: 4px 8px; vertical-align: top; font-size: 11pt;}
+            .atp-info-table td:first-child { font-weight: bold; width: 30%; }
             .content-hr { border: 0; border-top: 1px solid #ccc; margin: 15px 0; }
             h3 { font-size: 13pt; margin-top: 20px; margin-bottom: 8px; font-weight: bold; }
             h4 { font-size: 12pt; margin-top: 15px; margin-bottom: 5px; font-weight: bold; }
-            ul { padding-left: 20px; margin-top: 0; margin-bottom: 10px; }
+            ul, ol.tp-list { padding-left: 20px; margin-top: 0; margin-bottom: 10px; }
+            ol.tp-list { list-style-type: decimal; }
             li { margin-bottom: 4px; }
             p { margin-bottom: 8px; }
             .component-table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 15px; font-size: 10pt;}
@@ -381,15 +418,10 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
     if (printWindow) {
       printWindow.document.write(printableHtml);
       printWindow.document.close();
-      addLog("INFO", `Jendela cetak dibuka untuk ${itemToPrint.type} "${itemToPrint.title}".`, logSource);
-      setTimeout(() => {
-          if (printWindow && !printWindow.closed) { 
-            // printWindow.print(); // Commented out to allow user to initiate print from new window
-          }
-      }, 500);
+      addLog("INFO", `Jendela cetak dibuka untuk ${itemToPrint.curriculumType === "Kurikulum Merdeka" && itemToPrint.type === 'RPP' ? 'ATP' : itemToPrint.type} "${itemToPrint.title}".`, logSource);
     } else {
       toast({ title: "Gagal Membuka Jendela Cetak", description: "Pastikan pop-up diizinkan untuk situs ini.", variant: "destructive" });
-      addLog("ERROR", `Gagal membuka jendela cetak untuk ${itemToPrint.type} "${itemToPrint.title}". Kemungkinan pop-up diblokir.`, logSource);
+      addLog("ERROR", `Gagal membuka jendela cetak. Kemungkinan pop-up diblokir.`, logSource);
     }
     setIsPrintOptionsOpen(false);
     setItemToPrint(null);
@@ -398,39 +430,27 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
 
   const handleExportToText = async (item: AnyCurriculumItem) => {
     if (!isClient) return;
-    const logSource = `CurriculumExport-${item.type}`;
-    addLog("INFO", `Memulai ekspor ke teks untuk ${item.type} "${item.title}" (ID: ${item.id}) oleh ${currentUser?.email}.`, logSource);
+    const docTypeDisplay = item.type === 'RPP' ? (item.curriculumType === "Kurikulum Merdeka" ? "ATP" : "RPP") : item.type;
+    const logSource = `CurriculumExport-${docTypeDisplay}`;
+    addLog("INFO", `Memulai ekspor ke teks untuk ${docTypeDisplay} "${item.title}" (ID: ${item.id}) oleh ${currentUser?.email}.`, logSource);
     
     setIsExporting(prev => ({ ...prev, [item.id]: true }));
 
     try {
       let documentContent = "";
-      let fileName = `${item.title.replace(/[\\/:*?"<>|]/g, '_').replace(/\s+/g, '_')}_${item.type}.txt`;
+      let fileName = `${item.title.replace(/[\\/:*?"<>|]/g, '_').replace(/\s+/g, '_')}_${docTypeDisplay}.txt`;
 
-      if (item.type === 'RPP') {
+      if (item.type === 'RPP') { // This flow handles both RPP and ATP based on curriculumType
         const rppInput = item as LessonPlan;
-        const inputForFlow: ExportRppToTextInput = {
+        const inputForFlow: ExportRppToTextInput = { // Schema for exportRppToText includes all potential fields
           ...rppInput,
-          learningObjectives: rppInput.learningObjectives || [],
-          capaianPembelajaran: rppInput.capaianPembelajaran || [],
-          pemahamanBermakna: rppInput.pemahamanBermakna || [],
-          pertanyaanPemantik: rppInput.pertanyaanPemantik || [],
-          langkahPembelajaran: rppInput.langkahPembelajaran || { pendahuluan: [], kegiatanInti: [], penutup: [] },
-          assessment: rppInput.assessment || "Belum dirinci",
-          differentiationStrategies: rppInput.differentiationStrategies || [],
-          materials: rppInput.materials || "", 
-          standarKompetensi: rppInput.standarKompetensi,
-          kompetensiInti: rppInput.kompetensiInti,
-          kompetensiDasar: rppInput.kompetensiDasar,
-          indikatorPencapaianKompetensi: rppInput.indikatorPencapaianKompetensi,
-          metodePembelajaran: rppInput.metodePembelajaran,
-          alokasiWaktuJP: rppInput.alokasiWaktuJP
         };
-        addLog("INFO", `Memanggil alur Genkit 'exportRppToText' untuk RPP "${item.title}" (${item.curriculumType}).`, logSource);
+        addLog("INFO", `Memanggil alur Genkit 'exportRppToText' untuk ${docTypeDisplay} "${item.title}" (${item.curriculumType}).`, logSource);
         const result = await exportRppToText(inputForFlow); 
         documentContent = result.documentContent;
-        addLog("INFO", `Konten teks berhasil dibuat oleh Genkit untuk RPP "${item.title}".`, logSource);
+        addLog("INFO", `Konten teks berhasil dibuat oleh Genkit untuk ${docTypeDisplay} "${item.title}".`, logSource);
       } else if (item.type === 'PROTA') {
+        // ... (PROTA export logic remains largely the same)
         const prota = item as AnnualProgram;
         let protaText = `**PROGRAM TAHUNAN (PROTA)**\n\n`;
         protaText += `**Judul:** ${prota.title}\n`;
@@ -466,6 +486,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
         addLog("INFO", `Konten teks berhasil dibuat secara manual untuk PROTA "${item.title}".`, logSource);
 
       } else if (item.type === 'Promes') {
+        // ... (Promes export logic remains largely the same)
         const promes = item as SemesterProgram;
         let promesText = `**PROGRAM SEMESTER (PROMES)**\n\n`;
         promesText += `**Judul:** ${promes.title}\n`;
@@ -504,12 +525,12 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
         addLog("INFO", `Konten teks berhasil dibuat secara manual untuk Promes "${item.title}".`, logSource);
       }
        else {
-        documentContent = `Rincian untuk ${item.type}: ${item.title}\n\n(Fungsi ekspor detail untuk jenis ini belum diimplementasikan.)\n\n${JSON.stringify(item, null, 2)}`;
+        documentContent = `Rincian untuk ${docTypeDisplay}: ${item.title}\n\n(Fungsi ekspor detail untuk jenis ini belum diimplementasikan.)\n\n${JSON.stringify(item, null, 2)}`;
         toast({
           title: "Fitur Dalam Pengembangan",
-          description: `Ekspor detail untuk ${item.type} belum tersedia. Unduhan berisi data JSON dasar.`,
+          description: `Ekspor detail untuk ${docTypeDisplay} belum tersedia. Unduhan berisi data JSON dasar.`,
         });
-        addLog("WARN", `Ekspor detail untuk ${item.type} "${item.title}" belum diimplementasikan. Mengekspor data JSON mentah.`, logSource);
+        addLog("WARN", `Ekspor detail untuk ${docTypeDisplay} "${item.title}" belum diimplementasikan. Mengekspor data JSON mentah.`, logSource);
       }
 
       const blob = new Blob([documentContent], { type: 'text/plain;charset=utf-8' });
@@ -521,18 +542,19 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
       document.body.removeChild(link);
       URL.revokeObjectURL(link.href);
       toast({ title: "Ekspor Berhasil", description: `${item.title} telah diekspor sebagai ${fileName}` });
-      addLog("INFO", `Ekspor ${item.type} "${item.title}" ke file ${fileName} berhasil.`, logSource);
+      addLog("INFO", `Ekspor ${docTypeDisplay} "${item.title}" ke file ${fileName} berhasil.`, logSource);
     } catch (error) {
       console.error("Error exporting item:", error);
       toast({ title: "Ekspor Gagal", description: "Tidak dapat mengekspor item. Silakan coba lagi.", variant: "destructive" });
-      addLog("ERROR", `Gagal mengekspor ${item.type} "${item.title}". Kesalahan: ${error instanceof Error ? error.message : String(error)}`, logSource);
+      addLog("ERROR", `Gagal mengekspor ${docTypeDisplay} "${item.title}". Kesalahan: ${error instanceof Error ? error.message : String(error)}`, logSource);
     } finally {
       setIsExporting(prev => ({ ...prev, [item.id]: false }));
     }
   };
   
   const handleViewDetails = (item: AnyCurriculumItem) => {
-    addLog("INFO", `Pengguna ${currentUser?.email} melihat detail ${item.type} "${item.title}" (ID: ${item.id}).`, `CurriculumView-${item.type}`);
+    const docTypeDisplay = item.type === 'RPP' ? (item.curriculumType === "Kurikulum Merdeka" ? "ATP/Modul Ajar" : "RPP") : item.type;
+    addLog("INFO", `Pengguna ${currentUser?.email} melihat detail ${docTypeDisplay} "${item.title}" (ID: ${item.id}).`, `CurriculumView-${item.type}`);
     onView(item);
   };
 
@@ -557,10 +579,10 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
           <TableHeader>
             <TableRow>
               <TableHead className="min-w-[200px] sm:min-w-[250px] w-2/5 px-3 sm:px-4 py-3 text-sm">Judul</TableHead>
-              <TableHead className="min-w-[80px] px-3 sm:px-4 py-3 text-sm hidden md:table-cell">Jenis</TableHead>
+              <TableHead className="min-w-[120px] px-3 sm:px-4 py-3 text-sm hidden md:table-cell">Jenis Dokumen</TableHead>
               <TableHead className="min-w-[150px] sm:min-w-[180px] px-3 sm:px-4 py-3 text-sm">Kurikulum</TableHead>
               <TableHead className="min-w-[120px] sm:min-w-[150px] px-3 sm:px-4 py-3 text-sm hidden lg:table-cell">Mata Pelajaran</TableHead>
-              <TableHead className="min-w-[150px] sm:min-w-[180px] px-3 sm:px-4 py-3 text-sm hidden md:table-cell">Jenjang/Kelas</TableHead>
+              <TableHead className="min-w-[150px] sm:min-w-[180px] px-3 sm:px-4 py-3 text-sm hidden md:table-cell">Jenjang/Fase/Kelas</TableHead>
               <TableHead className="min-w-[150px] sm:min-w-[180px] px-3 sm:px-4 py-3 text-sm">Penyusun</TableHead>
               <TableHead className="min-w-[150px] sm:min-w-[180px] px-3 sm:px-4 py-3 text-sm hidden lg:table-cell">Terakhir Diperbarui</TableHead>
               <TableHead className="text-right min-w-[80px] sm:min-w-[100px] px-3 sm:px-4 py-3 text-sm">Aksi</TableHead>
@@ -574,12 +596,16 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
                 </TableCell>
               </TableRow>
             )}
-            {items.map((item) => (
+            {items.map((item) => {
+              const docTypeDisplay = item.type === 'RPP' 
+                ? (item.curriculumType === "Kurikulum Merdeka" ? "ATP/Modul Ajar" : "RPP") 
+                : item.type;
+              return (
               <TableRow key={item.id} className="hover:bg-muted/50">
                 <TableCell className="font-medium px-3 sm:px-4 py-2 sm:py-3 align-top text-sm">
                   {item.title}
                   <div className="md:hidden text-xs text-muted-foreground mt-1">
-                    {item.type} - {item.gradeLevel}
+                    {docTypeDisplay} - {item.gradeLevel}
                   </div>
                    <div className="lg:hidden text-xs text-muted-foreground mt-1">
                     Mapel: {item.subject}
@@ -590,7 +616,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
                 </TableCell>
                 <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top hidden md:table-cell">
                   <Badge variant={item.type === 'RPP' ? 'default' : item.type === 'PROTA' ? 'secondary' : 'outline'} className="text-xs">
-                    {item.type}
+                    {docTypeDisplay}
                   </Badge>
                 </TableCell>
                 <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top">
@@ -650,7 +676,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
                   </DropdownMenu>
                 </TableCell>
               </TableRow>
-            ))}
+            )})}
           </TableBody>
         </Table>
       </div>
@@ -659,7 +685,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
             isOpen={isPrintOptionsOpen}
             onOpenChange={setIsPrintOptionsOpen}
             itemType={itemToPrint.type}
-            itemCurriculumType={itemToPrint.curriculumType} // Pass the specific item's curriculum type
+            itemCurriculumType={itemToPrint.curriculumType} 
             defaultOptions={currentPrintOptions}
             onSubmit={handleFinalizePrint}
             hasSchoolProfile={!!schoolProfile} 
@@ -668,4 +694,3 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
     </>
   );
 }
-
