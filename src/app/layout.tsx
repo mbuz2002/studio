@@ -27,7 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id" suppressHydrationWarning>
-      <body className={`${roboto.variable} antialiased font-roboto`}> {/* Apply font-roboto */}
+      <body className={`${roboto.variable} antialiased font-sans`}> {/* Apply font-sans and Roboto variable */}
         <ThemeProvider>
           <QueryClientProvider>
             <LogProvider> 

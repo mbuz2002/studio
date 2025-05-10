@@ -1,5 +1,6 @@
 
 import type { Config } from "tailwindcss";
+import defaultTheme from 'tailwindcss/defaultTheme';
 
 export default {
     darkMode: ["class"],
@@ -11,7 +12,7 @@ export default {
   theme: {
   	extend: {
       fontFamily: {
-        sans: ["var(--font-plus-jakarta-sans)", "system-ui", "-apple-system", "BlinkMacSystemFont", '"Segoe UI"', "Roboto", '"Helvetica Neue"', "Arial", '"Noto Sans"', "sans-serif", '"Apple Color Emoji"', '"Segoe UI Emoji"', '"Segoe UI Symbol"', '"Noto Color Emoji"'],
+        sans: ['var(--font-roboto)', ...defaultTheme.fontFamily.sans],
       },
   		colors: {
   			background: 'hsl(var(--background))',
