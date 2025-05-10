@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { ShieldCheck, Eye, EyeOff, Trash2, ExternalLink, Activity, Settings as SettingsIcon, Layers } from "lucide-react";
+import { ShieldCheck, Eye, EyeOff, Trash2, ExternalLink, Activity, Settings as SettingsIcon, Layers, KeyRound, PackageOpen } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -73,12 +73,13 @@ export default function AdminSystemSettingsPage() {
 
   const handleRevealApiKey = () => {
     if (!showApiKey) {
+      // Simulate fetching API key
       setTimeout(() => {
-        setApiKey("genkit_gcp_mock_key_xxxxxxxxxxxx");
+        setApiKey("genkit_gcp_mock_key_xxxxxxxxxxxx"); // Replace with actual key fetching if implemented
         setShowApiKey(true);
         toast({ title: "Kunci API Ditampilkan", description: "Hanya untuk tujuan demonstrasi."});
         addLog("WARN", `Kunci API Google AI (Genkit) ditampilkan oleh Admin ${user?.email}.`, "AdminSystemSettings");
-      }, 500);
+      }, 300); // Short delay for effect
     } else {
       setApiKey("********************");
       setShowApiKey(false);
@@ -99,6 +100,7 @@ export default function AdminSystemSettingsPage() {
   };
   
   const handleGenkitDashboard = () => {
+    // This should point to your Genkit developer UI, typically localhost:4000 during development
     window.open('http://localhost:4000', '_blank');
      toast({
       title: "Membuka Dasbor Genkit",
@@ -126,7 +128,10 @@ export default function AdminSystemSettingsPage() {
       <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Card className="shadow-md rounded-md">
           <CardHeader className="p-5">
-            <CardTitle className="text-xl font-semibold">Mode Perawatan</CardTitle>
+             <div className="flex items-center gap-2">
+                <SettingsIcon className="h-6 w-6 text-primary" />
+                <CardTitle className="text-xl font-semibold">Mode Perawatan</CardTitle>
+            </div>
             <CardDescription className="text-base text-muted-foreground">Aktifkan mode perawatan untuk menonaktifkan akses publik sementara.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 p-5 pt-0">
@@ -149,8 +154,11 @@ export default function AdminSystemSettingsPage() {
 
         <Card className="shadow-md rounded-md">
           <CardHeader className="p-5">
-            <CardTitle className="text-xl font-semibold">Manajemen Kunci API</CardTitle>
-            <CardDescription className="text-base text-muted-foreground">Kelola kunci API untuk integrasi layanan eksternal (misalnya, Genkit/Google AI).</CardDescription>
+            <div className="flex items-center gap-2">
+                <KeyRound className="h-6 w-6 text-primary" />
+                <CardTitle className="text-xl font-semibold">Manajemen Kunci API</CardTitle>
+            </div>
+            <CardDescription className="text-base text-muted-foreground">Kelola kunci API untuk layanan eksternal (misalnya, Google AI Genkit).</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 p-5 pt-0">
             <div className="space-y-1.5">
@@ -161,7 +169,7 @@ export default function AdminSystemSettingsPage() {
                   {showApiKey ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </Button>
               </div>
-               <p className="text-xs text-muted-foreground">Kunci ini digunakan untuk layanan GenAI. Ditampilkan hanya untuk demo.</p>
+               <p className="text-xs text-muted-foreground">Kunci ini digunakan untuk layanan GenAI. Hanya untuk tujuan demo.</p>
             </div>
             <Button variant="secondary" onClick={handleGenkitDashboard} className="text-base w-full sm:w-auto">
               <ExternalLink className="mr-2 h-5 w-5" /> Buka Dasbor Genkit (Dev)
@@ -172,7 +180,7 @@ export default function AdminSystemSettingsPage() {
         <Card className="shadow-md rounded-md">
           <CardHeader className="p-5">
              <div className="flex items-center gap-2">
-              <Layers className="h-6 w-6 text-primary" />
+              <PackageOpen className="h-6 w-6 text-primary" />
               <CardTitle className="text-xl font-semibold">Manajemen Cache</CardTitle>
             </div>
             <CardDescription className="text-base text-muted-foreground">Kontrol cache aplikasi untuk memastikan data terbaru ditampilkan.</CardDescription>
@@ -216,4 +224,3 @@ export default function AdminSystemSettingsPage() {
     </div>
   );
 }
-
