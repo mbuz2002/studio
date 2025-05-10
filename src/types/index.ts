@@ -26,9 +26,9 @@ export interface SchoolProfile {
 
 export interface CurriculumItem {
   id: string;
-  title: string; // For ATP, this will be "ALUR TUJUAN PEMBELAJARAN KONSENTRASI KEAHLIAN..."
-  subject: string; // Mata Pelajaran
-  gradeLevel: string; // Fase for Kurikulum Merdeka
+  title: string; 
+  subject: string; 
+  gradeLevel: string; 
   createdAt: string; 
   updatedAt: string; 
   createdByUserId?: string; 
@@ -36,28 +36,25 @@ export interface CurriculumItem {
 }
 
 export interface LessonPlan extends CurriculumItem {
-  type: 'RPP'; // Remains RPP, but content structure changes for Kurikulum Merdeka to ATP/Modul Ajar
-  topic: string; // For ATP (Kurikulum Merdeka): Konsentrasi Keahlian or main theme. For RPP: Topic.
-  learningObjectives: string[]; // For Kurikulum Merdeka (ATP): Array of Tujuan Pembelajaran (TP). For K-13/KTSP: Standard learning objectives.
+  type: 'RPP'; 
+  topic: string; 
+  learningObjectives: string[]; 
   alokasiWaktuJP?: string; 
   
-  // Kurikulum Merdeka specific (for Modul Ajar / ATP context)
-  bidangKeahlian?: string; // e.g., Seni dan Ekonomi Kreatif
-  programKeahlian?: string; // e.g., Animasi (also used in ATP title for Konsentrasi Keahlian)
-  capaianPembelajaran?: string[]; // Capaian Pembelajaran (CP) relevant to the Modul Ajar/ATP.
+  bidangKeahlian?: string; 
+  programKeahlian?: string; 
+  capaianPembelajaran?: string[]; 
   pemahamanBermakna?: string[]; 
   pertanyaanPemantik?: string[]; 
   differentiationStrategies?: string[]; 
-  profilPelajarPancasilaFocus?: string[]; // Profil Pelajar Pancasila focus areas
+  profilPelajarPancasilaFocus?: string[]; 
 
-  // KTSP 2006 / K-13 specific
-  standarKompetensi?: string[]; // SK (KTSP)
-  kompetensiInti?: string[]; // KI (K-13)
-  kompetensiDasar?: string[]; // KD (KTSP, K-13)
-  indikatorPencapaianKompetensi?: string[]; // IPK (KTSP, K-13)
-  metodePembelajaran?: string[]; // Metode (KTSP, K-13)
+  standarKompetensi?: string[]; 
+  kompetensiInti?: string[]; 
+  kompetensiDasar?: string[]; 
+  indikatorPencapaianKompetensi?: string[]; 
+  metodePembelajaran?: string[]; 
   
-  // Common for Modul Ajar / RPP (can be brief for ATP context)
   langkahPembelajaran: { 
     pendahuluan: string[]; 
     kegiatanInti: string[]; 
@@ -69,14 +66,14 @@ export interface LessonPlan extends CurriculumItem {
 
 export interface AnnualProgramComponent {
   topic: string; 
-  elemenCapaianPembelajaran?: string[]; // For Kurikulum Merdeka: Elemen CP; For KTSP/K13: Kompetensi Dasar (KD)
+  elemenCapaianPembelajaran?: string[]; 
   alokasiWaktu: string; 
 }
 
 export interface AnnualProgram extends CurriculumItem {
   type: 'PROTA'; 
   year: string; 
-  capaianPembelajaran?: string[]; // Capaian Pembelajaran Umum for the year (Kurikulum Merdeka focus).
+  capaianPembelajaran?: string[]; 
   semester1Components: AnnualProgramComponent[];
   semester2Components: AnnualProgramComponent[];
   profilPelajarPancasilaFocus?: string[]; 
@@ -85,7 +82,7 @@ export interface AnnualProgram extends CurriculumItem {
 export interface WeeklyUnit {
   mingguKe: number;
   bulan?: string; 
-  materiPokokAtauTujuanPembelajaran: string; // Materi Pokok/Tema (KTSP/K13) or Tujuan Pembelajaran (Kurikulum Merdeka)
+  materiPokokAtauTujuanPembelajaran: string; 
   alokasiWaktu: string; 
   metodeStrategi?: string[]; 
   sumberBelajar?: string[]; 
@@ -97,7 +94,7 @@ export interface SemesterProgram extends CurriculumItem {
   type: 'Promes'; 
   semester: '1' | '2'; 
   year: string; 
-  capaianPembelajaranUmum?: string; // CP (Merdeka) / SK-KD Rangkuman (KTSP/K13) - This field is used for input to AI
+  capaianPembelajaranUmum?: string; 
   alokasiWaktuTotalSemester?: string; 
   komponenMingguan: WeeklyUnit[];
 }
@@ -114,41 +111,35 @@ export type { GenerateTeachingMaterialInput, GenerateTeachingMaterialOutput, Sug
 export interface PrintOptions {
   showKopSurat: boolean;
   
-  // RPP/Modul Ajar/ATP common
-  showRPPLearningObjectives: boolean; // TPs for ATP, Objectives for RPP
+  showRPPLearningObjectives: boolean; 
   showRPPAlokasiWaktu?: boolean;
 
-  // RPP/Modul Ajar (Kurikulum Merdeka) specific
   showRPPCapaianPembelajaran?: boolean; 
   showRPPPemahamanBermakna: boolean;
   showRPPPertanyaanPemantik: boolean;
   showRPPDifferentiationStrategies: boolean;
   showRPPProfilPelajarPancasila?: boolean;
-  showRPPBidangKeahlian?: boolean; // For ATP
-  showRPPProgramKeahlian?: boolean; // For ATP
+  showRPPBidangKeahlian?: boolean; 
+  showRPPProgramKeahlian?: boolean; 
 
 
-  // RPP KTSP/K-13 specific
   showRPPSK?: boolean; 
   showRPPKI?: boolean; 
   showRPPKD?: boolean; 
   showRPPIPK?: boolean; 
   showRPPMetodePembelajaran?: boolean;
 
-  // Common for RPP/Modul Ajar, maybe less for pure ATP print
   showRPPLangkahPendahuluan: boolean;
   showRPPLangkahKegiatanInti: boolean;
   showRPPLangkahPenutup: boolean;
   showRPPAssessment: boolean;
   showRPPMaterials: boolean;
-
-  // PROTA specific 
+ 
   showPROTACapaianPembelajaran?: boolean; 
   showPROTAFokusP5: boolean; 
   showPROTASemester1: boolean;
   showPROTASemester2: boolean;
   
-  // Promes specific 
   showPromesCapaianUmum: boolean;
   showPromesAlokasiTotal: boolean;
   showPromesKomponenMingguan: boolean;
@@ -156,7 +147,6 @@ export interface PrintOptions {
 
 export const defaultPrintOptions: PrintOptions = {
   showKopSurat: true,
-  // RPP/Modul Ajar/ATP
   showRPPLearningObjectives: true,
   showRPPAlokasiWaktu: true, 
   showRPPCapaianPembelajaran: true, 
@@ -176,12 +166,10 @@ export const defaultPrintOptions: PrintOptions = {
   showRPPKD: true,
   showRPPIPK: true,
   showRPPMetodePembelajaran: true,
-  // PROTA
   showPROTACapaianPembelajaran: true,
   showPROTAFokusP5: true,
   showPROTASemester1: true,
   showPROTASemester2: true,
-  // Promes
   showPromesCapaianUmum: true,
   showPromesAlokasiTotal: true,
   showPromesKomponenMingguan: true,
@@ -194,4 +182,64 @@ export interface ExportedCurriculumData {
   semesterPrograms: SemesterProgram[];
   schoolProfile: SchoolProfile | null;
   appUsers: User[];
+}
+
+
+// For AI Kurikulum Merdeka Module Generation
+export interface ModulAjarIdentitas {
+  namaPenyusun: string;
+  institusi: string;
+  tahunAjar: string;
+  jenjangSekolah: string; // e.g., SMA, SMK
+  fase: string; // e.g., Fase E, Fase F
+  kelasSemester: string; // e.g., X / Ganjil
+  alokasiWaktu: string; // e.g., 12 JP (3 Pertemuan @4JP)
+  mataPelajaran: string;
+  elemenCapaianPembelajaran?: string[]; // (Optional) Specific CP elements targeted
+}
+
+export interface ModulAjarKomponenInti {
+  tujuanPembelajaran: string[];
+  pemahamanBermakna: string[];
+  pertanyaanPemantik: string[];
+  kegiatanPembelajaran: {
+    pendahuluan: string[]; // Detail steps
+    inti: {
+      langkah: string; // e.g., "Kegiatan 1: Eksplorasi Konsep"
+      detailAktivitas: string[];
+    }[];
+    penutup: string[]; // Detail steps
+  };
+  asesmen: {
+    diagnostik?: string;
+    formatif: string;
+    sumatif: string;
+  };
+  pengayaanRemedial?: {
+    pengayaan: string;
+    remedial: string;
+  };
+  refleksiPesertaDidikGuru?: {
+    refleksiPesertaDidik: string;
+    refleksiGuru: string;
+  };
+}
+
+export interface ModulAjarLampiran {
+  lembarKerjaPesertaDidik?: string; // Could be detailed or a general description
+  bahanBacaanGuruSiswa?: string[];
+  glosarium?: { istilah: string; penjelasan: string }[];
+  daftarPustaka?: string[];
+}
+
+export interface GenerateKurikulumMerdekaModuleOutput {
+  judulModul: string;
+  identitasModul: ModulAjarIdentitas;
+  kompetensiAwal?: string[];
+  profilPelajarPancasila: string[]; // Dimensi yang dikembangkan
+  saranaPrasarana: string[];
+  targetPesertaDidik: string; // e.g., Reguler/Tipikal, Kesulitan Belajar, Pencapaian Tinggi
+  modelPembelajaran: string; // e.g., Tatap Muka, PJJ Daring, Blended Learning
+  komponenInti: ModulAjarKomponenInti;
+  lampiran?: ModulAjarLampiran;
 }

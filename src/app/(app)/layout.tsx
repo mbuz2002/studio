@@ -5,23 +5,24 @@ import { useEffect, useMemo } from 'react';
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset, SidebarRail } from '@/components/ui/sidebar';
 import { AppLogo } from '@/components/layout/AppLogo';
 import { UserProfile } from '@/components/layout/UserProfile';
-import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, ShieldCheck, Activity, Users, Info } from 'lucide-react';
+import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, ShieldCheck, Activity, Users, Info, BrainCircuit } from 'lucide-react';
 import Link from 'next/link';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
 import type { UserRole } from '@/types';
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
-import { useCurriculum } from '@/contexts/CurriculumContext'; // Import CurriculumContext
+import { useCurriculum } from '@/contexts/CurriculumContext';
 
 interface NavItem {
   href: string;
   label: string;
-  originalLabel?: string; // To store the base label
+  originalLabel?: string; 
   icon: React.ElementType;
   roles: UserRole[]; 
   isSystemSetting?: boolean; 
   isHiddenFromSidebar?: boolean; 
+  isKurikulumMerdekaOnly?: boolean; // New flag
 }
 
 const allNavItems: NavItem[] = [
@@ -29,7 +30,8 @@ const allNavItems: NavItem[] = [
   { href: "/lesson-plans", label: "Rencana Pembelajaran", originalLabel: "Rencana Pembelajaran", icon: BookOpenText, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/annual-programs", label: "Program Tahunan", originalLabel: "Program Tahunan", icon: CalendarDays, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/semester-programs", label: "Program Semester", originalLabel: "Program Semester", icon: CalendarClock, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
-  { href: "/ai-assistant", label: "Asisten AI", originalLabel: "Asisten AI", icon: Sparkles, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"] },
+  { href: "/ai-assistant", label: "Asisten AI Materi", originalLabel: "Asisten AI Materi", icon: Sparkles, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"] },
+  { href: "/ai-kurikulum-merdeka-module", label: "Modul Ajar (AI)", originalLabel: "Modul Ajar (AI)", icon: BrainCircuit, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], isKurikulumMerdekaOnly: true },
   { href: "/admin/user-management", label: "Manajemen Pengguna", originalLabel: "Manajemen Pengguna", icon: Users, roles: ["Admin", "TataUsaha"], isSystemSetting: false }, 
   { href: "/settings", label: "Pengaturan Akun", originalLabel: "Pengaturan Akun", icon: SettingsIcon, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/admin/system-settings", label: "Pengaturan Sistem", originalLabel: "Pengaturan Sistem", icon: ShieldCheck, roles: ["Admin"], isSystemSetting: true },
@@ -38,7 +40,7 @@ const allNavItems: NavItem[] = [
 
 export default function AppLayout({ children }: PropsWithChildren) {
   const { user, isAuthenticated, loading, logout } = useAuth();
-  const { defaultCurriculum } = useCurriculum(); // Get defaultCurriculum
+  const { defaultCurriculum } = useCurriculum(); 
   const router = useRouter();
   const pathname = usePathname();
 
@@ -53,14 +55,15 @@ export default function AppLayout({ children }: PropsWithChildren) {
     return allNavItems
       .map(item => {
         if (item.href === "/lesson-plans" && defaultCurriculum === "Kurikulum Merdeka") {
-          return { ...item, label: "ATP" };
+          return { ...item, label: "ATP / Modul Ajar" }; // Updated label for KM
         }
-        return { ...item, label: item.originalLabel || item.label }; // Reset to originalLabel or current label
+        return { ...item, label: item.originalLabel || item.label }; 
       })
       .filter(item => 
         item.roles.includes(user.role) && 
         !item.isHiddenFromSidebar &&
-        (item.isSystemSetting === false || (item.isSystemSetting === true && user.role === 'Admin') || item.roles.includes(user.role) )
+        (item.isSystemSetting === false || (item.isSystemSetting === true && user.role === 'Admin') || item.roles.includes(user.role) ) &&
+        (!item.isKurikulumMerdekaOnly || defaultCurriculum === "Kurikulum Merdeka") // Filter by Kurikulum Merdeka
     ).sort((a,b) => { 
         if (a.isSystemSetting && !b.isSystemSetting) return 1; 
         if (!a.isSystemSetting && b.isSystemSetting) return -1; 
@@ -71,9 +74,13 @@ export default function AppLayout({ children }: PropsWithChildren) {
         if (a.href === "/settings") return 1; 
         if (b.href === "/settings") return -1;
 
+        // Keep Modul Ajar (AI) and Asisten AI Materi grouped or ordered logically
+        if (a.href === "/ai-kurikulum-merdeka-module" && b.href === "/ai-assistant") return -1;
+        if (a.href === "/ai-assistant" && b.href === "/ai-kurikulum-merdeka-module") return 1;
+
         return 0;
     });
-  }, [user, defaultCurriculum]); // Add defaultCurriculum to dependency array
+  }, [user, defaultCurriculum]); 
 
    useEffect(() => {
     if (!loading && isAuthenticated && user) {
@@ -85,6 +92,16 @@ export default function AppLayout({ children }: PropsWithChildren) {
           if (dashboardAccess) router.push("/dashboard"); else logout(); 
           return;
         }
+        // Check for Kurikulum Merdeka only routes
+        if (currentNavItem.isKurikulumMerdekaOnly && defaultCurriculum !== "Kurikulum Merdeka") {
+            toast({
+                title: "Fitur Tidak Tersedia",
+                description: `Menu '${currentNavItem.label}' hanya untuk Kurikulum Merdeka. Kurikulum saat ini: ${defaultCurriculum}.`,
+                variant: "destructive",
+            });
+            router.push("/dashboard");
+            return;
+        }
       } else if (pathname === "/settings") { 
          const settingsBaseAccess = allNavItems.find(item => item.href === "/settings" && item.roles.includes(user.role));
          if (!settingsBaseAccess) {
@@ -92,7 +109,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
          }
       }
     }
-  }, [loading, isAuthenticated, user, pathname, router, logout]);
+  }, [loading, isAuthenticated, user, pathname, router, logout, defaultCurriculum]);
 
 
   if (loading || !isAuthenticated || !user) { 
@@ -148,3 +165,5 @@ export default function AppLayout({ children }: PropsWithChildren) {
   );
 }
 
+// Dummy toast for role check, replace with actual toast hook usage later
+const toast = (params: {title: string, description: string, variant?: string}) => console.warn("Toast:", params);

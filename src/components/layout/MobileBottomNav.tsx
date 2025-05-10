@@ -4,25 +4,27 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, Users } from 'lucide-react'; 
+import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, Users, BrainCircuit } from 'lucide-react'; 
 import type { UserRole } from '@/types';
 import { useAuth } from '@/contexts/AuthContext'; 
-import { useCurriculum } from '@/contexts/CurriculumContext'; // Import CurriculumContext
+import { useCurriculum } from '@/contexts/CurriculumContext';
 
 interface MobileNavItemData {
   href: string;
   label: string;
-  originalLabel?: string; // To store the base label
+  originalLabel?: string; 
   icon: React.ElementType;
   roles?: UserRole[]; 
+  isKurikulumMerdekaOnly?: boolean; // New flag
 }
 
 const mobileNavItemsData: MobileNavItemData[] = [
   { href: "/dashboard", label: "Dasbor", originalLabel: "Dasbor", icon: LayoutDashboard, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/lesson-plans", label: "RPP", originalLabel: "RPP", icon: BookOpenText, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
-  { href: "/annual-programs", label: "PROTA", originalLabel: "PROTA", icon: CalendarDays, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
-  { href: "/semester-programs", label: "Promes", originalLabel: "Promes", icon: CalendarClock, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
-  { href: "/ai-assistant", label: "AI", originalLabel: "AI", icon: Sparkles, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"] },
+  // { href: "/annual-programs", label: "PROTA", originalLabel: "PROTA", icon: CalendarDays, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+  // { href: "/semester-programs", label: "Promes", originalLabel: "Promes", icon: CalendarClock, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+  { href: "/ai-assistant", label: "AI Materi", originalLabel: "AI Materi", icon: Sparkles, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"] },
+  { href: "/ai-kurikulum-merdeka-module", label: "Modul AI", originalLabel: "Modul AI", icon: BrainCircuit, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], isKurikulumMerdekaOnly: true },
   { href: "/settings", label: "Atur", originalLabel: "Atur", icon: SettingsIcon, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] }, 
 ];
 
@@ -30,17 +32,21 @@ const mobileNavItemsData: MobileNavItemData[] = [
 export function MobileBottomNav() {
   const pathname = usePathname();
   const { user } = useAuth();
-  const { defaultCurriculum } = useCurriculum(); // Get defaultCurriculum
+  const { defaultCurriculum } = useCurriculum(); 
 
   const visibleNavItems = user 
     ? mobileNavItemsData
         .map(item => {
           if (item.href === "/lesson-plans" && defaultCurriculum === "Kurikulum Merdeka") {
-            return { ...item, label: "ATP" };
+            return { ...item, label: "ATP" }; // Updated label for KM
           }
-          return { ...item, label: item.originalLabel || item.label }; // Reset to originalLabel or current label
+          return { ...item, label: item.originalLabel || item.label }; 
         })
-        .filter(item => !item.roles || item.roles.includes(user.role))
+        .filter(item => 
+            (!item.roles || item.roles.includes(user.role)) &&
+            (!item.isKurikulumMerdekaOnly || defaultCurriculum === "Kurikulum Merdeka") // Filter by Kurikulum Merdeka
+        )
+        .slice(0, 5) // Ensure only 5 items are shown at most
     : [];
 
   if (!user || visibleNavItems.length === 0) {
