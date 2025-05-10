@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -6,13 +5,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { CalendarClock, Save, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
-import type { SemesterProgram, WeeklyUnit, CurriculumFramework } from "@/types";
+import type { SemesterProgram, WeeklyUnit, CurriculumFramework, SchoolProfile, EducationLevel } from "@/types";
 import { SemesterProgramFormFields } from "@/components/curriculum/SemesterProgramFormFields";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCurriculum } from "@/contexts/CurriculumContext";
 import { useLog } from "@/contexts/LogContext";
 import { generateSemesterProgram, type GenerateSemesterProgramInput, type GenerateSemesterProgramOutput } from "@/ai/flows/generate-semester-program";
+import { SCHOOL_PROFILE_STORAGE_KEY } from "@/types";
 
 
 const SEMESTER_PROGRAMS_STORAGE_KEY = "appSemesterPrograms";
@@ -24,7 +24,6 @@ const getInitialPromesData = (curriculum: CurriculumFramework): Partial<Semester
         alokasiWaktuTotalSemester: '',
         komponenMingguan: [],
         curriculumType: curriculum,
-        // Textarea fields for form binding
         capaianPembelajaranUmum_textarea: '',
         alokasiWaktuTotalSemester_input: '',
         komponenMingguan_textarea: '',
@@ -83,6 +82,7 @@ export default function NewSemesterProgramPage() {
 
   const [selectedCurriculum, setSelectedCurriculum] = useState<CurriculumFramework>(defaultCurriculum);
   const [formData, setFormData] = useState<Partial<SemesterProgram & PromesFormState>>(getInitialPromesData(defaultCurriculum));
+  const [schoolEducationLevel, setSchoolEducationLevel] = useState<EducationLevel | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
@@ -93,6 +93,16 @@ export default function NewSemesterProgramPage() {
     }
     setSelectedCurriculum(defaultCurriculum);
     setFormData(getInitialPromesData(defaultCurriculum));
+
+    const storedSchoolProfile = localStorage.getItem(SCHOOL_PROFILE_STORAGE_KEY);
+    if (storedSchoolProfile) {
+      try {
+        const parsedProfile: SchoolProfile = JSON.parse(storedSchoolProfile);
+        setSchoolEducationLevel(parsedProfile.jenjangPendidikan);
+      } catch (e) {
+        console.error("Failed to parse school profile for grade levels", e);
+      }
+    }
   }, [user, router, toast, defaultCurriculum]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -109,13 +119,10 @@ export default function NewSemesterProgramPage() {
       const newCurriculum = value as CurriculumFramework;
       setSelectedCurriculum(newCurriculum);
       setFormData(prev => ({
-        // Preserve common fields
         title: prev.title,
         subject: prev.subject,
-        // gradeLevel: prev.gradeLevel, // Will be reset by form field component
         year: prev.year,
         semester: prev.semester,
-        // Set new curriculum type and specific fields
         ...getInitialPromesData(newCurriculum),
       }));
     } else {
@@ -164,7 +171,7 @@ export default function NewSemesterProgramPage() {
         description: "Tidak dapat menghasilkan konten. Silakan coba lagi.",
         variant: "destructive",
       });
-      addLog("ERROR", `Gagal membuat draf Promes dengan AI. Kesalahan: ${error instanceof Error ? error.message : String(error)}`, source);
+      addLog("ERROR", `Gagal menyimpan Promes baru "${newSemesterProgram.title}". Kesalahan: ${error instanceof Error ? error.message : String(error)}`, source);
     } finally {
       setIsGeneratingAI(false);
     }
@@ -241,6 +248,7 @@ export default function NewSemesterProgramPage() {
               isGeneratingAI={isGeneratingAI}
               handleGenerateWithAI={handleGenerateWithAI}
               userRole={user.role}
+              schoolEducationLevel={schoolEducationLevel}
             />
             <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-6 border-t">
               <Button type="button" variant="outline" onClick={() => router.back()} className="w-full sm:w-auto">
@@ -257,3 +265,4 @@ export default function NewSemesterProgramPage() {
     </div>
   );
 }
+

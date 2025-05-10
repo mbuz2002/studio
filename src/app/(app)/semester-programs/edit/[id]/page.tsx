@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -6,13 +5,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { CalendarClock, Save, ArrowLeft, Trash2 } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
-import type { SemesterProgram, WeeklyUnit, CurriculumFramework } from "@/types";
+import type { SemesterProgram, WeeklyUnit, CurriculumFramework, SchoolProfile, EducationLevel } from "@/types";
 import { SemesterProgramFormFields } from "@/components/curriculum/SemesterProgramFormFields";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCurriculum } from "@/contexts/CurriculumContext";
 import { useLog } from "@/contexts/LogContext";
 import { generateSemesterProgram, type GenerateSemesterProgramInput, type GenerateSemesterProgramOutput } from "@/ai/flows/generate-semester-program";
+import { SCHOOL_PROFILE_STORAGE_KEY } from "@/types";
 
 const SEMESTER_PROGRAMS_STORAGE_KEY = "appSemesterPrograms";
 
@@ -68,8 +68,9 @@ export default function EditSemesterProgramPage() {
 
   const [formData, setFormData] = useState<Partial<SemesterProgram & PromesFormState>>({});
   const [selectedCurriculum, setSelectedCurriculum] = useState<CurriculumFramework>("Kurikulum Merdeka");
+  const [schoolEducationLevel, setSchoolEducationLevel] = useState<EducationLevel | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoadingData, setIsLoadingData] = useState(true);
+  const [isLoadingData, setIsLoadingData] = useState(false);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
   useEffect(() => {
@@ -102,6 +103,15 @@ export default function EditSemesterProgramPage() {
           router.push("/semester-programs");
         }
       }
+      const storedSchoolProfile = localStorage.getItem(SCHOOL_PROFILE_STORAGE_KEY);
+      if (storedSchoolProfile) {
+        try {
+          const parsedProfile: SchoolProfile = JSON.parse(storedSchoolProfile);
+          setSchoolEducationLevel(parsedProfile.jenjangPendidikan);
+        } catch (e) {
+          console.error("Failed to parse school profile for grade levels", e);
+        }
+      }
       setIsLoadingData(false);
     }
   }, [promesId, user, router, toast, addLog]);
@@ -123,10 +133,8 @@ export default function EditSemesterProgramPage() {
         const newFormData: Partial<SemesterProgram & PromesFormState> = {
             ...prev,
             curriculumType: newCurriculum,
-            gradeLevel: '', // Reset gradeLevel
+            gradeLevel: '', 
         };
-        // For Promes, capaianPembelajaranUmum_textarea and komponenMingguan_textarea might need to be cleared
-        // or re-evaluated by AI, as their content structure/meaning might change.
         newFormData.capaianPembelajaranUmum_textarea = '';
         newFormData.komponenMingguan_textarea = ''; 
         newFormData.capaianPembelajaranUmum = '';
@@ -281,6 +289,7 @@ export default function EditSemesterProgramPage() {
               isGeneratingAI={isGeneratingAI}
               handleGenerateWithAI={handleGenerateWithAI}
               userRole={user.role}
+              schoolEducationLevel={schoolEducationLevel}
             />
             <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-6 border-t">
               <Button type="button" variant="outline" onClick={() => router.back()} className="w-full sm:w-auto">
@@ -297,3 +306,4 @@ export default function EditSemesterProgramPage() {
     </div>
   );
 }
+

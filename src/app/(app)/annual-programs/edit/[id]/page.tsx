@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -6,13 +5,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { CalendarDays, Save, ArrowLeft, Trash2 } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
-import type { AnnualProgram, AnnualProgramComponent, CurriculumFramework } from "@/types";
+import type { AnnualProgram, AnnualProgramComponent, CurriculumFramework, SchoolProfile, EducationLevel } from "@/types";
 import { AnnualProgramFormFields } from "@/components/curriculum/AnnualProgramFormFields";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCurriculum } from "@/contexts/CurriculumContext";
 import { useLog } from "@/contexts/LogContext";
 import { generateAnnualProgram, type GenerateAnnualProgramInput, type GenerateAnnualProgramOutput } from "@/ai/flows/generate-annual-program";
+import { SCHOOL_PROFILE_STORAGE_KEY } from "@/types";
 
 const ANNUAL_PROGRAMS_STORAGE_KEY = "appAnnualPrograms";
 
@@ -38,6 +38,7 @@ export default function EditAnnualProgramPage() {
 
   const [formData, setFormData] = useState<Partial<AnnualProgram & ProtaFormState>>({});
   const [selectedCurriculum, setSelectedCurriculum] = useState<CurriculumFramework>("Kurikulum Merdeka");
+  const [schoolEducationLevel, setSchoolEducationLevel] = useState<EducationLevel | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
@@ -78,6 +79,15 @@ export default function EditAnnualProgramPage() {
           router.push("/annual-programs");
         }
       }
+      const storedSchoolProfile = localStorage.getItem(SCHOOL_PROFILE_STORAGE_KEY);
+      if (storedSchoolProfile) {
+        try {
+          const parsedProfile: SchoolProfile = JSON.parse(storedSchoolProfile);
+          setSchoolEducationLevel(parsedProfile.jenjangPendidikan);
+        } catch (e) {
+          console.error("Failed to parse school profile for grade levels", e);
+        }
+      }
       setIsLoadingData(false);
     }
   }, [protaId, user, router, toast, addLog]);
@@ -99,7 +109,7 @@ export default function EditAnnualProgramPage() {
         const newFormData: Partial<AnnualProgram & ProtaFormState> = {
             ...prev,
             curriculumType: newCurriculum,
-            gradeLevel: '', // Reset gradeLevel
+            gradeLevel: '', 
         };
         if (newCurriculum === "Kurikulum Merdeka") {
             newFormData.capaianPembelajaran_textarea = prev.capaianPembelajaran_textarea || '';
@@ -110,7 +120,6 @@ export default function EditAnnualProgramPage() {
             newFormData.profilPelajarPancasilaFocus_textarea = undefined;
             newFormData.profilPelajarPancasilaFocus = undefined;
         }
-        // Reset semester components as their structure (elemenCapaianPembelajaran vs KD) changes meaning
         newFormData.semester1_topics_textarea = '';
         newFormData.semester1_elements_textarea = '';
         newFormData.semester1_allocations_textarea = '';
@@ -295,6 +304,7 @@ export default function EditAnnualProgramPage() {
               isGeneratingAI={isGeneratingAI}
               handleGenerateWithAI={handleGenerateWithAI}
               userRole={user.role}
+              schoolEducationLevel={schoolEducationLevel}
             />
             <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-6 border-t">
               <Button type="button" variant="outline" onClick={() => router.back()} className="w-full sm:w-auto">
@@ -311,3 +321,4 @@ export default function EditAnnualProgramPage() {
     </div>
   );
 }
+

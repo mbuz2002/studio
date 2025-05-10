@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -6,13 +5,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { BookOpenText, Save, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
-import type { LessonPlan, CurriculumFramework } from "@/types";
+import type { LessonPlan, CurriculumFramework, SchoolProfile, EducationLevel } from "@/types";
 import { LessonPlanFormFields } from "@/components/curriculum/LessonPlanFormFields";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCurriculum } from "@/contexts/CurriculumContext";
 import { useLog } from "@/contexts/LogContext";
 import { generateLessonPlanFromTopic, type GenerateLessonPlanInput, type GenerateLessonPlanOutput } from "@/ai/flows/generate-lesson-plan-from-topic";
+import { SCHOOL_PROFILE_STORAGE_KEY } from "@/types";
 
 const LESSON_PLANS_STORAGE_KEY = "appLessonPlans";
 
@@ -100,6 +100,7 @@ export default function NewLessonPlanPage() {
 
   const [selectedCurriculum, setSelectedCurriculum] = useState<CurriculumFramework>(defaultCurriculum);
   const [formData, setFormData] = useState<Partial<LessonPlan>>(getInitialFormData(defaultCurriculum));
+  const [schoolEducationLevel, setSchoolEducationLevel] = useState<EducationLevel | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
@@ -108,10 +109,20 @@ export default function NewLessonPlanPage() {
       toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk membuat item ini.", variant: "destructive" });
       router.push("/lesson-plans");
     }
-    // Reset form data when defaultCurriculum changes ONLY if the user hasn't started typing
-    // For simplicity, we'll reset it every time defaultCurriculum changes on this NEW page.
+    
     setSelectedCurriculum(defaultCurriculum);
     setFormData(getInitialFormData(defaultCurriculum));
+
+    const storedSchoolProfile = localStorage.getItem(SCHOOL_PROFILE_STORAGE_KEY);
+    if (storedSchoolProfile) {
+      try {
+        const parsedProfile: SchoolProfile = JSON.parse(storedSchoolProfile);
+        setSchoolEducationLevel(parsedProfile.jenjangPendidikan);
+      } catch (e) {
+        console.error("Failed to parse school profile for grade levels", e);
+      }
+    }
+
   }, [user, router, toast, defaultCurriculum]);
 
 
@@ -128,15 +139,12 @@ export default function NewLessonPlanPage() {
       }
       const newCurriculum = value as CurriculumFramework;
       setSelectedCurriculum(newCurriculum);
-      // Reset form data based on new curriculum, preserving common fields if desired
+      
       setFormData(prev => ({
-        // Preserve some common fields if they exist from previous state
         title: prev.title,
         subject: prev.subject,
-        // gradeLevel will be reset because options change
         topic: prev.topic,
         alokasiWaktuJP: prev.alokasiWaktuJP,
-        // Set new curriculum type and specific fields
         ...getInitialFormData(newCurriculum),
       }));
     } else {
@@ -174,17 +182,15 @@ export default function NewLessonPlanPage() {
          addLog("WARN", `Gagal membuat draf ${selectedCurriculum === "Kurikulum Merdeka" ? "ATP/Modul Ajar" : "RPP"} dengan AI: Informasi kurang.`, source);
          return;
     }
-    if (selectedCurriculum === "Kurikulum Merdeka" && (!formData.capaianPembelajaran || formData.capaianPembelajaran.length === 0)) {
-        const isPAUD = formData.gradeLevel?.toUpperCase().includes("PAUD");
-        if (!isPAUD) { // For PAUD, CP is optional for AI generation in this context
-            toast({
-                title: "Informasi Kurang untuk Kurikulum Merdeka",
-                description: "Harap isi Capaian Pembelajaran untuk hasil AI yang lebih optimal.",
-                variant: "destructive"
-            });
-            addLog("WARN", `Gagal membuat draf ATP/Modul Ajar dengan AI (Kurikulum Merdeka): Capaian Pembelajaran kosong.`, source);
-            return;
-        }
+    const isPAUD = schoolEducationLevel === "PAUD" && selectedCurriculum === "Kurikulum Merdeka" && formData.gradeLevel?.toUpperCase().includes("PAUD");
+    if (selectedCurriculum === "Kurikulum Merdeka" && !isPAUD && (!formData.capaianPembelajaran || formData.capaianPembelajaran.length === 0)) {
+        toast({
+            title: "Informasi Kurang untuk Kurikulum Merdeka",
+            description: "Harap isi Capaian Pembelajaran untuk hasil AI yang lebih optimal.",
+            variant: "destructive"
+        });
+        addLog("WARN", `Gagal membuat draf ATP/Modul Ajar dengan AI (Kurikulum Merdeka): Capaian Pembelajaran kosong.`, source);
+        return;
     }
 
     setIsGeneratingAI(true);
@@ -330,6 +336,7 @@ export default function NewLessonPlanPage() {
               isGeneratingAI={isGeneratingAI}
               handleGenerateWithAI={handleGenerateWithAI}
               userRole={user.role}
+              schoolEducationLevel={schoolEducationLevel}
             />
             <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-6 border-t">
               <Button type="button" variant="outline" onClick={() => router.back()} className="w-full sm:w-auto">
@@ -346,3 +353,4 @@ export default function NewLessonPlanPage() {
     </div>
   );
 }
+

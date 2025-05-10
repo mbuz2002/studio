@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, type FormEvent, useRef } from "react";
@@ -10,12 +9,13 @@ import { Textarea } from "@/components/ui/textarea";
 import type { SchoolProfile, EducationLevel } from "@/types";
 import { SCHOOL_PROFILE_STORAGE_KEY } from "@/types";
 import { useToast } from "@/hooks/use-toast";
-import { Building, Save, UploadCloud, Link2 } from "lucide-react";
+import { Building, Save, UploadCloud, Link2, Info } from "lucide-react";
 import { useLog } from "@/contexts/LogContext";
 import { useAuth } from "@/contexts/AuthContext";
 import Image from "next/image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const educationLevels: { value: EducationLevel; label: string }[] = [
   { value: "PAUD", label: "Pendidikan Anak Usia Dini (PAUD)" },
@@ -28,16 +28,16 @@ const educationLevels: { value: EducationLevel; label: string }[] = [
 ];
 
 const initialProfile: SchoolProfile = {
-  id: "school-profile-1",
-  namaSekolah: "Sekolah Penggerak Contoh",
-  jenjangPendidikan: "SMA/MA", // Default jenjang
-  alamat: "Jl. Pendidikan No. 1, Kota Pelajar",
-  nomorTelepon: "021-1234567",
-  emailSekolah: "info@sekolahpenggerak.sch.id",
-  namaKepalaSekolah: "Dr. Budi Santoso, M.Pd.",
-  npsn: "12345678",
-  logoUrl: "https://picsum.photos/seed/schoollogo/200/200",
-  kotaSekolah: "Kota Pelajar",
+  id: "school-profile-main", // Ensure a unique ID
+  namaSekolah: "Nama Sekolah Anda",
+  jenjangPendidikan: "SMA/MA", 
+  alamat: "Jl. Contoh No. 123",
+  nomorTelepon: "021-000000",
+  emailSekolah: "kontak@sekolahanda.sch.id",
+  namaKepalaSekolah: "Nama Kepala Sekolah",
+  npsn: "10000000",
+  logoUrl: "", // Default to no logo
+  kotaSekolah: "Kota Anda",
   updatedAt: new Date().toISOString(),
 };
 
@@ -48,35 +48,40 @@ export function SchoolProfileForm() {
   const { addLog } = useLog();
   const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [logoPreview, setLogoPreview] = useState<string | null>(profile.logoUrl || null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoInputMethod, setLogoInputMethod] = useState<'url' | 'upload'>('url');
+  const [activeTab, setActiveTab] = useState("infoUmum");
 
   useEffect(() => {
     const source = "SchoolProfileForm-Init";
     const fetchedProfile = localStorage.getItem(SCHOOL_PROFILE_STORAGE_KEY);
     if (fetchedProfile) {
       try {
-        const parsedProfile = JSON.parse(fetchedProfile);
-        setProfile(parsedProfile);
-        setLogoPreview(parsedProfile.logoUrl || null);
+        const parsedProfile = JSON.parse(fetchedProfile) as SchoolProfile;
+        // Ensure all fields are present, falling back to initialProfile defaults
+        const completeProfile = { ...initialProfile, ...parsedProfile };
+        setProfile(completeProfile);
+        setLogoPreview(completeProfile.logoUrl || null);
+        if (completeProfile.logoUrl && completeProfile.logoUrl.startsWith("data:image")) {
+            setLogoInputMethod("upload");
+        } else if (completeProfile.logoUrl) {
+            setLogoInputMethod("url");
+        }
         addLog("INFO", "Profil sekolah dimuat dari penyimpanan lokal.", source);
       } catch (error) {
         console.error("Failed to parse school profile from localStorage", error);
         addLog("ERROR", `Gagal memuat profil sekolah dari penyimpanan lokal: ${error instanceof Error ? error.message : String(error)}`, source);
         localStorage.removeItem(SCHOOL_PROFILE_STORAGE_KEY);
-        setProfile(initialProfile); // Reset to initial if parsing fails
+        setProfile(initialProfile); 
         setLogoPreview(initialProfile.logoUrl || null);
       }
     } else {
-      setProfile(initialProfile); // Use initial if not found
+      setProfile(initialProfile); 
       setLogoPreview(initialProfile.logoUrl || null);
       addLog("INFO", "Tidak ada profil sekolah di penyimpanan lokal, menggunakan data awal.", source);
     }
   }, [addLog]);
 
-  useEffect(() => {
-    setLogoPreview(profile.logoUrl || null);
-  }, [profile.logoUrl]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -87,7 +92,7 @@ export function SchoolProfileForm() {
   };
 
   const handleSelectChange = (name: string, value: string) => {
-    setProfile(prev => ({ ...prev, [name]: value }));
+    setProfile(prev => ({ ...prev, [name]: value as EducationLevel }));
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -100,7 +105,7 @@ export function SchoolProfileForm() {
           variant: "destructive",
         });
         addLog("WARN", `Gagal unggah logo: File terlalu besar (${(file.size / (1024*1024)).toFixed(2)}MB). Oleh ${user?.email}.`, "SchoolProfileForm-LogoUpload");
-        if (fileInputRef.current) fileInputRef.current.value = ""; // Reset file input
+        if (fileInputRef.current) fileInputRef.current.value = ""; 
         return;
       }
       const reader = new FileReader();
@@ -120,13 +125,10 @@ export function SchoolProfileForm() {
     const source = "SchoolProfileForm-Submit";
     addLog("INFO", `Pengguna ${user?.email} memulai pembaruan profil sekolah.`, source);
     
-    const finalLogoUrl = logoPreview;
-
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    const updatedProfile = { ...profile, logoUrl: finalLogoUrl, updatedAt: new Date().toISOString() };
+    const finalProfileData = { ...profile, logoUrl: logoPreview, updatedAt: new Date().toISOString() };
     
-    setProfile(updatedProfile);
-    localStorage.setItem(SCHOOL_PROFILE_STORAGE_KEY, JSON.stringify(updatedProfile));
+    localStorage.setItem(SCHOOL_PROFILE_STORAGE_KEY, JSON.stringify(finalProfileData));
+    setProfile(finalProfileData); // Update state with potentially cleaned logoUrl from preview
     setIsLoading(false);
     toast({
       title: "Profil Sekolah Diperbarui",
@@ -141,128 +143,164 @@ export function SchoolProfileForm() {
         <div className="flex items-center gap-3">
           <Building className="h-8 w-8 text-primary-foreground drop-shadow" />
           <div>
-            <CardTitle className="text-2xl md:text-3xl">Profil Sekolah dan Kop Surat</CardTitle>
+            <CardTitle className="text-2xl md:text-3xl">Profil & Kop Surat Sekolah</CardTitle>
             <CardDescription className="text-primary-foreground/90 mt-1">
-              Kelola informasi umum sekolah Anda. Informasi ini akan digunakan untuk Kop Surat.
+              Kelola informasi umum sekolah dan pengaturan kop surat.
             </CardDescription>
           </div>
         </div>
       </CardHeader>
       <CardContent className="pt-6 p-4 md:p-6">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-1">
-              <Label htmlFor="namaSekolah">Nama Sekolah</Label>
-              <Input id="namaSekolah" name="namaSekolah" value={profile.namaSekolah || ""} onChange={handleChange} required />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="jenjangPendidikan">Jenjang Pendidikan</Label>
-              <Select 
-                name="jenjangPendidikan" 
-                value={profile.jenjangPendidikan || ""} 
-                onValueChange={(value) => handleSelectChange('jenjangPendidikan', value)}
-              >
-                <SelectTrigger id="jenjangPendidikan">
-                  <SelectValue placeholder="Pilih Jenjang Pendidikan" />
-                </SelectTrigger>
-                <SelectContent>
-                  {educationLevels.map(level => (
-                    <SelectItem key={level.value} value={level.value}>{level.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="alamat">Alamat Sekolah</Label>
-            <Textarea id="alamat" name="alamat" value={profile.alamat || ""} onChange={handleChange} required rows={3} />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-1">
-              <Label htmlFor="npsn">NPSN</Label>
-              <Input id="npsn" name="npsn" value={profile.npsn || ""} onChange={handleChange} />
-            </div>
-             <div className="space-y-1">
-              <Label htmlFor="kotaSekolah">Kota/Kabupaten Sekolah</Label>
-              <Input id="kotaSekolah" name="kotaSekolah" value={profile.kotaSekolah || ""} onChange={handleChange} placeholder="cth., Kota Surabaya"/>
-            </div>
-          </div>
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-1">
-              <Label htmlFor="nomorTelepon">Nomor Telepon</Label>
-              <Input id="nomorTelepon" name="nomorTelepon" type="tel" value={profile.nomorTelepon || ""} onChange={handleChange} />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="emailSekolah">Email Sekolah</Label>
-              <Input id="emailSekolah" name="emailSekolah" type="email" value={profile.emailSekolah || ""} onChange={handleChange} />
-            </div>
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="namaKepalaSekolah">Nama Kepala Sekolah</Label>
-            <Input id="namaKepalaSekolah" name="namaKepalaSekolah" value={profile.namaKepalaSekolah || ""} onChange={handleChange} />
-          </div>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 mb-6">
+            <TabsTrigger value="infoUmum">Informasi Umum Sekolah</TabsTrigger>
+            <TabsTrigger value="kopSurat">Pengaturan Kop Surat</TabsTrigger>
+          </TabsList>
+          
+          <form onSubmit={handleSubmit}>
+            <TabsContent value="infoUmum" className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-1.5">
+                  <Label htmlFor="namaSekolah">Nama Sekolah</Label>
+                  <Input id="namaSekolah" name="namaSekolah" value={profile.namaSekolah || ""} onChange={handleChange} required />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="jenjangPendidikan">Jenjang Pendidikan</Label>
+                  <Select 
+                    name="jenjangPendidikan" 
+                    value={profile.jenjangPendidikan || ""} 
+                    onValueChange={(value) => handleSelectChange('jenjangPendidikan', value)}
+                  >
+                    <SelectTrigger id="jenjangPendidikan">
+                      <SelectValue placeholder="Pilih Jenjang Pendidikan" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {educationLevels.map(level => (
+                        <SelectItem key={level.value} value={level.value}>{level.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="alamat">Alamat Sekolah</Label>
+                <Textarea id="alamat" name="alamat" value={profile.alamat || ""} onChange={handleChange} required rows={3} />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-1.5">
+                  <Label htmlFor="npsn">NPSN</Label>
+                  <Input id="npsn" name="npsn" value={profile.npsn || ""} onChange={handleChange} />
+                </div>
+                 <div className="space-y-1.5">
+                  <Label htmlFor="kotaSekolah">Kota/Kabupaten Sekolah (untuk Kop Surat)</Label>
+                  <Input id="kotaSekolah" name="kotaSekolah" value={profile.kotaSekolah || ""} onChange={handleChange} placeholder="cth., Kota Surabaya"/>
+                </div>
+              </div>
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-1.5">
+                  <Label htmlFor="nomorTelepon">Nomor Telepon</Label>
+                  <Input id="nomorTelepon" name="nomorTelepon" type="tel" value={profile.nomorTelepon || ""} onChange={handleChange} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="emailSekolah">Email Sekolah</Label>
+                  <Input id="emailSekolah" name="emailSekolah" type="email" value={profile.emailSekolah || ""} onChange={handleChange} />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="namaKepalaSekolah">Nama Kepala Sekolah (untuk TTD)</Label>
+                <Input id="namaKepalaSekolah" name="namaKepalaSekolah" value={profile.namaKepalaSekolah || ""} onChange={handleChange} />
+              </div>
+              <Alert variant="default" className="border-primary/30 shadow-sm">
+                <Info className="h-5 w-5 text-primary" />
+                <AlertTitle className="font-semibold">Informasi Jenjang Pendidikan</AlertTitle>
+                <AlertDescription className="text-sm">
+                  Pemilihan jenjang pendidikan akan mempengaruhi opsi tingkatan/fase yang tersedia saat membuat dokumen kurikulum (RPP, PROTA, Promes, Kelas).
+                </AlertDescription>
+              </Alert>
+            </TabsContent>
 
-          <div className="space-y-2">
-            <Label>Logo Sekolah (Untuk Kop Surat)</Label>
-            <Tabs value={logoInputMethod} onValueChange={(value) => setLogoInputMethod(value as 'url' | 'upload')} className="w-full">
-              <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2">
-                <TabsTrigger value="url"><Link2 className="mr-2 h-4 w-4" /> Masukkan URL</TabsTrigger>
-                <TabsTrigger value="upload"><UploadCloud className="mr-2 h-4 w-4" /> Unggah File</TabsTrigger>
-              </TabsList>
-              <TabsContent value="url" className="pt-2">
-                <div className="space-y-1">
-                  <Label htmlFor="logoUrl">URL Logo</Label>
-                  <Input 
-                    id="logoUrl" 
-                    name="logoUrl" 
-                    type="url" 
-                    value={logoInputMethod === 'url' ? (profile.logoUrl || '') : ''} 
-                    onChange={handleChange} 
-                    placeholder="https://contoh.com/logo.png" 
-                  />
-                </div>
-              </TabsContent>
-              <TabsContent value="upload" className="pt-2">
-                <div className="space-y-1">
-                  <Label htmlFor="logoFile">Pilih File Logo</Label>
-                  <Input 
-                    id="logoFile" 
-                    name="logoFile" 
-                    type="file" 
-                    accept="image/png, image/jpeg, image/svg+xml, image/gif" 
-                    ref={fileInputRef} 
-                    onChange={handleFileChange} 
-                  />
-                  <p className="text-xs text-muted-foreground">Format yang didukung: PNG, JPG, SVG, GIF. Maksimal 2MB.</p>
-                </div>
-              </TabsContent>
-            </Tabs>
-            
-            {logoPreview && (
-                <div className="mt-4">
-                    <Label>Pratinjau Logo:</Label>
-                    <div className="mt-2 w-32 h-32 relative border rounded-md p-2 flex items-center justify-center bg-muted/30">
-                        <Image 
-                            src={logoPreview} 
-                            alt="Pratinjau Logo Sekolah" 
-                            fill
-                            style={{objectFit:"contain"}}
-                            className="rounded"
-                            onError={() => {
-                              if (logoPreview?.startsWith('http')) setLogoPreview(null);
-                            }}
-                            data-ai-hint="school logo"
-                        />
+            <TabsContent value="kopSurat" className="space-y-6">
+              <div className="space-y-1.5">
+                <Label>Logo Sekolah (Untuk Kop Surat)</Label>
+                <Tabs value={logoInputMethod} onValueChange={(value) => setLogoInputMethod(value as 'url' | 'upload')} className="w-full">
+                  <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2">
+                    <TabsTrigger value="url"><Link2 className="mr-2 h-4 w-4" /> Masukkan URL</TabsTrigger>
+                    <TabsTrigger value="upload"><UploadCloud className="mr-2 h-4 w-4" /> Unggah File</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="url" className="pt-2">
+                    <div className="space-y-1">
+                      <Label htmlFor="logoUrl">URL Logo</Label>
+                      <Input 
+                        id="logoUrl" 
+                        name="logoUrl" 
+                        type="url" 
+                        value={logoInputMethod === 'url' ? (profile.logoUrl || '') : ''} 
+                        onChange={handleChange} 
+                        placeholder="https://contoh.com/logo.png" 
+                      />
                     </div>
-                </div>
-            )}
-          </div>
-
-          <Button type="submit" disabled={isLoading} className="w-full sm:w-auto mt-6 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-shadow">
-            <Save className="mr-2 h-4 w-4" />
-            {isLoading ? "Menyimpan..." : "Simpan Profil Sekolah"}
-          </Button>
-        </form>
+                  </TabsContent>
+                  <TabsContent value="upload" className="pt-2">
+                    <div className="space-y-1">
+                      <Label htmlFor="logoFile">Pilih File Logo</Label>
+                      <Input 
+                        id="logoFile" 
+                        name="logoFile" 
+                        type="file" 
+                        accept="image/png, image/jpeg, image/svg+xml, image/gif" 
+                        ref={fileInputRef} 
+                        onChange={handleFileChange} 
+                      />
+                      <p className="text-xs text-muted-foreground">Format yang didukung: PNG, JPG, SVG, GIF. Maksimal 2MB.</p>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+                
+                {logoPreview && (
+                    <div className="mt-4">
+                        <Label>Pratinjau Logo:</Label>
+                        <div className="mt-2 w-32 h-32 relative border rounded-md p-2 flex items-center justify-center bg-muted/30">
+                            <Image 
+                                src={logoPreview} 
+                                alt="Pratinjau Logo Sekolah" 
+                                fill
+                                style={{objectFit:"contain"}}
+                                className="rounded"
+                                onErrorCapture={(e) => {
+                                  console.warn("Image preview error for:", logoPreview, e);
+                                  setLogoPreview(null); // Clear preview on error
+                                }}
+                                data-ai-hint="school logo"
+                            />
+                        </div>
+                    </div>
+                )}
+                {!logoPreview && (
+                   <div className="mt-4">
+                        <Label>Pratinjau Logo:</Label>
+                        <div className="mt-2 w-32 h-32 border rounded-md p-2 flex items-center justify-center bg-muted/30 text-muted-foreground text-xs text-center">
+                            Tidak ada logo atau URL tidak valid.
+                        </div>
+                    </div>
+                )}
+              </div>
+              <Alert variant="default" className="border-accent/30 shadow-sm">
+                <Info className="h-5 w-5 text-accent" />
+                <AlertTitle className="font-semibold">Pengaturan Kop Surat</AlertTitle>
+                <AlertDescription className="text-sm">
+                  Nama Sekolah, Alamat, NPSN, Nomor Telepon, Email Sekolah, dan Logo akan digunakan untuk membuat kop surat pada dokumen yang dicetak. Kota/Kabupaten Sekolah akan digunakan pada bagian tanda tangan.
+                </AlertDescription>
+              </Alert>
+            </TabsContent>
+            
+            <div className="pt-6 border-t">
+              <Button type="submit" disabled={isLoading} className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-shadow">
+                <Save className="mr-2 h-4 w-4" />
+                {isLoading ? "Menyimpan..." : "Simpan Profil & Pengaturan Kop"}
+              </Button>
+            </div>
+          </form>
+        </Tabs>
       </CardContent>
     </Card>
   );

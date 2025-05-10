@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useMemo } from "react";
@@ -6,11 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { LessonPlan, CurriculumFramework, UserRole } from "@/types";
+import type { LessonPlan, CurriculumFramework, UserRole, EducationLevel } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Loader2, Wand2 } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
-
 
 interface LessonPlanFormFieldsProps {
   formData: Partial<LessonPlan>;
@@ -23,36 +21,35 @@ interface LessonPlanFormFieldsProps {
   isGeneratingAI: boolean;
   handleGenerateWithAI: () => Promise<void>;
   userRole: UserRole;
+  schoolEducationLevel?: EducationLevel;
 }
 
-const merdekaGradeLevels = [
-  { value: "PAUD (Kurikulum Merdeka)", label: "PAUD (Kurikulum Merdeka)" },
-  { value: "Fase A (Kelas 1-2 SD/MI)", label: "Fase A (Kelas 1-2 SD/MI)" },
-  { value: "Fase B (Kelas 3-4 SD/MI)", label: "Fase B (Kelas 3-4 SD/MI)" },
-  { value: "Fase C (Kelas 5-6 SD/MI)", label: "Fase C (Kelas 5-6 SD/MI)" },
-  { value: "Fase D (Kelas 7-9 SMP/MTs)", label: "Fase D (Kelas 7-9 SMP/MTs)" },
-  { value: "Fase E (Kelas 10 SMA/MA/SMK/MAK)", label: "Fase E (Kelas 10 SMA/MA/SMK/MAK)" },
-  { value: "Fase F (Kelas 11-12 SMA/MA/SMK/MAK)", label: "Fase F (Kelas 11-12 SMA/MA/SMK/MAK)" },
-  { value: "SLB (Fase A-F Disesuaikan)", label: "SLB (Fase A-F Disesuaikan)" },
-  { value: "Pendidikan Kesetaraan (Fase A-F Disesuaikan)", label: "Pendidikan Kesetaraan (Fase A-F Disesuaikan)" },
-];
+const allPossibleGradeLevels: { value: string, label: string, educationLevels: EducationLevel[], curriculums: string[] }[] = [
+  { value: "PAUD (Kurikulum Merdeka)", label: "PAUD (Kurikulum Merdeka)", educationLevels: ["PAUD"], curriculums: ["Kurikulum Merdeka"] },
+  { value: "Fase A (Kelas 1-2 SD/MI)", label: "Fase A (Kelas 1-2 SD/MI)", educationLevels: ["SD/MI"], curriculums: ["Kurikulum Merdeka"] },
+  { value: "Fase B (Kelas 3-4 SD/MI)", label: "Fase B (Kelas 3-4 SD/MI)", educationLevels: ["SD/MI"], curriculums: ["Kurikulum Merdeka"] },
+  { value: "Fase C (Kelas 5-6 SD/MI)", label: "Fase C (Kelas 5-6 SD/MI)", educationLevels: ["SD/MI"], curriculums: ["Kurikulum Merdeka"] },
+  { value: "Fase D (Kelas 7-9 SMP/MTs)", label: "Fase D (Kelas 7-9 SMP/MTs)", educationLevels: ["SMP/MTs"], curriculums: ["Kurikulum Merdeka"] },
+  { value: "Fase E (Kelas 10 SMA/MA/SMK/MAK)", label: "Fase E (Kelas 10 SMA/MA/SMK/MAK)", educationLevels: ["SMA/MA", "SMK/MAK"], curriculums: ["Kurikulum Merdeka"] },
+  { value: "Fase F (Kelas 11-12 SMA/MA/SMK/MAK)", label: "Fase F (Kelas 11-12 SMA/MA/SMK/MAK)", educationLevels: ["SMA/MA", "SMK/MAK"], curriculums: ["Kurikulum Merdeka"] },
+  { value: "SLB (Fase A-F Disesuaikan)", label: "SLB (Fase A-F Disesuaikan)", educationLevels: ["SLB"], curriculums: ["Kurikulum Merdeka"] },
+  { value: "Pendidikan Kesetaraan (Fase A-F Disesuaikan)", label: "Pendidikan Kesetaraan (Fase A-F Disesuaikan)", educationLevels: ["PKBM/Kesetaraan"], curriculums: ["Kurikulum Merdeka"] },
 
-const k13KtspGradeLevels = [
-  { value: "PAUD (K13/KTSP)", label: "PAUD (K13/KTSP)" },
-  { value: "Kelas I SD/MI", label: "Kelas I SD/MI" },
-  { value: "Kelas II SD/MI", label: "Kelas II SD/MI" },
-  { value: "Kelas III SD/MI", label: "Kelas III SD/MI" },
-  { value: "Kelas IV SD/MI", label: "Kelas IV SD/MI" },
-  { value: "Kelas V SD/MI", label: "Kelas V SD/MI" },
-  { value: "Kelas VI SD/MI", label: "Kelas VI SD/MI" },
-  { value: "Kelas VII SMP/MTs", label: "Kelas VII SMP/MTs" },
-  { value: "Kelas VIII SMP/MTs", label: "Kelas VIII SMP/MTs" },
-  { value: "Kelas IX SMP/MTs", label: "Kelas IX SMP/MTs" },
-  { value: "Kelas X SMA/MA/SMK/MAK", label: "Kelas X SMA/MA/SMK/MAK" },
-  { value: "Kelas XI SMA/MA/SMK/MAK", label: "Kelas XI SMA/MA/SMK/MAK" },
-  { value: "Kelas XII SMA/MA/SMK/MAK", label: "Kelas XII SMA/MA/SMK/MAK" },
-  { value: "SLB (Kelas 1-12 Disesuaikan)", label: "SLB (Kelas 1-12 Disesuaikan)" },
-  { value: "Pendidikan Kesetaraan (Paket A/B/C)", label: "Pendidikan Kesetaraan (Paket A/B/C)" },
+  { value: "PAUD (K13/KTSP)", label: "PAUD (K13/KTSP)", educationLevels: ["PAUD"], curriculums: ["K-13", "KTSP 2006"] },
+  { value: "Kelas I SD/MI", label: "Kelas I SD/MI", educationLevels: ["SD/MI"], curriculums: ["K-13", "KTSP 2006"] },
+  { value: "Kelas II SD/MI", label: "Kelas II SD/MI", educationLevels: ["SD/MI"], curriculums: ["K-13", "KTSP 2006"] },
+  { value: "Kelas III SD/MI", label: "Kelas III SD/MI", educationLevels: ["SD/MI"], curriculums: ["K-13", "KTSP 2006"] },
+  { value: "Kelas IV SD/MI", label: "Kelas IV SD/MI", educationLevels: ["SD/MI"], curriculums: ["K-13", "KTSP 2006"] },
+  { value: "Kelas V SD/MI", label: "Kelas V SD/MI", educationLevels: ["SD/MI"], curriculums: ["K-13", "KTSP 2006"] },
+  { value: "Kelas VI SD/MI", label: "Kelas VI SD/MI", educationLevels: ["SD/MI"], curriculums: ["K-13", "KTSP 2006"] },
+  { value: "Kelas VII SMP/MTs", label: "Kelas VII SMP/MTs", educationLevels: ["SMP/MTs"], curriculums: ["K-13", "KTSP 2006"] },
+  { value: "Kelas VIII SMP/MTs", label: "Kelas VIII SMP/MTs", educationLevels: ["SMP/MTs"], curriculums: ["K-13", "KTSP 2006"] },
+  { value: "Kelas IX SMP/MTs", label: "Kelas IX SMP/MTs", educationLevels: ["SMP/MTs"], curriculums: ["K-13", "KTSP 2006"] },
+  { value: "Kelas X SMA/MA/SMK/MAK", label: "Kelas X SMA/MA/SMK/MAK", educationLevels: ["SMA/MA", "SMK/MAK"], curriculums: ["K-13", "KTSP 2006"] },
+  { value: "Kelas XI SMA/MA/SMK/MAK", label: "Kelas XI SMA/MA/SMK/MAK", educationLevels: ["SMA/MA", "SMK/MAK"], curriculums: ["K-13", "KTSP 2006"] },
+  { value: "Kelas XII SMA/MA/SMK/MAK", label: "Kelas XII SMA/MA/SMK/MAK", educationLevels: ["SMA/MA", "SMK/MAK"], curriculums: ["K-13", "KTSP 2006"] },
+  { value: "SLB (Kelas 1-12 Disesuaikan)", label: "SLB (Kelas 1-12 Disesuaikan)", educationLevels: ["SLB"], curriculums: ["K-13", "KTSP 2006"] },
+  { value: "Pendidikan Kesetaraan (Paket A/B/C)", label: "Pendidikan Kesetaraan (Paket A/B/C)", educationLevels: ["PKBM/Kesetaraan"], curriculums: ["K-13", "KTSP 2006"] },
 ];
 
 
@@ -67,23 +64,28 @@ export function LessonPlanFormFields({
   isGeneratingAI,
   handleGenerateWithAI,
   userRole,
+  schoolEducationLevel,
 }: LessonPlanFormFieldsProps) {
 
   const currentGradeLevelOptions = useMemo(() => {
-    if (selectedCurriculum === "Kurikulum Merdeka") {
-      return merdekaGradeLevels;
+    if (!schoolEducationLevel) {
+      // If school level not set, show grades relevant to selected curriculum only
+      return allPossibleGradeLevels.filter(g => g.curriculums.includes(selectedCurriculum));
     }
-    return k13KtspGradeLevels;
-  }, [selectedCurriculum]);
+    return allPossibleGradeLevels.filter(grade => 
+      grade.educationLevels.includes(schoolEducationLevel) && 
+      grade.curriculums.includes(selectedCurriculum)
+    );
+  }, [selectedCurriculum, schoolEducationLevel]);
 
-  const isPAUDSelected = useMemo(() => selectedCurriculum === "Kurikulum Merdeka" && formData.gradeLevel?.toUpperCase().includes("PAUD"), [selectedCurriculum, formData.gradeLevel]);
-  const isSMKSelected = useMemo(() => selectedCurriculum === "Kurikulum Merdeka" && formData.gradeLevel?.toUpperCase().includes("SMK"), [selectedCurriculum, formData.gradeLevel]);
+  const isPAUDSelected = useMemo(() => schoolEducationLevel === "PAUD" && selectedCurriculum === "Kurikulum Merdeka" && formData.gradeLevel?.toUpperCase().includes("PAUD"), [selectedCurriculum, formData.gradeLevel, schoolEducationLevel]);
+  const isSMKSelected = useMemo(() => schoolEducationLevel === "SMK/MAK" && selectedCurriculum === "Kurikulum Merdeka" && formData.gradeLevel?.toUpperCase().includes("SMK"), [selectedCurriculum, formData.gradeLevel, schoolEducationLevel]);
 
   useEffect(() => {
     if (formData.gradeLevel && !currentGradeLevelOptions.find(opt => opt.value === formData.gradeLevel)) {
       handleSelectChange('gradeLevel', ''); 
     }
-  }, [selectedCurriculum, currentGradeLevelOptions, formData.gradeLevel, handleSelectChange]);
+  }, [selectedCurriculum, schoolEducationLevel, currentGradeLevelOptions, formData.gradeLevel, handleSelectChange]);
   
   const documentTypeLabel = selectedCurriculum === "Kurikulum Merdeka" 
     ? (isPAUDSelected ? "Modul Ajar PAUD" : "ATP / Modul Ajar") 
@@ -124,7 +126,7 @@ export function LessonPlanFormFields({
         </Button>
         {(!formData.topic || !formData.gradeLevel || !selectedCurriculum) && !isGeneratingAI && (
             <p className="text-xs text-muted-foreground mt-1">
-                Isi Jenis Kurikulum, {topicLabel}, dan Jenjang/Fase untuk mengaktifkan tombol AI.
+                Isi Jenis Kurikulum, {topicLabel}, dan {selectedCurriculum === "Kurikulum Merdeka" ? "Fase" : "Jenjang/Kelas"} untuk mengaktifkan tombol AI.
             </p>
         )}
          {(selectedCurriculum === "Kurikulum Merdeka" && !isPAUDSelected && (!formData.capaianPembelajaran || formData.capaianPembelajaran.length === 0) && !isGeneratingAI) && (
@@ -167,17 +169,25 @@ export function LessonPlanFormFields({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-1">
             <Label htmlFor="gradeLevel">{selectedCurriculum === "Kurikulum Merdeka" ? "Fase" : "Jenjang/Kelas"}</Label>
-            <Select value={formData.gradeLevel || ''} onValueChange={(value) => handleSelectChange('gradeLevel', value === "placeholder-grade" ? "" : value)}>
+            <Select 
+              value={formData.gradeLevel || ''} 
+              onValueChange={(value) => handleSelectChange('gradeLevel', value === "placeholder-grade" ? "" : value)}
+              disabled={!schoolEducationLevel && selectedCurriculum !== "Kurikulum Merdeka"} // Allow KM selection if school level not set
+            >
                 <SelectTrigger id="gradeLevel">
-                    <SelectValue placeholder={selectedCurriculum === "Kurikulum Merdeka" ? "Pilih Fase" : "Pilih Jenjang/Kelas"} />
+                    <SelectValue placeholder={!schoolEducationLevel && selectedCurriculum !== "Kurikulum Merdeka" ? "Atur Jenjang Sekolah di Profil" : (selectedCurriculum === "Kurikulum Merdeka" ? "Pilih Fase" : "Pilih Jenjang/Kelas")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="placeholder-grade" disabled>{selectedCurriculum === "Kurikulum Merdeka" ? "Pilih Fase" : "Pilih Jenjang/Kelas"}</SelectItem>
+                  <SelectItem value="placeholder-grade" disabled>{!schoolEducationLevel && selectedCurriculum !== "Kurikulum Merdeka" ? "Atur Jenjang Sekolah di Profil" : (selectedCurriculum === "Kurikulum Merdeka" ? "Pilih Fase" : "Pilih Jenjang/Kelas")}</SelectItem>
                     {currentGradeLevelOptions.map(option => (
                         <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
                     ))}
+                    {currentGradeLevelOptions.length === 0 && schoolEducationLevel && (
+                      <SelectItem value="no-options-lp" disabled>Tidak ada opsi jenjang yang cocok</SelectItem>
+                    )}
                 </SelectContent>
             </Select>
+            {!schoolEducationLevel && selectedCurriculum !== "Kurikulum Merdeka" && <p className="text-xs text-muted-foreground mt-1">Pilihan jenjang akan muncul setelah Jenjang Pendidikan di Profil Sekolah diatur.</p>}
         </div>
         <div className="space-y-1">
             <Label htmlFor="alokasiWaktuJP">Alokasi Waktu (JP)</Label>
@@ -320,3 +330,4 @@ export function LessonPlanFormFields({
     </>
   );
 }
+

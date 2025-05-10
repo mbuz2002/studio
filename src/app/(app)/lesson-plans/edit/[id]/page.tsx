@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -6,18 +5,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { BookOpenText, Save, ArrowLeft, Trash2 } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
-import type { LessonPlan, CurriculumFramework } from "@/types";
+import type { LessonPlan, CurriculumFramework, SchoolProfile, EducationLevel } from "@/types";
 import { LessonPlanFormFields } from "@/components/curriculum/LessonPlanFormFields";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCurriculum } from "@/contexts/CurriculumContext";
 import { useLog } from "@/contexts/LogContext";
 import { generateLessonPlanFromTopic, type GenerateLessonPlanInput, type GenerateLessonPlanOutput } from "@/ai/flows/generate-lesson-plan-from-topic";
-
+import { SCHOOL_PROFILE_STORAGE_KEY } from "@/types";
 
 const LESSON_PLANS_STORAGE_KEY = "appLessonPlans";
-
-// Dummy initial data for canEdit logic, replace with actual check or remove if not needed
 const initialLessonPlansData: Partial<LessonPlan>[] = [ {id: "rpp1"}, {id: "rpp2"}];
 
 
@@ -32,6 +29,7 @@ export default function EditLessonPlanPage() {
 
   const [formData, setFormData] = useState<Partial<LessonPlan>>({});
   const [selectedCurriculum, setSelectedCurriculum] = useState<CurriculumFramework>("Kurikulum Merdeka");
+  const [schoolEducationLevel, setSchoolEducationLevel] = useState<EducationLevel | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
@@ -62,6 +60,15 @@ export default function EditLessonPlanPage() {
           router.push("/lesson-plans");
         }
       }
+      const storedSchoolProfile = localStorage.getItem(SCHOOL_PROFILE_STORAGE_KEY);
+      if (storedSchoolProfile) {
+        try {
+          const parsedProfile: SchoolProfile = JSON.parse(storedSchoolProfile);
+          setSchoolEducationLevel(parsedProfile.jenjangPendidikan);
+        } catch (e) {
+          console.error("Failed to parse school profile for grade levels", e);
+        }
+      }
       setIsLoadingData(false);
     }
   }, [lessonPlanId, user, router, toast, addLog]);
@@ -83,12 +90,10 @@ export default function EditLessonPlanPage() {
         const newFormData: Partial<LessonPlan> = {
             ...prev,
             curriculumType: newCurriculum,
-            // Reset gradeLevel, it will be re-selected by user based on new curriculum options
             gradeLevel: '', 
         };
 
         if (newCurriculum === "Kurikulum Merdeka") {
-            // Initialize/keep Kurikulum Merdeka fields
             newFormData.bidangKeahlian = prev.bidangKeahlian || '';
             newFormData.programKeahlian = prev.programKeahlian || '';
             newFormData.capaianPembelajaran = prev.capaianPembelajaran || [];
@@ -96,7 +101,6 @@ export default function EditLessonPlanPage() {
             newFormData.pertanyaanPemantik = prev.pertanyaanPemantik || [];
             newFormData.differentiationStrategies = prev.differentiationStrategies || [];
             newFormData.profilPelajarPancasilaFocus = prev.profilPelajarPancasilaFocus || [];
-            // Clear KTSP/K-13 specific fields
             newFormData.standarKompetensi = undefined;
             newFormData.kompetensiInti = undefined;
             newFormData.kompetensiDasar = undefined;
@@ -107,7 +111,6 @@ export default function EditLessonPlanPage() {
             newFormData.kompetensiDasar = prev.kompetensiDasar || [];
             newFormData.indikatorPencapaianKompetensi = prev.indikatorPencapaianKompetensi || [];
             newFormData.metodePembelajaran = prev.metodePembelajaran || [];
-            // Clear Kurikulum Merdeka and KTSP specific fields
             newFormData.bidangKeahlian = undefined;
             newFormData.programKeahlian = undefined;
             newFormData.capaianPembelajaran = undefined;
@@ -121,7 +124,6 @@ export default function EditLessonPlanPage() {
             newFormData.kompetensiDasar = prev.kompetensiDasar || [];
             newFormData.indikatorPencapaianKompetensi = prev.indikatorPencapaianKompetensi || [];
             newFormData.metodePembelajaran = prev.metodePembelajaran || [];
-            // Clear Kurikulum Merdeka and K-13 specific fields
             newFormData.bidangKeahlian = undefined;
             newFormData.programKeahlian = undefined;
             newFormData.capaianPembelajaran = undefined;
@@ -169,7 +171,8 @@ export default function EditLessonPlanPage() {
          addLog("WARN", `Gagal membuat draf ${docType} dengan AI: Informasi kurang. ID: ${lessonPlanId}`, source);
          return;
     }
-    if (selectedCurriculum === "Kurikulum Merdeka" && (!formData.capaianPembelajaran || formData.capaianPembelajaran.length === 0)) {
+    const isPAUD = schoolEducationLevel === "PAUD" && selectedCurriculum === "Kurikulum Merdeka" && formData.gradeLevel?.toUpperCase().includes("PAUD");
+    if (selectedCurriculum === "Kurikulum Merdeka" && !isPAUD && (!formData.capaianPembelajaran || formData.capaianPembelajaran.length === 0)) {
         toast({
             title: "Informasi Kurang untuk Kurikulum Merdeka",
             description: "Harap isi Capaian Pembelajaran untuk hasil AI yang lebih optimal.",
@@ -201,7 +204,7 @@ export default function EditLessonPlanPage() {
             learningObjectives: result.learningObjectives,
             alokasiWaktuJP: result.alokasiWaktuJP || prev.alokasiWaktuJP,
             profilPelajarPancasilaFocus: result.profilPelajarPancasilaFocus || (selectedCurriculum === "Kurikulum Merdeka" ? prev.profilPelajarPancasilaFocus : undefined),
-            pemahamanBermakna: result.pemahamanBermakna || (selectedCurikulum === "Kurikulum Merdeka" ? prev.pemahamanBermakna : undefined),
+            pemahamanBermakna: result.pemahamanBermakna || (selectedCurriculum === "Kurikulum Merdeka" ? prev.pemahamanBermakna : undefined),
             pertanyaanPemantik: result.pertanyaanPemantik || (selectedCurriculum === "Kurikulum Merdeka" ? prev.pertanyaanPemantik : undefined),
             langkahPembelajaran: result.langkahPembelajaran || prev.langkahPembelajaran,
             assessment: result.assessmentStrategies?.join('\n- ') || prev.assessment,
@@ -327,6 +330,7 @@ export default function EditLessonPlanPage() {
               isGeneratingAI={isGeneratingAI}
               handleGenerateWithAI={handleGenerateWithAI}
               userRole={user.role}
+              schoolEducationLevel={schoolEducationLevel}
             />
             <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-6 border-t">
               <Button type="button" variant="outline" onClick={() => router.back()} className="w-full sm:w-auto">
@@ -343,3 +347,4 @@ export default function EditLessonPlanPage() {
     </div>
   );
 }
+

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, type FormEvent } from "react";
@@ -6,12 +5,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { ClipboardList, Save, ArrowLeft } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
-import type { SchoolClass, Teacher } from "@/types";
+import type { SchoolClass, Teacher, SchoolProfile, EducationLevel } from "@/types";
 import { ClassFormFields } from "@/components/master-data/ClassFormFields";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLog } from "@/contexts/LogContext";
-import { SCHOOL_CLASSES_STORAGE_KEY, TEACHERS_STORAGE_KEY } from "@/types";
+import { SCHOOL_CLASSES_STORAGE_KEY, TEACHERS_STORAGE_KEY, SCHOOL_PROFILE_STORAGE_KEY } from "@/types";
 
 export default function EditSchoolClassPage() {
   const router = useRouter();
@@ -23,6 +22,7 @@ export default function EditSchoolClassPage() {
 
   const [formData, setFormData] = useState<Partial<SchoolClass>>({});
   const [allTeachers, setAllTeachers] = useState<Teacher[]>([]);
+  const [schoolEducationLevel, setSchoolEducationLevel] = useState<EducationLevel | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
 
@@ -50,6 +50,15 @@ export default function EditSchoolClassPage() {
       const storedTeachers = localStorage.getItem(TEACHERS_STORAGE_KEY);
       if (storedTeachers) {
         setAllTeachers(JSON.parse(storedTeachers));
+      }
+      const storedSchoolProfile = localStorage.getItem(SCHOOL_PROFILE_STORAGE_KEY);
+      if (storedSchoolProfile) {
+        try {
+          const parsedProfile: SchoolProfile = JSON.parse(storedSchoolProfile);
+          setSchoolEducationLevel(parsedProfile.jenjangPendidikan);
+        } catch (e) {
+          console.error("Failed to parse school profile for grade levels", e);
+        }
       }
       setIsLoadingData(false);
     }
@@ -130,7 +139,8 @@ export default function EditSchoolClassPage() {
               formData={formData} 
               handleChange={handleChange} 
               handleSelectChange={handleSelectChange}
-              allTeachers={allTeachers} 
+              allTeachers={allTeachers}
+              schoolEducationLevel={schoolEducationLevel}
             />
             <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-6 border-t">
               <Button type="button" variant="outline" onClick={() => router.back()} className="w-full sm:w-auto">
@@ -147,3 +157,4 @@ export default function EditSchoolClassPage() {
     </div>
   );
 }
+
