@@ -88,7 +88,7 @@ export default function TeachersPage() {
       toast({ title: "Data Guru Dihapus", description: `"${teacherToDelete.name}" berhasil dihapus.` });
       addLog("WARN", `Data guru "${teacherToDelete.name}" (ID: ${teacherId}) dihapus oleh ${user?.email}.`, "TeachersPage");
     }
-  }, [teachers, user, toast, addLog]);
+  }, [teachers, user, toast, addLog, setTeachers]);
 
   if (!isClient || authLoading || !user) {
     return (

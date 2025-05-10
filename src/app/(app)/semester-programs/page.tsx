@@ -90,7 +90,10 @@ export default function SemesterProgramsPage() {
         }
       } catch (error) {
         console.error("Failed to access or parse localStorage for semester programs:", error);
-        setSemesterPrograms(initialSemesterProgramsData); 
+        setSemesterPrograms(initialSemesterProgramsData.map(sp => ({ // Ensure createdByUserId fallback here too
+            ...sp,
+            createdByUserId: sp.createdByUserId || (user ? user.id : 'user-demo-fallback')
+          }))); 
         toast({
           title: "Gagal Memuat Data Lokal",
           description: "Menggunakan data Promes standar. Perubahan mungkin tidak tersimpan dengan benar.",
@@ -154,7 +157,7 @@ export default function SemesterProgramsPage() {
       localStorage.setItem(SEMESTER_PROGRAMS_STORAGE_KEY, JSON.stringify(updatedSemesterPrograms));
       toast({ title: "Promes Dihapus", description: `"${itemToDelete.title}" telah berhasil dihapus.`});
     }
-  }, [canDelete, semesterPrograms, toast]);
+  }, [canDelete, semesterPrograms, toast, setSemesterPrograms]);
 
   const handleView = useCallback((item: AnyCurriculumItem) => {
     const prettyPrintJson = JSON.stringify(item, null, 2);

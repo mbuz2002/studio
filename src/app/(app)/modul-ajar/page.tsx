@@ -42,6 +42,8 @@ export default function ModulAjarPage() {
           setModulAjarItems(JSON.parse(storedModulAjar));
         } else {
           // setModulAjarItems(initialModulAjarData); // Already initialized
+          // Optionally save initial (empty) data if not found
+          localStorage.setItem(MODUL_AJAR_STORAGE_KEY, JSON.stringify(initialModulAjarData));
         }
       } catch (error) {
         console.error("Failed to access or parse localStorage for Modul Ajar:", error);
@@ -100,7 +102,7 @@ export default function ModulAjarPage() {
       localStorage.setItem(MODUL_AJAR_STORAGE_KEY, JSON.stringify(updatedModulAjarItems));
       toast({ title: "Modul Ajar Dihapus", description: `"${itemToDelete.title}" telah berhasil dihapus.`});
     }
-  }, [canDeleteItem, modulAjarItems, toast]);
+  }, [canDeleteItem, modulAjarItems, toast, setModulAjarItems]);
   
   const handleView = useCallback((item: AnyCurriculumItem) => {
     const prettyPrintJson = JSON.stringify(item, null, 2);

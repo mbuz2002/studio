@@ -89,7 +89,7 @@ export default function SchoolClassesPage() {
       toast({ title: "Kelas Dihapus", description: `Kelas "${classToDelete.name}" berhasil dihapus.` });
       addLog("WARN", `Kelas "${classToDelete.name}" (ID: ${classId}) dihapus oleh ${user?.email}.`, "SchoolClassesPage");
     }
-  }, [schoolClasses, user, toast, addLog]);
+  }, [schoolClasses, user, toast, addLog, setSchoolClasses]);
 
 
   if (!isClient || authLoading || !user) {

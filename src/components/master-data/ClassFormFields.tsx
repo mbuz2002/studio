@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useMemo, useEffect } from "react";
@@ -9,7 +10,7 @@ import type { SchoolClass, Teacher, EducationLevel, CurriculumFramework } from "
 import { useCurriculum } from "@/contexts/CurriculumContext"; // Added useCurriculum
 
 interface ClassFormFieldsProps {
-  formData: Partial<SchoolClass> & { curriculumType?: CurriculumFramework }; // Added curriculumType to formData if needed
+  formData: Partial<SchoolClass>; 
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleSelectChange: (name: string, value: string) => void;
   allTeachers: Teacher[];
@@ -80,10 +81,10 @@ export function ClassFormFields({
     schoolEducationLevel
 }: ClassFormFieldsProps) {
 
-  const { defaultCurriculum } = useCurriculum(); // Get the global default curriculum
+  const { defaultCurriculum } = useCurriculum(); 
 
   const gradeLevelOptions = useMemo(() => {
-    const currentCurriculumForFiltering = formData.curriculumType || defaultCurriculum; // Use form's curriculum if set, else global default
+    const currentCurriculumForFiltering = defaultCurriculum; 
     if (!schoolEducationLevel) {
         return allPossibleGradeLevels.filter(g => g.curriculums.includes(currentCurriculumForFiltering));
     }
@@ -91,7 +92,7 @@ export function ClassFormFields({
         grade.educationLevels.includes(schoolEducationLevel) &&
         grade.curriculums.includes(currentCurriculumForFiltering)
     );
-  }, [schoolEducationLevel, defaultCurriculum, formData.curriculumType]);
+  }, [schoolEducationLevel, defaultCurriculum]);
   
   useEffect(() => {
     if (formData.gradeLevel && !gradeLevelOptions.find(opt => opt.value === formData.gradeLevel)) {
@@ -120,7 +121,7 @@ export function ClassFormFields({
             <Select 
               value={formData.gradeLevel || ""} 
               onValueChange={(value) => handleSelectChange('gradeLevel', value === "placeholder-grade" ? "" : value)}
-              disabled={!schoolEducationLevel && !gradeLevelOptions.length} // Disable if no school level and no generic options for current curriculum
+              disabled={!schoolEducationLevel && !gradeLevelOptions.length} 
             >
               <SelectTrigger id="gradeLevel" className="text-base h-11 rounded-md">
                 <SelectValue placeholder={!schoolEducationLevel ? "Atur Jenjang Sekolah di Profil dahulu" : "Pilih Jenjang/Tingkat"} />
@@ -131,7 +132,7 @@ export function ClassFormFields({
                   <SelectItem key={level.value} value={level.value}>{level.label}</SelectItem>
                 ))}
                  {gradeLevelOptions.length === 0 && schoolEducationLevel && (
-                    <SelectItem value="no-options" disabled>Tidak ada jenjang yang cocok dengan Jenjang Sekolah & Kurikulum saat ini.</SelectItem>
+                    <SelectItem value="no-options" disabled>Tidak ada jenjang yang cocok dengan Jenjang Sekolah & Kurikulum Default.</SelectItem>
                 )}
               </SelectContent>
             </Select>

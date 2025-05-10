@@ -110,7 +110,10 @@ export default function LessonPlansPage() {
         }
       } catch (error) {
         console.error("Failed to access or parse localStorage for lesson plans:", error);
-        setLessonPlans(initialLessonPlansData); 
+        setLessonPlans(initialLessonPlansData.map(lp => ({ // Ensure createdByUserId fallback here too
+            ...lp,
+            createdByUserId: lp.createdByUserId || (user ? user.id : 'user-demo-fallback')
+          }))); 
         toast({
           title: "Gagal Memuat Data Lokal",
           description: "Menggunakan data standar. Perubahan mungkin tidak tersimpan dengan benar.",
@@ -169,7 +172,7 @@ export default function LessonPlansPage() {
       localStorage.setItem(LESSON_PLANS_STORAGE_KEY, JSON.stringify(updatedLessonPlans));
       toast({ title: `${docType} Dihapus`, description: `"${itemToDelete.title}" telah berhasil dihapus.`});
     }
-  }, [canDeleteItem, lessonPlans, toast]);
+  }, [canDeleteItem, lessonPlans, toast, setLessonPlans]);
   
   const handleView = useCallback((item: AnyCurriculumItem) => {
     const prettyPrintJson = JSON.stringify(item, null, 2);

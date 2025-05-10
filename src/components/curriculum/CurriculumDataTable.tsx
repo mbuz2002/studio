@@ -757,7 +757,7 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
             <TableRow>
               <TableHead className="min-w-[200px] sm:min-w-[250px] w-2/5 px-3 sm:px-4 py-3 text-sm">Judul</TableHead>
               <TableHead className="min-w-[120px] px-3 sm:px-4 py-3 text-sm hidden md:table-cell">Jenis Dokumen</TableHead>
-              <TableHead className="min-w-[150px] sm:min-w-[180px] px-3 sm:px-4 py-3 text-sm">Kurikulum</TableHead>
+              <TableHead className="min-w-[140px] sm:min-w-[160px] px-3 sm:px-4 py-3 text-sm">Kurikulum</TableHead>
               <TableHead className="min-w-[150px] sm:min-w-[180px] px-3 sm:px-4 py-3 text-sm hidden md:table-cell">Jenjang/Fase/Kelas</TableHead>
               <TableHead className="min-w-[150px] sm:min-w-[180px] px-3 sm:px-4 py-3 text-sm">Penyusun</TableHead>
               <TableHead className="min-w-[150px] sm:min-w-[180px] px-3 sm:px-4 py-3 text-sm hidden lg:table-cell">Terakhir Diperbarui</TableHead>
@@ -789,7 +789,7 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
               return (
               <TableRow key={item.id} className="hover:bg-muted/50">
                 <TableCell className="font-medium px-3 sm:px-4 py-2 sm:py-3 align-top text-sm">
-                  {item.title}
+                  <span className="block break-words max-w-xs">{item.title}</span>
                   <div className="md:hidden text-xs text-muted-foreground mt-1">
                     {docTypeDisplay} - {gradeLevelDisplay}
                   </div>
@@ -798,7 +798,7 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
                   </div>
                   <div className="lg:hidden text-xs text-muted-foreground mt-0.5">
                      Diperbarui: {isClient ? format(new Date(item.updatedAt), "dd/MM/yy", { locale: indonesianLocale }) : item.updatedAt.substring(0,10)}
-                  </div>
+                  </div>_
                 </TableCell>
                 <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top hidden md:table-cell">
                   <Badge variant={item.type === 'RPP' || item.type === 'ModulAjar' ? 'default' : item.type === 'PROTA' ? 'secondary' : 'outline'} className="text-xs">
@@ -806,7 +806,7 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
                     {docTypeDisplay}
                   </Badge>
                 </TableCell>
-                <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top">
+                <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top text-sm">
                   <Badge variant={getCurriculumBadgeVariant(item.curriculumType)} className="whitespace-nowrap text-xs py-1 px-2">
                     <BookCopy className="mr-1 h-3 w-3 hidden sm:inline-block"/>
                     {item.curriculumType}
@@ -891,4 +891,3 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
     </>
   );
 });
-

@@ -128,7 +128,7 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {visibleFeatureCards.map((feature) => (
-          <Card key={feature.title} className="flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 rounded-lg border-border/50 group bg-card hover:border-primary/70">
+          <Card key={feature.title} className="flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 rounded-lg border-border/50 group bg-card hover:border-primary/70 hover:scale-105 transform">
             <CardHeader className="pb-4 pt-6 px-6">
               <div className="flex items-start gap-4">
                 <div className={`p-3 rounded-lg bg-gradient-to-br ${feature.iconColor ? `from-${feature.iconColor.split('-')[1]}-500/20 to-${feature.iconColor.split('-')[1]}-500/10` : 'from-primary/20 to-primary/10'} flex-shrink-0`}>
@@ -161,4 +161,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-

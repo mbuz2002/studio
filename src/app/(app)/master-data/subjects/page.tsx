@@ -78,7 +78,7 @@ export default function SubjectsPage() {
       toast({ title: "Mata Pelajaran Dihapus", description: `"${subjectToDelete.name}" berhasil dihapus.` });
       addLog("WARN", `Mata pelajaran "${subjectToDelete.name}" (ID: ${subjectId}) dihapus oleh ${user?.email}.`, "SubjectsPage");
     }
-  }, [subjects, user, toast, addLog]);
+  }, [subjects, user, toast, addLog, setSubjects]);
 
 
   if (!isClient || authLoading || !user) {

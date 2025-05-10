@@ -92,7 +92,10 @@ export default function AnnualProgramsPage() {
         }
       } catch (error) {
         console.error("Failed to access or parse localStorage for annual programs:", error);
-        setAnnualPrograms(initialAnnualProgramsData); 
+        setAnnualPrograms(initialAnnualProgramsData.map(ap => ({ // Ensure createdByUserId fallback here too
+            ...ap,
+            createdByUserId: ap.createdByUserId || (user ? user.id : 'user-demo-fallback')
+          }))); 
         toast({
           title: "Gagal Memuat Data Lokal",
           description: "Menggunakan data PROTA standar. Perubahan mungkin tidak tersimpan dengan benar.",
@@ -157,7 +160,7 @@ export default function AnnualProgramsPage() {
       localStorage.setItem(ANNUAL_PROGRAMS_STORAGE_KEY, JSON.stringify(updatedAnnualPrograms));
       toast({ title: "PROTA Dihapus", description: `"${itemToDelete.title}" telah berhasil dihapus.`});
     }
-  }, [canDelete, annualPrograms, toast]);
+  }, [canDelete, annualPrograms, toast, setAnnualPrograms]);
 
   const handleView = useCallback((item: AnyCurriculumItem) => {
     const prettyPrintJson = JSON.stringify(item, null, 2);
