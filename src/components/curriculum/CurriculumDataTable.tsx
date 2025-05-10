@@ -789,7 +789,7 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
               return (
               <TableRow key={item.id} className="hover:bg-muted/50">
                 <TableCell className="font-medium px-3 sm:px-4 py-2 sm:py-3 align-top text-sm">
-                  <span className="block break-words max-w-xs">{item.title}</span>
+                  <span className="block break-words">{item.title}</span>
                   <div className="md:hidden text-xs text-muted-foreground mt-1">
                     {docTypeDisplay} - {gradeLevelDisplay}
                   </div>
@@ -798,7 +798,7 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
                   </div>
                   <div className="lg:hidden text-xs text-muted-foreground mt-0.5">
                      Diperbarui: {isClient ? format(new Date(item.updatedAt), "dd/MM/yy", { locale: indonesianLocale }) : item.updatedAt.substring(0,10)}
-                  </div>_
+                  </div>
                 </TableCell>
                 <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top hidden md:table-cell">
                   <Badge variant={item.type === 'RPP' || item.type === 'ModulAjar' ? 'default' : item.type === 'PROTA' ? 'secondary' : 'outline'} className="text-xs">
@@ -891,3 +891,4 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
     </>
   );
 });
+

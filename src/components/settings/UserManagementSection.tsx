@@ -20,7 +20,7 @@ const initialUsers: User[] = [
   { id: "user-2", name: "Kepala Sekolah", email: "kepsek@sekolah.id", role: "KepalaSekolah", avatarUrl: "https://picsum.photos/seed/kepsek/100/100" },
   { id: "user-3", name: "Waka Kurikulum", email: "waka@sekolah.id", role: "WakaKurikulum", avatarUrl: "https://picsum.photos/seed/waka/100/100" },
   { id: "user-4", name: "Guru Matematika", email: "guru.mat@sekolah.id", role: "Guru", avatarUrl: "https://picsum.photos/seed/gurumat/100/100" },
-  { id: "user-5", name: "Staff TU", email: "tu@sekolah.id", role: "TataUsaha", avatarUrl: "https://picsum.photos/seed/tu/100/100" },
+  { id: "user-5", name: "Staff Tata Usaha", email: "tu@sekolah.id", role: "TataUsaha", avatarUrl: "https://picsum.photos/seed/tu/100/100" },
 ];
 
 
@@ -178,4 +178,3 @@ export function UserManagementSection() {
     </Card>
   );
 }
-
