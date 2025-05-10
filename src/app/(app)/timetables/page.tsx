@@ -8,20 +8,28 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { ListChecks, PlusCircle, Search, Printer, Filter, X, Edit2, Trash2, MoreHorizontal, ExternalLink } from "lucide-react";
+import { ListChecks, PlusCircle, Search, Printer, Filter, X, Edit2, Trash2, MoreHorizontal, ExternalLink, AlertTriangle, User, Clock } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLog } from "@/contexts/LogContext";
-import type { TimetableEntry, Subject, Teacher, SchoolClass, SchoolProfile } from "@/types";
+import type { TimetableEntry, Subject, Teacher, SchoolClass, SchoolProfile, TeachingPeriodSettings } from "@/types";
 import { TIMETABLES_STORAGE_KEY, SUBJECTS_STORAGE_KEY, TEACHERS_STORAGE_KEY, SCHOOL_CLASSES_STORAGE_KEY, SCHOOL_PROFILE_STORAGE_KEY, TEACHING_PERIOD_SETTINGS_KEY } from "@/types";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { format, parse } from "date-fns";
 import { id as indonesianLocale } from "date-fns/locale";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const daysOfWeekOrder: TimetableEntry['dayOfWeek'][] = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+
+function parseTimeToMinutes(timeStr: string): number {
+  if (!timeStr || !timeStr.includes(':')) return 0;
+  const [hours, minutes] = timeStr.split(':').map(Number);
+  if (isNaN(hours) || isNaN(minutes)) return 0;
+  return hours * 60 + minutes;
+}
 
 export default function TimetablesPage() {
   const { user, loading: authLoading } = useAuth();
@@ -35,7 +43,7 @@ export default function TimetablesPage() {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [schoolClasses, setSchoolClasses] = useState<SchoolClass[]>([]);
   const [schoolProfile, setSchoolProfile] = useState<SchoolProfile | null>(null);
-  const [jpDuration, setJpDuration] = useState<number>(45);
+  const [teachingPeriodSettings, setTeachingPeriodSettings] = useState<TeachingPeriodSettings | null>(null);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClassId, setSelectedClassId] = useState<string | "ALL">("ALL");
@@ -70,7 +78,7 @@ export default function TimetablesPage() {
         if (storedProfile) setSchoolProfile(JSON.parse(storedProfile));
 
         const storedJpSettings = localStorage.getItem(TEACHING_PERIOD_SETTINGS_KEY);
-        if (storedJpSettings) setJpDuration(JSON.parse(storedJpSettings).jpDurationMinutes || 45);
+        if (storedJpSettings) setTeachingPeriodSettings(JSON.parse(storedJpSettings));
 
       } catch (e) {
         toast({ title: "Gagal Memuat Data Lokal", description: "Beberapa data mungkin tidak tampil benar.", variant: "destructive"});
@@ -80,14 +88,8 @@ export default function TimetablesPage() {
     loadData();
   }, [user, authLoading, router, toast, addLog]);
 
-  const getNameById = useCallback((id: string, list: {id: string, name: string}[]) => {
-    return list.find(item => item.id === id)?.name || "Tidak Diketahui";
-  }, []);
-  
   const subjectMap = useMemo(() => new Map(subjects.map(s => [s.id, s.name])), [subjects]);
   const teacherMap = useMemo(() => new Map(teachers.map(t => [t.id, t.name])), [teachers]);
-  const classMap = useMemo(() => new Map(schoolClasses.map(c => [c.id, c.name])), [schoolClasses]);
-
 
   const filteredTimetable = useMemo(() => {
     return timetableEntries
@@ -127,6 +129,33 @@ export default function TimetablesPage() {
 
   const activeFilterCount = [searchTerm, selectedClassId, selectedTeacherId, selectedDay].filter(f => f !== "" && f !== "ALL").length;
 
+  const calculateTotalWeeklyJPForTeacher = useCallback((teacherId: string): number => {
+    if (!teachingPeriodSettings?.jpDurationMinutes || teachingPeriodSettings.jpDurationMinutes <= 0) {
+      return 0;
+    }
+    const jpDuration = teachingPeriodSettings.jpDurationMinutes;
+    let totalJP = 0;
+    timetableEntries.forEach(entry => {
+      if (entry.teacherId === teacherId) {
+        const startMinutes = parseTimeToMinutes(entry.startTime);
+        const endMinutes = parseTimeToMinutes(entry.endTime);
+        const durationMinutes = endMinutes - startMinutes;
+        if (durationMinutes > 0) {
+          totalJP += durationMinutes / jpDuration;
+        }
+      }
+    });
+    return Math.round(totalJP * 10) / 10; // Round to 1 decimal place
+  }, [timetableEntries, teachingPeriodSettings]);
+
+  const selectedTeacherTotalJP = useMemo(() => {
+    if (selectedTeacherId !== "ALL" && teachingPeriodSettings?.jpDurationMinutes) {
+      return calculateTotalWeeklyJPForTeacher(selectedTeacherId);
+    }
+    return null;
+  }, [selectedTeacherId, calculateTotalWeeklyJPForTeacher, teachingPeriodSettings]);
+
+
   const handlePrint = () => {
     addLog("INFO", `Pengguna ${user?.email} mencetak jadwal pelajaran. Filter: Kelas=${selectedClassId}, Guru=${selectedTeacherId}, Hari=${selectedDay}.`, "TimetablesPage-Print");
     let printContent = `
@@ -151,6 +180,7 @@ export default function TimetablesPage() {
             .print-button-container { display: none; } /* Hide button in print */
             @media print {
                 .print-button-container { display: none; }
+                 h1, h2, h3, h4, h5, table, ul, ol, p, div { page-break-inside: avoid; }
             }
           </style>
         </head>
@@ -196,17 +226,28 @@ export default function TimetablesPage() {
                             <th>Kelas/Rombel</th>
                             <th>Mata Pelajaran</th>
                             <th>Guru Pengampu</th>
+                            ${teachingPeriodSettings?.jpDurationMinutes ? '<th>JP</th>' : ''}
                         </tr>
                     </thead>
                     <tbody>
             `;
             entriesForDay.forEach(entry => {
+                let jpDisplay = '-';
+                if (teachingPeriodSettings?.jpDurationMinutes && teachingPeriodSettings.jpDurationMinutes > 0) {
+                    const startMinutes = parseTimeToMinutes(entry.startTime);
+                    const endMinutes = parseTimeToMinutes(entry.endTime);
+                    const durationMinutes = endMinutes - startMinutes;
+                    if (durationMinutes > 0) {
+                        jpDisplay = (durationMinutes / teachingPeriodSettings.jpDurationMinutes).toFixed(1);
+                    }
+                }
                 printContent += `
                     <tr>
                         <td>${entry.startTime} - ${entry.endTime}</td>
                         <td>${entry.classOrGrade}</td>
                         <td>${subjectMap.get(entry.subjectId) || entry.subjectId}</td>
                         <td>${teacherMap.get(entry.teacherId) || entry.teacherId}</td>
+                        ${teachingPeriodSettings?.jpDurationMinutes ? `<td>${jpDisplay}</td>` : ''}
                     </tr>
                 `;
             });
@@ -268,6 +309,40 @@ export default function TimetablesPage() {
           </div>
         </CardHeader>
         <CardContent className="p-4 sm:p-6">
+          {!teachingPeriodSettings?.jpDurationMinutes && canManage && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertTriangle className="h-5 w-5" />
+              <AlertTitle>Pengaturan Durasi JP Belum Ditetapkan!</AlertTitle>
+              <AlertDescription>
+                Durasi untuk 1 Jam Pelajaran (JP) belum diatur. Ini diperlukan untuk perhitungan JP otomatis.
+                Admin dapat mengaturnya di <Link href="/admin/system-settings" className="font-semibold underline hover:text-destructive-foreground/80">Pengaturan Sistem</Link>.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {selectedTeacherTotalJP !== null && (
+            <Card className="mb-4 shadow-md rounded-md bg-secondary/30">
+                <CardHeader className="p-4">
+                    <div className="flex items-center gap-2">
+                        <User className="h-5 w-5 text-primary"/>
+                        <CardTitle className="text-lg font-semibold">Total JP Mingguan Guru</CardTitle>
+                    </div>
+                </CardHeader>
+                <CardContent className="p-4 pt-0">
+                    <p className="text-base">
+                        Guru: <span className="font-medium">{teacherMap.get(selectedTeacherId) || 'Tidak Diketahui'}</span>
+                    </p>
+                    <p className="text-base">
+                        Total Jam Pelajaran per Minggu: <span className="font-bold text-lg text-primary">{selectedTeacherTotalJP.toLocaleString(undefined, {minimumFractionDigits:0, maximumFractionDigits:1})} JP</span>
+                    </p>
+                    {(!teachingPeriodSettings?.jpDurationMinutes || teachingPeriodSettings.jpDurationMinutes <= 0) && (
+                        <p className="text-xs text-destructive mt-1">Durasi JP belum diatur. Hasil mungkin tidak akurat.</p>
+                    )}
+                </CardContent>
+            </Card>
+          )}
+
+
           <div className="flex flex-col gap-4 mb-6">
             <div className="flex flex-col md:flex-row gap-3 md:items-center">
               <div className="flex-grow relative">
@@ -358,12 +433,25 @@ export default function TimetablesPage() {
                 <div key={day} className="mb-6 last:mb-0">
                   <h3 className="text-xl font-bold mb-3 p-3 bg-secondary/50 rounded-t-md text-center sticky top-0 z-10 shadow-sm">{day}</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    {entriesForDay.map(entry => (
+                    {entriesForDay.map(entry => {
+                       let jpDisplay = '-';
+                       if (teachingPeriodSettings?.jpDurationMinutes && teachingPeriodSettings.jpDurationMinutes > 0) {
+                           const startMinutes = parseTimeToMinutes(entry.startTime);
+                           const endMinutes = parseTimeToMinutes(entry.endTime);
+                           const durationMinutes = endMinutes - startMinutes;
+                           if (durationMinutes > 0) {
+                               jpDisplay = (durationMinutes / teachingPeriodSettings.jpDurationMinutes).toFixed(1) + ' JP';
+                           }
+                       }
+                      return (
                       <Card key={entry.id} className="shadow-md hover:shadow-lg transition-shadow duration-200 rounded-lg flex flex-col">
                         <CardHeader className="p-4 bg-muted/30 rounded-t-lg">
-                          <CardTitle className="text-base font-semibold text-primary">
-                            {entry.startTime} - {entry.endTime}
-                          </CardTitle>
+                          <div className="flex justify-between items-center">
+                            <CardTitle className="text-base font-semibold text-primary">
+                              {entry.startTime} - {entry.endTime}
+                            </CardTitle>
+                            {jpDisplay !== '-' && <Badge variant="secondary" className="text-xs">{jpDisplay}</Badge>}
+                          </div>
                           <CardDescription className="text-xs text-muted-foreground">
                             {entry.classOrGrade}
                           </CardDescription>
@@ -392,7 +480,7 @@ export default function TimetablesPage() {
                             </CardContent>
                         )}
                       </Card>
-                    ))}
+                    )})}
                   </div>
                 </div>
               );
