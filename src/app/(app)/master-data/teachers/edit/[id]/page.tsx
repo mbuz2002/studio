@@ -17,7 +17,7 @@ export default function EditTeacherPage() {
   const router = useRouter();
   const params = useParams();
   const { id: teacherId } = params;
-  const { user, loading: authLoading } = useAuth();
+  const { user: adminUser, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const { addLog } = useLog();
 
@@ -28,7 +28,7 @@ export default function EditTeacherPage() {
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user || !["Admin", "KepalaSekolah", "WakaKurikulum"].includes(user.role)) {
+    if (!adminUser || !["Admin", "KepalaSekolah", "WakaKurikulum"].includes(adminUser.role)) {
       toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengedit data guru.", variant: "destructive" });
       router.push("/master-data/teachers");
       return;
@@ -41,7 +41,7 @@ export default function EditTeacherPage() {
         const teacherToEdit = teachers.find(t => t.id === teacherId);
         if (teacherToEdit) {
           setFormData(teacherToEdit);
-          addLog("INFO", `Memuat data guru "${teacherToEdit.name}" (ID: ${teacherId}) untuk diedit oleh ${user.email}.`, "EditTeacherPage");
+          addLog("INFO", `Memuat data guru "${teacherToEdit.name}" (ID: ${teacherId}) untuk diedit oleh ${adminUser.email}.`, "EditTeacherPage");
         } else {
           toast({ title: "Data Guru Tidak Ditemukan", variant: "destructive" });
           router.push("/master-data/teachers");
@@ -53,7 +53,7 @@ export default function EditTeacherPage() {
       }
       setIsLoadingData(false);
     }
-  }, [teacherId, user, authLoading, router, toast, addLog]);
+  }, [teacherId, adminUser, authLoading, router, toast, addLog]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -83,7 +83,7 @@ export default function EditTeacherPage() {
       const updatedTeachers = existingTeachers.map(t => t.id === teacherId ? updatedTeacher : t);
       localStorage.setItem(TEACHERS_STORAGE_KEY, JSON.stringify(updatedTeachers));
       toast({ title: "Data Guru Diperbarui", description: `Data untuk "${updatedTeacher.name}" berhasil diperbarui.` });
-      addLog("INFO", `Data guru "${updatedTeacher.name}" (ID: ${teacherId}) diperbarui oleh ${user?.email}.`, "EditTeacherPage");
+      addLog("INFO", `Data guru "${updatedTeacher.name}" (ID: ${teacherId}) diperbarui oleh ${adminUser?.email}.`, "EditTeacherPage");
       router.push("/master-data/teachers");
     } catch (error) {
       toast({ title: "Gagal Memperbarui", description: "Terjadi kesalahan.", variant: "destructive" });
@@ -92,7 +92,7 @@ export default function EditTeacherPage() {
     }
   };
 
-  if (isLoadingData || authLoading || !user) {
+  if (isLoadingData || authLoading || !adminUser) {
     return (
       <div className="flex h-[calc(100vh-200px)] items-center justify-center">
         <UserCheck className="h-12 w-12 animate-pulse text-primary mb-4" />
@@ -130,6 +130,7 @@ export default function EditTeacherPage() {
               handleChange={handleChange} 
               allSubjects={allSubjects}
               handleSubjectChange={handleSubjectChange}
+              isNewUserForm={false} // Explicitly false for edit form
             />
             <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-6 border-t">
               <Button type="button" variant="outline" onClick={() => router.back()} className="w-full sm:w-auto">
@@ -146,3 +147,4 @@ export default function EditTeacherPage() {
     </div>
   );
 }
+

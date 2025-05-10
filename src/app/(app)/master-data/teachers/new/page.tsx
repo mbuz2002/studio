@@ -6,26 +6,30 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { UserCheck, Save, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
-import type { Teacher, Subject } from "@/types";
+import type { Teacher, Subject, User } from "@/types";
 import { TeacherFormFields } from "@/components/master-data/TeacherFormFields";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLog } from "@/contexts/LogContext";
-import { TEACHERS_STORAGE_KEY, SUBJECTS_STORAGE_KEY } from "@/types";
+import { TEACHERS_STORAGE_KEY, SUBJECTS_STORAGE_KEY, APP_USERS_STORAGE_KEY } from "@/types";
+
+interface TeacherFormData extends Partial<Teacher> {
+  userEmail?: string; // For the user account email
+}
 
 export default function NewTeacherPage() {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { user: adminUser, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const { addLog } = useLog();
 
-  const [formData, setFormData] = useState<Partial<Teacher>>({ name: "", nip: "", subjectIds: [] });
+  const [formData, setFormData] = useState<TeacherFormData>({ name: "", nip: "", subjectIds: [], userEmail: "" });
   const [allSubjects, setAllSubjects] = useState<Subject[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user || !["Admin", "KepalaSekolah", "WakaKurikulum"].includes(user.role)) {
+    if (!adminUser || !["Admin", "KepalaSekolah", "WakaKurikulum"].includes(adminUser.role)) {
       toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk menambah data guru.", variant: "destructive" });
       router.push("/master-data/teachers");
       return;
@@ -35,7 +39,7 @@ export default function NewTeacherPage() {
     if (storedSubjects) {
       setAllSubjects(JSON.parse(storedSubjects));
     }
-  }, [user, authLoading, router, toast]);
+  }, [adminUser, authLoading, router, toast]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -52,33 +56,56 @@ export default function NewTeacherPage() {
         toast({ title: "Nama Guru Wajib Diisi", variant: "destructive"});
         return;
     }
+    if (!formData.userEmail) {
+        toast({ title: "Email Akun Pengguna Wajib Diisi", description: "Email ini akan digunakan untuk membuat akun pengguna untuk guru.", variant: "destructive"});
+        return;
+    }
     setIsSubmitting(true);
 
+    const teacherId = `teacher-${Date.now()}`;
+    const userId = `user-${Date.now()}`;
+
     const newTeacher: Teacher = {
-      id: `teacher-${Date.now()}`,
+      id: teacherId,
       name: formData.name!,
       nip: formData.nip,
       subjectIds: formData.subjectIds || [],
-      userId: formData.userId, // If linking to User accounts
+      userId: userId, // Link to the new user
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      createdByUserId: user?.id,
+      createdByUserId: adminUser?.id,
+    };
+
+    const newUser: User = {
+        id: userId,
+        name: formData.name!,
+        email: formData.userEmail!,
+        role: "Guru", // Automatically assign 'Guru' role
+        avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.name!)}&background=random&color=fff`,
+        updatedAt: new Date().toISOString(),
     };
 
     try {
+      // Save Teacher
       const existingTeachers = JSON.parse(localStorage.getItem(TEACHERS_STORAGE_KEY) || "[]") as Teacher[];
       localStorage.setItem(TEACHERS_STORAGE_KEY, JSON.stringify([newTeacher, ...existingTeachers]));
-      toast({ title: "Data Guru Ditambahkan", description: `Data untuk "${newTeacher.name}" berhasil disimpan.` });
-      addLog("INFO", `Data guru baru "${newTeacher.name}" (NIP: ${newTeacher.nip || '-'}) ditambahkan oleh ${user?.email}.`, "NewTeacherPage");
+      addLog("INFO", `Data guru baru "${newTeacher.name}" (NIP: ${newTeacher.nip || '-'}) ditambahkan oleh ${adminUser?.email}.`, "NewTeacherPage-Teacher");
+
+      // Save User
+      const existingUsers = JSON.parse(localStorage.getItem(APP_USERS_STORAGE_KEY) || "[]") as User[];
+      localStorage.setItem(APP_USERS_STORAGE_KEY, JSON.stringify([newUser, ...existingUsers]));
+      addLog("INFO", `Akun pengguna baru untuk guru "${newUser.name}" (Email: ${newUser.email}) berhasil dibuat.`, "NewTeacherPage-User");
+      
+      toast({ title: "Data Guru & Akun Ditambahkan", description: `Data untuk "${newTeacher.name}" dan akun pengguna terkait berhasil disimpan.` });
       router.push("/master-data/teachers");
     } catch (error) {
-      toast({ title: "Gagal Menyimpan", description: "Terjadi kesalahan saat menyimpan data guru.", variant: "destructive" });
-      addLog("ERROR", `Gagal menyimpan data guru baru "${newTeacher.name}". Kesalahan: ${error instanceof Error ? error.message : String(error)}`, "NewTeacherPage");
+      toast({ title: "Gagal Menyimpan", description: "Terjadi kesalahan saat menyimpan data guru atau akun pengguna.", variant: "destructive" });
+      addLog("ERROR", `Gagal menyimpan data guru baru "${newTeacher.name}" atau akun pengguna. Kesalahan: ${error instanceof Error ? error.message : String(error)}`, "NewTeacherPage");
       setIsSubmitting(false);
     }
   };
   
-  if (authLoading || !user) {
+  if (authLoading || !adminUser) {
      return (
       <div className="flex h-[calc(100vh-200px)] items-center justify-center">
         <UserCheck className="h-12 w-12 animate-pulse text-primary mb-4" />
@@ -96,7 +123,7 @@ export default function NewTeacherPage() {
             <div>
               <CardTitle className="text-2xl md:text-3xl font-bold">Tambah Data Guru Baru</CardTitle>
               <CardDescription className="text-base md:text-lg text-primary-foreground/90 mt-1">
-                Masukkan detail untuk data guru baru.
+                Masukkan detail untuk data guru baru. Akun pengguna akan otomatis dibuat.
               </CardDescription>
             </div>
           </div>
@@ -108,6 +135,7 @@ export default function NewTeacherPage() {
               handleChange={handleChange} 
               allSubjects={allSubjects}
               handleSubjectChange={handleSubjectChange}
+              isNewUserForm={true}
             />
             <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-6 border-t">
               <Button type="button" variant="outline" onClick={() => router.back()} className="w-full sm:w-auto">
@@ -124,3 +152,4 @@ export default function NewTeacherPage() {
     </div>
   );
 }
+

@@ -8,21 +8,23 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ChevronsUpDown, CheckIcon } from "lucide-react";
+import { ChevronsUpDown } from "lucide-react";
 import type { Teacher, Subject } from "@/types";
 
 interface TeacherFormFieldsProps {
-  formData: Partial<Teacher>;
+  formData: Partial<Teacher> & { userEmail?: string }; // Added userEmail for new user creation
   handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   allSubjects: Subject[];
   handleSubjectChange: (subjectIds: string[]) => void;
+  isNewUserForm?: boolean; // To conditionally show user email field
 }
 
 export function TeacherFormFields({ 
   formData, 
   handleChange, 
   allSubjects,
-  handleSubjectChange 
+  handleSubjectChange,
+  isNewUserForm = false // Default to false
 }: TeacherFormFieldsProps) {
   
   const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>(formData.subjectIds || []);
@@ -74,6 +76,23 @@ export function TeacherFormFields({
           className="text-base h-11 rounded-md focus:border-primary"
         />
       </div>
+
+      {isNewUserForm && (
+        <div className="space-y-1.5">
+          <Label htmlFor="userEmail" className="text-base font-medium">Email Akun Pengguna</Label>
+          <Input
+            id="userEmail"
+            name="userEmail" // Make sure this matches the key in formData
+            type="email"
+            value={formData.userEmail || ""}
+            onChange={handleChange}
+            placeholder="cth., guru@sekolah.id"
+            required
+            className="text-base h-11 rounded-md focus:border-primary"
+          />
+          <p className="text-xs text-muted-foreground">Email ini akan digunakan untuk membuat akun pengguna baru untuk guru ini.</p>
+        </div>
+      )}
 
       <div className="space-y-1.5">
         <Label className="text-base font-medium">Mata Pelajaran yang Diampu</Label>
@@ -129,18 +148,7 @@ export function TeacherFormFields({
           </PopoverContent>
         </Popover>
       </div>
-      {/* Optional: Link to User account if managing separate Teacher entities from User entities */}
-      {/* <div className="space-y-1.5">
-        <Label htmlFor="userId" className="text-base font-medium">Akun Pengguna Terkait (Opsional)</Label>
-        <Input
-          id="userId"
-          name="userId"
-          value={formData.userId || ""}
-          onChange={handleChange}
-          placeholder="ID Akun Pengguna (jika ada)"
-          className="text-base h-11 rounded-md focus:border-primary"
-        />
-      </div> */}
     </>
   );
 }
+
