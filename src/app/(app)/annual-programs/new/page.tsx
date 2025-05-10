@@ -16,6 +16,17 @@ import { generateAnnualProgram, type GenerateAnnualProgramInput, type GenerateAn
 
 const ANNUAL_PROGRAMS_STORAGE_KEY = "appAnnualPrograms";
 
+type ProtaFormState = {
+  capaianPembelajaran_textarea?: string; 
+  profilPelajarPancasilaFocus_textarea?: string;
+  semester1_topics_textarea?: string;
+  semester1_elements_textarea?: string; 
+  semester1_allocations_textarea?: string;
+  semester2_topics_textarea?: string;
+  semester2_elements_textarea?: string; 
+  semester2_allocations_textarea?: string;
+};
+
 const getInitialProtaData = (curriculum: CurriculumFramework): Partial<AnnualProgram & ProtaFormState> => {
     const common = {
         type: 'PROTA' as const, title: '', subject: '', gradeLevel: '', year: '',
@@ -46,16 +57,7 @@ const getInitialProtaData = (curriculum: CurriculumFramework): Partial<AnnualPro
     };
 };
 
-type ProtaFormState = {
-  capaianPembelajaran_textarea?: string; 
-  profilPelajarPancasilaFocus_textarea?: string;
-  semester1_topics_textarea?: string;
-  semester1_elements_textarea?: string; 
-  semester1_allocations_textarea?: string;
-  semester2_topics_textarea?: string;
-  semester2_elements_textarea?: string; 
-  semester2_allocations_textarea?: string;
-};
+
 
 
 export default function NewAnnualProgramPage() {
