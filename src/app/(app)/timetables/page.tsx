@@ -269,7 +269,7 @@ export default function TimetablesPage() {
     printWindow?.document.close();
   };
   
-  const handleDeleteEntry = (entryId: string) => {
+  const handleDeleteEntry = useCallback((entryId: string) => {
     const entryToDelete = timetableEntries.find(e => e.id === entryId);
     if (!entryToDelete) return;
 
@@ -280,7 +280,7 @@ export default function TimetablesPage() {
         toast({ title: "Entri Jadwal Dihapus" });
         addLog("WARN", `Entri jadwal (ID: ${entryId}) untuk kelas ${entryToDelete.classOrGrade} dihapus oleh ${user?.email}.`, "TimetablesPage");
     }
-  };
+  }, [timetableEntries, subjectMap, user, toast, addLog]);
 
 
   if (!isClient || authLoading || !user) {
@@ -491,3 +491,4 @@ export default function TimetablesPage() {
     </div>
   );
 }
+
