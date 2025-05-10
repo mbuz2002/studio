@@ -38,7 +38,7 @@ const ModulAjarIdentitasSchema = z.object({
   jenjangSekolah: z.string(),
   fase: z.string(),
   kelasSemester: z.string(),
-  alokasiWaktu: z.string(),
+  alokasiWaktu: z.string().describe('Estimasi total alokasi waktu untuk modul ini, harus dalam format yang menyertakan "JP", contoh: "12 JP", "3 Pertemuan @ 4 JP = 12 JP".'),
   mataPelajaran: z.string(),
   elemenCapaianPembelajaran: z.array(z.string()).optional(),
 });
@@ -125,7 +125,7 @@ Modul Ajar harus mencakup komponen-komponen berikut, sesuai dengan struktur Kuri
     *   Jenjang Sekolah: (Ekstrak dari {{{jenjangFaseKelas}}}, misal "SMA", "SMP")
     *   Fase: (Ekstrak dari {{{jenjangFaseKelas}}}, misal "Fase F", "Fase D")
     *   Kelas/Semester: (Ekstrak dari {{{jenjangFaseKelas}}} dan tentukan semester yang paling relevan dengan topik, misal "XI / Ganjil")
-    *   Alokasi Waktu: (gunakan input {{{alokasiWaktuTotal}}}, atau sarankan alokasi yang sesuai jika kosong)
+    *   Alokasi Waktu: (gunakan input {{{alokasiWaktuTotal}}}, atau sarankan alokasi yang sesuai jika kosong. Pastikan formatnya menyebutkan "JP", contoh: "12 JP" atau "3 Pertemuan x 4 JP")
     *   Mata Pelajaran: {{{subject}}}
     *   Elemen Capaian Pembelajaran: (jika {{{capaianPembelajaranElemen}}} diberikan, gunakan itu. Jika tidak, AI boleh menyarankan elemen CP yang relevan dengan topik dan fase)
 3.  **Kompetensi Awal** (Opsional): Pengetahuan atau keterampilan prasyarat.
@@ -170,3 +170,4 @@ const generateKurikulumMerdekaModuleFlow = ai.defineFlow(
     return output!;
   }
 );
+

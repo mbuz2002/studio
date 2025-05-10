@@ -44,7 +44,7 @@ export interface LessonPlan extends CurriculumItem {
   type: 'RPP'; 
   topic: string; 
   learningObjectives: string[]; 
-  alokasiWaktuJP?: string; 
+  alokasiWaktuJP?: string; // Format: "X JP", e.g., "2 JP" or "3 x 40 menit (2 JP)"
   
   bidangKeahlian?: string; 
   programKeahlian?: string; 
@@ -72,7 +72,7 @@ export interface LessonPlan extends CurriculumItem {
 export interface AnnualProgramComponent {
   topic: string; 
   elemenCapaianPembelajaran?: string[]; 
-  alokasiWaktu: string; 
+  alokasiWaktu: string; // Format: "X JP", e.g., "24 JP"
 }
 
 export interface AnnualProgram extends CurriculumItem {
@@ -88,7 +88,7 @@ export interface WeeklyUnit {
   mingguKe: number;
   bulan?: string; 
   materiPokokAtauTujuanPembelajaran: string; 
-  alokasiWaktu: string; 
+  alokasiWaktu: string; // Format: "X JP", e.g., "6 JP"
   metodeStrategi?: string[]; 
   sumberBelajar?: string[]; 
   rencanaAsesmen?: string[]; 
@@ -100,7 +100,7 @@ export interface SemesterProgram extends CurriculumItem {
   semester: '1' | '2'; 
   year: string; 
   capaianPembelajaranUmum?: string; 
-  alokasiWaktuTotalSemester?: string; 
+  alokasiWaktuTotalSemester?: string; // Format: "X JP", e.g., "72 JP" or "18 Minggu x 4 JP/Minggu = 72 JP"
   komponenMingguan: WeeklyUnit[];
 }
 
@@ -112,7 +112,7 @@ export interface ModulAjarIdentitas {
   jenjangSekolah: string; // e.g., SMA, SMK
   fase: string; // e.g., Fase E, Fase F
   kelasSemester: string; // e.g., X / Ganjil
-  alokasiWaktu: string; // e.g., 12 JP (3 Pertemuan @4JP)
+  alokasiWaktu: string; // Format: "X JP", e.g., "12 JP" or "3 Pertemuan @ 4JP = 12 JP"
   mataPelajaran: string;
   elemenCapaianPembelajaran?: string[]; // (Optional) Specific CP elements targeted
 }
@@ -380,7 +380,7 @@ export interface SchoolClass {
 
 
 export interface TeachingPeriodSettings {
-  jpDurationMinutes: number;
+  jpDurationMinutes: number; // Duration of one teaching period (Jam Pelajaran) in minutes
 }
 
 // Storage Keys
@@ -398,4 +398,5 @@ export const SCHOOL_SETTINGS_STORAGE_KEY = "schoolProfile"; // Alias for clarity
 export const APP_USERS_STORAGE_KEY = "appUsers";
 export const CURRICULUM_STORAGE_KEY = "app-default-curriculum";
 export const THEME_STORAGE_KEY = "app-theme";
+
 
