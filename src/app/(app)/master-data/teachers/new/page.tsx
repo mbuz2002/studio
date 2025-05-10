@@ -14,7 +14,8 @@ import { useLog } from "@/contexts/LogContext";
 import { TEACHERS_STORAGE_KEY, SUBJECTS_STORAGE_KEY, APP_USERS_STORAGE_KEY } from "@/types";
 
 interface TeacherFormData extends Partial<Teacher> {
-  userEmail?: string; // For the user account email
+  userEmail?: string;
+  password?: string; // Added password field
 }
 
 export default function NewTeacherPage() {
@@ -23,7 +24,7 @@ export default function NewTeacherPage() {
   const { toast } = useToast();
   const { addLog } = useLog();
 
-  const [formData, setFormData] = useState<TeacherFormData>({ name: "", nip: "", subjectIds: [], userEmail: "" });
+  const [formData, setFormData] = useState<TeacherFormData>({ name: "", nip: "", subjectIds: [], userEmail: "", password: "" });
   const [allSubjects, setAllSubjects] = useState<Subject[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -60,6 +61,10 @@ export default function NewTeacherPage() {
         toast({ title: "Email Akun Pengguna Wajib Diisi", description: "Email ini akan digunakan untuk membuat akun pengguna untuk guru.", variant: "destructive"});
         return;
     }
+    if (!formData.password || formData.password.length < 6) {
+        toast({ title: "Kata Sandi Tidak Valid", description: "Kata sandi minimal 6 karakter.", variant: "destructive"});
+        return;
+    }
     setIsSubmitting(true);
 
     const teacherId = `teacher-${Date.now()}`;
@@ -81,6 +86,9 @@ export default function NewTeacherPage() {
         name: formData.name!,
         email: formData.userEmail!,
         role: "Guru", // Automatically assign 'Guru' role
+        // In a real app, password should be hashed before storing or sending to backend
+        // For this localStorage demo, we'll omit storing it directly in the User object visible in storage
+        // but acknowledge it's captured for account creation.
         avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.name!)}&background=random&color=fff`,
         updatedAt: new Date().toISOString(),
     };
@@ -93,8 +101,11 @@ export default function NewTeacherPage() {
 
       // Save User
       const existingUsers = JSON.parse(localStorage.getItem(APP_USERS_STORAGE_KEY) || "[]") as User[];
+      // IMPORTANT: Do not store raw password in localStorage for the User object.
+      // The password from formData.password would be used by an auth system to create the account.
+      // For this demo, we just create the user entry without the password field.
       localStorage.setItem(APP_USERS_STORAGE_KEY, JSON.stringify([newUser, ...existingUsers]));
-      addLog("INFO", `Akun pengguna baru untuk guru "${newUser.name}" (Email: ${newUser.email}) berhasil dibuat.`, "NewTeacherPage-User");
+      addLog("INFO", `Akun pengguna baru untuk guru "${newUser.name}" (Email: ${newUser.email}) berhasil dibuat. Kata sandi telah di-set (simulasi).`, "NewTeacherPage-User");
       
       toast({ title: "Data Guru & Akun Ditambahkan", description: `Data untuk "${newTeacher.name}" dan akun pengguna terkait berhasil disimpan.` });
       router.push("/master-data/teachers");
@@ -152,4 +163,3 @@ export default function NewTeacherPage() {
     </div>
   );
 }
-

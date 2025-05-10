@@ -11,12 +11,16 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ChevronsUpDown } from "lucide-react";
 import type { Teacher, Subject } from "@/types";
 
+interface TeacherFormData extends Partial<Teacher> {
+  userEmail?: string;
+  password?: string; // Added password field
+}
 interface TeacherFormFieldsProps {
-  formData: Partial<Teacher> & { userEmail?: string }; // Added userEmail for new user creation
+  formData: TeacherFormData; 
   handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   allSubjects: Subject[];
   handleSubjectChange: (subjectIds: string[]) => void;
-  isNewUserForm?: boolean; // To conditionally show user email field
+  isNewUserForm?: boolean; 
 }
 
 export function TeacherFormFields({ 
@@ -24,7 +28,7 @@ export function TeacherFormFields({
   handleChange, 
   allSubjects,
   handleSubjectChange,
-  isNewUserForm = false // Default to false
+  isNewUserForm = false
 }: TeacherFormFieldsProps) {
   
   const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>(formData.subjectIds || []);
@@ -78,20 +82,37 @@ export function TeacherFormFields({
       </div>
 
       {isNewUserForm && (
-        <div className="space-y-1.5">
-          <Label htmlFor="userEmail" className="text-base font-medium">Email Akun Pengguna</Label>
-          <Input
-            id="userEmail"
-            name="userEmail" // Make sure this matches the key in formData
-            type="email"
-            value={formData.userEmail || ""}
-            onChange={handleChange}
-            placeholder="cth., guru@sekolah.id"
-            required
-            className="text-base h-11 rounded-md focus:border-primary"
-          />
-          <p className="text-xs text-muted-foreground">Email ini akan digunakan untuk membuat akun pengguna baru untuk guru ini.</p>
-        </div>
+        <>
+          <div className="space-y-1.5">
+            <Label htmlFor="userEmail" className="text-base font-medium">Email Akun Pengguna</Label>
+            <Input
+              id="userEmail"
+              name="userEmail" 
+              type="email"
+              value={formData.userEmail || ""}
+              onChange={handleChange}
+              placeholder="cth., guru@sekolah.id"
+              required
+              className="text-base h-11 rounded-md focus:border-primary"
+            />
+            <p className="text-xs text-muted-foreground">Email ini akan digunakan untuk membuat akun pengguna baru untuk guru ini.</p>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="password" className="text-base font-medium">Kata Sandi Akun Pengguna</Label>
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              value={formData.password || ""}
+              onChange={handleChange}
+              placeholder="Minimal 6 karakter"
+              required
+              minLength={6}
+              className="text-base h-11 rounded-md focus:border-primary"
+            />
+            <p className="text-xs text-muted-foreground">Buat kata sandi untuk akun pengguna baru guru ini.</p>
+          </div>
+        </>
       )}
 
       <div className="space-y-1.5">
@@ -151,4 +172,3 @@ export function TeacherFormFields({
     </>
   );
 }
-
