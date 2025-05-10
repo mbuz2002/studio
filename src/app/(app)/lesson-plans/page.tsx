@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react"; // Added useCallback
+import { useState, useEffect, useMemo, useCallback } from "react"; 
 import { CurriculumDataTable } from "@/components/curriculum/CurriculumDataTable";
 import type { LessonPlan, AnyCurriculumItem, CurriculumFramework } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,7 +24,7 @@ const initialLessonPlansData: LessonPlan[] = [
     curriculumType: "Kurikulum Merdeka",
     title: "ATP Dasar-Dasar Animasi Fase F",
     subject: "Animasi",
-    gradeLevel: "Fase F (Kelas XI-XII SMK)",
+    gradeLevel: "Fase F (Kelas 11-12 SMA/MA/SMK/MAK)",
     topic: "Dasar-Dasar Keahlian Animasi", 
     bidangKeahlian: "Seni dan Ekonomi Kreatif",
     programKeahlian: "Animasi",
@@ -214,7 +214,9 @@ export default function LessonPlansPage() {
     );
   }
   
-  const pageTitle = defaultCurriculum === "Kurikulum Merdeka" ? "Alur Tujuan Pembelajaran (ATP) / Modul Ajar" : "Rencana Pelaksanaan Pembelajaran (RPP)";
+  const pageTitle = defaultCurriculum === "Kurikulum Merdeka" ? "ATP (Alur Tujuan Pembelajaran)" : "RPP (Rencana Pelaksanaan Pembelajaran)";
+  const documentTypeForTable = defaultCurriculum === "Kurikulum Merdeka" ? "ATP" : "RPP";
+
 
   return (
     <div className="space-y-6 py-4 md:py-8">
@@ -239,7 +241,7 @@ export default function LessonPlansPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input
                   type="search"
-                  placeholder={`Cari ${pageTitle} (judul, jenjang, kurikulum, topik)...`}
+                  placeholder={`Cari ${documentTypeForTable} (judul, jenjang, kurikulum, topik)...`}
                   className="pl-10 w-full text-base md:text-sm h-10"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}

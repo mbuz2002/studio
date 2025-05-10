@@ -5,7 +5,7 @@ import { useEffect, useMemo } from 'react';
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset, SidebarRail } from '@/components/ui/sidebar';
 import { AppLogo } from '@/components/layout/AppLogo';
 import { UserProfile } from '@/components/layout/UserProfile';
-import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, ShieldCheck, Activity, Users, Info, BrainCircuit } from 'lucide-react'; 
+import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, ShieldCheck, Activity, Users, Info, BrainCircuit, FileText } from 'lucide-react'; 
 import Link from 'next/link';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
@@ -28,7 +28,7 @@ interface NavItem {
 
 const allNavItems: NavItem[] = [
   { href: "/dashboard", label: "Dasbor", originalLabel: "Dasbor", icon: LayoutDashboard, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
-  { href: "/lesson-plans", label: "Rencana Pembelajaran", originalLabel: "Rencana Pembelajaran", icon: BookOpenText, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+  { href: "/lesson-plans", label: "RPP", originalLabel: "RPP / ATP", icon: BookOpenText, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] }, // Label will be dynamic
   { href: "/annual-programs", label: "Program Tahunan", originalLabel: "Program Tahunan", icon: CalendarDays, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/semester-programs", label: "Program Semester", originalLabel: "Program Semester", icon: CalendarClock, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/modul-ajar", label: "Modul Ajar (KM)", originalLabel: "Modul Ajar (KM)", icon: BrainCircuit, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], isKurikulumMerdekaOnly: true },
@@ -57,10 +57,11 @@ export default function AppLayout({ children }: PropsWithChildren) {
     if (!user) return [];
     return allNavItems
       .map(item => {
-        if (item.href === "/lesson-plans" && defaultCurriculum === "Kurikulum Merdeka") {
-          return { ...item, label: "ATP / Modul Ajar (Umum)" }; 
+        let currentLabel = item.originalLabel || item.label;
+        if (item.href === "/lesson-plans") {
+          currentLabel = defaultCurriculum === "Kurikulum Merdeka" ? "ATP (Alur Tujuan Pembelajaran)" : "RPP (Rencana Pelaksanaan Pembelajaran)";
         }
-        return { ...item, label: item.originalLabel || item.label }; 
+        return { ...item, label: currentLabel }; 
       })
       .filter(item => 
         item.roles.includes(user.role) && 
@@ -96,7 +97,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
         if (currentNavItem.isKurikulumMerdekaOnly && defaultCurriculum !== "Kurikulum Merdeka") {
             toast({
                 title: "Fitur Tidak Tersedia",
-                description: `Menu '${currentNavItem.label}' hanya untuk Kurikulum Merdeka. Kurikulum saat ini: ${defaultCurriculum}.`,
+                description: `Menu '${currentNavItem.originalLabel || currentNavItem.label}' hanya untuk Kurikulum Merdeka. Kurikulum saat ini: ${defaultCurriculum}.`,
                 variant: "destructive",
             });
             router.push("/dashboard");
@@ -116,7 +117,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
     return (
       <div className="flex h-screen flex-col items-center justify-center bg-background text-foreground">
         <div className="flex flex-col items-center text-center"> 
-            <BookOpenText className="mr-3 h-16 w-16 animate-pulse text-primary mb-6" /> 
+            <FileText className="mr-3 h-16 w-16 animate-pulse text-primary mb-6" /> 
             <h2 className="text-2xl font-semibold text-foreground mb-2">Memuat Sesi Anda...</h2>
             <p className="text-base text-muted-foreground">Mohon tunggu sebentar, EduAI Planner sedang menyiapkan data Anda.</p>
         </div>
