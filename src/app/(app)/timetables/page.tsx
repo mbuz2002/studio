@@ -271,16 +271,19 @@ export default function TimetablesPage() {
   
   const handleDeleteEntry = useCallback((entryId: string) => {
     const entryToDelete = timetableEntries.find(e => e.id === entryId);
-    if (!entryToDelete) return;
+    if (!entryToDelete) {
+        toast({ title: "Error", description: "Jadwal tidak ditemukan untuk dihapus.", variant: "destructive" });
+        return;
+    }
 
-    if (window.confirm(`Yakin ingin menghapus jadwal ${subjectMap.get(entryToDelete.subjectId)} kelas ${entryToDelete.classOrGrade} pada hari ${entryToDelete.dayOfWeek}?`)) {
+    if (window.confirm(`Yakin ingin menghapus jadwal ${subjectMap.get(entryToDelete.subjectId) || 'Tanpa Nama'} kelas ${entryToDelete.classOrGrade} pada hari ${entryToDelete.dayOfWeek}?`)) {
         const updatedEntries = timetableEntries.filter(e => e.id !== entryId);
-        setTimetableEntries(updatedEntries); // Update state
-        localStorage.setItem(TIMETABLES_STORAGE_KEY, JSON.stringify(updatedEntries)); // Update localStorage
+        setTimetableEntries(updatedEntries);
+        localStorage.setItem(TIMETABLES_STORAGE_KEY, JSON.stringify(updatedEntries));
         toast({ title: "Entri Jadwal Dihapus" });
         addLog("WARN", `Entri jadwal (ID: ${entryId}) untuk kelas ${entryToDelete.classOrGrade} dihapus oleh ${user?.email}.`, "TimetablesPage");
     }
-  }, [timetableEntries, subjectMap, user, toast, addLog]);
+  }, [timetableEntries, subjectMap, user, toast, addLog, setTimetableEntries]);
 
 
   if (!isClient || authLoading || !user) {
