@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Activity, RotateCw, Search, ShieldAlert, Trash2, AlertTriangle, Info, Loader2 } from "lucide-react";
+import { Activity, RotateCw, Search, ShieldAlert, Trash2, AlertTriangle, Info } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
@@ -100,7 +100,7 @@ export default function SystemLogsPage() {
     return (
       <div className="flex h-[calc(100vh-200px)] items-center justify-center">
         <div className="flex flex-col items-center text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+          <Activity className="h-12 w-12 animate-pulse text-primary mb-4" />
           <p className="text-xl font-medium text-muted-foreground">Memverifikasi akses dan memuat log...</p>
            <p className="text-sm text-muted-foreground">Mohon tunggu sebentar.</p>
         </div>

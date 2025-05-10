@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpenText, Save, ArrowLeft, Loader2, Trash2 } from "lucide-react";
+import { BookOpenText, Save, ArrowLeft, Trash2 } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import type { LessonPlan, CurriculumFramework } from "@/types";
 import { LessonPlanFormFields } from "@/components/curriculum/LessonPlanFormFields";
@@ -201,7 +201,7 @@ export default function EditLessonPlanPage() {
             learningObjectives: result.learningObjectives,
             alokasiWaktuJP: result.alokasiWaktuJP || prev.alokasiWaktuJP,
             profilPelajarPancasilaFocus: result.profilPelajarPancasilaFocus || (selectedCurriculum === "Kurikulum Merdeka" ? prev.profilPelajarPancasilaFocus : undefined),
-            pemahamanBermakna: result.pemahamanBermakna || (selectedCurriculum === "Kurikulum Merdeka" ? prev.pemahamanBermakna : undefined),
+            pemahamanBermakna: result.pemahamanBermakna || (selectedCurikulum === "Kurikulum Merdeka" ? prev.pemahamanBermakna : undefined),
             pertanyaanPemantik: result.pertanyaanPemantik || (selectedCurriculum === "Kurikulum Merdeka" ? prev.pertanyaanPemantik : undefined),
             langkahPembelajaran: result.langkahPembelajaran || prev.langkahPembelajaran,
             assessment: result.assessmentStrategies?.join('\n- ') || prev.assessment,
@@ -275,9 +275,12 @@ export default function EditLessonPlanPage() {
 
   if (isLoadingData || !user) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="ml-2">Memuat data dokumen...</p>
+      <div className="flex h-[calc(100vh-200px)] items-center justify-center">
+        <div className="flex flex-col items-center text-center">
+          <BookOpenText className="h-12 w-12 animate-pulse text-primary mb-4" />
+          <p className="text-xl font-medium text-muted-foreground">Memuat data dokumen...</p>
+          <p className="text-sm text-muted-foreground">Mohon tunggu sebentar.</p>
+        </div>
       </div>
     );
   }
@@ -329,8 +332,8 @@ export default function EditLessonPlanPage() {
               <Button type="button" variant="outline" onClick={() => router.back()} className="w-full sm:w-auto">
                 <ArrowLeft className="mr-2 h-4 w-4" /> Batal
               </Button>
-              <Button type="submit" disabled={isSubmitting} className="bg-primary hover:bg-primary/90 text-primary-foreground w-full sm:w-auto">
-                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+              <Button type="submit" disabled={isSubmitting || isGeneratingAI} className="bg-primary hover:bg-primary/90 text-primary-foreground w-full sm:w-auto">
+                {isSubmitting ? <BookOpenText className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                 Simpan Perubahan
               </Button>
             </div>

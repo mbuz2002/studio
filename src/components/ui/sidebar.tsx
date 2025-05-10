@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -69,29 +70,18 @@ const SidebarProvider = React.forwardRef<
   ) => {
     const isMobile = useIsMobile()
     const [openMobile, setOpenMobile] = React.useState(false)
-    const [initialOpenStateDetermined, setInitialOpenStateDetermined] = React.useState(false);
-
+    
     // Initialize _open with defaultOpen, then update from cookie in useEffect
-    const [_open, _setOpen] = React.useState(defaultOpen);
-
-    React.useEffect(() => {
+    const [_open, _setOpen] = React.useState(() => {
       if (typeof window !== "undefined") {
         const cookieValue = document.cookie
           .split("; ")
           .find((row) => row.startsWith(`${SIDEBAR_COOKIE_NAME}=`))
           ?.split("=")[1];
-        
-        let derivedInitialOpen = defaultOpen;
-        if (cookieValue !== undefined) {
-          derivedInitialOpen = cookieValue === "true";
-        }
-        _setOpen(derivedInitialOpen);
-        setInitialOpenStateDetermined(true);
-      } else {
-        _setOpen(defaultOpen); // Fallback for SSR
-        setInitialOpenStateDetermined(true);
+        return cookieValue !== undefined ? cookieValue === "true" : defaultOpen;
       }
-    }, [defaultOpen]);
+      return defaultOpen; // Fallback for SSR or if cookie not found immediately
+    });
 
 
     const open = openProp ?? _open
@@ -147,8 +137,6 @@ const SidebarProvider = React.forwardRef<
       [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar]
     )
     
-    // Removed the conditional `return null;` to ensure children (like MobileBottomNav) always render on mobile.
-    // This might cause a brief flicker on desktop if cookie state mismatches defaultOpen.
 
     return (
       <SidebarContext.Provider value={contextValue}>

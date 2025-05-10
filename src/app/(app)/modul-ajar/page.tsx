@@ -8,7 +8,7 @@ import { MODUL_AJAR_STORAGE_KEY } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { FileUp, Filter, Search, Loader2, BrainCircuit, PlusCircle, X, AlertTriangle } from "lucide-react";
+import { FileUp, Filter, Search, BrainCircuit, PlusCircle, X, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCurriculum } from "@/contexts/CurriculumContext"; 
@@ -132,7 +132,7 @@ export default function ModulAjarPage() {
     return (
       <div className="flex h-[calc(100vh-200px)] items-center justify-center">
          <div className="flex flex-col items-center text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+          <BrainCircuit className="h-12 w-12 animate-pulse text-primary mb-4" />
           <p className="text-xl font-medium text-muted-foreground">Memuat Modul Ajar...</p>
            <p className="text-sm text-muted-foreground">Menyiapkan daftar modul Anda.</p>
         </div>

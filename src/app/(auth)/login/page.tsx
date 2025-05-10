@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BookMarked, LogIn, UserCircle, Loader2 } from "lucide-react"; 
+import { BookMarked, LogIn, UserCircle } from "lucide-react"; 
 import Link from "next/link";
 import type { FormEvent} from 'react';
 import { useState } from 'react';
@@ -96,7 +96,7 @@ export default function LoginPage() {
                <p className="text-xs text-muted-foreground pt-1">Kata sandi diabaikan untuk mode demo ini.</p>
             </div>
             <Button type="submit" className="w-full bg-gradient-to-r from-accent to-primary hover:from-accent/90 hover:to-primary/90 text-accent-foreground text-base py-3 h-12 rounded-md shadow-lg hover:shadow-xl transition-shadow duration-300" disabled={isLoading}>
-              {isLoading ? <Loader2 className="mr-2.5 h-5 w-5 animate-spin" /> : <LogIn className="mr-2.5 h-5 w-5" />}
+              {isLoading ? <BookMarked className="mr-2.5 h-5 w-5 animate-pulse" /> : <LogIn className="mr-2.5 h-5 w-5" />}
               {isLoading ? "Memproses..." : "Masuk"}
             </Button>
           </form>

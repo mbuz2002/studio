@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Save, ArrowLeft, Loader2 } from "lucide-react";
+import { CalendarDays, Save, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { AnnualProgram, AnnualProgramComponent, CurriculumFramework } from "@/types";
 import { AnnualProgramFormFields } from "@/components/curriculum/AnnualProgramFormFields";
@@ -215,9 +215,12 @@ export default function NewAnnualProgramPage() {
 
   if (!user) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="ml-2">Memuat...</p>
+      <div className="flex h-[calc(100vh-200px)] items-center justify-center">
+        <div className="flex flex-col items-center text-center">
+          <CalendarDays className="h-12 w-12 animate-pulse text-primary mb-4" />
+          <p className="text-xl font-medium text-muted-foreground">Memuat...</p>
+          <p className="text-sm text-muted-foreground">Mohon tunggu sebentar.</p>
+        </div>
       </div>
     );
   }
@@ -252,8 +255,8 @@ export default function NewAnnualProgramPage() {
               <Button type="button" variant="outline" onClick={() => router.back()} className="w-full sm:w-auto">
                 <ArrowLeft className="mr-2 h-4 w-4" /> Batal
               </Button>
-              <Button type="submit" disabled={isSubmitting} className="bg-primary hover:bg-primary/90 text-primary-foreground w-full sm:w-auto">
-                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+              <Button type="submit" disabled={isSubmitting || isGeneratingAI} className="bg-primary hover:bg-primary/90 text-primary-foreground w-full sm:w-auto">
+                {isSubmitting ? <CalendarDays className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                 Simpan PROTA
               </Button>
             </div>

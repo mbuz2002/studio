@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Sparkles, BookOpenCheck, ExternalLink, FileText, Video, Book, Newspaper, Globe, Search, TableIcon, Languages, MessageSquareWarning } from "lucide-react";
+import { Sparkles, BookOpenCheck, ExternalLink, FileText, Video, Book, Newspaper, Globe, Search, TableIcon, Languages, MessageSquareWarning } from "lucide-react";
 import { generateTeachingMaterial, type GenerateTeachingMaterialInput, type GenerateTeachingMaterialOutput } from "@/ai/flows/generate-teaching-material"; 
 import type { SuggestedSourceSchema as AISuggestedSource } from "@/ai/flows/generate-teaching-material"; 
 import { useToast } from "@/hooks/use-toast";
@@ -102,7 +102,7 @@ export default function AIAssistantPage() {
     return (
       <div className="flex h-[calc(100vh-200px)] items-center justify-center">
          <div className="flex flex-col items-center text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+          <Sparkles className="h-12 w-12 animate-pulse text-primary mb-4" />
           <p className="text-xl font-medium text-muted-foreground">Memuat Asisten AI...</p>
           <p className="text-sm text-muted-foreground">Menyiapkan alat bantu cerdas Anda.</p>
         </div>
@@ -180,7 +180,7 @@ export default function AIAssistantPage() {
                   </Select>
                 </div>
                 <Button type="submit" disabled={isGeneratingMaterial || !materialTopic || !materialGradeLevel} className="w-full bg-gradient-to-r from-accent to-primary hover:from-accent/90 hover:to-primary/90 text-accent-foreground text-lg py-3 h-12 mt-2 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 rounded-md">
-                  {isGeneratingMaterial ? <Loader2 className="mr-2.5 h-5 w-5 animate-spin" /> : <BookOpenCheck className="mr-2.5 h-5 w-5" />}
+                  {isGeneratingMaterial ? <Sparkles className="mr-2.5 h-5 w-5 animate-spin" /> : <BookOpenCheck className="mr-2.5 h-5 w-5" />}
                   Buat Materi Ajar
                 </Button>
               </form>
@@ -193,7 +193,7 @@ export default function AIAssistantPage() {
             <Card className="shadow-lg rounded-lg border-border/50">
               <CardHeader className="p-6 rounded-t-lg bg-muted/30">
                 <div className="flex items-center">
-                    <Loader2 className="h-7 w-7 animate-spin text-primary mr-3" />
+                    <Sparkles className="h-7 w-7 animate-pulse text-primary mr-3" />
                     <CardTitle className="text-2xl font-semibold text-muted-foreground">AI sedang meracik materi untuk Anda...</CardTitle>
                 </div>
                 <CardDescription className="text-base text-muted-foreground mt-2">Proses ini mungkin memerlukan beberapa saat. Mohon tunggu.</CardDescription>
@@ -313,7 +313,7 @@ export default function AIAssistantPage() {
           
           {!generatedMaterial && !isGeneratingMaterial && (
             <Card className="shadow-lg h-full flex flex-col items-center justify-center text-center p-8 md:p-12 bg-muted/30 border-2 border-dashed border-border/70 rounded-lg min-h-[400px]">
-                <Sparkles className="h-16 w-16 md:h-20 md:w-20 text-muted-foreground/40 mb-5" />
+                <Sparkles className="h-16 w-16 md:h-20 md:w-20 text-muted-foreground/40 mb-5 animate-pulse" />
                 <CardTitle className="text-2xl md:text-3xl font-semibold text-muted-foreground">Hasil Materi Akan Tampil di Sini</CardTitle>
                 <CardDescription className="text-base md:text-lg text-muted-foreground mt-3 max-w-md">
                     Isi parameter di sebelah kiri dan klik "Buat Materi Ajar" untuk melihat bagaimana AI dapat membantu Anda menyusun konten pembelajaran.

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { ShieldCheck, Loader2, Eye, EyeOff, Trash2, ExternalLink, Activity } from "lucide-react";
+import { ShieldCheck, Eye, EyeOff, Trash2, ExternalLink, Activity, Settings as SettingsIcon } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -52,7 +52,7 @@ export default function AdminSystemSettingsPage() {
     return (
       <div className="flex h-[calc(100vh-200px)] items-center justify-center">
         <div className="flex flex-col items-center text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+          <SettingsIcon className="h-12 w-12 animate-pulse text-primary mb-4" />
           <p className="text-xl font-medium text-muted-foreground">Memverifikasi akses...</p>
           <p className="text-sm text-muted-foreground">Mohon tunggu sebentar.</p>
         </div>

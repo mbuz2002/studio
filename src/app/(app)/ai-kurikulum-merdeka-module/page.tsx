@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Sparkles, BrainCircuit, Printer, FileText, Book, ListChecks, UserCheck, MessageSquareHeart, Lightbulb, AlertTriangle, Search, Save } from "lucide-react";
+import { Sparkles, BrainCircuit, Printer, FileText, Book, ListChecks, UserCheck, MessageSquareHeart, Lightbulb, AlertTriangle, Search, Save } from "lucide-react";
 import { 
     generateKurikulumMerdekaModule, 
     type GenerateKurikulumMerdekaModuleInput,
@@ -390,7 +390,7 @@ export default function NewAIKurikulumMerdekaModulePage() {
     return (
       <div className="flex h-[calc(100vh-200px)] items-center justify-center">
          <div className="flex flex-col items-center text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+          <BrainCircuit className="h-12 w-12 animate-pulse text-primary mb-4" />
           <p className="text-xl font-medium text-muted-foreground">Memuat Pembuat Modul Ajar AI...</p>
            <p className="text-sm text-muted-foreground">Menyiapkan fitur canggih untuk Anda.</p>
         </div>
@@ -479,7 +479,7 @@ export default function NewAIKurikulumMerdekaModulePage() {
                   <Textarea id="moduleCPElemen" value={moduleCPElemen} onChange={(e) => setModuleCPElemen(e.target.value)} placeholder="CP Elemen 1: Memahami konsep..." className="text-base rounded-md focus:border-primary" rows={3} />
                 </div>
                 <Button type="submit" disabled={isGeneratingModule || !moduleTopic || !moduleSubject || !moduleGradeLevel} className="w-full bg-gradient-to-r from-accent to-primary hover:from-accent/90 hover:to-primary/90 text-accent-foreground text-lg py-3 h-12 mt-2 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 rounded-md">
-                  {isGeneratingModule ? <Loader2 className="mr-2.5 h-5 w-5 animate-spin" /> : <Sparkles className="mr-2.5 h-5 w-5" />}
+                  {isGeneratingModule ? <Sparkles className="mr-2.5 h-5 w-5 animate-spin" /> : <Sparkles className="mr-2.5 h-5 w-5" />}
                   Buat Modul Ajar
                 </Button>
               </form>
@@ -492,7 +492,7 @@ export default function NewAIKurikulumMerdekaModulePage() {
             <Card className="shadow-lg rounded-lg border-border/50">
                <CardHeader className="p-6 rounded-t-lg bg-muted/30">
                 <div className="flex items-center">
-                    <Loader2 className="h-7 w-7 animate-spin text-primary mr-3" />
+                    <Sparkles className="h-7 w-7 animate-pulse text-primary mr-3" />
                     <CardTitle className="text-2xl font-semibold text-muted-foreground">AI sedang merancang Modul Ajar...</CardTitle>
                 </div>
                 <CardDescription className="text-base text-muted-foreground mt-2">Proses ini mungkin memerlukan waktu. Mohon tunggu.</CardDescription>
@@ -686,7 +686,7 @@ export default function NewAIKurikulumMerdekaModulePage() {
                 </Alert>
                 <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                     <Button onClick={handleSaveModule} disabled={isSaving || !generatedModule} className="w-full sm:w-auto">
-                        {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2 h-4 w-4" />} Simpan Modul Ajar
+                        {isSaving ? <Sparkles className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2 h-4 w-4" />} Simpan Modul Ajar
                     </Button>
                     <Button onClick={handlePreparePrintModulAjar} disabled={!generatedModule} variant="outline" className="w-full sm:w-auto">
                         <Printer className="mr-2 h-4 w-4" /> Cetak / PDF
@@ -698,7 +698,7 @@ export default function NewAIKurikulumMerdekaModulePage() {
           
           {!generatedModule && !isGeneratingModule && (
             <Card className="shadow-lg h-full flex flex-col items-center justify-center text-center p-8 md:p-12 bg-muted/30 border-2 border-dashed border-border/70 rounded-lg min-h-[400px]">
-                <BrainCircuit className="h-16 w-16 md:h-20 md:w-20 text-muted-foreground/40 mb-5" />
+                <BrainCircuit className="h-16 w-16 md:h-20 md:w-20 text-muted-foreground/40 mb-5 animate-pulse" />
                 <CardTitle className="text-2xl md:text-3xl font-semibold text-muted-foreground">Hasil Modul Ajar Akan Tampil di Sini</CardTitle>
                 <CardDescription className="text-base md:text-lg text-muted-foreground mt-3 max-w-md">
                     Isi parameter di sebelah kiri dan klik "Buat Modul Ajar" untuk memulai.

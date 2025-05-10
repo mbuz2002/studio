@@ -7,7 +7,7 @@ import { UserManagementSection } from "@/components/settings/UserManagementSecti
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { Loader2, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import { useLog } from "@/contexts/LogContext";
 
 export default function UserManagementPage() {
@@ -45,7 +45,7 @@ export default function UserManagementPage() {
     return (
       <div className="flex h-[calc(100vh-200px)] items-center justify-center">
          <div className="flex flex-col items-center text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+          <Users className="h-12 w-12 animate-pulse text-primary mb-4" />
           <p className="text-xl font-medium text-muted-foreground">Memverifikasi akses...</p>
            <p className="text-sm text-muted-foreground">Menyiapkan manajemen pengguna.</p>
         </div>

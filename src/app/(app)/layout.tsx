@@ -5,7 +5,7 @@ import { useEffect, useMemo } from 'react';
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset, SidebarRail } from '@/components/ui/sidebar';
 import { AppLogo } from '@/components/layout/AppLogo';
 import { UserProfile } from '@/components/layout/UserProfile';
-import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, ShieldCheck, Activity, Users, Info, BrainCircuit, Loader2 } from 'lucide-react'; 
+import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, ShieldCheck, Activity, Users, Info, BrainCircuit } from 'lucide-react'; 
 import Link from 'next/link';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
@@ -115,11 +115,11 @@ export default function AppLayout({ children }: PropsWithChildren) {
   if (loading || !isAuthenticated || !user) { 
     return (
       <div className="flex h-screen flex-col items-center justify-center bg-background text-foreground">
-        <div className="flex items-center text-xl"> 
-            <Loader2 className="mr-3 h-8 w-8 animate-spin text-primary" /> 
-            Memuat sesi pengguna...
+        <div className="flex flex-col items-center text-center"> 
+            <BookOpenText className="mr-3 h-16 w-16 animate-pulse text-primary mb-6" /> 
+            <h2 className="text-2xl font-semibold text-foreground mb-2">Memuat Sesi Anda...</h2>
+            <p className="text-base text-muted-foreground">Mohon tunggu sebentar, EduAI Planner sedang menyiapkan data Anda.</p>
         </div>
-        <p className="mt-2 text-base text-muted-foreground">Mohon tunggu sebentar, data Anda sedang kami siapkan.</p>
       </div>
     );
   }

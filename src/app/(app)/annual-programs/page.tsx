@@ -7,7 +7,7 @@ import type { AnnualProgram, AnyCurriculumItem, CurriculumFramework } from "@/ty
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { FileUp, Filter, Search, Loader2, CalendarDays, PlusCircle, X } from "lucide-react";
+import { FileUp, Filter, Search, CalendarDays, PlusCircle, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCurriculum } from "@/contexts/CurriculumContext"; 
@@ -191,9 +191,12 @@ export default function AnnualProgramsPage() {
 
   if (!isClient || !user) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="ml-2">Memuat Program Tahunan...</p>
+      <div className="flex h-[calc(100vh-200px)] items-center justify-center">
+        <div className="flex flex-col items-center text-center">
+          <CalendarDays className="h-12 w-12 animate-pulse text-primary mb-4" />
+          <p className="text-xl font-medium text-muted-foreground">Memuat Program Tahunan...</p>
+          <p className="text-sm text-muted-foreground">Mohon tunggu sebentar.</p>
+        </div>
       </div>
     );
   }
@@ -311,4 +314,3 @@ export default function AnnualProgramsPage() {
     </div>
   );
 }
-

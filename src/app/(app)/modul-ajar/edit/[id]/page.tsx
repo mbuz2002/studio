@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, ArrowLeft, Save } from 'lucide-react'; 
+import { BrainCircuit, ArrowLeft, Save } from 'lucide-react'; 
 import type { ModulAjar } from '@/types';
 import { MODUL_AJAR_STORAGE_KEY } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -59,7 +59,7 @@ export default function EditModulAjarPage() {
     return (
       <div className="flex h-[calc(100vh-200px)] items-center justify-center">
         <div className="flex flex-col items-center text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+          <BrainCircuit className="h-12 w-12 animate-pulse text-primary mb-4" />
           <p className="text-xl font-medium text-muted-foreground">Memuat data Modul Ajar...</p>
           <p className="text-sm text-muted-foreground">Mohon tunggu sebentar.</p>
         </div>
@@ -145,7 +145,7 @@ export default function EditModulAjarPage() {
                 Kembali ke Daftar
               </Button>
               <Button type="submit" className="bg-primary hover:bg-primary/90 text-primary-foreground w-full sm:w-auto" disabled={isSaving}>
-                {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                {isSaving ? <BrainCircuit className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                 Simpan Perubahan
               </Button>
             </div>
