@@ -3,11 +3,12 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpenText, CalendarDays, CalendarClock, Sparkles, PlusCircle, Users, FileText, LayoutDashboard } from "lucide-react";
+import { BookOpenText, CalendarDays, CalendarClock, Sparkles, PlusCircle, Users, FileText, LayoutDashboard, BrainCircuit } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useAuth } from "@/contexts/AuthContext";
 import type { UserRole } from "@/types";
+import { useCurriculum } from "@/contexts/CurriculumContext"; // Import useCurriculum
 
 const featureCardsConfig: {
   title: string;
@@ -17,6 +18,7 @@ const featureCardsConfig: {
   image: string;
   aiHint: string;
   roles: UserRole[];
+  isKurikulumMerdekaOnly?: boolean;
 }[] = [
   {
     title: "Modul Ajar / RPP / ATP",
@@ -46,7 +48,17 @@ const featureCardsConfig: {
     roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"] 
   },
   {
-    title: "Asisten AI EduPlanner",
+    title: "Modul Ajar (Kurikulum Merdeka)",
+    description: "Rancang dan kelola Modul Ajar spesifik untuk Kurikulum Merdeka dengan fitur AI.",
+    icon: BrainCircuit,
+    href: "/modul-ajar",
+    image: "https://picsum.photos/seed/modulajarkm/800/600",
+    aiHint: "pembelajaran inovatif",
+    roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"],
+    isKurikulumMerdekaOnly: true,
+  },
+  {
+    title: "Asisten AI Pembuat Materi",
     description: "Manfaatkan kecerdasan buatan untuk ide, saran, dan pembuatan draf materi pengajaran.",
     icon: Sparkles,
     href: "/ai-assistant",
@@ -58,10 +70,16 @@ const featureCardsConfig: {
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const { defaultCurriculum } = useCurriculum(); // Get default curriculum
 
   const canCreateNewPlan = user && (user.role === "Admin" || user.role === "WakaKurikulum" || user.role === "Guru");
 
-  const visibleFeatureCards = user ? featureCardsConfig.filter(card => card.roles.includes(user.role)) : [];
+  const visibleFeatureCards = user 
+    ? featureCardsConfig.filter(card => 
+        card.roles.includes(user.role) &&
+        (!card.isKurikulumMerdekaOnly || defaultCurriculum === "Kurikulum Merdeka")
+      ) 
+    : [];
 
   return (
     <div className="container mx-auto py-6 md:py-8">
@@ -120,7 +138,7 @@ export default function DashboardPage() {
             <CardContent className="flex-grow flex items-end mt-auto pt-3 pb-5 px-5"> 
               <Button asChild variant="outline" className="w-full text-base border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground transition-colors duration-300 rounded-md">
                 <Link href={feature.href}>
-                  Buka {feature.title.split(" (")[0]} {/* Keep button text shorter */}
+                  Buka {feature.title.split(" (")[0]} 
                 </Link>
               </Button>
             </CardContent>
@@ -130,7 +148,7 @@ export default function DashboardPage() {
            <Card className="rounded-lg col-span-full shadow-md border-border/50">
             <CardHeader className="p-6">
               <CardTitle className="text-xl md:text-2xl font-semibold">Tidak Ada Fitur Tersedia</CardTitle>
-              <CardDescription className="text-base text-muted-foreground mt-1">Saat ini tidak ada fitur yang dapat diakses untuk peran Anda. Silakan hubungi administrator jika ini tidak sesuai.</CardDescription>
+              <CardDescription className="text-base text-muted-foreground mt-1">Saat ini tidak ada fitur yang dapat diakses untuk peran Anda atau sesuai dengan pengaturan kurikulum saat ini. Silakan hubungi administrator jika ini tidak sesuai.</CardDescription>
             </CardHeader>
           </Card>
         )}

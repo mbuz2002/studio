@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Sparkles, BrainCircuit, Printer, FileText, Book, ListChecks, UserCheck, MessageSquareHeart, Lightbulb, AlertTriangle, Search } from "lucide-react";
+import { Loader2, Sparkles, BrainCircuit, Printer, FileText, Book, ListChecks, UserCheck, MessageSquareHeart, Lightbulb, AlertTriangle, Search, Save } from "lucide-react";
 import { 
     generateKurikulumMerdekaModule, 
     type GenerateKurikulumMerdekaModuleInput,
@@ -24,11 +24,12 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { useCurriculum } from "@/contexts/CurriculumContext";
 import { Badge } from "@/components/ui/badge";
-import type { SchoolProfile, User, PrintOptionsModulAjar } from "@/types";
-import { defaultPrintOptionsModulAjar } from "@/types";
+import type { SchoolProfile, User, PrintOptionsModulAjar, ModulAjar } from "@/types";
+import { defaultPrintOptionsModulAjar, MODUL_AJAR_STORAGE_KEY } from "@/types";
 import { PrintOptionsModulAjarDialog } from "@/components/curriculum/PrintOptionsModulAjarDialog";
 import { format } from "date-fns";
 import { id as indonesianLocale } from "date-fns/locale";
+import { useRouter } from "next/navigation";
 
 const merdekaGradeLevels = [
   { value: "PAUD (Kurikulum Merdeka)", label: "PAUD (Kurikulum Merdeka)" },
@@ -41,11 +42,12 @@ const merdekaGradeLevels = [
   { value: "SLB (Fase A-F Disesuaikan)", label: "SLB (Fase A-F Disesuaikan)" },
 ];
 
-export default function AIKurikulumMerdekaModulePage() {
+export default function NewAIKurikulumMerdekaModulePage() {
   const { toast } = useToast();
   const { user } = useAuth();
   const { addLog } = useLog();
   const { defaultCurriculum } = useCurriculum();
+  const router = useRouter();
 
   const [moduleTopic, setModuleTopic] = useState("");
   const [moduleSubject, setModuleSubject] = useState("");
@@ -55,6 +57,7 @@ export default function AIKurikulumMerdekaModulePage() {
   
   const [generatedModule, setGeneratedModule] = useState<GenerateKurikulumMerdekaModuleOutput | null>(null);
   const [isGeneratingModule, setIsGeneratingModule] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const [isClient, setIsClient] = useState(false);
   const [schoolProfile, setSchoolProfile] = useState<SchoolProfile | null>(null);
@@ -64,16 +67,19 @@ export default function AIKurikulumMerdekaModulePage() {
 
   useEffect(() => {
     setIsClient(true);
+    const pageSource = "NewAIKurikulumMerdekaModulePage";
     if (user) {
-      addLog("INFO", `Pengguna ${user.email} mengakses halaman Pembuatan Modul Ajar AI (Kurikulum Merdeka).`, "AIKurikulumMerdekaModulePage");
+      addLog("INFO", `Pengguna ${user.email} mengakses halaman Pembuatan Modul Ajar AI Baru.`, pageSource);
     }
     if (defaultCurriculum !== "Kurikulum Merdeka" && user) {
         toast({
             title: "Fitur Khusus Kurikulum Merdeka",
-            description: "Halaman ini dioptimalkan untuk pembuatan Modul Ajar Kurikulum Merdeka.",
+            description: "Halaman ini untuk pembuatan Modul Ajar Kurikulum Merdeka. Kurikulum default Anda saat ini bukan Kurikulum Merdeka.",
             variant: "default",
         });
-         addLog("WARN", `Pengguna ${user.email} mengakses halaman Modul Ajar AI, namun kurikulum default bukan Kurikulum Merdeka.`, "AIKurikulumMerdekaModulePage");
+         addLog("WARN", `Pengguna ${user.email} mengakses halaman Modul Ajar AI, namun kurikulum default bukan Kurikulum Merdeka.`, pageSource);
+         router.push("/dashboard"); // Redirect if not Kurikulum Merdeka context
+         return;
     }
     if (typeof window !== 'undefined') {
       const storedProfile = localStorage.getItem("schoolProfile");
@@ -82,21 +88,22 @@ export default function AIKurikulumMerdekaModulePage() {
             setSchoolProfile(JSON.parse(storedProfile));
         } catch (e) {
             console.error("Failed to parse school profile from localStorage", e);
+             addLog("ERROR", `Gagal memuat profil sekolah dari penyimpanan lokal: ${e instanceof Error ? e.message : String(e)}`, pageSource);
         }
       }
     }
-  }, [user, addLog, defaultCurriculum, toast]);
+  }, [user, addLog, defaultCurriculum, toast, router]);
 
   const handleGenerateModule = async (e: FormEvent) => {
     e.preventDefault();
     if (!moduleTopic || !moduleSubject || !moduleGradeLevel) {
       toast({ title: "Informasi Kurang", description: "Harap isi Topik, Mata Pelajaran, dan Jenjang/Fase.", variant: "destructive" });
-      addLog("WARN", `Gagal membuat Modul Ajar AI: Informasi dasar kurang. Topik: '${moduleTopic}', Mapel: '${moduleSubject}', Jenjang: '${moduleGradeLevel}'.`, "AIKurikulumMerdekaModulePage");
+      addLog("WARN", `Gagal membuat Modul Ajar AI: Informasi dasar kurang. Topik: '${moduleTopic}', Mapel: '${moduleSubject}', Jenjang: '${moduleGradeLevel}'.`, "NewAIKurikulumMerdekaModulePage-AI");
       return;
     }
     setIsGeneratingModule(true);
     setGeneratedModule(null);
-    addLog("INFO", `Memulai pembuatan Modul Ajar dengan AI. Topik: "${moduleTopic}", Mapel: "${moduleSubject}", Jenjang: "${moduleGradeLevel}".`, "AIKurikulumMerdekaModulePage");
+    addLog("INFO", `Memulai pembuatan Modul Ajar dengan AI. Topik: "${moduleTopic}", Mapel: "${moduleSubject}", Jenjang: "${moduleGradeLevel}".`, "NewAIKurikulumMerdekaModulePage-AI");
     try {
       const input: GenerateKurikulumMerdekaModuleInput = { 
         topic: moduleTopic, 
@@ -111,13 +118,44 @@ export default function AIKurikulumMerdekaModulePage() {
       const result = await generateKurikulumMerdekaModule(input);
       setGeneratedModule(result);
       toast({ title: "Modul Ajar Dihasilkan!", description: "AI telah membuat draf Modul Ajar Kurikulum Merdeka untuk Anda." });
-      addLog("INFO", `Modul Ajar AI berhasil dibuat. Judul: "${result.judulModul}".`, "AIKurikulumMerdekaModulePage");
+      addLog("INFO", `Modul Ajar AI berhasil dibuat. Judul: "${result.judulModul}".`, "NewAIKurikulumMerdekaModulePage-AI");
     } catch (error) {
       console.error("Error generating Kurikulum Merdeka module:", error);
       toast({ title: "Pembuatan Modul Gagal", description: `Tidak dapat membuat modul ajar. ${error instanceof Error ? error.message : 'Silakan coba lagi.'}`, variant: "destructive" });
-      addLog("ERROR", `Gagal membuat Modul Ajar AI. Topik: "${moduleTopic}". Kesalahan: ${error instanceof Error ? error.message : String(error)}`, "AIKurikulumMerdekaModulePage");
+      addLog("ERROR", `Gagal membuat Modul Ajar AI. Topik: "${moduleTopic}". Kesalahan: ${error instanceof Error ? error.message : String(error)}`, "NewAIKurikulumMerdekaModulePage-AI");
     } finally {
       setIsGeneratingModule(false);
+    }
+  };
+
+  const handleSaveModule = async () => {
+    if (!generatedModule || !user) return;
+    setIsSaving(true);
+    addLog("INFO", `Pengguna ${user.email} menyimpan Modul Ajar AI "${generatedModule.judulModul}".`, "NewAIKurikulumMerdekaModulePage-Save");
+
+    const newModulAjar: ModulAjar = {
+        ...generatedModule,
+        id: `modulajar-${Date.now()}`,
+        type: 'ModulAjar',
+        title: generatedModule.judulModul,
+        subject: generatedModule.identitasModul.mataPelajaran,
+        gradeLevel: generatedModule.identitasModul.fase, // Or kelasSemester, depends on desired display
+        curriculumType: "Kurikulum Merdeka",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        createdByUserId: user.id,
+    };
+
+    try {
+        const existingModules = JSON.parse(localStorage.getItem(MODUL_AJAR_STORAGE_KEY) || "[]") as ModulAjar[];
+        localStorage.setItem(MODUL_AJAR_STORAGE_KEY, JSON.stringify([newModulAjar, ...existingModules]));
+        toast({ title: "Modul Ajar Disimpan", description: `"${newModulAjar.title}" telah berhasil disimpan.` });
+        addLog("INFO", `Modul Ajar "${newModulAjar.title}" (ID: ${newModulAjar.id}) berhasil disimpan oleh ${user.email}.`, "NewAIKurikulumMerdekaModulePage-Save");
+        router.push("/modul-ajar");
+    } catch (error) {
+        toast({ title: "Gagal Menyimpan", description: "Terjadi kesalahan saat menyimpan Modul Ajar.", variant: "destructive" });
+        addLog("ERROR", `Gagal menyimpan Modul Ajar "${newModulAjar.title}". Kesalahan: ${error instanceof Error ? error.message : String(error)}`, "NewAIKurikulumMerdekaModulePage-Save");
+        setIsSaving(false);
     }
   };
 
@@ -365,6 +403,20 @@ export default function AIKurikulumMerdekaModulePage() {
       </div>
     );
   }
+   if (defaultCurriculum !== "Kurikulum Merdeka") {
+      return (
+          <div className="container mx-auto py-6 md:py-8">
+            <Alert variant="destructive">
+                <AlertTriangle className="h-5 w-5"/>
+                <AlertTitle>Fitur Tidak Tersedia</AlertTitle>
+                <AlertDescription>
+                    Fitur pembuatan Modul Ajar AI hanya tersedia untuk Kurikulum Merdeka. Silakan ubah pengaturan kurikulum default Anda jika ingin menggunakan fitur ini.
+                </AlertDescription>
+            </Alert>
+        </div>
+      );
+  }
+
 
   return (
     <div className="container mx-auto py-6 md:py-8">
@@ -374,7 +426,7 @@ export default function AIKurikulumMerdekaModulePage() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
               <BrainCircuit className="h-12 w-12 md:h-14 md:w-14 flex-shrink-0 text-background drop-shadow-lg" />
               <div>
-                <CardTitle className="text-3xl md:text-4xl font-bold tracking-tight">AI Pembuat Modul Ajar Kurikulum Merdeka</CardTitle>
+                <CardTitle className="text-3xl md:text-4xl font-bold tracking-tight">AI Pembuat Modul Ajar Baru</CardTitle>
                 <CardDescription className="text-lg md:text-xl mt-1.5 text-primary-foreground/90">
                   Rancang Modul Ajar Kurikulum Merdeka yang komprehensif dengan bantuan AI.
                 </CardDescription>
@@ -404,7 +456,7 @@ export default function AIKurikulumMerdekaModulePage() {
                   <Input id="moduleSubject" value={moduleSubject} onChange={(e) => setModuleSubject(e.target.value)} placeholder="cth., Ilmu Pengetahuan Alam dan Sosial (IPAS)" className="text-base h-11 rounded-md focus:border-primary" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="moduleGradeLevel" className="text-base font-medium">Jenjang/Fase/Kelas (Kur. Merdeka)</Label>
+                  <Label htmlFor="moduleGradeLevel" className="text-base font-medium">Jenjang/Fase/Kelas</Label>
                   <Select value={moduleGradeLevel} onValueChange={(value) => { if (value !== "placeholder-grade") setModuleGradeLevel(value); else setModuleGradeLevel("");}}>
                     <SelectTrigger id="moduleGradeLevel" className="text-base h-11 rounded-md focus:border-primary">
                       <SelectValue placeholder="Pilih Jenjang/Fase/Kelas" />
@@ -454,7 +506,7 @@ export default function AIKurikulumMerdekaModulePage() {
               <CardHeader className="p-6 bg-muted/30 border-b rounded-t-lg">
                 <CardTitle className="text-2xl md:text-3xl text-primary font-bold tracking-tight">{generatedModule.judulModul}</CardTitle>
               </CardHeader>
-              <ScrollArea className="h-auto max-h-[80vh] rounded-b-md">
+              <ScrollArea className="h-auto max-h-[calc(100vh-280px)] lg:max-h-[calc(100vh-240px)] rounded-b-md"> {/* Adjusted max-h */}
               <CardContent className="p-6 space-y-6">
                 
                 <section>
@@ -628,9 +680,14 @@ export default function AIKurikulumMerdekaModulePage() {
                         Konten yang dihasilkan AI adalah draf awal. Selalu verifikasi keakuratan, kelengkapan, dan relevansi modul sebelum digunakan.
                     </AlertDescription>
                 </Alert>
-                <Button onClick={handlePreparePrintModulAjar} disabled={!generatedModule} variant="outline" className="w-full sm:w-auto">
-                    <Printer className="mr-2 h-4 w-4" /> Cetak / Simpan PDF
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                    <Button onClick={handleSaveModule} disabled={isSaving || !generatedModule} className="w-full sm:w-auto">
+                        {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2 h-4 w-4" />} Simpan Modul Ajar
+                    </Button>
+                    <Button onClick={handlePreparePrintModulAjar} disabled={!generatedModule} variant="outline" className="w-full sm:w-auto">
+                        <Printer className="mr-2 h-4 w-4" /> Cetak / PDF
+                    </Button>
+                </div>
               </CardFooter>
             </Card>
           )}
@@ -666,4 +723,3 @@ export default function AIKurikulumMerdekaModulePage() {
     </div>
   );
 }
-

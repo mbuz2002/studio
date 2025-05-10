@@ -15,16 +15,16 @@ interface MobileNavItemData {
   originalLabel?: string; 
   icon: React.ElementType;
   roles?: UserRole[]; 
-  isKurikulumMerdekaOnly?: boolean; // New flag
+  isKurikulumMerdekaOnly?: boolean; 
 }
 
 const mobileNavItemsData: MobileNavItemData[] = [
   { href: "/dashboard", label: "Dasbor", originalLabel: "Dasbor", icon: LayoutDashboard, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/lesson-plans", label: "RPP", originalLabel: "RPP", icon: BookOpenText, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+  { href: "/modul-ajar", label: "Modul KM", originalLabel: "Modul KM", icon: BrainCircuit, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], isKurikulumMerdekaOnly: true },
   // { href: "/annual-programs", label: "PROTA", originalLabel: "PROTA", icon: CalendarDays, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   // { href: "/semester-programs", label: "Promes", originalLabel: "Promes", icon: CalendarClock, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/ai-assistant", label: "AI Materi", originalLabel: "AI Materi", icon: Sparkles, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"] },
-  { href: "/ai-kurikulum-merdeka-module", label: "Modul AI", originalLabel: "Modul AI", icon: BrainCircuit, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], isKurikulumMerdekaOnly: true },
   { href: "/settings", label: "Atur", originalLabel: "Atur", icon: SettingsIcon, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] }, 
 ];
 
@@ -38,15 +38,15 @@ export function MobileBottomNav() {
     ? mobileNavItemsData
         .map(item => {
           if (item.href === "/lesson-plans" && defaultCurriculum === "Kurikulum Merdeka") {
-            return { ...item, label: "ATP" }; // Updated label for KM
+            return { ...item, label: "ATP/Umum" }; 
           }
           return { ...item, label: item.originalLabel || item.label }; 
         })
         .filter(item => 
             (!item.roles || item.roles.includes(user.role)) &&
-            (!item.isKurikulumMerdekaOnly || defaultCurriculum === "Kurikulum Merdeka") // Filter by Kurikulum Merdeka
+            (!item.isKurikulumMerdekaOnly || defaultCurriculum === "Kurikulum Merdeka") 
         )
-        .slice(0, 5) // Ensure only 5 items are shown at most
+        .slice(0, 5) 
     : [];
 
   if (!user || visibleNavItems.length === 0) {

@@ -9,14 +9,15 @@ import { useAuth } from "@/contexts/AuthContext";
 import { SchoolProfileForm } from "@/components/settings/SchoolProfileForm";
 import { EditUserDialog } from "@/components/settings/EditUserDialog";
 import { AppPreferencesDialog } from "@/components/settings/AppPreferencesDialog"; 
-import type { User, SchoolProfile, ExportedCurriculumData, LessonPlan, AnnualProgram, SemesterProgram, CurriculumFramework } from "@/types";
+import type { User, SchoolProfile, ExportedCurriculumData, LessonPlan, AnnualProgram, SemesterProgram, CurriculumFramework, ModulAjar } from "@/types"; // Added ModulAjar
+import { MODUL_AJAR_STORAGE_KEY } from "@/types"; // Added MODUL_AJAR_STORAGE_KEY
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useLog } from "@/contexts/LogContext"; 
-import { useCurriculum } from "@/contexts/CurriculumContext"; // Import curriculum context
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Import Select
-import { Label } from "@/components/ui/label"; // Import Label
+import { useCurriculum } from "@/contexts/CurriculumContext"; 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; 
+import { Label } from "@/components/ui/label"; 
 
 
 const LESSON_PLANS_STORAGE_KEY = "appLessonPlans";
@@ -27,10 +28,10 @@ const APP_USERS_STORAGE_KEY = "appUsers";
 
 
 export default function SettingsPage() {
-  const { user, updateUser, logout } = useAuth(); // Added logout
+  const { user, updateUser, logout } = useAuth(); 
   const { toast } = useToast();
   const { addLog } = useLog(); 
-  const { defaultCurriculum, setDefaultCurriculum, availableCurriculums } = useCurriculum(); // Use curriculum context
+  const { defaultCurriculum, setDefaultCurriculum, availableCurriculums } = useCurriculum(); 
   const [selectedGlobalCurriculum, setSelectedGlobalCurriculum] = useState<CurriculumFramework>(defaultCurriculum);
 
   const [isEditUserDialogOpen, setIsEditUserDialogOpen] = useState(false);
@@ -42,7 +43,7 @@ export default function SettingsPage() {
     if (user) { 
       addLog("INFO", `Pengguna ${user.email} mengakses halaman Pengaturan Akun.`, "SettingsPage");
     }
-    setSelectedGlobalCurriculum(defaultCurriculum); // Sync with context on mount/change
+    setSelectedGlobalCurriculum(defaultCurriculum); 
   }, [user, addLog, defaultCurriculum]);
 
   if (!user) {
@@ -83,6 +84,7 @@ export default function SettingsPage() {
       const lessonPlansData = JSON.parse(localStorage.getItem(LESSON_PLANS_STORAGE_KEY) || "[]") as LessonPlan[];
       const annualProgramsData = JSON.parse(localStorage.getItem(ANNUAL_PROGRAMS_STORAGE_KEY) || "[]") as AnnualProgram[];
       const semesterProgramsData = JSON.parse(localStorage.getItem(SEMESTER_PROGRAMS_STORAGE_KEY) || "[]") as SemesterProgram[];
+      const modulAjarData = JSON.parse(localStorage.getItem(MODUL_AJAR_STORAGE_KEY) || "[]") as ModulAjar[];
       const schoolProfileData = JSON.parse(localStorage.getItem(SCHOOL_PROFILE_STORAGE_KEY) || "null") as SchoolProfile | null;
       const appUsersData = JSON.parse(localStorage.getItem(APP_USERS_STORAGE_KEY) || "[]") as User[];
       
@@ -90,6 +92,7 @@ export default function SettingsPage() {
         lessonPlans: lessonPlansData,
         annualPrograms: annualProgramsData,
         semesterPrograms: semesterProgramsData,
+        modulAjar: modulAjarData,
         schoolProfile: schoolProfileData,
         appUsers: appUsersData,
       };
@@ -138,6 +141,7 @@ export default function SettingsPage() {
           typeof importedData.lessonPlans === 'undefined' ||
           typeof importedData.annualPrograms === 'undefined' ||
           typeof importedData.semesterPrograms === 'undefined' ||
+          typeof importedData.modulAjar === 'undefined' || // Check for modulAjar
           typeof importedData.schoolProfile === 'undefined' || 
           typeof importedData.appUsers === 'undefined'
         ) {
@@ -147,12 +151,14 @@ export default function SettingsPage() {
         if (!Array.isArray(importedData.lessonPlans)) throw new Error("Data RPP tidak valid.");
         if (!Array.isArray(importedData.annualPrograms)) throw new Error("Data PROTA tidak valid.");
         if (!Array.isArray(importedData.semesterPrograms)) throw new Error("Data Promes tidak valid.");
+        if (!Array.isArray(importedData.modulAjar)) throw new Error("Data Modul Ajar tidak valid.");
         if (importedData.schoolProfile !== null && typeof importedData.schoolProfile !== 'object') throw new Error("Data Profil Sekolah tidak valid.");
         if (!Array.isArray(importedData.appUsers)) throw new Error("Data Pengguna tidak valid.");
 
         localStorage.setItem(LESSON_PLANS_STORAGE_KEY, JSON.stringify(importedData.lessonPlans));
         localStorage.setItem(ANNUAL_PROGRAMS_STORAGE_KEY, JSON.stringify(importedData.annualPrograms));
         localStorage.setItem(SEMESTER_PROGRAMS_STORAGE_KEY, JSON.stringify(importedData.semesterPrograms));
+        localStorage.setItem(MODUL_AJAR_STORAGE_KEY, JSON.stringify(importedData.modulAjar));
         localStorage.setItem(SCHOOL_PROFILE_STORAGE_KEY, JSON.stringify(importedData.schoolProfile));
         localStorage.setItem(APP_USERS_STORAGE_KEY, JSON.stringify(importedData.appUsers));
         
@@ -185,7 +191,7 @@ export default function SettingsPage() {
 
   const handleCurriculumChange = (value: CurriculumFramework) => {
     setSelectedGlobalCurriculum(value);
-    setDefaultCurriculum(value); // This updates context and localStorage
+    setDefaultCurriculum(value); 
     toast({
       title: "Pengaturan Kurikulum Disimpan",
       description: `Kurikulum default untuk item baru telah diatur ke ${value}.`,
@@ -402,4 +408,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-

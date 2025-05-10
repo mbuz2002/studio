@@ -1,5 +1,4 @@
 
-
 export type UserRole = "Admin" | "KepalaSekolah" | "WakaKurikulum" | "TataUsaha" | "Guru";
 export type CurriculumFramework = "Kurikulum Merdeka" | "K-13" | "KTSP 2006";
 
@@ -100,8 +99,80 @@ export interface SemesterProgram extends CurriculumItem {
   komponenMingguan: WeeklyUnit[];
 }
 
+// For AI Kurikulum Merdeka Module Generation
+export interface ModulAjarIdentitas {
+  namaPenyusun: string;
+  institusi: string;
+  tahunAjar: string;
+  jenjangSekolah: string; // e.g., SMA, SMK
+  fase: string; // e.g., Fase E, Fase F
+  kelasSemester: string; // e.g., X / Ganjil
+  alokasiWaktu: string; // e.g., 12 JP (3 Pertemuan @4JP)
+  mataPelajaran: string;
+  elemenCapaianPembelajaran?: string[]; // (Optional) Specific CP elements targeted
+}
 
-export type AnyCurriculumItem = LessonPlan | AnnualProgram | SemesterProgram;
+export interface ModulAjarKomponenInti {
+  tujuanPembelajaran: string[];
+  pemahamanBermakna: string[];
+  pertanyaanPemantik: string[];
+  kegiatanPembelajaran: {
+    pendahuluan: string[]; // Detail steps
+    inti: {
+      langkah: string; // e.g., "Kegiatan 1: Eksplorasi Konsep"
+      detailAktivitas: string[];
+    }[];
+    penutup: string[]; // Detail steps
+  };
+  asesmen: {
+    diagnostik?: string;
+    formatif: string;
+    sumatif: string;
+  };
+  pengayaanRemedial?: {
+    pengayaan: string;
+    remedial: string;
+  };
+  refleksiPesertaDidikGuru?: {
+    refleksiPesertaDidik: string;
+    refleksiGuru: string;
+  };
+}
+
+export interface ModulAjarLampiran {
+  lembarKerjaPesertaDidik?: string; // Could be detailed or a general description
+  bahanBacaanGuruSiswa?: string[];
+  glosarium?: { istilah: string; penjelasan: string }[];
+  daftarPustaka?: string[];
+}
+
+export interface GenerateKurikulumMerdekaModuleOutput {
+  judulModul: string;
+  identitasModul: ModulAjarIdentitas;
+  kompetensiAwal?: string[];
+  profilPelajarPancasila: string[]; // Dimensi yang dikembangkan
+  saranaPrasarana: string[];
+  targetPesertaDidik: string;
+  modelPembelajaran: string; // e.g., Tatap Muka, PJJ Daring, Blended Learning
+  komponenInti: ModulAjarKomponenInti;
+  lampiran?: ModulAjarLampiran;
+}
+
+// Stored Modul Ajar Type
+export interface ModulAjar extends GenerateKurikulumMerdekaModuleOutput {
+  id: string;
+  type: 'ModulAjar'; // To distinguish in AnyCurriculumItem
+  title: string; // Alias for judulModul for CurriculumDataTable compatibility
+  subject: string; // Alias for identitasModul.mataPelajaran
+  gradeLevel: string; // Alias for identitasModul.fase or kelasSemester
+  curriculumType: "Kurikulum Merdeka";
+  createdAt: string;
+  updatedAt: string;
+  createdByUserId?: string;
+}
+
+
+export type AnyCurriculumItem = LessonPlan | AnnualProgram | SemesterProgram | ModulAjar;
 
 // For AI flow outputs
 export type { GenerateLessonPlanInput, GenerateLessonPlanOutput } from '@/ai/flows/generate-lesson-plan-from-topic';
@@ -181,68 +252,9 @@ export interface ExportedCurriculumData {
   lessonPlans: LessonPlan[];
   annualPrograms: AnnualProgram[];
   semesterPrograms: SemesterProgram[];
+  modulAjar?: ModulAjar[]; // Added
   schoolProfile: SchoolProfile | null;
   appUsers: User[];
-}
-
-
-// For AI Kurikulum Merdeka Module Generation
-export interface ModulAjarIdentitas {
-  namaPenyusun: string;
-  institusi: string;
-  tahunAjar: string;
-  jenjangSekolah: string; // e.g., SMA, SMK
-  fase: string; // e.g., Fase E, Fase F
-  kelasSemester: string; // e.g., X / Ganjil
-  alokasiWaktu: string; // e.g., 12 JP (3 Pertemuan @4JP)
-  mataPelajaran: string;
-  elemenCapaianPembelajaran?: string[]; // (Optional) Specific CP elements targeted
-}
-
-export interface ModulAjarKomponenInti {
-  tujuanPembelajaran: string[];
-  pemahamanBermakna: string[];
-  pertanyaanPemantik: string[];
-  kegiatanPembelajaran: {
-    pendahuluan: string[]; // Detail steps
-    inti: {
-      langkah: string; // e.g., "Kegiatan 1: Eksplorasi Konsep"
-      detailAktivitas: string[];
-    }[];
-    penutup: string[]; // Detail steps
-  };
-  asesmen: {
-    diagnostik?: string;
-    formatif: string;
-    sumatif: string;
-  };
-  pengayaanRemedial?: {
-    pengayaan: string;
-    remedial: string;
-  };
-  refleksiPesertaDidikGuru?: {
-    refleksiPesertaDidik: string;
-    refleksiGuru: string;
-  };
-}
-
-export interface ModulAjarLampiran {
-  lembarKerjaPesertaDidik?: string; // Could be detailed or a general description
-  bahanBacaanGuruSiswa?: string[];
-  glosarium?: { istilah: string; penjelasan: string }[];
-  daftarPustaka?: string[];
-}
-
-export interface GenerateKurikulumMerdekaModuleOutput {
-  judulModul: string;
-  identitasModul: ModulAjarIdentitas;
-  kompetensiAwal?: string[];
-  profilPelajarPancasila: string[]; // Dimensi yang dikembangkan
-  saranaPrasarana: string[];
-  targetPesertaDidik: string;
-  modelPembelajaran: string; // e.g., Tatap Muka, PJJ Daring, Blended Learning
-  komponenInti: ModulAjarKomponenInti;
-  lampiran?: ModulAjarLampiran;
 }
 
 
@@ -302,3 +314,5 @@ export const defaultPrintOptionsModulAjar: PrintOptionsModulAjar = {
   showMALampiran_Glosarium: true,
   showMALampiran_DaftarPustaka: true,
 };
+
+export const MODUL_AJAR_STORAGE_KEY = "appModulAjar";

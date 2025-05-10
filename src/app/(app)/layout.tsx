@@ -22,7 +22,7 @@ interface NavItem {
   roles: UserRole[]; 
   isSystemSetting?: boolean; 
   isHiddenFromSidebar?: boolean; 
-  isKurikulumMerdekaOnly?: boolean; // New flag
+  isKurikulumMerdekaOnly?: boolean; 
 }
 
 const allNavItems: NavItem[] = [
@@ -30,8 +30,9 @@ const allNavItems: NavItem[] = [
   { href: "/lesson-plans", label: "Rencana Pembelajaran", originalLabel: "Rencana Pembelajaran", icon: BookOpenText, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/annual-programs", label: "Program Tahunan", originalLabel: "Program Tahunan", icon: CalendarDays, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/semester-programs", label: "Program Semester", originalLabel: "Program Semester", icon: CalendarClock, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+  { href: "/modul-ajar", label: "Modul Ajar (KM)", originalLabel: "Modul Ajar (KM)", icon: BrainCircuit, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], isKurikulumMerdekaOnly: true },
   { href: "/ai-assistant", label: "Asisten AI Materi", originalLabel: "Asisten AI Materi", icon: Sparkles, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"] },
-  { href: "/ai-kurikulum-merdeka-module", label: "Modul Ajar (AI)", originalLabel: "Modul Ajar (AI)", icon: BrainCircuit, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], isKurikulumMerdekaOnly: true },
+  { href: "/ai-kurikulum-merdeka-module", label: "Buat Modul Ajar AI", originalLabel: "Buat Modul Ajar AI", icon: BrainCircuit, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], isKurikulumMerdekaOnly: true, isHiddenFromSidebar: true }, // Page for creation, linked from Modul Ajar list
   { href: "/admin/user-management", label: "Manajemen Pengguna", originalLabel: "Manajemen Pengguna", icon: Users, roles: ["Admin", "TataUsaha"], isSystemSetting: false }, 
   { href: "/settings", label: "Pengaturan Akun", originalLabel: "Pengaturan Akun", icon: SettingsIcon, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/admin/system-settings", label: "Pengaturan Sistem", originalLabel: "Pengaturan Sistem", icon: ShieldCheck, roles: ["Admin"], isSystemSetting: true },
@@ -55,7 +56,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
     return allNavItems
       .map(item => {
         if (item.href === "/lesson-plans" && defaultCurriculum === "Kurikulum Merdeka") {
-          return { ...item, label: "ATP / Modul Ajar" }; // Updated label for KM
+          return { ...item, label: "ATP / Modul Ajar (Umum)" }; // Keep distinct from the new Modul Ajar menu
         }
         return { ...item, label: item.originalLabel || item.label }; 
       })
@@ -63,21 +64,31 @@ export default function AppLayout({ children }: PropsWithChildren) {
         item.roles.includes(user.role) && 
         !item.isHiddenFromSidebar &&
         (item.isSystemSetting === false || (item.isSystemSetting === true && user.role === 'Admin') || item.roles.includes(user.role) ) &&
-        (!item.isKurikulumMerdekaOnly || defaultCurriculum === "Kurikulum Merdeka") // Filter by Kurikulum Merdeka
+        (!item.isKurikulumMerdekaOnly || defaultCurriculum === "Kurikulum Merdeka") 
     ).sort((a,b) => { 
+        // Prioritize non-system settings
         if (a.isSystemSetting && !b.isSystemSetting) return 1; 
         if (!a.isSystemSetting && b.isSystemSetting) return -1; 
         
+        // Sort system settings alphabetically if both are system settings
         if (a.isSystemSetting && b.isSystemSetting) {
             return a.label.localeCompare(b.label); 
         }
+
+        // Push /settings to the bottom of non-system settings
         if (a.href === "/settings") return 1; 
         if (b.href === "/settings") return -1;
 
-        // Keep Modul Ajar (AI) and Asisten AI Materi grouped or ordered logically
-        if (a.href === "/ai-kurikulum-merdeka-module" && b.href === "/ai-assistant") return -1;
-        if (a.href === "/ai-assistant" && b.href === "/ai-kurikulum-merdeka-module") return 1;
+        // Group AI features
+        const aiOrder = ["/modul-ajar", "/ai-assistant"]; // "/ai-kurikulum-merdeka-module" is hidden
+        const aIsAI = aiOrder.includes(a.href);
+        const bIsAI = aiOrder.includes(b.href);
 
+        if (aIsAI && !bIsAI) return 1; // Push AI features towards bottom (before settings)
+        if (!aIsAI && bIsAI) return -1;
+        if (aIsAI && bIsAI) return aiOrder.indexOf(a.href) - aiOrder.indexOf(b.href); // Sort AI features among themselves
+
+        // Default sort (can be alphabetical or by original order if stable sort is used by browser)
         return 0;
     });
   }, [user, defaultCurriculum]); 
