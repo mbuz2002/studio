@@ -2,7 +2,7 @@
 "use client";
 
 import type { PropsWithChildren} from 'react';
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import type { CurriculumFramework } from '@/types';
 
 const CURRICULUM_STORAGE_KEY = "app-default-curriculum";
@@ -42,12 +42,18 @@ export const CurriculumProvider = ({ children }: PropsWithChildren) => {
     localStorage.setItem(CURRICULUM_STORAGE_KEY, curriculum);
   }, []);
   
+  const contextValue = useMemo(() => ({
+    defaultCurriculum,
+    setDefaultCurriculum,
+    availableCurriculums: availableCurriculumsList
+  }), [defaultCurriculum, setDefaultCurriculum]);
+
   if (!isMounted) {
     return null; 
   }
 
   return (
-    <CurriculumContext.Provider value={{ defaultCurriculum, setDefaultCurriculum, availableCurriculums: availableCurriculumsList }}>
+    <CurriculumContext.Provider value={contextValue}>
       {children}
     </CurriculumContext.Provider>
   );
@@ -60,3 +66,4 @@ export const useCurriculum = () => {
   }
   return context;
 };
+

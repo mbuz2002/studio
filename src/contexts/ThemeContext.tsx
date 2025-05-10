@@ -1,7 +1,8 @@
+
 "use client";
 
 import type { PropsWithChildren } from 'react';
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 
 export type Theme = "default-light" | "default-dark" | "ocean-breeze" | "forest-haven" | "system";
 const THEME_STORAGE_KEY = "app-theme";
@@ -81,13 +82,19 @@ export const ThemeProvider = ({ children }: PropsWithChildren) => {
     localStorage.setItem(THEME_STORAGE_KEY, newTheme);
   }, []);
   
+  const contextValue = useMemo(() => ({
+    theme,
+    setTheme,
+    availableThemes: availableThemesList
+  }), [theme, setTheme]);
+
   if (!isMounted) {
     // To prevent flash of unstyled content or incorrect theme during SSR/hydration
     return null; 
   }
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, availableThemes: availableThemesList }}>
+    <ThemeContext.Provider value={contextValue}>
       {children}
     </ThemeContext.Provider>
   );

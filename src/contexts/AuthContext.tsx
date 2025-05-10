@@ -2,7 +2,7 @@
 "use client";
 
 import type { PropsWithChildren} from 'react';
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import type { User, UserRole } from '@/types';
 import { useRouter } from 'next/navigation';
 import { useLog } from './LogContext'; // Import useLog
@@ -68,7 +68,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     };
   }, [addLog]);
 
-  const login = (email: string, role: UserRole) => {
+  const login = useCallback((email: string, role: UserRole) => {
     const baseUser = mockUsers[role] || mockUsers.Guru; 
     const loggedInUser: User = {
       id: `user-${Date.now()}-${Math.random().toString(36).substring(2,9)}`, 
@@ -82,9 +82,9 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     // addLog is called after state updates and navigation, generally safe.
     addLog("INFO", `Pengguna ${email} (Peran: ${role}) berhasil masuk.`, "AuthContext");
     router.push('/dashboard');
-  };
+  }, [addLog, router]);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     if (user) {
       // addLog is called before state updates, potentially defer if issues arise.
       addLog("INFO", `Pengguna ${user.email} keluar.`, "AuthContext");
@@ -92,7 +92,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     setUser(null);
     localStorage.removeItem('currentUser');
     router.push('/login');
-  };
+  }, [user, addLog, router]);
 
   const updateUser = useCallback((updatedUserData: Partial<User>) => {
     setUser(currentUser => {
@@ -111,8 +111,17 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     });
   }, [addLog]);
 
+  const contextValue = useMemo(() => ({
+    user,
+    isAuthenticated: !!user,
+    login,
+    logout,
+    updateUser,
+    loading
+  }), [user, login, logout, updateUser, loading]);
+
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, logout, updateUser, loading }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
@@ -125,3 +134,4 @@ export const useAuth = () => {
   }
   return context;
 };
+
