@@ -275,8 +275,8 @@ export default function TimetablesPage() {
 
     if (window.confirm(`Yakin ingin menghapus jadwal ${subjectMap.get(entryToDelete.subjectId)} kelas ${entryToDelete.classOrGrade} pada hari ${entryToDelete.dayOfWeek}?`)) {
         const updatedEntries = timetableEntries.filter(e => e.id !== entryId);
-        setTimetableEntries(updatedEntries);
-        localStorage.setItem(TIMETABLES_STORAGE_KEY, JSON.stringify(updatedEntries));
+        setTimetableEntries(updatedEntries); // Update state
+        localStorage.setItem(TIMETABLES_STORAGE_KEY, JSON.stringify(updatedEntries)); // Update localStorage
         toast({ title: "Entri Jadwal Dihapus" });
         addLog("WARN", `Entri jadwal (ID: ${entryId}) untuk kelas ${entryToDelete.classOrGrade} dihapus oleh ${user?.email}.`, "TimetablesPage");
     }
@@ -444,7 +444,7 @@ export default function TimetablesPage() {
                            }
                        }
                       return (
-                      <Card key={entry.id} className="shadow-md hover:shadow-lg transition-shadow duration-200 rounded-lg flex flex-col">
+                      <Card key={entry.id + entry.startTime} className="shadow-md hover:shadow-lg transition-shadow duration-200 rounded-lg flex flex-col">
                         <CardHeader className="p-4 bg-muted/30 rounded-t-lg">
                           <div className="flex justify-between items-center">
                             <CardTitle className="text-base font-semibold text-primary">
