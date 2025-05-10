@@ -5,7 +5,7 @@ import { useEffect, useMemo } from 'react';
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset, SidebarRail } from '@/components/ui/sidebar';
 import { AppLogo } from '@/components/layout/AppLogo';
 import { UserProfile } from '@/components/layout/UserProfile';
-import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, ShieldCheck, Activity, Users, Info, BrainCircuit, Loader2 } from 'lucide-react'; // Added Loader2 and ensured Info is present
+import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, ShieldCheck, Activity, Users, Info, BrainCircuit, Loader2 } from 'lucide-react'; 
 import Link from 'next/link';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
@@ -13,7 +13,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import type { UserRole } from '@/types';
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
 import { useCurriculum } from '@/contexts/CurriculumContext';
-import { useToast } from '@/hooks/use-toast'; // Import useToast
+import { useToast } from '@/hooks/use-toast'; 
 
 interface NavItem {
   href: string;
@@ -33,7 +33,7 @@ const allNavItems: NavItem[] = [
   { href: "/semester-programs", label: "Program Semester", originalLabel: "Program Semester", icon: CalendarClock, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/modul-ajar", label: "Modul Ajar (KM)", originalLabel: "Modul Ajar (KM)", icon: BrainCircuit, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], isKurikulumMerdekaOnly: true },
   { href: "/ai-assistant", label: "Asisten AI Materi", originalLabel: "Asisten AI Materi", icon: Sparkles, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"] },
-  { href: "/ai-kurikulum-merdeka-module", label: "Buat Modul Ajar AI", originalLabel: "Buat Modul Ajar AI", icon: BrainCircuit, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], isKurikulumMerdekaOnly: true, isHiddenFromSidebar: true }, // Page for creation, linked from Modul Ajar list
+  { href: "/ai-kurikulum-merdeka-module", label: "Buat Modul Ajar AI", originalLabel: "Buat Modul Ajar AI", icon: BrainCircuit, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], isKurikulumMerdekaOnly: true, isHiddenFromSidebar: true }, 
   { href: "/admin/user-management", label: "Manajemen Pengguna", originalLabel: "Manajemen Pengguna", icon: Users, roles: ["Admin", "TataUsaha"], isSystemSetting: false }, 
   { href: "/settings", label: "Pengaturan Akun", originalLabel: "Pengaturan Akun", icon: SettingsIcon, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/admin/system-settings", label: "Pengaturan Sistem", originalLabel: "Pengaturan Sistem", icon: ShieldCheck, roles: ["Admin"], isSystemSetting: true },
@@ -45,7 +45,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
   const { defaultCurriculum } = useCurriculum(); 
   const router = useRouter();
   const pathname = usePathname();
-  const { toast } = useToast(); // Initialize useToast
+  const { toast } = useToast(); 
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -58,7 +58,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
     return allNavItems
       .map(item => {
         if (item.href === "/lesson-plans" && defaultCurriculum === "Kurikulum Merdeka") {
-          return { ...item, label: "ATP / Modul Ajar (Umum)" }; // Keep distinct from the new Modul Ajar menu
+          return { ...item, label: "ATP / Modul Ajar (Umum)" }; 
         }
         return { ...item, label: item.originalLabel || item.label }; 
       })
@@ -114,11 +114,12 @@ export default function AppLayout({ children }: PropsWithChildren) {
 
   if (loading || !isAuthenticated || !user) { 
     return (
-      <div className="flex h-screen items-center justify-center bg-background text-foreground">
-        <div className="flex items-center text-lg"> 
-            <Loader2 className="mr-3 h-6 w-6 animate-spin text-primary" /> 
+      <div className="flex h-screen flex-col items-center justify-center bg-background text-foreground">
+        <div className="flex items-center text-xl"> 
+            <Loader2 className="mr-3 h-8 w-8 animate-spin text-primary" /> 
             Memuat sesi pengguna...
         </div>
+        <p className="mt-2 text-base text-muted-foreground">Mohon tunggu sebentar, data Anda sedang kami siapkan.</p>
       </div>
     );
   }
@@ -167,6 +168,3 @@ export default function AppLayout({ children }: PropsWithChildren) {
       </SidebarProvider>
   );
 }
-
-// Dummy toast for role check, replace with actual toast hook usage later
-// const toast = (params: {title: string, description: string, variant?: string}) => console.warn("Toast:", params);

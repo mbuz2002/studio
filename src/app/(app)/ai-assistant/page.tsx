@@ -51,7 +51,7 @@ const merdekaGradeLevels = [
 
 export default function AIAssistantPage() {
   const { toast } = useToast();
-  const { user, loading: authLoading } = useAuth(); // Added authLoading
+  const { user, loading: authLoading } = useAuth(); 
   const { addLog } = useLog();
 
   const [materialTopic, setMaterialTopic] = useState("");
@@ -63,10 +63,10 @@ export default function AIAssistantPage() {
   const [isClient, setIsClient] = useState(false);
   useEffect(() => {
     setIsClient(true);
-    if (user) {
+    if (user && !authLoading) { // Ensure user and not authLoading
       addLog("INFO", `Pengguna ${user.email} mengakses halaman Asisten AI (Pembuatan Materi).`, "AIAssistantPage-Material");
     }
-  }, [user, addLog]);
+  }, [user, addLog, authLoading]); // Add authLoading to dependency array
 
   const handleGenerateMaterial = async (e: FormEvent) => {
     e.preventDefault();
@@ -98,16 +98,19 @@ export default function AIAssistantPage() {
   };
 
 
-  if (!isClient || authLoading) { // Check authLoading as well
+  if (!isClient || authLoading) { 
     return (
-      <div className="flex h-[calc(100vh-150px)] items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        <p className="ml-4 text-lg text-muted-foreground">Memuat Asisten AI...</p>
+      <div className="flex h-[calc(100vh-200px)] items-center justify-center">
+         <div className="flex flex-col items-center text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+          <p className="text-xl font-medium text-muted-foreground">Memuat Asisten AI...</p>
+          <p className="text-sm text-muted-foreground">Menyiapkan alat bantu cerdas Anda.</p>
+        </div>
       </div>
     );
   }
 
-  if (!user) { // If still no user after loading, show a message or redirect (already handled by layout)
+  if (!user) { 
     return (
          <div className="flex h-[calc(100vh-150px)] items-center justify-center">
             <p className="text-lg text-muted-foreground">Silakan login untuk menggunakan Asisten AI.</p>

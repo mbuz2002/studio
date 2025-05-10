@@ -44,7 +44,7 @@ const merdekaGradeLevels = [
 
 export default function NewAIKurikulumMerdekaModulePage() {
   const { toast } = useToast();
-  const { user, loading: authLoading } = useAuth(); // Added authLoading
+  const { user, loading: authLoading } = useAuth(); 
   const { addLog } = useLog();
   const { defaultCurriculum } = useCurriculum();
   const router = useRouter();
@@ -68,7 +68,7 @@ export default function NewAIKurikulumMerdekaModulePage() {
   useEffect(() => {
     setIsClient(true);
     const pageSource = "NewAIKurikulumMerdekaModulePage";
-    if (user) {
+    if (user && !authLoading) { // Check authLoading
       addLog("INFO", `Pengguna ${user.email} mengakses halaman Pembuatan Modul Ajar AI Baru.`, pageSource);
     }
     if (defaultCurriculum !== "Kurikulum Merdeka" && user && !authLoading) {
@@ -92,7 +92,7 @@ export default function NewAIKurikulumMerdekaModulePage() {
         }
       }
     }
-  }, [user, addLog, defaultCurriculum, toast, router, authLoading]);
+  }, [user, addLog, defaultCurriculum, toast, router, authLoading]); // Add authLoading to dependency array
 
   const handleGenerateModule = async (e: FormEvent) => {
     e.preventDefault();
@@ -386,15 +386,18 @@ export default function NewAIKurikulumMerdekaModulePage() {
   }, [generatedModule, generatePrintableHtmlModulAjar, addLog, toast]);
 
 
-  if (!isClient || authLoading) { // Check authLoading
+  if (!isClient || authLoading) { 
     return (
-      <div className="flex h-[calc(100vh-150px)] items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        <p className="ml-4 text-lg text-muted-foreground">Memuat Pembuat Modul Ajar AI...</p>
+      <div className="flex h-[calc(100vh-200px)] items-center justify-center">
+         <div className="flex flex-col items-center text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+          <p className="text-xl font-medium text-muted-foreground">Memuat Pembuat Modul Ajar AI...</p>
+           <p className="text-sm text-muted-foreground">Menyiapkan fitur canggih untuk Anda.</p>
+        </div>
       </div>
     );
   }
-   if (!user) { // If still no user after loading, show a message or redirect
+   if (!user) { 
     return (
          <div className="flex h-[calc(100vh-150px)] items-center justify-center">
             <p className="text-lg text-muted-foreground">Silakan login untuk menggunakan fitur ini.</p>

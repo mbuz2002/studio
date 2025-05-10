@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BookMarked, LogIn, UserCircle, Loader2 } from "lucide-react"; // Added Loader2
+import { BookMarked, LogIn, UserCircle, Loader2 } from "lucide-react"; 
 import Link from "next/link";
 import type { FormEvent} from 'react';
 import { useState } from 'react';
@@ -26,17 +26,19 @@ export default function LoginPage() {
   const { login } = useAuth();
   const [email, setEmail] = useState("pengguna@sekolah.id"); 
   const [selectedRole, setSelectedRole] = useState<UserRole>("WakaKurikulum"); 
-  const [isLoading, setIsLoading] = useState(false); // Added isLoading state
+  const [isLoading, setIsLoading] = useState(false); 
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (email && selectedRole) {
-      setIsLoading(true); // Set loading to true
-      // Simulate a short delay for visual feedback if login is too fast
-      // setTimeout(() => { 
+      setIsLoading(true); 
+      
+      // Simulate a short delay for visual feedback if login is too fast for demo purposes
+      // In a real app, login would be an async call.
+      setTimeout(() => { 
         login(email, selectedRole);
-        // setIsLoading(false); // Usually not needed if login navigates away
-      // }, 500); 
+        // setIsLoading(false); // Usually not needed here as login navigates away
+      }, 300); 
     } else {
       alert("Harap isi email dan pilih peran.");
     }
@@ -47,8 +49,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md shadow-2xl rounded-xl overflow-hidden border-border/50">
         <CardHeader className="text-center pt-8 pb-6 bg-card">
           <div className="mb-5 flex items-center justify-center text-primary">
-            {/* You can replace this with an actual Image component if you have a logo */}
-            {/* <Image src="/path-to-your-logo.svg" alt="EduAI Planner Logo" width={60} height={60} /> */}
+            
             <BookMarked size={56} strokeWidth={1.5} className="text-primary drop-shadow-md" />
           </div>
           <CardTitle className="text-3xl md:text-4xl font-bold text-foreground">EduAI Planner</CardTitle>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -42,9 +43,12 @@ export default function UserManagementPage() {
 
   if (pageLoading || authLoading || !isClient) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="ml-3 text-lg">Memverifikasi akses...</p>
+      <div className="flex h-[calc(100vh-200px)] items-center justify-center">
+         <div className="flex flex-col items-center text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+          <p className="text-xl font-medium text-muted-foreground">Memverifikasi akses...</p>
+           <p className="text-sm text-muted-foreground">Menyiapkan manajemen pengguna.</p>
+        </div>
       </div>
     );
   }
@@ -78,4 +82,3 @@ export default function UserManagementPage() {
     </div>
   );
 }
-

@@ -5,29 +5,29 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, ArrowLeft, Save } from 'lucide-react'; // Added Save
+import { Loader2, ArrowLeft, Save } from 'lucide-react'; 
 import type { ModulAjar } from '@/types';
 import { MODUL_AJAR_STORAGE_KEY } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useLog } from '@/contexts/LogContext';
-import { Input } from '@/components/ui/input'; // Added Input
-import { Label } from '@/components/ui/label'; // Added Label
+import { Input } from '@/components/ui/input'; 
+import { Label } from '@/components/ui/label'; 
 
 export default function EditModulAjarPage() {
   const params = useParams();
   const router = useRouter();
   const { id: modulAjarId } = params;
-  const { user, loading: authLoading } = useAuth(); // Added authLoading
+  const { user, loading: authLoading } = useAuth(); 
   const { toast } = useToast();
   const { addLog } = useLog();
 
   const [modulAjar, setModulAjar] = useState<ModulAjar | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false); // Added isSaving state
+  const [isSaving, setIsSaving] = useState(false); 
 
   useEffect(() => {
-    if (authLoading) return; // Wait for auth to finish loading
+    if (authLoading) return; 
 
     if (!modulAjarId || !user) {
       router.push('/modul-ajar');
@@ -57,9 +57,12 @@ export default function EditModulAjarPage() {
 
   if (isLoading || authLoading) {
     return (
-      <div className="flex h-[calc(100vh-150px)] items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        <p className="ml-4 text-lg text-muted-foreground">Memuat data Modul Ajar...</p>
+      <div className="flex h-[calc(100vh-200px)] items-center justify-center">
+        <div className="flex flex-col items-center text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+          <p className="text-xl font-medium text-muted-foreground">Memuat data Modul Ajar...</p>
+          <p className="text-sm text-muted-foreground">Mohon tunggu sebentar.</p>
+        </div>
       </div>
     );
   }
@@ -75,7 +78,7 @@ export default function EditModulAjarPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
-    // Basic update for now, can be expanded
+    
     if(modulAjar) {
         const updatedModulAjar = { ...modulAjar, updatedAt: new Date().toISOString() };
         

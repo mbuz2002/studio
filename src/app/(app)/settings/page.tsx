@@ -4,7 +4,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Cog, UserCircle, ShieldCheck, Database, Palette, Upload, Download, FileText, Users, BookCopy, LogOut, Loader2 } from "lucide-react"; // Added Loader2
+import { Cog, UserCircle, ShieldCheck, Database, Palette, Upload, Download, FileText, Users, BookCopy, LogOut, Loader2 } from "lucide-react"; 
 import { useAuth } from "@/contexts/AuthContext";
 import { SchoolProfileForm } from "@/components/settings/SchoolProfileForm";
 import { EditUserDialog } from "@/components/settings/EditUserDialog";
@@ -28,7 +28,7 @@ const APP_USERS_STORAGE_KEY = "appUsers";
 
 
 export default function SettingsPage() {
-  const { user, updateUser, logout, loading: authLoading } = useAuth(); // Added authLoading
+  const { user, updateUser, logout, loading: authLoading } = useAuth(); 
   const { toast } = useToast();
   const { addLog } = useLog(); 
   const { defaultCurriculum, setDefaultCurriculum, availableCurriculums } = useCurriculum(); 
@@ -46,16 +46,19 @@ export default function SettingsPage() {
     setSelectedGlobalCurriculum(defaultCurriculum); 
   }, [user, addLog, defaultCurriculum, authLoading]);
 
-  if (authLoading) { // Check for authLoading first
+  if (authLoading) { 
     return (
-       <div className="flex h-[calc(100vh-150px)] items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        <p className="ml-4 text-lg text-muted-foreground">Memuat Pengaturan...</p>
+       <div className="flex h-[calc(100vh-200px)] items-center justify-center">
+        <div className="flex flex-col items-center text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+          <p className="text-xl font-medium text-muted-foreground">Memuat Pengaturan...</p>
+          <p className="text-sm text-muted-foreground">Menyiapkan preferensi Anda.</p>
+        </div>
       </div>
     );
   }
   
-  if (!user) { // Then check if user is null (should be handled by layout, but as a fallback)
+  if (!user) { 
     return (
        <div className="flex h-[calc(100vh-150px)] items-center justify-center">
         <p className="text-lg text-muted-foreground">Silakan login untuk mengakses pengaturan.</p>

@@ -21,7 +21,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 const initialModulAjarData: ModulAjar[] = []; 
 
 export default function ModulAjarPage() {
-  const { user, loading: authLoading } = useAuth(); // Added authLoading
+  const { user, loading: authLoading } = useAuth(); 
   const { toast } = useToast();
   const router = useRouter();
   const { defaultCurriculum } = useCurriculum();
@@ -33,7 +33,7 @@ export default function ModulAjarPage() {
   
   useEffect(() => {
     setIsClient(true);
-    if (authLoading) return; // Wait for auth to load
+    if (authLoading) return; 
     
     if (typeof window !== 'undefined') {
       try {
@@ -53,7 +53,7 @@ export default function ModulAjarPage() {
         });
       }
     }
-  }, [toast, authLoading]); // Depend on authLoading
+  }, [toast, authLoading]); 
 
   const uniqueFases = useMemo(() => {
     if (!isClient) return [];
@@ -128,16 +128,19 @@ export default function ModulAjarPage() {
 
   const activeFilterCount = [searchTerm, faseFilter].filter(f => f !== "" && f !== "ALL").length;
 
-  if (!isClient || authLoading) { // Check authLoading
+  if (!isClient || authLoading) { 
     return (
-      <div className="flex h-[calc(100vh-150px)] items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        <p className="ml-4 text-lg text-muted-foreground">Memuat Modul Ajar...</p>
+      <div className="flex h-[calc(100vh-200px)] items-center justify-center">
+         <div className="flex flex-col items-center text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+          <p className="text-xl font-medium text-muted-foreground">Memuat Modul Ajar...</p>
+           <p className="text-sm text-muted-foreground">Menyiapkan daftar modul Anda.</p>
+        </div>
       </div>
     );
   }
   
-  if (!user) { // If still no user after loading
+  if (!user) { 
       return (
           <div className="flex h-[calc(100vh-150px)] items-center justify-center">
               <p className="text-lg text-muted-foreground">Silakan login untuk melihat Modul Ajar.</p>

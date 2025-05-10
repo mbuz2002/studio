@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -15,7 +16,7 @@ import { useLog } from "@/contexts/LogContext";
 
 
 export default function AdminSystemSettingsPage() {
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth(); // Renamed loading to authLoading for clarity
   const { toast } = useToast();
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
@@ -30,7 +31,7 @@ export default function AdminSystemSettingsPage() {
   }, []);
 
   useEffect(() => {
-    if (!loading && isClient) {
+    if (!authLoading && isClient) { // Check !authLoading
       if (!user || user.role !== "Admin") {
         toast({
           title: "Akses Ditolak",
@@ -45,13 +46,16 @@ export default function AdminSystemSettingsPage() {
          addLog("INFO", `Admin ${user.email} mengakses halaman Pengaturan Sistem.`, "AdminSystemSettings");
       }
     }
-  }, [user, loading, isClient, router, toast, addLog]);
+  }, [user, authLoading, isClient, router, toast, addLog]); // Add authLoading to dependency array
 
-  if (!isClient || loading || !user || user.role !== "Admin") {
+  if (!isClient || authLoading || !user || user.role !== "Admin") { // Check authLoading
     return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="ml-3 text-lg">Memverifikasi akses...</p>
+      <div className="flex h-[calc(100vh-200px)] items-center justify-center">
+        <div className="flex flex-col items-center text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+          <p className="text-xl font-medium text-muted-foreground">Memverifikasi akses...</p>
+          <p className="text-sm text-muted-foreground">Mohon tunggu sebentar.</p>
+        </div>
       </div>
     );
   }
@@ -206,4 +210,3 @@ export default function AdminSystemSettingsPage() {
     </div>
   );
 }
-

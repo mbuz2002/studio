@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -14,8 +15,7 @@ import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { id as indonesianLocale } from "date-fns/locale";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useLog, type LogEntry, type LogLevel } from "@/contexts/LogContext";
-import { MAX_LOGS } from "@/contexts/LogContext"; // Import MAX_LOGS
+import { useLog, type LogEntry, type LogLevel, MAX_LOGS } from "@/contexts/LogContext"; 
 
 export default function SystemLogsPage() {
   const { user, loading: authLoading } = useAuth();
@@ -79,7 +79,7 @@ export default function SystemLogsPage() {
       case "ERROR":
         return <ShieldAlert className="h-4 w-4 sm:h-5 sm:w-5 text-red-500" />;
       default:
-        return <Activity className="h-4 w-4 sm:h-5 sm:w-5" />; // Fallback icon
+        return <Activity className="h-4 w-4 sm:h-5 sm:w-5" />; 
     }
   };
   
@@ -98,9 +98,12 @@ export default function SystemLogsPage() {
 
   if (pageLoading || authLoading || !isClient) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="ml-3 text-lg">Memverifikasi akses dan memuat log...</p>
+      <div className="flex h-[calc(100vh-200px)] items-center justify-center">
+        <div className="flex flex-col items-center text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+          <p className="text-xl font-medium text-muted-foreground">Memverifikasi akses dan memuat log...</p>
+           <p className="text-sm text-muted-foreground">Mohon tunggu sebentar.</p>
+        </div>
       </div>
     );
   }
@@ -223,4 +226,3 @@ export default function SystemLogsPage() {
     </div>
   );
 }
-

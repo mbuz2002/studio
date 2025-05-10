@@ -3,7 +3,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpenText, CalendarDays, CalendarClock, Sparkles, PlusCircle, Users, FileText, LayoutDashboard, BrainCircuit, Loader2 } from "lucide-react"; // Added Loader2
+import { BookOpenText, CalendarDays, CalendarClock, Sparkles, PlusCircle, Users, FileText, LayoutDashboard, BrainCircuit, Loader2 } from "lucide-react"; 
 import Link from "next/link";
 import Image from "next/image";
 import { useAuth } from "@/contexts/AuthContext";
@@ -58,7 +58,7 @@ const featureCardsConfig: {
     isKurikulumMerdekaOnly: true,
   },
   {
-    title: "Asisten AI Pembuat Materi",
+    title: "Asisten AI Pembuatan Materi",
     description: "Manfaatkan kecerdasan buatan untuk ide, saran, dan pembuatan draf materi pengajaran.",
     icon: Sparkles,
     href: "/ai-assistant",
@@ -69,7 +69,7 @@ const featureCardsConfig: {
 ];
 
 export default function DashboardPage() {
-  const { user, loading: authLoading } = useAuth(); // Added authLoading
+  const { user, loading: authLoading } = useAuth(); 
   const { defaultCurriculum } = useCurriculum(); 
 
   const canCreateNewPlan = user && (user.role === "Admin" || user.role === "WakaKurikulum" || user.role === "Guru");
@@ -81,11 +81,14 @@ export default function DashboardPage() {
       ) 
     : [];
 
-  if (authLoading || !user) { // Added loading state check
+  if (authLoading || !user) { 
     return (
-      <div className="flex h-[calc(100vh-150px)] items-center justify-center"> {/* Adjust height as needed */}
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        <p className="ml-4 text-lg text-muted-foreground">Memuat dasbor...</p>
+      <div className="flex h-[calc(100vh-200px)] items-center justify-center"> 
+        <div className="flex flex-col items-center text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+          <p className="text-xl font-medium text-muted-foreground">Memuat dasbor Anda...</p>
+          <p className="text-sm text-muted-foreground">Mohon tunggu sebentar.</p>
+        </div>
       </div>
     );
   }
