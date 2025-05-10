@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BookMarked, LogIn, UserCircle } from "lucide-react"; 
+import { GraduationCap, LogIn } from "lucide-react"; 
 import Link from "next/link";
 import type { FormEvent} from 'react';
 import { useState } from 'react';
@@ -33,11 +34,8 @@ export default function LoginPage() {
     if (email && selectedRole) {
       setIsLoading(true); 
       
-      // Simulate a short delay for visual feedback if login is too fast for demo purposes
-      // In a real app, login would be an async call.
       setTimeout(() => { 
         login(email, selectedRole);
-        // setIsLoading(false); // Usually not needed here as login navigates away
       }, 300); 
     } else {
       alert("Harap isi email dan pilih peran.");
@@ -49,10 +47,9 @@ export default function LoginPage() {
       <Card className="w-full max-w-md shadow-2xl rounded-xl overflow-hidden border-border/50">
         <CardHeader className="text-center pt-8 pb-6 bg-card">
           <div className="mb-5 flex items-center justify-center text-primary">
-            
-            <BookMarked size={56} strokeWidth={1.5} className="text-primary drop-shadow-md" />
+            <GraduationCap size={56} strokeWidth={1.5} className="text-primary drop-shadow-md" />
           </div>
-          <CardTitle className="text-3xl md:text-4xl font-bold text-foreground">EduAI Planner</CardTitle>
+          <CardTitle className="text-3xl md:text-4xl font-bold text-foreground">GUMPLA AI</CardTitle>
           <CardDescription className="text-base md:text-lg text-muted-foreground pt-1.5">
             Masuk untuk melanjutkan atau pilih peran untuk demo.
           </CardDescription>
@@ -96,7 +93,7 @@ export default function LoginPage() {
                <p className="text-xs text-muted-foreground pt-1">Kata sandi diabaikan untuk mode demo ini.</p>
             </div>
             <Button type="submit" className="w-full bg-gradient-to-r from-accent to-primary hover:from-accent/90 hover:to-primary/90 text-accent-foreground text-base py-3 h-12 rounded-md shadow-lg hover:shadow-xl transition-shadow duration-300" disabled={isLoading}>
-              {isLoading ? <BookMarked className="mr-2.5 h-5 w-5 animate-pulse" /> : <LogIn className="mr-2.5 h-5 w-5" />}
+              {isLoading ? <GraduationCap className="mr-2.5 h-5 w-5 animate-pulse" /> : <LogIn className="mr-2.5 h-5 w-5" />}
               {isLoading ? "Memproses..." : "Masuk"}
             </Button>
           </form>
@@ -113,3 +110,4 @@ export default function LoginPage() {
     </div>
   );
 }
+

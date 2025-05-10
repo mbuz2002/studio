@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,10 +17,10 @@ const featureCardsConfig: {
   href: string;
   roles: UserRole[];
   isKurikulumMerdekaOnly?: boolean;
-  iconColor?: string; // Optional color for icon
+  iconColor?: string; 
 }[] = [
   {
-    title: "RPP / ATP", // Label will adjust based on curriculum
+    title: "RPP / ATP", 
     description: "Buat, edit, dan kelola RPP (K13/KTSP) atau Alur Tujuan Pembelajaran (ATP) untuk Kurikulum Merdeka.",
     icon: BookOpenText,
     href: "/lesson-plans",
@@ -101,7 +102,7 @@ export default function DashboardPage() {
            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-2">
             <LayoutDashboard className="h-10 w-10 md:h-12 md:w-12 text-primary-foreground flex-shrink-0 mt-1 drop-shadow-lg" />
             <div>
-              <CardTitle className="text-3xl md:text-4xl font-bold tracking-tight">Selamat Datang di EduAI Planner!</CardTitle>
+              <CardTitle className="text-3xl md:text-4xl font-bold tracking-tight">Selamat Datang di GUMPLA AI!</CardTitle>
               <CardDescription className="text-lg md:text-xl text-primary-foreground/90 mt-1.5">
                 Platform cerdas untuk perencanaan dan manajemen kurikulum yang efektif dan inovatif.
               </CardDescription>
@@ -113,7 +114,7 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent className="p-6 md:p-8 pt-6 bg-card">
           <p className="mb-6 text-base md:text-lg leading-relaxed text-card-foreground/90">
-            Maksimalkan potensi pengajaran Anda dengan EduAI Planner. Buat, atur, dan tingkatkan kualitas dokumen pembelajaran Anda dengan dukungan AI. Mulai jelajahi fitur-fitur unggulan di bawah ini atau langsung buat dokumen baru.
+            Maksimalkan potensi pengajaran Anda dengan GUMPLA AI. Buat, atur, dan tingkatkan kualitas dokumen pembelajaran Anda dengan dukungan AI. Mulai jelajahi fitur-fitur unggulan di bawah ini atau langsung buat dokumen baru.
           </p>
           {canCreateNewPlan && (
             <Button asChild size="lg" className="bg-gradient-to-r from-accent to-primary hover:from-accent/90 hover:to-primary/90 text-accent-foreground text-lg py-3 px-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 rounded-md">
@@ -160,3 +161,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+

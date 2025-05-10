@@ -1,4 +1,5 @@
 
+
 "use client";
 import type { PropsWithChildren } from 'react';
 import { useEffect, useMemo } from 'react';
@@ -14,6 +15,7 @@ import type { UserRole } from '@/types';
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
 import { useCurriculum } from '@/contexts/CurriculumContext';
 import { useToast } from '@/hooks/use-toast'; 
+import LoadingSpinner from '@/components/ui/loading-spinner';
 
 interface NavItem {
   href: string;
@@ -28,7 +30,7 @@ interface NavItem {
 
 const allNavItems: NavItem[] = [
   { href: "/dashboard", label: "Dasbor", originalLabel: "Dasbor", icon: LayoutDashboard, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
-  { href: "/lesson-plans", label: "RPP", originalLabel: "RPP / ATP", icon: BookOpenText, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] }, // Label will be dynamic
+  { href: "/lesson-plans", label: "RPP", originalLabel: "RPP / ATP", icon: BookOpenText, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] }, 
   { href: "/annual-programs", label: "Program Tahunan", originalLabel: "Program Tahunan", icon: CalendarDays, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/semester-programs", label: "Program Semester", originalLabel: "Program Semester", icon: CalendarClock, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/modul-ajar", label: "Modul Ajar (KM)", originalLabel: "Modul Ajar (KM)", icon: BrainCircuit, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], isKurikulumMerdekaOnly: true },
@@ -46,6 +48,23 @@ export default function AppLayout({ children }: PropsWithChildren) {
   const router = useRouter();
   const pathname = usePathname();
   const { toast } = useToast(); 
+  const [isPageLoading, setIsPageLoading] = useState(false);
+
+  useEffect(() => {
+    const handleStart = (url:string) => url !== pathname && setIsPageLoading(true);
+    const handleComplete = (url:string) => url === pathname && setIsPageLoading(false);
+
+    router.events?.on('routeChangeStart', handleStart);
+    router.events?.on('routeChangeComplete', handleComplete);
+    router.events?.on('routeChangeError', handleComplete);
+
+    return () => {
+      router.events?.off('routeChangeStart', handleStart);
+      router.events?.off('routeChangeComplete', handleComplete);
+      router.events?.off('routeChangeError', handleComplete);
+    };
+  }, [pathname, router.events]);
+
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -114,15 +133,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
 
 
   if (loading || !isAuthenticated || !user) { 
-    return (
-      <div className="flex h-screen flex-col items-center justify-center bg-background text-foreground">
-        <div className="flex flex-col items-center text-center"> 
-            <FileText className="mr-3 h-16 w-16 animate-pulse text-primary mb-6" /> 
-            <h2 className="text-2xl font-semibold text-foreground mb-2">Memuat Sesi Anda...</h2>
-            <p className="text-base text-muted-foreground">Mohon tunggu sebentar, EduAI Planner sedang menyiapkan data Anda.</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner message="Memuat Sesi Anda..." icon={<FileText className="mr-3 h-16 w-16 animate-pulse text-primary mb-6" />} />;
   }
   
   return (
@@ -158,14 +169,17 @@ export default function AppLayout({ children }: PropsWithChildren) {
         <SidebarInset>
           <MobileBottomNav />
           <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8 pb-24 sm:pb-8 flex flex-col min-h-screen bg-background text-foreground"> 
-            <div className="flex-grow">
-                {children}
-            </div>
+           {isPageLoading ? <LoadingSpinner icon={<Sparkles className="h-16 w-16 animate-pulse text-primary mb-6" />} message="Memuat Halaman..."/> : (
+              <div className="flex-grow">
+                  {children}
+              </div>
+           )}
             <footer className="mt-auto pt-8 text-center text-xs text-muted-foreground">
-              <p>&copy; {new Date().getFullYear()} EduAI Planner. Created by RIFQY IZA FAHRIZAL.</p>
+              <p>&copy; {new Date().getFullYear()} GUMPLA AI. Created by RIFQY IZA FAHRIZAL.</p>
             </footer>
           </main>
         </SidebarInset>
       </SidebarProvider>
   );
 }
+

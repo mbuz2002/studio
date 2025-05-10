@@ -1,6 +1,6 @@
 
 import type { Metadata } from 'next';
-import { Plus_Jakarta_Sans } from 'next/font/google'; // Changed font
+import { Roboto } from 'next/font/google'; 
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { QueryClientProvider } from '@/lib/query-provider';
@@ -9,15 +9,15 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
 import { LogProvider } from '@/contexts/LogContext';
 import { CurriculumProvider } from '@/contexts/CurriculumContext';
 
-const plusJakartaSans = Plus_Jakarta_Sans({
+const roboto = Roboto({
   subsets: ['latin'],
-  variable: '--font-plus-jakarta-sans', 
-  weight: ['300', '400', '500', '600', '700', '800'] // Common weights for Plus Jakarta Sans
+  variable: '--font-roboto', 
+  weight: ['300', '400', '500', '700'] 
 });
 
 export const metadata: Metadata = {
-  title: 'EduAI Planner',
-  description: 'Perencanaan Pembelajaran dan Manajemen Kurikulum Berbasis AI',
+  title: 'GUMPLA AI',
+  description: 'Platform Cerdas Perencanaan Pembelajaran dan Manajemen Kurikulum dengan GUMPLA AI.',
 };
 
 export default function RootLayout({
@@ -27,7 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id" suppressHydrationWarning>
-      <body className={`${plusJakartaSans.variable} antialiased`}>
+      <body className={`${roboto.variable} antialiased font-roboto`}> {/* Apply font-roboto */}
         <ThemeProvider>
           <QueryClientProvider>
             <LogProvider> 
@@ -44,3 +44,4 @@ export default function RootLayout({
     </html>
   );
 }
+
