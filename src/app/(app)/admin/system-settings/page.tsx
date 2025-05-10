@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { ShieldCheck, Eye, EyeOff, Trash2, ExternalLink, Activity, Settings as SettingsIcon } from "lucide-react";
+import { ShieldCheck, Eye, EyeOff, Trash2, ExternalLink, Activity, Settings as SettingsIcon, Layers } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -16,7 +16,7 @@ import { useLog } from "@/contexts/LogContext";
 
 
 export default function AdminSystemSettingsPage() {
-  const { user, loading: authLoading } = useAuth(); // Renamed loading to authLoading for clarity
+  const { user, loading: authLoading } = useAuth(); 
   const { toast } = useToast();
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
@@ -31,7 +31,7 @@ export default function AdminSystemSettingsPage() {
   }, []);
 
   useEffect(() => {
-    if (!authLoading && isClient) { // Check !authLoading
+    if (!authLoading && isClient) { 
       if (!user || user.role !== "Admin") {
         toast({
           title: "Akses Ditolak",
@@ -46,9 +46,9 @@ export default function AdminSystemSettingsPage() {
          addLog("INFO", `Admin ${user.email} mengakses halaman Pengaturan Sistem.`, "AdminSystemSettings");
       }
     }
-  }, [user, authLoading, isClient, router, toast, addLog]); // Add authLoading to dependency array
+  }, [user, authLoading, isClient, router, toast, addLog]); 
 
-  if (!isClient || authLoading || !user || user.role !== "Admin") { // Check authLoading
+  if (!isClient || authLoading || !user || user.role !== "Admin") { 
     return (
       <div className="flex h-[calc(100vh-200px)] items-center justify-center">
         <div className="flex flex-col items-center text-center">
@@ -123,7 +123,7 @@ export default function AdminSystemSettingsPage() {
         </CardHeader>
       </Card>
 
-      <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Card className="shadow-md rounded-md">
           <CardHeader className="p-5">
             <CardTitle className="text-xl font-semibold">Mode Perawatan</CardTitle>
@@ -171,7 +171,10 @@ export default function AdminSystemSettingsPage() {
 
         <Card className="shadow-md rounded-md">
           <CardHeader className="p-5">
-            <CardTitle className="text-xl font-semibold">Manajemen Cache</CardTitle>
+             <div className="flex items-center gap-2">
+              <Layers className="h-6 w-6 text-primary" />
+              <CardTitle className="text-xl font-semibold">Manajemen Cache</CardTitle>
+            </div>
             <CardDescription className="text-base text-muted-foreground">Kontrol cache aplikasi untuk memastikan data terbaru ditampilkan.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 p-5 pt-0">
@@ -179,14 +182,17 @@ export default function AdminSystemSettingsPage() {
               <Trash2 className="mr-2 h-5 w-5" /> Bersihkan Cache Aplikasi
             </Button>
             <p className="text-sm text-muted-foreground">
-              Tindakan ini akan menghapus semua data cache yang disimpan oleh aplikasi. Gunakan dengan hati-hati.
+              Tindakan ini akan menghapus semua data cache yang disimpan oleh aplikasi (simulasi). Gunakan dengan hati-hati.
             </p>
           </CardContent>
         </Card>
 
         <Card className="shadow-md rounded-md">
           <CardHeader className="p-5">
-            <CardTitle className="text-xl font-semibold">Log Sistem</CardTitle>
+             <div className="flex items-center gap-2">
+                <Activity className="h-6 w-6 text-primary" />
+                <CardTitle className="text-xl font-semibold">Log Sistem</CardTitle>
+            </div>
             <CardDescription className="text-base text-muted-foreground">Tinjau log aktivitas dan kesalahan sistem untuk pemecahan masalah.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 p-5 pt-0">
@@ -210,3 +216,4 @@ export default function AdminSystemSettingsPage() {
     </div>
   );
 }
+
