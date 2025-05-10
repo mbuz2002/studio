@@ -5,21 +5,23 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { SchoolClass, Teacher, EducationLevel } from "@/types";
+import type { SchoolClass, Teacher, EducationLevel, CurriculumFramework } from "@/types"; // Added CurriculumFramework
+import { useCurriculum } from "@/contexts/CurriculumContext"; // Added useCurriculum
 
 interface ClassFormFieldsProps {
-  formData: Partial<SchoolClass>;
+  formData: Partial<SchoolClass> & { curriculumType?: CurriculumFramework }; // Added curriculumType to formData if needed
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleSelectChange: (name: string, value: string) => void;
   allTeachers: Teacher[];
   schoolEducationLevel?: EducationLevel; 
 }
 
-const allPossibleGradeLevels: { value: string, label: string, educationLevels: EducationLevel[], curriculums: string[] }[] = [
+// Keep the comprehensive list as it might be used elsewhere or as a base
+const allPossibleGradeLevels: { value: string, label: string, educationLevels: EducationLevel[], curriculums: CurriculumFramework[] }[] = [
   // PAUD
-  { value: "PAUD - Kelompok Bermain", label: "PAUD - Kelompok Bermain", educationLevels: ["PAUD"], curriculums: ["K-13", "KTSP 2006"] },
-  { value: "PAUD - TK A", label: "PAUD - TK A", educationLevels: ["PAUD"], curriculums: ["K-13", "KTSP 2006"] },
-  { value: "PAUD - TK B", label: "PAUD - TK B", educationLevels: ["PAUD"], curriculums: ["K-13", "KTSP 2006"] },
+  { value: "PAUD - Kelompok Bermain", label: "PAUD - Kelompok Bermain", educationLevels: ["PAUD"], curriculums: ["K-13", "KTSP 2006", "Kurikulum Merdeka"] },
+  { value: "PAUD - TK A", label: "PAUD - TK A", educationLevels: ["PAUD"], curriculums: ["K-13", "KTSP 2006", "Kurikulum Merdeka"] },
+  { value: "PAUD - TK B", label: "PAUD - TK B", educationLevels: ["PAUD"], curriculums: ["K-13", "KTSP 2006", "Kurikulum Merdeka"] },
   { value: "Fase Fondasi (PAUD)", label: "Fase Fondasi (PAUD)", educationLevels: ["PAUD"], curriculums: ["Kurikulum Merdeka"] },
   
   // SD/MI
@@ -46,7 +48,7 @@ const allPossibleGradeLevels: { value: string, label: string, educationLevels: E
   { value: "Fase E (Kelas 10 SMA/MA)", label: "Fase E (Kelas 10 SMA/MA)", educationLevels: ["SMA/MA"], curriculums: ["Kurikulum Merdeka"] },
   { value: "Fase F (Kelas 11-12 SMA/MA)", label: "Fase F (Kelas 11-12 SMA/MA)", educationLevels: ["SMA/MA"], curriculums: ["Kurikulum Merdeka"] },
 
-  // SMK/MAK - Shares phases with SMA/MA for KurMer, but distinct classes for K13/KTSP
+  // SMK/MAK
   { value: "Kelas X SMK/MAK", label: "Kelas X SMK/MAK", educationLevels: ["SMK/MAK"], curriculums: ["K-13", "KTSP 2006"] },
   { value: "Kelas XI SMK/MAK", label: "Kelas XI SMK/MAK", educationLevels: ["SMK/MAK"], curriculums: ["K-13", "KTSP 2006"] },
   { value: "Kelas XII SMK/MAK", label: "Kelas XII SMK/MAK", educationLevels: ["SMK/MAK"], curriculums: ["K-13", "KTSP 2006"] },
@@ -62,9 +64,9 @@ const allPossibleGradeLevels: { value: string, label: string, educationLevels: E
   { value: "SLB Kelas Atas (10-12 Disesuaikan)", label: "SLB Kelas Atas (10-12 Disesuaikan)", educationLevels: ["SLB"], curriculums: ["K-13", "KTSP 2006"] },
   
   // Kesetaraan
-  { value: "Paket A (Setara SD)", label: "Paket A (Setara SD)", educationLevels: ["PKBM/Kesetaraan"], curriculums: ["K-13", "KTSP 2006", "Kurikulum Merdeka"]}, // KurMer uses Fase A-C for Paket A equivalent
-  { value: "Paket B (Setara SMP)", label: "Paket B (Setara SMP)", educationLevels: ["PKBM/Kesetaraan"], curriculums: ["K-13", "KTSP 2006", "Kurikulum Merdeka"]}, // KurMer uses Fase D for Paket B equivalent
-  { value: "Paket C (Setara SMA)", label: "Paket C (Setara SMA)", educationLevels: ["PKBM/Kesetaraan"], curriculums: ["K-13", "KTSP 2006", "Kurikulum Merdeka"]}, // KurMer uses Fase E-F for Paket C equivalent
+  { value: "Paket A (Setara SD)", label: "Paket A (Setara SD)", educationLevels: ["PKBM/Kesetaraan"], curriculums: ["K-13", "KTSP 2006", "Kurikulum Merdeka"]},
+  { value: "Paket B (Setara SMP)", label: "Paket B (Setara SMP)", educationLevels: ["PKBM/Kesetaraan"], curriculums: ["K-13", "KTSP 2006", "Kurikulum Merdeka"]},
+  { value: "Paket C (Setara SMA)", label: "Paket C (Setara SMA)", educationLevels: ["PKBM/Kesetaraan"], curriculums: ["K-13", "KTSP 2006", "Kurikulum Merdeka"]},
 ];
 
 
@@ -78,16 +80,19 @@ export function ClassFormFields({
     schoolEducationLevel
 }: ClassFormFieldsProps) {
 
+  const { defaultCurriculum } = useCurriculum(); // Get the global default curriculum
+
   const gradeLevelOptions = useMemo(() => {
+    const currentCurriculumForFiltering = formData.curriculumType || defaultCurriculum; // Use form's curriculum if set, else global default
     if (!schoolEducationLevel) {
-        // If school level not set, show a generic list (could be empty or prompt to set school level)
-        // For now, let's return a broader list but ideally prompt user.
-        return allPossibleGradeLevels.filter(g => g.label.includes(formData.curriculumType || "Merdeka") || g.label.includes(formData.curriculumType || "K-13") || g.label.includes(formData.curriculumType || "KTSP") );
+        return allPossibleGradeLevels.filter(g => g.curriculums.includes(currentCurriculumForFiltering));
     }
-    return allPossibleGradeLevels.filter(grade => grade.educationLevels.includes(schoolEducationLevel));
-  }, [schoolEducationLevel, formData.curriculumType]);
+    return allPossibleGradeLevels.filter(grade => 
+        grade.educationLevels.includes(schoolEducationLevel) &&
+        grade.curriculums.includes(currentCurriculumForFiltering)
+    );
+  }, [schoolEducationLevel, defaultCurriculum, formData.curriculumType]);
   
-  // Effect to clear gradeLevel if it's not in the new options
   useEffect(() => {
     if (formData.gradeLevel && !gradeLevelOptions.find(opt => opt.value === formData.gradeLevel)) {
       handleSelectChange('gradeLevel', '');
@@ -115,22 +120,22 @@ export function ClassFormFields({
             <Select 
               value={formData.gradeLevel || ""} 
               onValueChange={(value) => handleSelectChange('gradeLevel', value === "placeholder-grade" ? "" : value)}
-              disabled={!schoolEducationLevel}
+              disabled={!schoolEducationLevel && !gradeLevelOptions.length} // Disable if no school level and no generic options for current curriculum
             >
               <SelectTrigger id="gradeLevel" className="text-base h-11 rounded-md">
-                <SelectValue placeholder={!schoolEducationLevel ? "Atur Jenjang Sekolah di Profil" : "Pilih Jenjang/Tingkat"} />
+                <SelectValue placeholder={!schoolEducationLevel ? "Atur Jenjang Sekolah di Profil dahulu" : "Pilih Jenjang/Tingkat"} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="placeholder-grade" disabled>{!schoolEducationLevel ? "Atur Jenjang Sekolah di Profil" : "Pilih Jenjang/Tingkat"}</SelectItem>
+                <SelectItem value="placeholder-grade" disabled>{!schoolEducationLevel ? "Atur Jenjang Sekolah di Profil dahulu" : "Pilih Jenjang/Tingkat"}</SelectItem>
                 {gradeLevelOptions.map(level => (
                   <SelectItem key={level.value} value={level.value}>{level.label}</SelectItem>
                 ))}
                  {gradeLevelOptions.length === 0 && schoolEducationLevel && (
-                    <SelectItem value="no-options" disabled>Tidak ada jenjang yang cocok</SelectItem>
+                    <SelectItem value="no-options" disabled>Tidak ada jenjang yang cocok dengan Jenjang Sekolah & Kurikulum saat ini.</SelectItem>
                 )}
               </SelectContent>
             </Select>
-            {!schoolEducationLevel && <p className="text-xs text-muted-foreground mt-1">Pilihan jenjang akan muncul setelah Jenjang Pendidikan di Profil Sekolah diatur.</p>}
+            {!schoolEducationLevel && <p className="text-xs text-muted-foreground mt-1">Pilihan jenjang akan muncul/optimal setelah Jenjang Pendidikan di Profil Sekolah diatur.</p>}
         </div>
       </div>
       <div className="space-y-1.5">
@@ -167,4 +172,3 @@ export function ClassFormFields({
     </>
   );
 }
-

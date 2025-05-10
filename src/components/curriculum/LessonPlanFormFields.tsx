@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { LessonPlan, CurriculumFramework, UserRole, EducationLevel } from "@/types";
+import type { LessonPlan, CurriculumFramework, UserRole, EducationLevel, TeachingPeriodSettings } from "@/types";
+import { TEACHING_PERIOD_SETTINGS_KEY } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Loader2, Wand2 } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
@@ -66,6 +67,22 @@ export function LessonPlanFormFields({
   userRole,
   schoolEducationLevel,
 }: LessonPlanFormFieldsProps) {
+
+  const [jpDuration, setJpDuration] = useState<number | null>(null);
+
+  useEffect(() => {
+    const storedSettings = localStorage.getItem(TEACHING_PERIOD_SETTINGS_KEY);
+    if (storedSettings) {
+      try {
+        const parsedSettings: TeachingPeriodSettings = JSON.parse(storedSettings);
+        if (parsedSettings.jpDurationMinutes) {
+          setJpDuration(parsedSettings.jpDurationMinutes);
+        }
+      } catch (e) {
+        console.error("Failed to parse teaching period settings", e);
+      }
+    }
+  }, []);
 
   const currentGradeLevelOptions = useMemo(() => {
     if (!schoolEducationLevel) {
@@ -192,6 +209,7 @@ export function LessonPlanFormFields({
         <div className="space-y-1">
             <Label htmlFor="alokasiWaktuJP">Alokasi Waktu (JP)</Label>
             <Input id="alokasiWaktuJP" name="alokasiWaktuJP" value={formData.alokasiWaktuJP || ''} onChange={handleChange} placeholder="cth., 2 JP atau 3x40 menit" />
+            {jpDuration && <p className="text-xs text-muted-foreground mt-1">Estimasi (1 JP = {jpDuration} menit).</p>}
         </div>
       </div>
 
@@ -330,4 +348,3 @@ export function LessonPlanFormFields({
     </>
   );
 }
-

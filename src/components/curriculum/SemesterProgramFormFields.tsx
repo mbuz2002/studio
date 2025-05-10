@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { SemesterProgram, CurriculumFramework, UserRole, EducationLevel } from "@/types";
+import type { SemesterProgram, CurriculumFramework, UserRole, EducationLevel, TeachingPeriodSettings } from "@/types";
+import { TEACHING_PERIOD_SETTINGS_KEY } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Loader2, Wand2 } from "lucide-react";
 
@@ -65,6 +66,22 @@ export function SemesterProgramFormFields({
   userRole,
   schoolEducationLevel,
 }: SemesterProgramFormFieldsProps) {
+
+  const [jpDuration, setJpDuration] = useState<number | null>(null);
+
+  useEffect(() => {
+    const storedSettings = localStorage.getItem(TEACHING_PERIOD_SETTINGS_KEY);
+    if (storedSettings) {
+      try {
+        const parsedSettings: TeachingPeriodSettings = JSON.parse(storedSettings);
+        if (parsedSettings.jpDurationMinutes) {
+          setJpDuration(parsedSettings.jpDurationMinutes);
+        }
+      } catch (e) {
+        console.error("Failed to parse teaching period settings", e);
+      }
+    }
+  }, []);
 
   const currentGradeLevelOptions = useMemo(() => {
     if (!schoolEducationLevel) {
@@ -178,6 +195,7 @@ export function SemesterProgramFormFields({
         <div className="space-y-1">
             <Label htmlFor="alokasiWaktuTotalSemester_input">Alokasi Waktu Total Semester (JP) (Opsional)</Label>
             <Input id="alokasiWaktuTotalSemester_input" name="alokasiWaktuTotalSemester_input" value={formData.alokasiWaktuTotalSemester_input || ''} onChange={handleChange} placeholder="cth., 72 JP" />
+            {jpDuration && <p className="text-xs text-muted-foreground mt-1">Estimasi (1 JP = {jpDuration} menit).</p>}
         </div>
       </div>
       
@@ -226,10 +244,8 @@ Minggu ke: 2
 ... (dan seterusnya)`
           } 
         />
-        <p className="text-xs text-muted-foreground">Isi rincian per minggu. Gunakan '---' (tiga tanda hubung) sebagai pemisah antar unit mingguan. Pastikan alokasi waktu dalam Jam Pelajaran (JP).</p>
+        <p className="text-xs text-muted-foreground">Isi rincian per minggu. Gunakan '---' (tiga tanda hubung) sebagai pemisah antar unit mingguan. Pastikan alokasi waktu dalam Jam Pelajaran (JP). {jpDuration && `(1 JP = ${jpDuration} menit).`}</p>
       </div>
     </>
   );
 }
-
-

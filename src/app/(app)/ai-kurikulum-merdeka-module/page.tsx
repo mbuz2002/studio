@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, type FormEvent, useCallback } from "react";
@@ -24,8 +23,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { useCurriculum } from "@/contexts/CurriculumContext";
 import { Badge } from "@/components/ui/badge";
-import type { SchoolProfile, User, PrintOptionsModulAjar, ModulAjar } from "@/types";
-import { defaultPrintOptionsModulAjar, MODUL_AJAR_STORAGE_KEY } from "@/types";
+import type { SchoolProfile, User, PrintOptionsModulAjar, ModulAjar, TeachingPeriodSettings } from "@/types";
+import { defaultPrintOptionsModulAjar, MODUL_AJAR_STORAGE_KEY, TEACHING_PERIOD_SETTINGS_KEY } from "@/types";
 import { PrintOptionsModulAjarDialog } from "@/components/curriculum/PrintOptionsModulAjarDialog";
 import { format } from "date-fns";
 import { id as indonesianLocale } from "date-fns/locale";
@@ -63,6 +62,7 @@ export default function NewAIKurikulumMerdekaModulePage() {
   const [schoolProfile, setSchoolProfile] = useState<SchoolProfile | null>(null);
   const [isPrintOptionsOpen, setIsPrintOptionsOpen] = useState(false);
   const [currentPrintOptions, setCurrentPrintOptions] = useState<PrintOptionsModulAjar>(defaultPrintOptionsModulAjar);
+  const [jpDuration, setJpDuration] = useState<number | null>(null);
 
 
   useEffect(() => {
@@ -89,6 +89,17 @@ export default function NewAIKurikulumMerdekaModulePage() {
         } catch (e) {
             console.error("Failed to parse school profile from localStorage", e);
              addLog("ERROR", `Gagal memuat profil sekolah dari penyimpanan lokal: ${e instanceof Error ? e.message : String(e)}`, pageSource);
+        }
+      }
+      const storedSettings = localStorage.getItem(TEACHING_PERIOD_SETTINGS_KEY);
+      if (storedSettings) {
+        try {
+          const parsedSettings: TeachingPeriodSettings = JSON.parse(storedSettings);
+          if (parsedSettings.jpDurationMinutes) {
+            setJpDuration(parsedSettings.jpDurationMinutes);
+          }
+        } catch (e) {
+          console.error("Failed to parse teaching period settings", e);
         }
       }
     }
@@ -473,6 +484,7 @@ export default function NewAIKurikulumMerdekaModulePage() {
                 <div className="space-y-1.5">
                   <Label htmlFor="moduleAlokasiWaktu" className="text-base font-medium">Estimasi Alokasi Waktu (Opsional)</Label>
                   <Input id="moduleAlokasiWaktu" value={moduleAlokasiWaktu} onChange={(e) => setModuleAlokasiWaktu(e.target.value)} placeholder="cth., 12 JP atau 3 Pertemuan" className="text-base h-11 rounded-md focus:border-primary" />
+                  {jpDuration && <p className="text-xs text-muted-foreground mt-1">Estimasi (1 JP = {jpDuration} menit).</p>}
                 </div>
                  <div className="space-y-1.5">
                   <Label htmlFor="moduleCPElemen" className="text-base font-medium">Elemen Capaian Pembelajaran (CP) (Opsional, satu per baris)</Label>

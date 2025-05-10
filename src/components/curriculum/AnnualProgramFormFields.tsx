@@ -2,12 +2,13 @@
 
 "use client";
 
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { AnnualProgram, CurriculumFramework, UserRole, EducationLevel } from "@/types";
+import type { AnnualProgram, CurriculumFramework, UserRole, EducationLevel, TeachingPeriodSettings } from "@/types";
+import { TEACHING_PERIOD_SETTINGS_KEY } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Loader2, Wand2 } from "lucide-react";
 
@@ -72,6 +73,22 @@ export function AnnualProgramFormFields({
   userRole,
   schoolEducationLevel,
 }: AnnualProgramFormFieldsProps) {
+
+  const [jpDuration, setJpDuration] = useState<number | null>(null);
+
+  useEffect(() => {
+    const storedSettings = localStorage.getItem(TEACHING_PERIOD_SETTINGS_KEY);
+    if (storedSettings) {
+      try {
+        const parsedSettings: TeachingPeriodSettings = JSON.parse(storedSettings);
+        if (parsedSettings.jpDurationMinutes) {
+          setJpDuration(parsedSettings.jpDurationMinutes);
+        }
+      } catch (e) {
+        console.error("Failed to parse teaching period settings", e);
+      }
+    }
+  }, []);
 
   const currentGradeLevelOptions = useMemo(() => {
     if (!schoolEducationLevel) {
@@ -231,6 +248,7 @@ export function AnnualProgramFormFields({
         <div className="space-y-1">
           <Label htmlFor="semester1_allocations_textarea">Alokasi Waktu JP (satu per baris, sesuaikan dengan baris topik)</Label>
           <Textarea id="semester1_allocations_textarea" name="semester1_allocations_textarea" value={formData.semester1_allocations_textarea || ''} onChange={handleChange} placeholder="Contoh: 24 JP\n30 JP" rows={3} />
+           {jpDuration && <p className="text-xs text-muted-foreground mt-1">Estimasi (1 JP = {jpDuration} menit).</p>}
         </div>
       </div>
 
@@ -247,9 +265,9 @@ export function AnnualProgramFormFields({
         <div className="space-y-1">
           <Label htmlFor="semester2_allocations_textarea">Alokasi Waktu JP (satu per baris, sesuaikan dengan baris topik)</Label>
           <Textarea id="semester2_allocations_textarea" name="semester2_allocations_textarea" value={formData.semester2_allocations_textarea || ''} onChange={handleChange} placeholder="Contoh: 24 JP\n30 JP" rows={3} />
+          {jpDuration && <p className="text-xs text-muted-foreground mt-1">Estimasi (1 JP = {jpDuration} menit).</p>}
         </div>
       </div>
     </>
   );
 }
-
