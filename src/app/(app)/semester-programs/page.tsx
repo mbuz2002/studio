@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react"; // Added useCallback
 import { CurriculumDataTable } from "@/components/curriculum/CurriculumDataTable";
 import type { SemesterProgram, AnyCurriculumItem, CurriculumFramework } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -114,31 +114,36 @@ export default function SemesterProgramsPage() {
 
 
   const canCreate = user && (user.role === "Admin" || user.role === "WakaKurikulum" || user.role === "Guru");
-  const canEdit = (item: SemesterProgram): boolean => {
+  
+  const canEdit = useCallback((item: AnyCurriculumItem): boolean => {
     if (!user) return false;
+    const semesterProgramItem = item as SemesterProgram;
     if (user.role === "Admin" || user.role === "WakaKurikulum") return true;
-    if (user.role === "Guru" && item.createdByUserId === user.id) return true;
-    if (user.role === "Guru" && initialSemesterProgramsData.some(sp => sp.id === item.id && (!item.createdByUserId || item.createdByUserId === 'user-demo-fallback'))) return true;
+    if (user.role === "Guru" && semesterProgramItem.createdByUserId === user.id) return true;
+    if (user.role === "Guru" && initialSemesterProgramsData.some(sp => sp.id === semesterProgramItem.id && (!semesterProgramItem.createdByUserId || semesterProgramItem.createdByUserId === 'user-demo-fallback'))) return true;
     return false;
-  }
-  const canDelete = (item: SemesterProgram): boolean => {
+  }, [user]);
+
+  const canDelete = useCallback((item: AnyCurriculumItem): boolean => {
     if (!user) return false;
+    const semesterProgramItem = item as SemesterProgram;
     if (user.role === "Admin" || user.role === "WakaKurikulum") return true;
-    if (user.role === "Guru" && item.createdByUserId === user.id) return true;
-    if (user.role === "Guru" && initialSemesterProgramsData.some(sp => sp.id === item.id && (!item.createdByUserId || item.createdByUserId === 'user-demo-fallback'))) return true;
+    if (user.role === "Guru" && semesterProgramItem.createdByUserId === user.id) return true;
+    if (user.role === "Guru" && initialSemesterProgramsData.some(sp => sp.id === semesterProgramItem.id && (!semesterProgramItem.createdByUserId || semesterProgramItem.createdByUserId === 'user-demo-fallback'))) return true;
     return false;
-  }
+  }, [user]);
+
   const canImport = user && (user.role === "Admin" || user.role === "WakaKurikulum");
 
-  const handleEdit = (item: AnyCurriculumItem) => {
+  const handleEdit = useCallback((item: AnyCurriculumItem) => {
     if (!canEdit(item as SemesterProgram)) { 
         toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengedit Promes ini.", variant: "destructive" });
         return;
     }
     router.push(`/semester-programs/edit/${item.id}`);
-  };
+  }, [canEdit, router, toast]);
 
-  const handleDelete = (itemToDelete: AnyCurriculumItem) => {
+  const handleDelete = useCallback((itemToDelete: AnyCurriculumItem) => {
      if (!canDelete(itemToDelete as SemesterProgram)) { 
         toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk menghapus Promes ini.", variant: "destructive" });
         return;
@@ -149,14 +154,14 @@ export default function SemesterProgramsPage() {
       localStorage.setItem(SEMESTER_PROGRAMS_STORAGE_KEY, JSON.stringify(updatedSemesterPrograms));
       toast({ title: "Promes Dihapus", description: `"${itemToDelete.title}" telah berhasil dihapus.`});
     }
-  };
+  }, [canDelete, semesterPrograms, toast]);
 
-  const handleView = (item: AnyCurriculumItem) => {
+  const handleView = useCallback((item: AnyCurriculumItem) => {
     const prettyPrintJson = JSON.stringify(item, null, 2);
     const newWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
     newWindow?.document.write(`<pre>${prettyPrintJson}</pre>`);
     newWindow?.document.close();
-  };
+  }, []);
 
   const filteredSemesterPrograms = useMemo(() => {
     return isClient ? semesterPrograms.filter(sp =>
@@ -172,14 +177,14 @@ export default function SemesterProgramsPage() {
     ) : [];
   }, [isClient, semesterPrograms, searchTerm, curriculumFilter, gradeFilter, yearFilter, semesterFilter, user]);
 
-  const resetFilters = () => {
+  const resetFilters = useCallback(() => {
     setSearchTerm("");
     setCurriculumFilter("ALL");
     setGradeFilter("ALL");
     setYearFilter("ALL");
     setSemesterFilter("ALL");
     toast({ title: "Filter Direset", description: "Semua filter telah dikembalikan ke default." });
-  };
+  }, [toast]);
 
   const activeFilterCount = [searchTerm, curriculumFilter, gradeFilter, yearFilter, semesterFilter].filter(f => f !== "" && f !== "ALL").length;
 
@@ -307,10 +312,10 @@ export default function SemesterProgramsPage() {
             <CurriculumDataTable
                 items={filteredSemesterPrograms}
                 onView={handleView}
-                onEdit={canEdit ? handleEdit : undefined} 
-                onDelete={canDelete ? handleDelete : undefined} 
-                canEdit={(item) => canEdit(item as SemesterProgram)} 
-                canDelete={(item) => canDelete(item as SemesterProgram)} 
+                onEdit={handleEdit} 
+                onDelete={handleDelete} 
+                canEdit={canEdit} 
+                canDelete={canDelete} 
                 itemTypeForExport="Promes"
             />
           </div>

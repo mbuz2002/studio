@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react"; // Added useCallback
 import { CurriculumDataTable } from "@/components/curriculum/CurriculumDataTable";
 import type { AnnualProgram, AnyCurriculumItem, CurriculumFramework } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -116,32 +116,37 @@ export default function AnnualProgramsPage() {
 
 
   const canCreate = user && (user.role === "Admin" || user.role === "WakaKurikulum" || user.role === "Guru");
-  const canEdit = (item: AnnualProgram): boolean => {
+  
+  const canEdit = useCallback((item: AnyCurriculumItem): boolean => {
     if (!user) return false;
+    const annualProgramItem = item as AnnualProgram;
     if (user.role === "Admin" || user.role === "WakaKurikulum") return true;
-    if (user.role === "Guru" && item.createdByUserId === user.id) return true;
-    if (user.role === "Guru" && initialAnnualProgramsData.some(ap => ap.id === item.id && (!item.createdByUserId || item.createdByUserId === 'user-demo-fallback'))) return true;
+    if (user.role === "Guru" && annualProgramItem.createdByUserId === user.id) return true;
+    if (user.role === "Guru" && initialAnnualProgramsData.some(ap => ap.id === annualProgramItem.id && (!annualProgramItem.createdByUserId || annualProgramItem.createdByUserId === 'user-demo-fallback'))) return true;
     return false;
-  }
-  const canDelete = (item: AnnualProgram): boolean => {
+  }, [user]);
+
+  const canDelete = useCallback((item: AnyCurriculumItem): boolean => {
     if (!user) return false;
+    const annualProgramItem = item as AnnualProgram;
     if (user.role === "Admin" || user.role === "WakaKurikulum") return true;
-    if (user.role === "Guru" && item.createdByUserId === user.id) return true;
-    if (user.role === "Guru" && initialAnnualProgramsData.some(ap => ap.id === item.id && (!item.createdByUserId || item.createdByUserId === 'user-demo-fallback'))) return true;
+    if (user.role === "Guru" && annualProgramItem.createdByUserId === user.id) return true;
+    if (user.role === "Guru" && initialAnnualProgramsData.some(ap => ap.id === annualProgramItem.id && (!annualProgramItem.createdByUserId || annualProgramItem.createdByUserId === 'user-demo-fallback'))) return true;
     return false;
-  }
+  }, [user]);
+
   const canImport = user && (user.role === "Admin" || user.role === "WakaKurikulum");
 
 
-  const handleEdit = (item: AnyCurriculumItem) => {
+  const handleEdit = useCallback((item: AnyCurriculumItem) => {
     if (!canEdit(item as AnnualProgram)) { 
         toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengedit PROTA ini.", variant: "destructive" });
         return;
     }
     router.push(`/annual-programs/edit/${item.id}`);
-  };
+  }, [canEdit, router, toast]);
 
-  const handleDelete = (itemToDelete: AnyCurriculumItem) => {
+  const handleDelete = useCallback((itemToDelete: AnyCurriculumItem) => {
     if (!canDelete(itemToDelete as AnnualProgram)) { 
         toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk menghapus PROTA ini.", variant: "destructive" });
         return;
@@ -152,14 +157,14 @@ export default function AnnualProgramsPage() {
       localStorage.setItem(ANNUAL_PROGRAMS_STORAGE_KEY, JSON.stringify(updatedAnnualPrograms));
       toast({ title: "PROTA Dihapus", description: `"${itemToDelete.title}" telah berhasil dihapus.`});
     }
-  };
+  }, [canDelete, annualPrograms, toast]);
 
-  const handleView = (item: AnyCurriculumItem) => {
+  const handleView = useCallback((item: AnyCurriculumItem) => {
     const prettyPrintJson = JSON.stringify(item, null, 2);
     const newWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
     newWindow?.document.write(`<pre>${prettyPrintJson}</pre>`);
     newWindow?.document.close();
-  };
+  }, []);
 
   const filteredAnnualPrograms = useMemo(() => {
     return isClient ? annualPrograms.filter(ap =>
@@ -174,13 +179,13 @@ export default function AnnualProgramsPage() {
     ) : [];
   }, [isClient, annualPrograms, searchTerm, curriculumFilter, gradeFilter, yearFilter, user]);
 
-  const resetFilters = () => {
+  const resetFilters = useCallback(() => {
     setSearchTerm("");
     setCurriculumFilter("ALL");
     setGradeFilter("ALL");
     setYearFilter("ALL");
     toast({ title: "Filter Direset", description: "Semua filter telah dikembalikan ke default." });
-  };
+  }, [toast]);
 
   const activeFilterCount = [searchTerm, curriculumFilter, gradeFilter, yearFilter].filter(f => f !== "" && f !== "ALL").length;
 
@@ -294,10 +299,10 @@ export default function AnnualProgramsPage() {
             <CurriculumDataTable
                 items={filteredAnnualPrograms}
                 onView={handleView}
-                onEdit={canEdit ? handleEdit : undefined} 
-                onDelete={canDelete ? handleDelete : undefined} 
-                canEdit={(item) => canEdit(item as AnnualProgram)} 
-                canDelete={(item) => canDelete(item as AnnualProgram)} 
+                onEdit={handleEdit} 
+                onDelete={handleDelete} 
+                canEdit={canEdit} 
+                canDelete={canDelete} 
                 itemTypeForExport="PROTA"
             />
           </div>

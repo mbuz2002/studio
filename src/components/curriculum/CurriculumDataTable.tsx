@@ -10,7 +10,7 @@ import { Download, Eye, FilePenLine, MoreHorizontal, Trash2, Loader2, Printer, S
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { id as indonesianLocale } from "date-fns/locale"; 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react"; // Added React, useCallback, useMemo
 import { exportRppToText, type ExportRppToTextInput } from "@/ai/flows/export-rpp-to-text";
 import { useToast } from "@/hooks/use-toast";
 import { PrintOptionsDialog } from "./PrintOptionsDialog";
@@ -28,7 +28,7 @@ interface CurriculumDataTableProps {
   itemTypeForExport?: 'RPP' | 'PROTA' | 'Promes'; 
 }
 
-export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, canDelete, itemTypeForExport }: CurriculumDataTableProps) {
+export const CurriculumDataTable = React.memo(function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, canDelete, itemTypeForExport }: CurriculumDataTableProps) {
   const [isClient, setIsClient] = useState(false);
   const [isExporting, setIsExporting] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
@@ -72,13 +72,13 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
     }
   }, [currentUser, addLog]);
 
-  const getCreatorName = (userId?: string): string => {
+  const getCreatorName = useCallback((userId?: string): string => {
     if (!userId) return 'Tidak diketahui';
     const user = appUsers.find(u => u.id === userId);
     return user ? user.name : userId; // Fallback to userId if name not found
-  };
+  }, [appUsers]);
 
-  const getCreatorAvatar = (userId?: string): string | undefined => {
+  const getCreatorAvatar = useCallback((userId?: string): string | undefined => {
     if (!userId) return undefined;
     const user = appUsers.find(u => u.id === userId);
     // Generate UI Avatar URL if no avatarUrl and name exists
@@ -86,15 +86,15 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
       return `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random&color=fff&font-size=0.45`;
     }
     return user?.avatarUrl;
-  };
+  }, [appUsers]);
   
-   const getInitials = (name: string) => {
+   const getInitials = useCallback((name: string) => {
     if (!name || typeof name !== 'string') return '';
     return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
-  }
+  }, [])
 
 
- const generatePrintableHtml = (item: AnyCurriculumItem, options: PrintOptions): string => {
+ const generatePrintableHtml = useCallback((item: AnyCurriculumItem, options: PrintOptions): string => {
     const creatorUser = appUsers.find(u => u.id === item.createdByUserId);
     const creatorName = creatorUser ? creatorUser.name : item.createdByUserId || 'Tidak diketahui';
     const documentTypeDisplay = item.type === 'RPP' ? (item.curriculumType === "Kurikulum Merdeka" ? "ALUR TUJUAN PEMBELAJARAN" : "RENCANA PELAKSANAAN PEMBELAJARAN") : item.type.toUpperCase();
@@ -427,16 +427,16 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
         </body>
       </html>
     `;
-  };
+  }, [isClient, appUsers, addLog, currentUser, schoolProfile]);
 
-  const handlePreparePrint = (item: AnyCurriculumItem) => {
+  const handlePreparePrint = useCallback((item: AnyCurriculumItem) => {
     if (!isClient) return;
     setItemToPrint(item);
     setCurrentPrintOptions(defaultPrintOptions); 
     setIsPrintOptionsOpen(true);
-  };
+  }, [isClient]);
   
-  const handleFinalizePrint = (options: PrintOptions) => {
+  const handleFinalizePrint = useCallback((options: PrintOptions) => {
     if (!itemToPrint) return;
     const logSource = `CurriculumPrint-${itemToPrint.type}`; 
     const printableHtml = generatePrintableHtml(itemToPrint, options); 
@@ -452,10 +452,10 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
     }
     setIsPrintOptionsOpen(false);
     setItemToPrint(null);
-  };
+  }, [itemToPrint, generatePrintableHtml, addLog, toast]);
 
 
-  const handleExportToText = async (item: AnyCurriculumItem) => {
+  const handleExportToText = useCallback(async (item: AnyCurriculumItem) => {
     if (!isClient) return;
     const docTypeDisplay = item.type === 'RPP' ? (item.curriculumType === "Kurikulum Merdeka" ? "ATP" : "RPP") : item.type;
     const logSource = `CurriculumExport-${docTypeDisplay}`;
@@ -575,15 +575,15 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
     } finally {
       setIsExporting(prev => ({ ...prev, [item.id]: false }));
     }
-  };
+  }, [isClient, itemTypeForExport, toast, addLog, currentUser]);
   
-  const handleViewDetails = (item: AnyCurriculumItem) => {
+  const handleViewDetails = useCallback((item: AnyCurriculumItem) => {
     const docTypeDisplay = item.type === 'RPP' ? (item.curriculumType === "Kurikulum Merdeka" ? "ATP/Modul Ajar" : "RPP") : item.type;
     addLog("INFO", `Pengguna ${currentUser?.email} melihat detail ${docTypeDisplay} "${item.title}" (ID: ${item.id}).`, `CurriculumView-${item.type}`);
     onView(item);
-  };
+  }, [currentUser, addLog, onView]);
 
-  const getCurriculumBadgeVariant = (curriculumType: CurriculumFramework): "default" | "secondary" | "outline" => {
+  const getCurriculumBadgeVariant = useCallback((curriculumType: CurriculumFramework): "default" | "secondary" | "outline" => {
     switch (curriculumType) {
       case "Kurikulum Merdeka":
         return "default";
@@ -594,7 +594,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
       default:
         return "outline";
     }
-  }
+  }, []);
 
 
   return (
@@ -716,6 +716,6 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
       )}
     </>
   );
-}
+});
 
     

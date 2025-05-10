@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react"; // Added useCallback
 import { CurriculumDataTable } from "@/components/curriculum/CurriculumDataTable";
 import type { LessonPlan, AnyCurriculumItem, CurriculumFramework } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -129,33 +129,35 @@ export default function LessonPlansPage() {
 
   const canCreate = user && (user.role === "Admin" || user.role === "WakaKurikulum" || user.role === "Guru");
   
-  const canEditItem = (item: LessonPlan): boolean => {
+  const canEditItem = useCallback((item: AnyCurriculumItem): boolean => {
     if (!user) return false;
+    const lessonPlanItem = item as LessonPlan;
     if (user.role === "Admin" || user.role === "WakaKurikulum") return true;
-    if (user.role === "Guru" && item.createdByUserId === user.id) return true; 
-    if (user.role === "Guru" && initialLessonPlansData.some(lp => lp.id === item.id && (!item.createdByUserId || item.createdByUserId === 'user-demo-fallback'))) return true;
+    if (user.role === "Guru" && lessonPlanItem.createdByUserId === user.id) return true; 
+    if (user.role === "Guru" && initialLessonPlansData.some(lp => lp.id === lessonPlanItem.id && (!lessonPlanItem.createdByUserId || lessonPlanItem.createdByUserId === 'user-demo-fallback'))) return true;
     return false;
-  };
+  }, [user]);
 
-  const canDeleteItem = (item: LessonPlan): boolean => {
+  const canDeleteItem = useCallback((item: AnyCurriculumItem): boolean => {
      if (!user) return false;
+     const lessonPlanItem = item as LessonPlan;
     if (user.role === "Admin" || user.role === "WakaKurikulum") return true;
-    if (user.role === "Guru" && item.createdByUserId === user.id) return true;
-    if (user.role === "Guru" && initialLessonPlansData.some(lp => lp.id === item.id && (!item.createdByUserId || item.createdByUserId === 'user-demo-fallback'))) return true;
+    if (user.role === "Guru" && lessonPlanItem.createdByUserId === user.id) return true;
+    if (user.role === "Guru" && initialLessonPlansData.some(lp => lp.id === lessonPlanItem.id && (!lessonPlanItem.createdByUserId || lessonPlanItem.createdByUserId === 'user-demo-fallback'))) return true;
     return false;
-  };
+  }, [user]);
 
   const canImport = user && (user.role === "Admin" || user.role === "WakaKurikulum");
 
-  const handleEdit = (item: AnyCurriculumItem) => {
+  const handleEdit = useCallback((item: AnyCurriculumItem) => {
     if (!canEditItem(item as LessonPlan)) { 
         toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengedit dokumen ini.", variant: "destructive" });
         return;
     }
     router.push(`/lesson-plans/edit/${item.id}`);
-  };
+  }, [canEditItem, router, toast]);
 
-  const handleDelete = (itemToDelete: AnyCurriculumItem) => {
+  const handleDelete = useCallback((itemToDelete: AnyCurriculumItem) => {
     if (!canDeleteItem(itemToDelete as LessonPlan)) { 
         toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk menghapus dokumen ini.", variant: "destructive" });
         return;
@@ -167,14 +169,14 @@ export default function LessonPlansPage() {
       localStorage.setItem(LESSON_PLANS_STORAGE_KEY, JSON.stringify(updatedLessonPlans));
       toast({ title: `${docType} Dihapus`, description: `"${itemToDelete.title}" telah berhasil dihapus.`});
     }
-  };
+  }, [canDeleteItem, lessonPlans, toast]);
   
-  const handleView = (item: AnyCurriculumItem) => {
+  const handleView = useCallback((item: AnyCurriculumItem) => {
     const prettyPrintJson = JSON.stringify(item, null, 2);
     const newWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
     newWindow?.document.write(`<pre>${prettyPrintJson}</pre>`);
     newWindow?.document.close();
-  };
+  }, []);
 
   const filteredLessonPlans = useMemo(() => {
     return isClient ? lessonPlans.filter(lp =>
@@ -190,12 +192,12 @@ export default function LessonPlansPage() {
     ) : [];
   }, [isClient, lessonPlans, searchTerm, curriculumFilter, gradeFilter, user]);
 
-  const resetFilters = () => {
+  const resetFilters = useCallback(() => {
     setSearchTerm("");
     setCurriculumFilter("ALL");
     setGradeFilter("ALL");
     toast({ title: "Filter Direset", description: "Semua filter telah dikembalikan ke default." });
-  };
+  }, [toast]);
 
   const activeFilterCount = [searchTerm, curriculumFilter, gradeFilter].filter(f => f !== "" && f !== "ALL").length;
 
@@ -299,8 +301,8 @@ export default function LessonPlansPage() {
                 onView={handleView}
                 onEdit={handleEdit} 
                 onDelete={handleDelete} 
-                canEdit={(item) => canEditItem(item as LessonPlan)} 
-                canDelete={(item) => canDeleteItem(item as LessonPlan)} 
+                canEdit={canEditItem} 
+                canDelete={canDeleteItem} 
                 itemTypeForExport="RPP" 
             />
           </div>
