@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState, useCallback } from 'react';
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset, SidebarRail } from '@/components/ui/sidebar';
 import { AppLogo } from '@/components/layout/AppLogo';
 import { UserProfile } from '@/components/layout/UserProfile';
-import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, ShieldCheck, Activity, Users, Info, BrainCircuit, FileText, LogOut } from 'lucide-react';
+import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, ShieldCheck, Activity, Users, Info, BrainCircuit, FileText, LogOut, Package, UserCheck, ListChecks, Book, CaseSensitive } from 'lucide-react';
 import Link from 'next/link';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
@@ -13,7 +13,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import type { UserRole } from '@/types';
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
 import { useCurriculum } from '@/contexts/CurriculumContext';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast'; 
 import LoadingSpinner from '@/components/ui/loading-spinner'; 
 
 interface NavItem {
@@ -25,6 +25,7 @@ interface NavItem {
   isSystemSetting?: boolean;
   isHiddenFromSidebar?: boolean;
   isKurikulumMerdekaOnly?: boolean;
+  isMasterData?: boolean;
 }
 
 const allNavItems: NavItem[] = [
@@ -35,6 +36,13 @@ const allNavItems: NavItem[] = [
   { href: "/modul-ajar", label: "Modul Ajar (KM)", originalLabel: "Modul Ajar (KM)", icon: BrainCircuit, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], isKurikulumMerdekaOnly: true },
   { href: "/ai-assistant", label: "Asisten AI Materi", originalLabel: "Asisten AI Materi", icon: Sparkles, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"] },
   { href: "/ai-kurikulum-merdeka-module", label: "Buat Modul Ajar AI", originalLabel: "Buat Modul Ajar AI", icon: BrainCircuit, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], isKurikulumMerdekaOnly: true, isHiddenFromSidebar: true },
+  
+  // Master Data Section
+  { href: "/master-data/subjects", label: "Mata Pelajaran", originalLabel: "Mata Pelajaran", icon: Book, roles: ["Admin", "KepalaSekolah", "WakaKurikulum"], isMasterData: true },
+  { href: "/master-data/teachers", label: "Data Guru", originalLabel: "Data Guru", icon: UserCheck, roles: ["Admin", "KepalaSekolah", "WakaKurikulum"], isMasterData: true },
+  
+  { href: "/timetables", label: "Jadwal Pelajaran", originalLabel: "Jadwal Pelajaran", icon: ListChecks, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"] }, // Guru and TU can view
+  
   { href: "/admin/user-management", label: "Manajemen Pengguna", originalLabel: "Manajemen Pengguna", icon: Users, roles: ["Admin", "TataUsaha"], isSystemSetting: false },
   { href: "/settings", label: "Pengaturan Akun", originalLabel: "Pengaturan Akun", icon: SettingsIcon, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/admin/system-settings", label: "Pengaturan Sistem", originalLabel: "Pengaturan Sistem", icon: ShieldCheck, roles: ["Admin"], isSystemSetting: true },
@@ -49,12 +57,11 @@ export default function AppLayout({ children }: PropsWithChildren) {
   const { toast } = useToast();
   const [isPageLoading, setIsPageLoading] = useState(false); 
 
-  // Simplified page transition loading effect
   useEffect(() => {
     setIsPageLoading(true);
-    const timer = setTimeout(() => setIsPageLoading(false), 300); // Simulate loading time
+    const timer = setTimeout(() => setIsPageLoading(false), 300);
     return () => clearTimeout(timer);
-  }, [pathname]); // Only depend on pathname for visual loading effect
+  }, [pathname]);
 
 
   useEffect(() => {
@@ -76,12 +83,19 @@ export default function AppLayout({ children }: PropsWithChildren) {
       .filter(item =>
         item.roles.includes(user.role) &&
         !item.isHiddenFromSidebar &&
+        (!item.isMasterData || ["Admin", "KepalaSekolah", "WakaKurikulum"].includes(user.role)) && // Master data visibility
         (item.isSystemSetting === false || (item.isSystemSetting === true && user.role === 'Admin') || item.roles.includes(user.role) ) &&
         (!item.isKurikulumMerdekaOnly || defaultCurriculum === "Kurikulum Merdeka")
     ).sort((a,b) => {
         if (a.isSystemSetting && !b.isSystemSetting) return 1;
         if (!a.isSystemSetting && b.isSystemSetting) return -1;
         if (a.isSystemSetting && b.isSystemSetting) return a.label.localeCompare(b.label);
+
+        if (a.isMasterData && !b.isMasterData) return 1; // Push master data towards settings
+        if (!a.isMasterData && b.isMasterData) return -1;
+        if (a.isMasterData && b.isMasterData) return a.label.localeCompare(b.label);
+
+
         if (a.href === "/settings") return 1;
         if (b.href === "/settings") return -1;
         const aiOrder = ["/modul-ajar", "/ai-assistant"];
@@ -113,6 +127,11 @@ export default function AppLayout({ children }: PropsWithChildren) {
             router.push("/dashboard");
             return;
         }
+         if (currentNavItem.isMasterData && !["Admin", "KepalaSekolah", "WakaKurikulum"].includes(user.role)) {
+            toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengakses menu Master Data.", variant: "destructive"});
+            router.push("/dashboard");
+            return;
+        }
       } else if (pathname === "/settings") {
          const settingsBaseAccess = allNavItems.find(item => item.href === "/settings" && item.roles.includes(user.role));
          if (!settingsBaseAccess) {
@@ -127,6 +146,12 @@ export default function AppLayout({ children }: PropsWithChildren) {
     return <LoadingSpinner message="Memuat Sesi Anda..." icon={<Sparkles className="h-16 w-16 animate-pulse text-primary mb-6" />} />;
   }
 
+  const curriculumPlanningItems = filteredNavItems.filter(item => !item.isSystemSetting && !item.isMasterData && item.href !== "/dashboard" && item.href !== "/settings" && !item.href.includes("/ai-"));
+  const aiToolsItems = filteredNavItems.filter(item => item.href.includes("/ai-"));
+  const masterDataItems = filteredNavItems.filter(item => item.isMasterData);
+  const settingsItems = filteredNavItems.filter(item => item.isSystemSetting || item.href === "/settings" || item.href === "/admin/user-management");
+
+
   return (
       <SidebarProvider>
         <Sidebar collapsible="icon" variant="sidebar" side="left" className="border-r shadow-xl bg-sidebar text-sidebar-foreground">
@@ -136,21 +161,110 @@ export default function AppLayout({ children }: PropsWithChildren) {
           <ScrollArea className="flex-1">
           <SidebarContent className="p-2">
             <SidebarMenu>
-              {filteredNavItems.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                  <Link href={item.href} legacyBehavior passHref>
+              {filteredNavItems.find(item => item.href === "/dashboard") && (
+                <SidebarMenuItem>
+                  <Link href="/dashboard" legacyBehavior passHref>
                     <SidebarMenuButton
                       className="w-full text-base font-medium"
-                      tooltip={{children: item.label, className: "ml-1 text-xs"}}
-                      isActive={pathname.startsWith(item.href)}
+                      tooltip={{children: "Dasbor", className: "ml-1 text-xs"}}
+                      isActive={pathname === "/dashboard"}
                     >
-                      <item.icon className="h-5 w-5" />
-                      <span className="group-data-[state=expanded]:md:inline hidden">{item.label}</span>
+                      <LayoutDashboard className="h-5 w-5" />
+                      <span className="group-data-[state=expanded]:md:inline hidden">Dasbor</span>
                     </SidebarMenuButton>
                   </Link>
                 </SidebarMenuItem>
-              ))}
+              )}
             </SidebarMenu>
+
+            {curriculumPlanningItems.length > 0 && (
+              <SidebarGroup>
+                <SidebarGroupLabel className="group-data-[state=expanded]:md:inline hidden">Perencanaan</SidebarGroupLabel>
+                <SidebarMenu>
+                  {curriculumPlanningItems.map((item) => (
+                    <SidebarMenuItem key={item.href}>
+                      <Link href={item.href} legacyBehavior passHref>
+                        <SidebarMenuButton
+                          className="w-full text-base font-medium"
+                          tooltip={{children: item.label, className: "ml-1 text-xs"}}
+                          isActive={pathname.startsWith(item.href)}
+                        >
+                          <item.icon className="h-5 w-5" />
+                          <span className="group-data-[state=expanded]:md:inline hidden">{item.label}</span>
+                        </SidebarMenuButton>
+                      </Link>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroup>
+            )}
+
+            {aiToolsItems.length > 0 && (
+              <SidebarGroup>
+                <SidebarGroupLabel className="group-data-[state=expanded]:md:inline hidden">Alat AI</SidebarGroupLabel>
+                <SidebarMenu>
+                  {aiToolsItems.map((item) => (
+                    <SidebarMenuItem key={item.href}>
+                      <Link href={item.href} legacyBehavior passHref>
+                        <SidebarMenuButton
+                          className="w-full text-base font-medium"
+                          tooltip={{children: item.label, className: "ml-1 text-xs"}}
+                          isActive={pathname.startsWith(item.href)}
+                        >
+                          <item.icon className="h-5 w-5" />
+                          <span className="group-data-[state=expanded]:md:inline hidden">{item.label}</span>
+                        </SidebarMenuButton>
+                      </Link>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroup>
+            )}
+            
+            {masterDataItems.length > 0 && (
+                <SidebarGroup>
+                    <SidebarGroupLabel className="group-data-[state=expanded]:md:inline hidden">Master Data</SidebarGroupLabel>
+                    <SidebarMenu>
+                    {masterDataItems.map((item) => (
+                        <SidebarMenuItem key={item.href}>
+                        <Link href={item.href} legacyBehavior passHref>
+                            <SidebarMenuButton
+                            className="w-full text-base font-medium"
+                            tooltip={{children: item.label, className: "ml-1 text-xs"}}
+                            isActive={pathname.startsWith(item.href)}
+                            >
+                            <item.icon className="h-5 w-5" />
+                            <span className="group-data-[state=expanded]:md:inline hidden">{item.label}</span>
+                            </SidebarMenuButton>
+                        </Link>
+                        </SidebarMenuItem>
+                    ))}
+                    </SidebarMenu>
+                </SidebarGroup>
+            )}
+
+            {settingsItems.length > 0 && (
+              <SidebarGroup>
+                <SidebarGroupLabel className="group-data-[state=expanded]:md:inline hidden">Pengaturan</SidebarGroupLabel>
+                <SidebarMenu>
+                  {settingsItems.map((item) => (
+                    <SidebarMenuItem key={item.href}>
+                      <Link href={item.href} legacyBehavior passHref>
+                        <SidebarMenuButton
+                          className="w-full text-base font-medium"
+                          tooltip={{children: item.label, className: "ml-1 text-xs"}}
+                          isActive={pathname.startsWith(item.href)}
+                        >
+                          <item.icon className="h-5 w-5" />
+                          <span className="group-data-[state=expanded]:md:inline hidden">{item.label}</span>
+                        </SidebarMenuButton>
+                      </Link>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroup>
+            )}
+
           </SidebarContent>
           </ScrollArea>
           <SidebarFooter className="border-t border-sidebar-border p-2 mt-auto shadow-inner">
@@ -173,4 +287,3 @@ export default function AppLayout({ children }: PropsWithChildren) {
       </SidebarProvider>
   );
 }
-

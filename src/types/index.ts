@@ -252,9 +252,13 @@ export interface ExportedCurriculumData {
   lessonPlans: LessonPlan[];
   annualPrograms: AnnualProgram[];
   semesterPrograms: SemesterProgram[];
-  modulAjar?: ModulAjar[]; // Added
+  modulAjar?: ModulAjar[];
   schoolProfile: SchoolProfile | null;
   appUsers: User[];
+  subjects?: Subject[]; // New
+  teachers?: Teacher[]; // New
+  timetables?: TimetableEntry[]; // New
+  teachingPeriodSettings?: TeachingPeriodSettings; // New
 }
 
 
@@ -315,4 +319,62 @@ export const defaultPrintOptionsModulAjar: PrintOptionsModulAjar = {
   showMALampiran_DaftarPustaka: true,
 };
 
+// New Types for Master Data and Timetable
+export interface Subject {
+  id: string;
+  name: string;
+  code?: string; // e.g., MTK-01
+  createdAt: string;
+  updatedAt: string;
+  createdByUserId?: string;
+}
+
+export interface Teacher {
+  id: string;
+  name: string;
+  nip?: string; // Nomor Induk Pegawai
+  subjectIds: string[]; // Array of Subject IDs they teach
+  userId?: string; // Optional: link to a User account
+  createdAt: string;
+  updatedAt: string;
+  createdByUserId?: string;
+}
+
+export interface TimeSlot {
+  id: string;
+  startTime: string; // e.g., "07:00"
+  endTime: string; // e.g., "07:45"
+  // jpDurationMinutes will determine the length implicitly
+}
+
+export interface TimetableEntry {
+  id: string;
+  dayOfWeek: 'Senin' | 'Selasa' | 'Rabu' | 'Kamis' | 'Jumat' | 'Sabtu' | 'Minggu';
+  timeSlotId: string; // Reference to a TimeSlot or just store start/end times directly
+  startTime: string; // e.g., 07:00
+  endTime: string;   // e.g., 07:45
+  subjectId: string;
+  teacherId: string;
+  classOrGrade: string; // e.g., "Kelas X-A" or "Fase E Grup 1"
+  createdAt: string;
+  updatedAt: string;
+  createdByUserId?: string;
+}
+
+export interface TeachingPeriodSettings {
+  jpDurationMinutes: number;
+}
+
+// Storage Keys
 export const MODUL_AJAR_STORAGE_KEY = "appModulAjar";
+export const SUBJECTS_STORAGE_KEY = "appSubjects";
+export const TEACHERS_STORAGE_KEY = "appTeachers";
+export const TIMETABLES_STORAGE_KEY = "appTimetables";
+export const TEACHING_PERIOD_SETTINGS_KEY = "appTeachingPeriodSettings";
+export const LESSON_PLANS_STORAGE_KEY = "appLessonPlans";
+export const ANNUAL_PROGRAMS_STORAGE_KEY = "appAnnualPrograms";
+export const SEMESTER_PROGRAMS_STORAGE_KEY = "appSemesterPrograms";
+export const SCHOOL_PROFILE_STORAGE_KEY = "schoolProfile";
+export const APP_USERS_STORAGE_KEY = "appUsers";
+export const CURRICULUM_STORAGE_KEY = "app-default-curriculum";
+export const THEME_STORAGE_KEY = "app-theme";

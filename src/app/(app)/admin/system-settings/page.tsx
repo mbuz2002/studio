@@ -7,12 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { ShieldCheck, Eye, EyeOff, Trash2, ExternalLink, Activity, Settings as SettingsIcon, Layers, KeyRound, PackageOpen } from "lucide-react";
+import { ShieldCheck, Eye, EyeOff, Trash2, ExternalLink, Activity, Settings as SettingsIcon, Layers, KeyRound, PackageOpen, Clock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useRouter } from "next/navigation";
 import { useLog } from "@/contexts/LogContext";
+import type { TeachingPeriodSettings } from "@/types";
+import { TEACHING_PERIOD_SETTINGS_KEY } from "@/types";
 
 
 export default function AdminSystemSettingsPage() {
@@ -25,10 +27,24 @@ export default function AdminSystemSettingsPage() {
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [apiKey, setApiKey] = useState("********************");
   const [showApiKey, setShowApiKey] = useState(false);
+  const [jpDurationMinutes, setJpDurationMinutes] = useState<number>(45); // Default JP duration
 
   useEffect(() => {
     setIsClient(true);
-  }, []);
+    // Load JP duration from localStorage
+    const storedSettings = localStorage.getItem(TEACHING_PERIOD_SETTINGS_KEY);
+    if (storedSettings) {
+      try {
+        const parsedSettings: TeachingPeriodSettings = JSON.parse(storedSettings);
+        if (parsedSettings.jpDurationMinutes) {
+          setJpDurationMinutes(parsedSettings.jpDurationMinutes);
+        }
+      } catch (e) {
+        console.error("Failed to parse teaching period settings", e);
+        addLog("ERROR", "Gagal memuat pengaturan durasi JP dari localStorage.", "AdminSystemSettings");
+      }
+    }
+  }, [addLog]);
 
   useEffect(() => {
     if (!authLoading && isClient) { 
@@ -73,13 +89,12 @@ export default function AdminSystemSettingsPage() {
 
   const handleRevealApiKey = () => {
     if (!showApiKey) {
-      // Simulate fetching API key
       setTimeout(() => {
-        setApiKey("genkit_gcp_mock_key_xxxxxxxxxxxx"); // Replace with actual key fetching if implemented
+        setApiKey("genkit_gcp_mock_key_xxxxxxxxxxxx"); 
         setShowApiKey(true);
         toast({ title: "Kunci API Ditampilkan", description: "Hanya untuk tujuan demonstrasi."});
         addLog("WARN", `Kunci API Google AI (Genkit) ditampilkan oleh Admin ${user?.email}.`, "AdminSystemSettings");
-      }, 300); // Short delay for effect
+      }, 300); 
     } else {
       setApiKey("********************");
       setShowApiKey(false);
@@ -100,7 +115,6 @@ export default function AdminSystemSettingsPage() {
   };
   
   const handleGenkitDashboard = () => {
-    // This should point to your Genkit developer UI, typically localhost:4000 during development
     window.open('http://localhost:4000', '_blank');
      toast({
       title: "Membuka Dasbor Genkit",
@@ -108,6 +122,26 @@ export default function AdminSystemSettingsPage() {
     });
     addLog("INFO", `Admin ${user?.email} mencoba membuka dasbor Genkit (Dev).`, "AdminSystemSettings");
   }
+
+  const handleJpDurationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value, 10);
+    if (!isNaN(value) && value > 0) {
+      setJpDurationMinutes(value);
+    } else if (e.target.value === "") {
+      setJpDurationMinutes(0); // Allow clearing for re-typing
+    }
+  };
+
+  const handleSaveJpDuration = () => {
+    if (jpDurationMinutes <= 0) {
+      toast({ title: "Input Tidak Valid", description: "Durasi JP harus lebih besar dari 0 menit.", variant: "destructive" });
+      return;
+    }
+    const settings: TeachingPeriodSettings = { jpDurationMinutes };
+    localStorage.setItem(TEACHING_PERIOD_SETTINGS_KEY, JSON.stringify(settings));
+    toast({ title: "Pengaturan Disimpan", description: `Durasi 1 Jam Pelajaran (JP) diatur ke ${jpDurationMinutes} menit.` });
+    addLog("INFO", `Admin ${user?.email} mengatur durasi JP menjadi ${jpDurationMinutes} menit.`, "AdminSystemSettings");
+  };
 
   return (
     <div className="space-y-6 py-4 md:py-8">
@@ -212,6 +246,37 @@ export default function AdminSystemSettingsPage() {
             </p>
           </CardContent>
         </Card>
+        
+        <Card className="shadow-md rounded-md">
+          <CardHeader className="p-5">
+             <div className="flex items-center gap-2">
+                <Clock className="h-6 w-6 text-primary" />
+                <CardTitle className="text-xl font-semibold">Pengaturan Jam Pelajaran</CardTitle>
+            </div>
+            <CardDescription className="text-base text-muted-foreground">Atur durasi standar untuk 1 Jam Pelajaran (JP).</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4 p-5 pt-0">
+            <div className="space-y-1.5">
+                <Label htmlFor="jpDuration" className="text-base">Durasi 1 JP (menit)</Label>
+                <Input 
+                    id="jpDuration" 
+                    type="number" 
+                    value={jpDurationMinutes === 0 ? "" : jpDurationMinutes} 
+                    onChange={handleJpDurationChange}
+                    min="1"
+                    placeholder="cth., 45"
+                    className="text-base"
+                />
+            </div>
+            <Button onClick={handleSaveJpDuration} className="text-base w-full sm:w-auto">
+              Simpan Durasi JP
+            </Button>
+            <p className="text-sm text-muted-foreground">
+              Durasi ini akan digunakan sebagai acuan dalam penjadwalan dan perhitungan alokasi waktu.
+            </p>
+          </CardContent>
+        </Card>
+
       </div>
 
       <Alert variant="destructive" className="mt-8 shadow-md rounded-md">

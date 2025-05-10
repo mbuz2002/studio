@@ -4,13 +4,13 @@
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Cog, UserCircle, ShieldCheck, Database, Palette, Upload, Download, FileText, Users, BookCopy, LogOut } from "lucide-react"; 
+import { Cog, UserCircle, ShieldCheck, Database, Palette, Upload, Download, FileText, Users, BookCopy, LogOut, Clock } from "lucide-react"; 
 import { useAuth } from "@/contexts/AuthContext";
 import { SchoolProfileForm } from "@/components/settings/SchoolProfileForm";
 import { EditUserDialog } from "@/components/settings/EditUserDialog";
 import { AppPreferencesDialog } from "@/components/settings/AppPreferencesDialog"; 
-import type { User, SchoolProfile, ExportedCurriculumData, LessonPlan, AnnualProgram, SemesterProgram, CurriculumFramework, ModulAjar } from "@/types"; 
-import { MODUL_AJAR_STORAGE_KEY } from "@/types"; 
+import type { User, SchoolProfile, ExportedCurriculumData, LessonPlan, AnnualProgram, SemesterProgram, CurriculumFramework, ModulAjar, Subject, Teacher, TimetableEntry, TeachingPeriodSettings } from "@/types"; 
+import { MODUL_AJAR_STORAGE_KEY, SUBJECTS_STORAGE_KEY, TEACHERS_STORAGE_KEY, TIMETABLES_STORAGE_KEY, TEACHING_PERIOD_SETTINGS_KEY, LESSON_PLANS_STORAGE_KEY, ANNUAL_PROGRAMS_STORAGE_KEY, SEMESTER_PROGRAMS_STORAGE_KEY, SCHOOL_PROFILE_STORAGE_KEY, APP_USERS_STORAGE_KEY } from "@/types"; 
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -18,13 +18,6 @@ import { useLog } from "@/contexts/LogContext";
 import { useCurriculum } from "@/contexts/CurriculumContext"; 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; 
 import { Label } from "@/components/ui/label"; 
-
-
-const LESSON_PLANS_STORAGE_KEY = "appLessonPlans";
-const ANNUAL_PROGRAMS_STORAGE_KEY = "appAnnualPrograms";
-const SEMESTER_PROGRAMS_STORAGE_KEY = "appSemesterPrograms";
-const SCHOOL_PROFILE_STORAGE_KEY = "schoolProfile";
-const APP_USERS_STORAGE_KEY = "appUsers";
 
 
 export default function SettingsPage() {
@@ -95,6 +88,10 @@ export default function SettingsPage() {
       const modulAjarData = JSON.parse(localStorage.getItem(MODUL_AJAR_STORAGE_KEY) || "[]") as ModulAjar[];
       const schoolProfileData = JSON.parse(localStorage.getItem(SCHOOL_PROFILE_STORAGE_KEY) || "null") as SchoolProfile | null;
       const appUsersData = JSON.parse(localStorage.getItem(APP_USERS_STORAGE_KEY) || "[]") as User[];
+      const subjectsData = JSON.parse(localStorage.getItem(SUBJECTS_STORAGE_KEY) || "[]") as Subject[];
+      const teachersData = JSON.parse(localStorage.getItem(TEACHERS_STORAGE_KEY) || "[]") as Teacher[];
+      const timetablesData = JSON.parse(localStorage.getItem(TIMETABLES_STORAGE_KEY) || "[]") as TimetableEntry[];
+      const teachingPeriodSettingsData = JSON.parse(localStorage.getItem(TEACHING_PERIOD_SETTINGS_KEY) || "null") as TeachingPeriodSettings | null;
       
       const dataToExport: ExportedCurriculumData = {
         lessonPlans: lessonPlansData,
@@ -103,6 +100,10 @@ export default function SettingsPage() {
         modulAjar: modulAjarData,
         schoolProfile: schoolProfileData,
         appUsers: appUsersData,
+        subjects: subjectsData,
+        teachers: teachersData,
+        timetables: timetablesData,
+        teachingPeriodSettings: teachingPeriodSettingsData,
       };
 
       const jsonData = JSON.stringify(dataToExport, null, 2);
@@ -118,7 +119,7 @@ export default function SettingsPage() {
 
       toast({
         title: "Ekspor Data Berhasil",
-        description: "Semua data kurikulum, profil sekolah, dan pengguna telah diekspor.",
+        description: "Semua data aplikasi telah diekspor.",
       });
       addLog("INFO", `Ekspor semua data aplikasi berhasil oleh pengguna ${user?.email}. File: eduai_planner_backup_${new Date().toISOString().split('T')[0]}.json`, "SettingsPage-DataManagement");
 
@@ -144,31 +145,31 @@ export default function SettingsPage() {
         const content = e.target?.result as string;
         const importedData = JSON.parse(content) as ExportedCurriculumData;
 
-        if (
-          !importedData ||
-          typeof importedData.lessonPlans === 'undefined' ||
-          typeof importedData.annualPrograms === 'undefined' ||
-          typeof importedData.semesterPrograms === 'undefined' ||
-          typeof importedData.modulAjar === 'undefined' || 
-          typeof importedData.schoolProfile === 'undefined' || 
-          typeof importedData.appUsers === 'undefined'
-        ) {
-          throw new Error("Format file tidak valid atau data tidak lengkap.");
+        // Basic validation for all expected top-level keys
+        const requiredKeys: (keyof ExportedCurriculumData)[] = [
+          'lessonPlans', 'annualPrograms', 'semesterPrograms', 'modulAjar', 
+          'schoolProfile', 'appUsers', 'subjects', 'teachers', 'timetables', 'teachingPeriodSettings'
+        ];
+        for (const key of requiredKeys) {
+          if (typeof importedData[key] === 'undefined') {
+            throw new Error(`Format file tidak valid atau data tidak lengkap. Properti '${key}' tidak ditemukan.`);
+          }
         }
-
+        
+        // More specific validation (optional, can be expanded)
         if (!Array.isArray(importedData.lessonPlans)) throw new Error("Data RPP tidak valid.");
-        if (!Array.isArray(importedData.annualPrograms)) throw new Error("Data PROTA tidak valid.");
-        if (!Array.isArray(importedData.semesterPrograms)) throw new Error("Data Promes tidak valid.");
-        if (!Array.isArray(importedData.modulAjar)) throw new Error("Data Modul Ajar tidak valid.");
-        if (importedData.schoolProfile !== null && typeof importedData.schoolProfile !== 'object') throw new Error("Data Profil Sekolah tidak valid.");
-        if (!Array.isArray(importedData.appUsers)) throw new Error("Data Pengguna tidak valid.");
+        // ... (add more checks as needed for each data type)
 
-        localStorage.setItem(LESSON_PLANS_STORAGE_KEY, JSON.stringify(importedData.lessonPlans));
-        localStorage.setItem(ANNUAL_PROGRAMS_STORAGE_KEY, JSON.stringify(importedData.annualPrograms));
-        localStorage.setItem(SEMESTER_PROGRAMS_STORAGE_KEY, JSON.stringify(importedData.semesterPrograms));
-        localStorage.setItem(MODUL_AJAR_STORAGE_KEY, JSON.stringify(importedData.modulAjar));
-        localStorage.setItem(SCHOOL_PROFILE_STORAGE_KEY, JSON.stringify(importedData.schoolProfile));
-        localStorage.setItem(APP_USERS_STORAGE_KEY, JSON.stringify(importedData.appUsers));
+        localStorage.setItem(LESSON_PLANS_STORAGE_KEY, JSON.stringify(importedData.lessonPlans || []));
+        localStorage.setItem(ANNUAL_PROGRAMS_STORAGE_KEY, JSON.stringify(importedData.annualPrograms || []));
+        localStorage.setItem(SEMESTER_PROGRAMS_STORAGE_KEY, JSON.stringify(importedData.semesterPrograms || []));
+        localStorage.setItem(MODUL_AJAR_STORAGE_KEY, JSON.stringify(importedData.modulAjar || []));
+        localStorage.setItem(SCHOOL_PROFILE_STORAGE_KEY, JSON.stringify(importedData.schoolProfile || null));
+        localStorage.setItem(APP_USERS_STORAGE_KEY, JSON.stringify(importedData.appUsers || []));
+        localStorage.setItem(SUBJECTS_STORAGE_KEY, JSON.stringify(importedData.subjects || []));
+        localStorage.setItem(TEACHERS_STORAGE_KEY, JSON.stringify(importedData.teachers || []));
+        localStorage.setItem(TIMETABLES_STORAGE_KEY, JSON.stringify(importedData.timetables || []));
+        localStorage.setItem(TEACHING_PERIOD_SETTINGS_KEY, JSON.stringify(importedData.teachingPeriodSettings || null));
         
         toast({
           title: "Impor Data Berhasil",

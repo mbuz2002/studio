@@ -4,14 +4,14 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, Users, BrainCircuit, ShieldCheck, MoreHorizontal } from 'lucide-react';
+import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, Users, BrainCircuit, ShieldCheck, MoreHorizontal, Package, UserCheck, ListChecks, Book } from 'lucide-react';
 import type { UserRole } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCurriculum } from '@/contexts/CurriculumContext';
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Button } from '@/components/ui/button'; // Import Button
+import { Button } from '@/components/ui/button';
 
 interface MobileNavItemData {
   href: string;
@@ -19,6 +19,7 @@ interface MobileNavItemData {
   icon: React.ElementType;
   roles?: UserRole[];
   isKurikulumMerdekaOnly?: boolean;
+  isMasterData?: boolean;
 }
 
 const mobileNavItemsData: MobileNavItemData[] = [
@@ -28,6 +29,11 @@ const mobileNavItemsData: MobileNavItemData[] = [
   { href: "/semester-programs", label: "Promes", icon: CalendarClock, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/modul-ajar", label: "Modul KM", icon: BrainCircuit, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], isKurikulumMerdekaOnly: true },
   { href: "/ai-assistant", label: "AI Materi", icon: Sparkles, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"] },
+  
+  { href: "/master-data/subjects", label: "Mapel", icon: Book, roles: ["Admin", "KepalaSekolah", "WakaKurikulum"], isMasterData: true },
+  { href: "/master-data/teachers", label: "Guru", icon: UserCheck, roles: ["Admin", "KepalaSekolah", "WakaKurikulum"], isMasterData: true },
+  { href: "/timetables", label: "Jadwal", icon: ListChecks, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"]},
+
   { href: "/admin/user-management", label: "Pengguna", icon: Users, roles: ["Admin", "TataUsaha"] },
   { href: "/settings", label: "Atur Akun", icon: SettingsIcon, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/admin/system-settings", label: "Sys Cfg", icon: ShieldCheck, roles: ["Admin"] },
@@ -50,18 +56,19 @@ export function MobileBottomNav() {
         })
         .filter(item =>
             (!item.roles || item.roles.includes(user.role)) &&
-            (!item.isKurikulumMerdekaOnly || defaultCurriculum === "Kurikulum Merdeka")
+            (!item.isKurikulumMerdekaOnly || defaultCurriculum === "Kurikulum Merdeka") &&
+            (!item.isMasterData || ["Admin", "KepalaSekolah", "WakaKurikulum"].includes(user.role))
         )
     : [];
 
-  const MAX_ITEMS_IN_BAR = 5;
+  const MAX_ITEMS_IN_BAR = 5; // Number of items directly in the bar, including "More"
   let finalNavItems: MobileNavItemData[] = [];
   let overflowItems: MobileNavItemData[] = [];
 
   if (filteredFullList.length <= MAX_ITEMS_IN_BAR) {
     finalNavItems = filteredFullList;
   } else {
-    finalNavItems = filteredFullList.slice(0, MAX_ITEMS_IN_BAR - 1);
+    finalNavItems = filteredFullList.slice(0, MAX_ITEMS_IN_BAR - 1); // Leave space for "More"
     overflowItems = filteredFullList.slice(MAX_ITEMS_IN_BAR - 1);
     finalNavItems.push({
       href: "#more-menu", 
@@ -118,7 +125,7 @@ export function MobileBottomNav() {
           <SheetHeader className="p-4 border-b">
             <SheetTitle>Menu Lainnya</SheetTitle>
           </SheetHeader>
-          <ScrollArea className="max-h-[calc(70vh-70px)]"> {/* Adjust height considering header */}
+          <ScrollArea className="max-h-[calc(70vh-70px)]">
             <div className="grid grid-cols-1 gap-0 p-2">
               {overflowItems.map((overflowItem) => (
                 <Link
@@ -133,7 +140,6 @@ export function MobileBottomNav() {
                   onClick={() => setIsMoreSheetOpen(false)}
                 >
                   <overflowItem.icon className={cn("h-5 w-5", pathname.startsWith(overflowItem.href) ? "text-primary" : "text-muted-foreground")} />
-                  {/* Use originalLabel if available for more descriptive text in sheet, or fallback to label */}
                   {mobileNavItemsData.find(i => i.href === overflowItem.href)?.label || overflowItem.label}
                 </Link>
               ))}
