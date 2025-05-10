@@ -1,4 +1,5 @@
 
+
 export type UserRole = "Admin" | "KepalaSekolah" | "WakaKurikulum" | "TataUsaha" | "Guru";
 export type CurriculumFramework = "Kurikulum Merdeka" | "K-13" | "KTSP 2006";
 
@@ -87,7 +88,7 @@ export interface WeeklyUnit {
   metodeStrategi?: string[]; 
   sumberBelajar?: string[]; 
   rencanaAsesmen?: string[]; 
-  catatanIntegrasiP5?: string; 
+  catatanIntegrasiP5?: string;
 }
 
 export interface SemesterProgram extends CurriculumItem {
@@ -238,7 +239,7 @@ export interface GenerateKurikulumMerdekaModuleOutput {
   kompetensiAwal?: string[];
   profilPelajarPancasila: string[]; // Dimensi yang dikembangkan
   saranaPrasarana: string[];
-  targetPesertaDidik: string; // e.g., Reguler/Tipikal, Kesulitan Belajar, Pencapaian Tinggi
+  targetPesertaDidik: string;
   modelPembelajaran: string; // e.g., Tatap Muka, PJJ Daring, Blended Learning
   komponenInti: ModulAjarKomponenInti;
   lampiran?: ModulAjarLampiran;

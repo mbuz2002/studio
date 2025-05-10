@@ -23,6 +23,7 @@ import remarkGfm from 'remark-gfm';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { useCurriculum } from "@/contexts/CurriculumContext";
+import { Badge } from "@/components/ui/badge"; // Added Badge
 
 const merdekaGradeLevels = [
   { value: "PAUD (Kurikulum Merdeka)", label: "PAUD (Kurikulum Merdeka)" },
