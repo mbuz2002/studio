@@ -1,12 +1,11 @@
 
-
 "use client";
 import type { PropsWithChildren } from 'react';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset, SidebarRail } from '@/components/ui/sidebar';
 import { AppLogo } from '@/components/layout/AppLogo';
 import { UserProfile } from '@/components/layout/UserProfile';
-import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, ShieldCheck, Activity, Users, Info, BrainCircuit, FileText } from 'lucide-react'; 
+import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, ShieldCheck, Activity, Users, Info, BrainCircuit, FileText, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,29 +13,29 @@ import { useRouter, usePathname } from 'next/navigation';
 import type { UserRole } from '@/types';
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
 import { useCurriculum } from '@/contexts/CurriculumContext';
-import { useToast } from '@/hooks/use-toast'; 
-import LoadingSpinner from '@/components/ui/loading-spinner';
+import { useToast } from '@/hooks/use-toast';
+import LoadingSpinner from '@/components/ui/loading-spinner'; // Corrected import path
 
 interface NavItem {
   href: string;
   label: string;
-  originalLabel?: string; 
+  originalLabel?: string;
   icon: React.ElementType;
-  roles: UserRole[]; 
-  isSystemSetting?: boolean; 
-  isHiddenFromSidebar?: boolean; 
-  isKurikulumMerdekaOnly?: boolean; 
+  roles: UserRole[];
+  isSystemSetting?: boolean;
+  isHiddenFromSidebar?: boolean;
+  isKurikulumMerdekaOnly?: boolean;
 }
 
 const allNavItems: NavItem[] = [
   { href: "/dashboard", label: "Dasbor", originalLabel: "Dasbor", icon: LayoutDashboard, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
-  { href: "/lesson-plans", label: "RPP", originalLabel: "RPP / ATP", icon: BookOpenText, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] }, 
+  { href: "/lesson-plans", label: "RPP", originalLabel: "RPP / ATP", icon: BookOpenText, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/annual-programs", label: "Program Tahunan", originalLabel: "Program Tahunan", icon: CalendarDays, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/semester-programs", label: "Program Semester", originalLabel: "Program Semester", icon: CalendarClock, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/modul-ajar", label: "Modul Ajar (KM)", originalLabel: "Modul Ajar (KM)", icon: BrainCircuit, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], isKurikulumMerdekaOnly: true },
   { href: "/ai-assistant", label: "Asisten AI Materi", originalLabel: "Asisten AI Materi", icon: Sparkles, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"] },
-  { href: "/ai-kurikulum-merdeka-module", label: "Buat Modul Ajar AI", originalLabel: "Buat Modul Ajar AI", icon: BrainCircuit, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], isKurikulumMerdekaOnly: true, isHiddenFromSidebar: true }, 
-  { href: "/admin/user-management", label: "Manajemen Pengguna", originalLabel: "Manajemen Pengguna", icon: Users, roles: ["Admin", "TataUsaha"], isSystemSetting: false }, 
+  { href: "/ai-kurikulum-merdeka-module", label: "Buat Modul Ajar AI", originalLabel: "Buat Modul Ajar AI", icon: BrainCircuit, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], isKurikulumMerdekaOnly: true, isHiddenFromSidebar: true },
+  { href: "/admin/user-management", label: "Manajemen Pengguna", originalLabel: "Manajemen Pengguna", icon: Users, roles: ["Admin", "TataUsaha"], isSystemSetting: false },
   { href: "/settings", label: "Pengaturan Akun", originalLabel: "Pengaturan Akun", icon: SettingsIcon, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/admin/system-settings", label: "Pengaturan Sistem", originalLabel: "Pengaturan Sistem", icon: ShieldCheck, roles: ["Admin"], isSystemSetting: true },
   { href: "/admin/system-logs", label: "Log Sistem", originalLabel: "Log Sistem", icon: Activity, roles: ["Admin"], isSystemSetting: true, isHiddenFromSidebar: true },
@@ -44,26 +43,18 @@ const allNavItems: NavItem[] = [
 
 export default function AppLayout({ children }: PropsWithChildren) {
   const { user, isAuthenticated, loading, logout } = useAuth();
-  const { defaultCurriculum } = useCurriculum(); 
+  const { defaultCurriculum } = useCurriculum();
   const router = useRouter();
   const pathname = usePathname();
-  const { toast } = useToast(); 
-  const [isPageLoading, setIsPageLoading] = useState(false);
+  const { toast } = useToast();
+  const [isPageLoading, setIsPageLoading] = useState(false); 
 
+  // Simplified page transition loading effect
   useEffect(() => {
-    const handleStart = (url:string) => url !== pathname && setIsPageLoading(true);
-    const handleComplete = (url:string) => url === pathname && setIsPageLoading(false);
-
-    router.events?.on('routeChangeStart', handleStart);
-    router.events?.on('routeChangeComplete', handleComplete);
-    router.events?.on('routeChangeError', handleComplete);
-
-    return () => {
-      router.events?.off('routeChangeStart', handleStart);
-      router.events?.off('routeChangeComplete', handleComplete);
-      router.events?.off('routeChangeError', handleComplete);
-    };
-  }, [pathname, router.events]);
+    setIsPageLoading(true);
+    const timer = setTimeout(() => setIsPageLoading(false), 300); // Simulate loading time
+    return () => clearTimeout(timer);
+  }, [pathname]);
 
 
   useEffect(() => {
@@ -80,37 +71,37 @@ export default function AppLayout({ children }: PropsWithChildren) {
         if (item.href === "/lesson-plans") {
           currentLabel = defaultCurriculum === "Kurikulum Merdeka" ? "ATP (Alur Tujuan Pembelajaran)" : "RPP (Rencana Pelaksanaan Pembelajaran)";
         }
-        return { ...item, label: currentLabel }; 
+        return { ...item, label: currentLabel };
       })
-      .filter(item => 
-        item.roles.includes(user.role) && 
+      .filter(item =>
+        item.roles.includes(user.role) &&
         !item.isHiddenFromSidebar &&
         (item.isSystemSetting === false || (item.isSystemSetting === true && user.role === 'Admin') || item.roles.includes(user.role) ) &&
-        (!item.isKurikulumMerdekaOnly || defaultCurriculum === "Kurikulum Merdeka") 
-    ).sort((a,b) => { 
-        if (a.isSystemSetting && !b.isSystemSetting) return 1; 
-        if (!a.isSystemSetting && b.isSystemSetting) return -1; 
-        if (a.isSystemSetting && b.isSystemSetting) return a.label.localeCompare(b.label); 
-        if (a.href === "/settings") return 1; 
+        (!item.isKurikulumMerdekaOnly || defaultCurriculum === "Kurikulum Merdeka")
+    ).sort((a,b) => {
+        if (a.isSystemSetting && !b.isSystemSetting) return 1;
+        if (!a.isSystemSetting && b.isSystemSetting) return -1;
+        if (a.isSystemSetting && b.isSystemSetting) return a.label.localeCompare(b.label);
+        if (a.href === "/settings") return 1;
         if (b.href === "/settings") return -1;
-        const aiOrder = ["/modul-ajar", "/ai-assistant"]; 
+        const aiOrder = ["/modul-ajar", "/ai-assistant"];
         const aIsAI = aiOrder.includes(a.href);
         const bIsAI = aiOrder.includes(b.href);
-        if (aIsAI && !bIsAI) return 1; 
+        if (aIsAI && !bIsAI) return 1;
         if (!aIsAI && bIsAI) return -1;
-        if (aIsAI && bIsAI) return aiOrder.indexOf(a.href) - aiOrder.indexOf(b.href); 
+        if (aIsAI && bIsAI) return aiOrder.indexOf(a.href) - aiOrder.indexOf(b.href);
         return 0;
     });
-  }, [user, defaultCurriculum]); 
+  }, [user, defaultCurriculum]);
 
    useEffect(() => {
     if (!loading && isAuthenticated && user) {
-      const currentNavItem = allNavItems.find(item => pathname.startsWith(item.href) && item.href !== '/'); 
-      
+      const currentNavItem = allNavItems.find(item => pathname.startsWith(item.href) && item.href !== '/');
+
       if (currentNavItem) {
         if (!currentNavItem.roles.includes(user.role)) {
           const dashboardAccess = allNavItems.find(item => item.href === "/dashboard" && item.roles.includes(user.role));
-          if (dashboardAccess) router.push("/dashboard"); else logout(); 
+          if (dashboardAccess) router.push("/dashboard"); else logout();
           return;
         }
         if (currentNavItem.isKurikulumMerdekaOnly && defaultCurriculum !== "Kurikulum Merdeka") {
@@ -122,7 +113,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
             router.push("/dashboard");
             return;
         }
-      } else if (pathname === "/settings") { 
+      } else if (pathname === "/settings") {
          const settingsBaseAccess = allNavItems.find(item => item.href === "/settings" && item.roles.includes(user.role));
          if (!settingsBaseAccess) {
             router.push("/dashboard");
@@ -132,10 +123,10 @@ export default function AppLayout({ children }: PropsWithChildren) {
   }, [loading, isAuthenticated, user, pathname, router, logout, defaultCurriculum, toast]);
 
 
-  if (loading || !isAuthenticated || !user) { 
-    return <LoadingSpinner message="Memuat Sesi Anda..." icon={<FileText className="mr-3 h-16 w-16 animate-pulse text-primary mb-6" />} />;
+  if (loading || !isAuthenticated || !user) {
+    return <LoadingSpinner message="Memuat Sesi Anda..." icon={<Sparkles className="h-16 w-16 animate-pulse text-primary mb-6" />} />;
   }
-  
+
   return (
       <SidebarProvider>
         <Sidebar collapsible="icon" variant="sidebar" side="left" className="border-r shadow-xl bg-sidebar text-sidebar-foreground">
@@ -148,8 +139,8 @@ export default function AppLayout({ children }: PropsWithChildren) {
               {filteredNavItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <Link href={item.href} legacyBehavior passHref>
-                    <SidebarMenuButton 
-                      className="w-full text-base font-medium" 
+                    <SidebarMenuButton
+                      className="w-full text-base font-medium"
                       tooltip={{children: item.label, className: "ml-1 text-xs"}}
                       isActive={pathname.startsWith(item.href)}
                     >
@@ -168,7 +159,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
         </Sidebar>
         <SidebarInset>
           <MobileBottomNav />
-          <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8 pb-24 sm:pb-8 flex flex-col min-h-screen bg-background text-foreground"> 
+          <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8 pb-24 sm:pb-8 flex flex-col min-h-screen bg-background text-foreground">
            {isPageLoading ? <LoadingSpinner icon={<Sparkles className="h-16 w-16 animate-pulse text-primary mb-6" />} message="Memuat Halaman..."/> : (
               <div className="flex-grow">
                   {children}
@@ -182,4 +173,3 @@ export default function AppLayout({ children }: PropsWithChildren) {
       </SidebarProvider>
   );
 }
-
