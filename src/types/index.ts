@@ -244,3 +244,61 @@ export interface GenerateKurikulumMerdekaModuleOutput {
   komponenInti: ModulAjarKomponenInti;
   lampiran?: ModulAjarLampiran;
 }
+
+
+// Print Options for Modul Ajar Kurikulum Merdeka
+export interface PrintOptionsModulAjar {
+  showKopSurat: boolean;
+  showMAIdentitas: boolean;
+  showMAKompetensiAwal: boolean;
+  showMAProfilPelajarPancasila: boolean;
+  showMASaranaPrasarana: boolean;
+  showMATargetPesertaDidik: boolean;
+  showMAModelPembelajaran: boolean;
+  // Komponen Inti
+  showMAKomponenInti_TujuanPembelajaran: boolean;
+  showMAKomponenInti_PemahamanBermakna: boolean;
+  showMAKomponenInti_PertanyaanPemantik: boolean;
+  showMAKomponenInti_KegiatanPembelajaran: boolean; // Sub-options for Pendahuluan, Inti, Penutup
+  showMAKomponenInti_Kegiatan_Pendahuluan: boolean;
+  showMAKomponenInti_Kegiatan_Inti: boolean;
+  showMAKomponenInti_Kegiatan_Penutup: boolean;
+  showMAKomponenInti_Asesmen: boolean; // Sub-options for Diagnostik, Formatif, Sumatif
+  showMAKomponenInti_Asesmen_Diagnostik: boolean;
+  showMAKomponenInti_Asesmen_Formatif: boolean;
+  showMAKomponenInti_Asesmen_Sumatif: boolean;
+  showMAKomponenInti_PengayaanRemedial: boolean;
+  showMAKomponenInti_Refleksi: boolean;
+  // Lampiran
+  showMALampiran_LKPD: boolean;
+  showMALampiran_BahanBacaan: boolean;
+  showMALampiran_Glosarium: boolean;
+  showMALampiran_DaftarPustaka: boolean;
+}
+
+export const defaultPrintOptionsModulAjar: PrintOptionsModulAjar = {
+  showKopSurat: true,
+  showMAIdentitas: true,
+  showMAKompetensiAwal: true,
+  showMAProfilPelajarPancasila: true,
+  showMASaranaPrasarana: true,
+  showMATargetPesertaDidik: true,
+  showMAModelPembelajaran: true,
+  showMAKomponenInti_TujuanPembelajaran: true,
+  showMAKomponenInti_PemahamanBermakna: true,
+  showMAKomponenInti_PertanyaanPemantik: true,
+  showMAKomponenInti_KegiatanPembelajaran: true,
+  showMAKomponenInti_Kegiatan_Pendahuluan: true,
+  showMAKomponenInti_Kegiatan_Inti: true,
+  showMAKomponenInti_Kegiatan_Penutup: true,
+  showMAKomponenInti_Asesmen: true,
+  showMAKomponenInti_Asesmen_Diagnostik: true,
+  showMAKomponenInti_Asesmen_Formatif: true,
+  showMAKomponenInti_Asesmen_Sumatif: true,
+  showMAKomponenInti_PengayaanRemedial: true,
+  showMAKomponenInti_Refleksi: true,
+  showMALampiran_LKPD: true,
+  showMALampiran_BahanBacaan: true,
+  showMALampiran_Glosarium: true,
+  showMALampiran_DaftarPustaka: true,
+};

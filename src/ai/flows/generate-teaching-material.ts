@@ -24,14 +24,14 @@ const SuggestedSourceSchema = z.object({
     type: z.enum(['buku', 'jurnal', 'artikel online', 'video', 'website edukasi', 'lainnya']).describe('Jenis sumber referensi.'),
     title: z.string().describe('Judul sumber referensi (misal, judul buku, artikel, atau video).'),
     authorOrPublisher: z.string().optional().describe('Penulis atau penerbit sumber (jika ada).'),
-    url: z.string().optional().describe('URL jika sumber online (misal, link ke artikel atau video).'),
-    description: z.string().optional().describe('Deskripsi singkat mengapa sumber ini relevan atau bagaimana menggunakannya.'),
+    url: z.string().optional().describe('URL jika sumber online (misal, link ke artikel atau video). Pastikan URL valid dan bisa diakses.'),
+    description: z.string().optional().describe('Deskripsi singkat mengapa sumber ini relevan atau bagaimana menggunakannya. Jika sumber adalah buku, sebutkan perkiraan halaman yang relevan jika memungkinkan.'),
 });
 
 const GenerateTeachingMaterialOutputSchema = z.object({
   materialTitle: z.string().describe('Judul materi pembelajaran yang menarik dan relevan dengan topik.'),
   materialContent: z.string().describe('Konten materi pembelajaran yang terstruktur dengan baik, menggunakan format markdown. Konten harus sesuai dengan topik, jenjang, dan tingkat kedetailan yang diminta. Jika ada teks Arab, sertakan dengan harakat lengkap. Jika ada data tabular, gunakan sintaks tabel Markdown.'),
-  suggestedSources: z.array(SuggestedSourceSchema).describe('Daftar sumber referensi yang relevan dan kredibel untuk mendukung materi pembelajaran yang dibuat. Sertakan minimal 2-3 sumber.'),
+  suggestedSources: z.array(SuggestedSourceSchema).describe('Daftar sumber referensi yang relevan dan kredibel untuk mendukung materi pembelajaran yang dibuat. Sertakan minimal 2-3 sumber. Jika ada URL, pastikan valid.'),
 });
 export type GenerateTeachingMaterialOutput = z.infer<typeof GenerateTeachingMaterialOutputSchema>;
 
@@ -65,7 +65,7 @@ Materi pembelajaran harus:
 
 3.  **Sumber Referensi yang Disarankan**:
     *   Sediakan minimal 2-3 sumber referensi yang kredibel dan relevan.
-    *   Untuk setiap sumber, sebutkan jenisnya (buku, artikel online, video, dll.), judul, penulis/penerbit (jika ada), URL (jika online), dan deskripsi singkat mengapa sumber tersebut berguna.
+    *   Untuk setiap sumber, sebutkan jenisnya (buku, artikel online, video, dll.), judul, penulis/penerbit (jika ada), URL (jika online, pastikan URL tersebut valid dan dapat diakses), dan deskripsi singkat mengapa sumber tersebut berguna atau bagaimana menggunakannya. Jika sumber berupa buku, sebutkan juga perkiraan halaman yang relevan jika memungkinkan.
     *   Prioritaskan sumber-sumber yang mudah diakses oleh guru atau siswa di Indonesia (misalnya, situs Kemdikbud, platform edukasi lokal, buku teks yang umum).
 
 Pastikan output yang dihasilkan sesuai dengan skema JSON yang diharapkan dan menggunakan Bahasa Indonesia yang baik dan benar.
@@ -85,5 +85,6 @@ const generateTeachingMaterialFlow = ai.defineFlow(
 );
 
     
+
 
 

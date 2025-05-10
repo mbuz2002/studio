@@ -1,14 +1,14 @@
 
 "use client";
 
-import React, { useState, useEffect, type FormEvent, useMemo } from "react";
+import React, { useState, useEffect, type FormEvent, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Sparkles, BrainCircuit, ExternalLink, Search, FileText, Book, ListChecks, UserCheck, MessageSquareHeart, Lightbulb, AlertTriangle, TableIcon } from "lucide-react";
+import { Loader2, Sparkles, BrainCircuit, Printer, FileText, Book, ListChecks, UserCheck, MessageSquareHeart, Lightbulb, AlertTriangle, Search } from "lucide-react";
 import { 
     generateKurikulumMerdekaModule, 
     type GenerateKurikulumMerdekaModuleInput,
@@ -23,7 +23,12 @@ import remarkGfm from 'remark-gfm';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { useCurriculum } from "@/contexts/CurriculumContext";
-import { Badge } from "@/components/ui/badge"; // Added Badge
+import { Badge } from "@/components/ui/badge";
+import type { SchoolProfile, User, PrintOptionsModulAjar } from "@/types";
+import { defaultPrintOptionsModulAjar } from "@/types";
+import { PrintOptionsModulAjarDialog } from "@/components/curriculum/PrintOptionsModulAjarDialog";
+import { format } from "date-fns";
+import { id as indonesianLocale } from "date-fns/locale";
 
 const merdekaGradeLevels = [
   { value: "PAUD (Kurikulum Merdeka)", label: "PAUD (Kurikulum Merdeka)" },
@@ -52,6 +57,11 @@ export default function AIKurikulumMerdekaModulePage() {
   const [isGeneratingModule, setIsGeneratingModule] = useState(false);
 
   const [isClient, setIsClient] = useState(false);
+  const [schoolProfile, setSchoolProfile] = useState<SchoolProfile | null>(null);
+  const [isPrintOptionsOpen, setIsPrintOptionsOpen] = useState(false);
+  const [currentPrintOptions, setCurrentPrintOptions] = useState<PrintOptionsModulAjar>(defaultPrintOptionsModulAjar);
+
+
   useEffect(() => {
     setIsClient(true);
     if (user) {
@@ -64,6 +74,16 @@ export default function AIKurikulumMerdekaModulePage() {
             variant: "default",
         });
          addLog("WARN", `Pengguna ${user.email} mengakses halaman Modul Ajar AI, namun kurikulum default bukan Kurikulum Merdeka.`, "AIKurikulumMerdekaModulePage");
+    }
+    if (typeof window !== 'undefined') {
+      const storedProfile = localStorage.getItem("schoolProfile");
+      if (storedProfile) {
+        try {
+            setSchoolProfile(JSON.parse(storedProfile));
+        } catch (e) {
+            console.error("Failed to parse school profile from localStorage", e);
+        }
+      }
     }
   }, [user, addLog, defaultCurriculum, toast]);
 
@@ -84,9 +104,9 @@ export default function AIKurikulumMerdekaModulePage() {
         jenjangFaseKelas: moduleGradeLevel,
         capaianPembelajaranElemen: moduleCPElemen.split('\n').map(s => s.trim()).filter(s => s),
         alokasiWaktuTotal: moduleAlokasiWaktu,
-        namaPenyusun: user?.name || undefined, // Pass current user's name
-        institusi: "Nama Sekolah/Institusi Anda", // Placeholder, can be fetched from SchoolProfile later
-        tahunAjar: new Date().getFullYear() + "/" + (new Date().getFullYear() + 1), // Placeholder
+        namaPenyusun: user?.name || "Nama Guru Penyusun", 
+        institusi: schoolProfile?.namaSekolah || "Nama Sekolah/Institusi", 
+        tahunAjar: new Date().getFullYear() + "/" + (new Date().getFullYear() + 1), 
       };
       const result = await generateKurikulumMerdekaModule(input);
       setGeneratedModule(result);
@@ -100,6 +120,235 @@ export default function AIKurikulumMerdekaModulePage() {
       setIsGeneratingModule(false);
     }
   };
+
+  const handlePreparePrintModulAjar = useCallback(() => {
+    if (!generatedModule) return;
+    setCurrentPrintOptions(defaultPrintOptionsModulAjar);
+    setIsPrintOptionsOpen(true);
+  }, [generatedModule]);
+
+  const generatePrintableHtmlModulAjar = useCallback((modul: GenerateKurikulumMerdekaModuleOutput, options: PrintOptionsModulAjar): string => {
+    const logSource = `PrintModulAjar-${modul.identitasModul.mataPelajaran}`;
+    addLog("INFO", `Mempersiapkan pratinjau cetak untuk Modul Ajar "${modul.judulModul}" oleh ${user?.email}. Opsi: ${JSON.stringify(options)}`, logSource);
+
+    let contentHtml = ``;
+    
+    if (options.showKopSurat) {
+      if (schoolProfile) {
+          contentHtml += `
+              <div class="kop-surat">
+                ${schoolProfile.logoUrl ? `<img src="${schoolProfile.logoUrl}" alt="Logo Sekolah" class="logo-sekolah" data-ai-hint="school logo">` : '<div class="logo-placeholder">Logo Sekolah</div>'}
+                <div class="kop-text">
+                  <h1>${schoolProfile.namaSekolah || 'Nama Sekolah Belum Diatur'}</h1>
+                  <p class="kop-address">${schoolProfile.alamat || 'Alamat Sekolah Belum Diatur'}</p>
+                  <p class="kop-contact">
+                    ${schoolProfile.npsn ? `NPSN: ${schoolProfile.npsn}` : ''}
+                    ${schoolProfile.nomorTelepon ? `${schoolProfile.npsn ? ' | ' : ''}Telp: ${schoolProfile.nomorTelepon}` : ''}
+                    ${schoolProfile.emailSekolah ? `${(schoolProfile.npsn || schoolProfile.nomorTelepon) ? ' | ' : ''}Email: ${schoolProfile.emailSekolah}` : ''}
+                  </p>
+                </div>
+              </div>
+          `;
+      } else { 
+          addLog("WARN", `Kop surat diminta untuk Modul Ajar "${modul.judulModul}" tapi profil sekolah tidak lengkap/tidak ada.`, logSource);
+          contentHtml += `
+              <div class="kop-surat">
+                <div class="logo-placeholder">Logo Sekolah</div>
+                <div class="kop-text">
+                  <h1>Nama Sekolah Belum Diatur</h1>
+                  <p class="kop-address">Alamat Sekolah Belum Diatur</p>
+                </div>
+              </div>
+          `;
+      }
+    }
+
+    contentHtml += `<h2 class="modul-main-title">${modul.judulModul}</h2>`;
+    
+    let sectionCounter = 0;
+    const nextLetter = () => String.fromCharCode(65 + sectionCounter++);
+
+    if (options.showMAIdentitas) {
+        sectionCounter = 0; // Reset for main sections
+        contentHtml += `<h3>${nextLetter()}. INFORMASI UMUM</h3>`;
+        contentHtml += `<table class="info-table">
+            <tr><td>Nama Penyusun</td><td>: ${modul.identitasModul.namaPenyusun}</td></tr>
+            <tr><td>Institusi</td><td>: ${modul.identitasModul.institusi}</td></tr>
+            <tr><td>Tahun Ajar</td><td>: ${modul.identitasModul.tahunAjar}</td></tr>
+            <tr><td>Jenjang Sekolah</td><td>: ${modul.identitasModul.jenjangSekolah}</td></tr>
+            <tr><td>Fase</td><td>: ${modul.identitasModul.fase}</td></tr>
+            <tr><td>Kelas/Semester</td><td>: ${modul.identitasModul.kelasSemester}</td></tr>
+            <tr><td>Alokasi Waktu</td><td>: ${modul.identitasModul.alokasiWaktu}</td></tr>
+            <tr><td>Mata Pelajaran</td><td>: ${modul.identitasModul.mataPelajaran}</td></tr>
+            ${modul.identitasModul.elemenCapaianPembelajaran && modul.identitasModul.elemenCapaianPembelajaran.length > 0 ? `<tr><td>Elemen Capaian Pembelajaran</td><td>: ${modul.identitasModul.elemenCapaianPembelajaran.join(', ')}</td></tr>` : ''}
+        </table>`;
+    }
+
+    if (options.showMAKompetensiAwal && modul.kompetensiAwal && modul.kompetensiAwal.length > 0) {
+        contentHtml += `<h3>${nextLetter()}. KOMPETENSI AWAL</h3><ul>${modul.kompetensiAwal.map(k => `<li>${k}</li>`).join('')}</ul>`;
+    }
+    if (options.showMAProfilPelajarPancasila && modul.profilPelajarPancasila.length > 0) {
+        contentHtml += `<h3>${nextLetter()}. PROFIL PELAJAR PANCASILA</h3><ul>${modul.profilPelajarPancasila.map(p => `<li>${p}</li>`).join('')}</ul>`;
+    }
+    if (options.showMASaranaPrasarana && modul.saranaPrasarana.length > 0) {
+        contentHtml += `<h3>${nextLetter()}. SARANA DAN PRASARANA</h3><ul>${modul.saranaPrasarana.map(s => `<li>${s}</li>`).join('')}</ul>`;
+    }
+    if (options.showMATargetPesertaDidik) {
+        contentHtml += `<h3>${nextLetter()}. TARGET PESERTA DIDIK</h3><p>${modul.targetPesertaDidik}</p>`;
+    }
+    if (options.showMAModelPembelajaran) {
+        contentHtml += `<h3>${nextLetter()}. MODEL PEMBELAJARAN</h3><p>${modul.modelPembelajaran}</p>`;
+    }
+
+    // Komponen Inti
+    sectionCounter = 0; // Reset for Komponen Inti sections
+    contentHtml += `<h3>KOMPONEN INTI</h3>`;
+    const ki = modul.komponenInti;
+    if (options.showMAKomponenInti_TujuanPembelajaran && ki.tujuanPembelajaran.length > 0) {
+        contentHtml += `<h4>${nextLetter()}. Tujuan Pembelajaran</h4><ol>${ki.tujuanPembelajaran.map(tp => `<li>${tp}</li>`).join('')}</ol>`;
+    }
+    if (options.showMAKomponenInti_PemahamanBermakna && ki.pemahamanBermakna.length > 0) {
+        contentHtml += `<h4>${nextLetter()}. Pemahaman Bermakna</h4><ul>${ki.pemahamanBermakna.map(pb => `<li>${pb}</li>`).join('')}</ul>`;
+    }
+    if (options.showMAKomponenInti_PertanyaanPemantik && ki.pertanyaanPemantik.length > 0) {
+        contentHtml += `<h4>${nextLetter()}. Pertanyaan Pemantik</h4><ul>${ki.pertanyaanPemantik.map(pp => `<li>${pp}</li>`).join('')}</ul>`;
+    }
+    if (options.showMAKomponenInti_KegiatanPembelajaran) {
+        contentHtml += `<h4>${nextLetter()}. Kegiatan Pembelajaran</h4>`;
+        if (options.showMAKomponenInti_Kegiatan_Pendahuluan && ki.kegiatanPembelajaran.pendahuluan.length > 0) {
+            contentHtml += `<h5>1. Pendahuluan</h5><ul>${ki.kegiatanPembelajaran.pendahuluan.map(p => `<li>${p}</li>`).join('')}</ul>`;
+        }
+        if (options.showMAKomponenInti_Kegiatan_Inti && ki.kegiatanPembelajaran.inti.length > 0) {
+            contentHtml += `<h5>2. Kegiatan Inti</h5><ol class="kegiatan-inti-list">${ki.kegiatanPembelajaran.inti.map(k => `<li><strong>${k.langkah}</strong><ul>${k.detailAktivitas.map(d => `<li>${d}</li>`).join('')}</ul></li>`).join('')}</ol>`;
+        }
+        if (options.showMAKomponenInti_Kegiatan_Penutup && ki.kegiatanPembelajaran.penutup.length > 0) {
+            contentHtml += `<h5>3. Penutup</h5><ul>${ki.kegiatanPembelajaran.penutup.map(p => `<li>${p}</li>`).join('')}</ul>`;
+        }
+    }
+    if (options.showMAKomponenInti_Asesmen) {
+        contentHtml += `<h4>${nextLetter()}. Asesmen</h4>`;
+        if (options.showMAKomponenInti_Asesmen_Diagnostik && ki.asesmen.diagnostik) contentHtml += `<p><strong>Diagnostik:</strong> ${ki.asesmen.diagnostik}</p>`;
+        if (options.showMAKomponenInti_Asesmen_Formatif) contentHtml += `<p><strong>Formatif:</strong> ${ki.asesmen.formatif}</p>`;
+        if (options.showMAKomponenInti_Asesmen_Sumatif) contentHtml += `<p><strong>Sumatif:</strong> ${ki.asesmen.sumatif}</p>`;
+    }
+    if (options.showMAKomponenInti_PengayaanRemedial && ki.pengayaanRemedial) {
+        contentHtml += `<h4>${nextLetter()}. Pengayaan dan Remedial</h4><p><strong>Pengayaan:</strong> ${ki.pengayaanRemedial.pengayaan}</p><p><strong>Remedial:</strong> ${ki.pengayaanRemedial.remedial}</p>`;
+    }
+    if (options.showMAKomponenInti_Refleksi && ki.refleksiPesertaDidikGuru) {
+        contentHtml += `<h4>${nextLetter()}. Refleksi Peserta Didik dan Guru</h4><p><strong>Refleksi Peserta Didik:</strong> ${ki.refleksiPesertaDidikGuru.refleksiPesertaDidik}</p><p><strong>Refleksi Guru:</strong> ${ki.refleksiPesertaDidikGuru.refleksiGuru}</p>`;
+    }
+
+    // Lampiran
+    if (modul.lampiran && (options.showMALampiran_LKPD || options.showMALampiran_BahanBacaan || options.showMALampiran_Glosarium || options.showMALampiran_DaftarPustaka)) {
+        sectionCounter = 0; // Reset for Lampiran sections
+        contentHtml += `<h3>LAMPIRAN</h3>`;
+        const lamp = modul.lampiran;
+        if (options.showMALampiran_LKPD && lamp.lembarKerjaPesertaDidik) {
+            contentHtml += `<h4>${nextLetter()}. Lembar Kerja Peserta Didik (LKPD)</h4><div>${lamp.lembarKerjaPesertaDidik.replace(/\n/g, '<br>')}</div>`;
+        }
+        if (options.showMALampiran_BahanBacaan && lamp.bahanBacaanGuruSiswa && lamp.bahanBacaanGuruSiswa.length > 0) {
+            contentHtml += `<h4>${nextLetter()}. Bahan Bacaan Guru dan Peserta Didik</h4><ul>${lamp.bahanBacaanGuruSiswa.map(b => `<li>${b.includes('http') ? `<a href="${b}" target="_blank" rel="noopener noreferrer">${b}</a>` : b}</li>`).join('')}</ul>`;
+        }
+        if (options.showMALampiran_Glosarium && lamp.glosarium && lamp.glosarium.length > 0) {
+            contentHtml += `<h4>${nextLetter()}. Glosarium</h4><ul>${lamp.glosarium.map(g => `<li><strong>${g.istilah}:</strong> ${g.penjelasan}</li>`).join('')}</ul>`;
+        }
+        if (options.showMALampiran_DaftarPustaka && lamp.daftarPustaka && lamp.daftarPustaka.length > 0) {
+            contentHtml += `<h4>${nextLetter()}. Daftar Pustaka</h4><ul>${lamp.daftarPustaka.map(dp => `<li>${dp.includes('http') ? `<a href="${dp}" target="_blank" rel="noopener noreferrer">${dp}</a>` : dp}</li>`).join('')}</ul>`;
+        }
+    }
+    
+    contentHtml += `
+      <div class="signature-section">
+        <div class="signature-block">
+          <p>Mengetahui,</p>
+          <p>Kepala Sekolah</p>
+          <br><br><br>
+          <p class="signature-name">${(schoolProfile?.namaKepalaSekolah || '(.........................................)')}</p>
+          ${schoolProfile?.npsn ? `<p class="signature-nip">NIP/NPSN: ${schoolProfile.npsn}</p>` : ''}
+        </div>
+        <div class="signature-block">
+          <p>${modul.identitasModul.institusi.split(" ")[0] || "Kota"}, ${isClient ? format(new Date(), "dd MMMM yyyy", { locale: indonesianLocale }) : new Date().toLocaleDateString()}</p>
+          <p>Guru Mata Pelajaran</p>
+          <br><br><br>
+          <p class="signature-name">${modul.identitasModul.namaPenyusun || '(.........................................)'}</p>
+           ${user && user.role === 'Guru' ? `<p class="signature-nip">NIP: (NIP Guru Jika Ada)</p>` : ''}
+        </div>
+      </div>
+    `;
+
+
+    return `
+      <html>
+        <head>
+          <title>Cetak Modul Ajar: ${modul.judulModul}</title>
+          <style>
+            @page { 
+              size: 21cm 33cm; /* F4 Paper Size */
+              margin: 0.75in; 
+            }
+            body { font-family: 'Times New Roman', Times, serif; margin: 0; line-height: 1.4; font-size: 11pt; color: #333; }
+            .kop-surat { display: flex; align-items: center; margin-bottom: 15px; border-bottom: 4px double black; padding-bottom: 10px; min-height: 80px; }
+            .logo-sekolah { max-height: 75px; max-width: 75px; margin-right: 15px; object-fit: contain; }
+            .logo-placeholder { width: 75px; height: 75px; border: 1px dashed #999; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 9pt; color: #666; margin-right: 15px;}
+            .kop-text { text-align: center; flex-grow: 1; }
+            .kop-text h1 { font-size: 16pt; margin: 0 0 2px 0; font-weight: bold; text-transform: uppercase; }
+            .kop-text p { font-size: 10pt; margin: 1px 0; }
+            .kop-text .kop-address { font-size: 9pt; }
+            .kop-text .kop-contact { font-size: 9pt; }
+            .modul-main-title { font-size: 14pt; margin-top: 15px; margin-bottom: 15px; font-weight: bold; text-transform: uppercase; text-align: center; }
+            .info-table { width: 100%; margin-bottom: 15px; font-size: 11pt; border-collapse: collapse;}
+            .info-table td { padding: 3px 0px; vertical-align: top;}
+            .info-table td:first-child { font-weight: normal; width: 35%; } /* Adjusted width */
+            .info-table td:nth-child(2) { font-weight: normal; }
+            h3 { font-size: 12pt; margin-top: 18px; margin-bottom: 8px; font-weight: bold; text-transform: uppercase; }
+            h4 { font-size: 11pt; margin-top: 12px; margin-bottom: 6px; font-weight: bold; }
+            h5 { font-size: 11pt; margin-top: 8px; margin-bottom: 4px; font-weight: bold; }
+            ul, ol { padding-left: 25px; margin-top: 5px; margin-bottom: 10px; }
+            ol.kegiatan-inti-list { padding-left: 20px; }
+            ol.kegiatan-inti-list > li > ul { padding-left: 20px; list-style-type: disc; }
+            li { margin-bottom: 5px; text-align: justify; }
+            p { margin-bottom: 10px; text-align: justify; }
+            .signature-section { margin-top: 40px; display: flex; justify-content: space-between; page-break-inside: avoid; }
+            .signature-block { width: 45%; text-align: center; }
+            .signature-name { font-weight: bold; text-decoration: underline; }
+            .signature-nip { font-size: 10pt; }
+            .print-button-container { text-align: center; margin-top: 30px; }
+            @media print {
+              body { margin: 0.75in; font-size: 11pt; } 
+              .print-button-container { display: none; }
+              .kop-surat { border-bottom: 4px double black !important; } 
+              h1, h2, h3, h4, h5, table, ul, ol, p, div { page-break-inside: avoid; }
+              h3, h4, h5 { page-break-after: avoid; }
+            }
+          </style>
+        </head>
+        <body>
+          ${contentHtml}
+          <div class="print-button-container">
+            <button onclick="window.print()" style="padding: 10px 20px; font-size: 12pt; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">Cetak Dokumen</button>
+          </div>
+        </body>
+      </html>
+    `;
+  }, [isClient, schoolProfile, user, addLog]);
+
+  const handleFinalizePrintModulAjar = useCallback((options: PrintOptionsModulAjar) => {
+    if (!generatedModule) return;
+    const logSource = `PrintModulAjar-${generatedModule.identitasModul.mataPelajaran}`; 
+    const printableHtml = generatePrintableHtmlModulAjar(generatedModule, options); 
+    
+    const printWindow = window.open('', '_blank', 'width=1000,height=700,scrollbars=yes,resizable=yes');
+    if (printWindow) {
+      printWindow.document.write(printableHtml);
+      printWindow.document.close();
+      addLog("INFO", `Jendela cetak dibuka untuk Modul Ajar "${generatedModule.judulModul}".`, logSource);
+    } else {
+      toast({ title: "Gagal Membuka Jendela Cetak", description: "Pastikan pop-up diizinkan untuk situs ini.", variant: "destructive" });
+      addLog("ERROR", `Gagal membuka jendela cetak untuk Modul Ajar. Kemungkinan pop-up diblokir.`, logSource);
+    }
+    setIsPrintOptionsOpen(false);
+  }, [generatedModule, generatePrintableHtmlModulAjar, addLog, toast]);
+
 
   if (!isClient || !user) {
     return (
@@ -339,7 +588,11 @@ export default function AIKurikulumMerdekaModulePage() {
                             <>
                                 <h4 className="text-lg font-semibold mt-3 mb-1">Bahan Bacaan Guru & Siswa</h4>
                                 <ul className="list-disc pl-5 space-y-1 text-sm">
-                                    {generatedModule.lampiran.bahanBacaanGuruSiswa.map((item, idx) => <li key={`bb-${idx}`}>{item}</li>)}
+                                    {generatedModule.lampiran.bahanBacaanGuruSiswa.map((item, idx) => (
+                                        <li key={`bb-${idx}`}>
+                                            {item.includes('http') ? <a href={item} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{item}</a> : item}
+                                        </li>
+                                    ))}
                                 </ul>
                             </>
                         )}
@@ -355,7 +608,11 @@ export default function AIKurikulumMerdekaModulePage() {
                             <>
                                 <h4 className="text-lg font-semibold mt-3 mb-1">Daftar Pustaka</h4>
                                 <ul className="list-disc pl-5 space-y-1 text-sm">
-                                    {generatedModule.lampiran.daftarPustaka.map((item, idx) => <li key={`dp-${idx}`}>{item}</li>)}
+                                    {generatedModule.lampiran.daftarPustaka.map((item, idx) => (
+                                      <li key={`dp-${idx}`}>
+                                        {item.includes('http') ? <a href={item} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{item}</a> : item}
+                                      </li>
+                                    ))}
                                 </ul>
                             </>
                         )}
@@ -363,14 +620,17 @@ export default function AIKurikulumMerdekaModulePage() {
                 )}
               </CardContent>
               </ScrollArea>
-              <CardFooter className="p-6 border-t bg-muted/20 rounded-b-lg">
-                 <Alert variant="default" className="border-primary/50 shadow-sm rounded-md">
+              <CardFooter className="p-6 border-t bg-muted/20 rounded-b-lg flex flex-col sm:flex-row items-center justify-between gap-4">
+                 <Alert variant="default" className="border-primary/50 shadow-sm rounded-md flex-grow">
                     <Search className="h-5 w-5 text-primary" />
                     <AlertTitle className="font-semibold text-primary">Verifikasi & Sesuaikan Modul</AlertTitle>
                     <AlertDescription className="text-base">
                         Konten yang dihasilkan AI adalah draf awal. Selalu verifikasi keakuratan, kelengkapan, dan relevansi modul sebelum digunakan.
                     </AlertDescription>
                 </Alert>
+                <Button onClick={handlePreparePrintModulAjar} disabled={!generatedModule} variant="outline" className="w-full sm:w-auto">
+                    <Printer className="mr-2 h-4 w-4" /> Cetak / Simpan PDF
+                </Button>
               </CardFooter>
             </Card>
           )}
@@ -394,6 +654,16 @@ export default function AIKurikulumMerdekaModulePage() {
           )}
         </div>
       </div>
+      {generatedModule && (
+        <PrintOptionsModulAjarDialog
+            isOpen={isPrintOptionsOpen}
+            onOpenChange={setIsPrintOptionsOpen}
+            defaultOptions={currentPrintOptions}
+            onSubmit={handleFinalizePrintModulAjar}
+            hasSchoolProfile={!!schoolProfile} 
+        />
+      )}
     </div>
   );
 }
+
