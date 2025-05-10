@@ -26,6 +26,8 @@ const exampleGradeLevels = [
     "Paket A", "Paket B", "Paket C"
 ];
 
+const NO_HOMEROOM_VALUE = "_NO_HOMEROOM_";
+
 export function ClassFormFields({ 
     formData, 
     handleChange, 
@@ -69,14 +71,14 @@ export function ClassFormFields({
         <Label htmlFor="homeroomTeacherId" className="text-base font-medium">Wali Kelas (Opsional)</Label>
         <Select 
           value={formData.homeroomTeacherId || ""} 
-          onValueChange={(value) => handleSelectChange('homeroomTeacherId', value === "placeholder-teacher" ? "" : value)}
+          onValueChange={(value) => handleSelectChange('homeroomTeacherId', (value === "placeholder-teacher" || value === NO_HOMEROOM_VALUE) ? "" : value)}
         >
           <SelectTrigger id="homeroomTeacherId" className="text-base h-11 rounded-md">
             <SelectValue placeholder="Pilih Wali Kelas" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="placeholder-teacher" disabled>Pilih Wali Kelas</SelectItem>
-            <SelectItem value="">Tidak Ada Wali Kelas</SelectItem>
+            <SelectItem value={NO_HOMEROOM_VALUE}>Tidak Ada Wali Kelas</SelectItem>
             {allTeachers.length === 0 && <SelectItem value="no-teachers" disabled>Belum ada data guru</SelectItem>}
             {allTeachers.map(teacher => (
               <SelectItem key={teacher.id} value={teacher.id}>{teacher.name}</SelectItem>
@@ -99,4 +101,3 @@ export function ClassFormFields({
     </>
   );
 }
-
