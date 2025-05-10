@@ -1,6 +1,9 @@
 
+
 export type UserRole = "Admin" | "KepalaSekolah" | "WakaKurikulum" | "TataUsaha" | "Guru";
 export type CurriculumFramework = "Kurikulum Merdeka" | "K-13" | "KTSP 2006";
+export type EducationLevel = "PAUD" | "SD/MI" | "SMP/MTs" | "SMA/MA" | "SMK/MAK" | "SLB" | "PKBM/Kesetaraan";
+
 
 export interface User {
   id: string;
@@ -15,12 +18,14 @@ export interface User {
 export interface SchoolProfile {
   id: string;
   namaSekolah: string;
+  jenjangPendidikan: EducationLevel;
   alamat: string;
   nomorTelepon: string;
   emailSekolah: string;
   namaKepalaSekolah: string;
   npsn?: string; 
   logoUrl?: string; 
+  kotaSekolah?: string;
   updatedAt: string;
 }
 
@@ -255,10 +260,11 @@ export interface ExportedCurriculumData {
   modulAjar?: ModulAjar[];
   schoolProfile: SchoolProfile | null;
   appUsers: User[];
-  subjects?: Subject[]; // New
-  teachers?: Teacher[]; // New
-  timetables?: TimetableEntry[]; // New
-  teachingPeriodSettings?: TeachingPeriodSettings; // New
+  subjects?: Subject[];
+  teachers?: Teacher[];
+  timetables?: TimetableEntry[];
+  schoolClasses?: SchoolClass[]; // New
+  teachingPeriodSettings?: TeachingPeriodSettings;
 }
 
 
@@ -350,16 +356,28 @@ export interface TimeSlot {
 export interface TimetableEntry {
   id: string;
   dayOfWeek: 'Senin' | 'Selasa' | 'Rabu' | 'Kamis' | 'Jumat' | 'Sabtu' | 'Minggu';
-  timeSlotId: string; // Reference to a TimeSlot or just store start/end times directly
+  timeSlotId?: string; // Reference to a TimeSlot or just store start/end times directly
   startTime: string; // e.g., 07:00
   endTime: string;   // e.g., 07:45
   subjectId: string;
   teacherId: string;
-  classOrGrade: string; // e.g., "Kelas X-A" or "Fase E Grup 1"
+  classOrGrade: string; // e.g., "Kelas X-A" or "Fase E Grup 1" // Can be SchoolClass.id
   createdAt: string;
   updatedAt: string;
   createdByUserId?: string;
 }
+
+export interface SchoolClass {
+  id: string;
+  name: string; // e.g., "Kelas X IPA 1", "Fase A Kelompok A"
+  gradeLevel: string; // e.g., "X", "Fase A", "VII" (can be more specific than SchoolProfile.jenjangPendidikan)
+  homeroomTeacherId?: string; // Wali Kelas (Teacher ID)
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  createdByUserId?: string;
+}
+
 
 export interface TeachingPeriodSettings {
   jpDurationMinutes: number;
@@ -370,11 +388,14 @@ export const MODUL_AJAR_STORAGE_KEY = "appModulAjar";
 export const SUBJECTS_STORAGE_KEY = "appSubjects";
 export const TEACHERS_STORAGE_KEY = "appTeachers";
 export const TIMETABLES_STORAGE_KEY = "appTimetables";
+export const SCHOOL_CLASSES_STORAGE_KEY = "appSchoolClasses"; // New
 export const TEACHING_PERIOD_SETTINGS_KEY = "appTeachingPeriodSettings";
 export const LESSON_PLANS_STORAGE_KEY = "appLessonPlans";
 export const ANNUAL_PROGRAMS_STORAGE_KEY = "appAnnualPrograms";
 export const SEMESTER_PROGRAMS_STORAGE_KEY = "appSemesterPrograms";
-export const SCHOOL_PROFILE_STORAGE_KEY = "schoolProfile";
+export const SCHOOL_PROFILE_STORAGE_KEY = "schoolProfile"; // Same as SCHOOL_SETTINGS_STORAGE_KEY
+export const SCHOOL_SETTINGS_STORAGE_KEY = "schoolProfile"; // Alias for clarity
 export const APP_USERS_STORAGE_KEY = "appUsers";
 export const CURRICULUM_STORAGE_KEY = "app-default-curriculum";
 export const THEME_STORAGE_KEY = "app-theme";
+

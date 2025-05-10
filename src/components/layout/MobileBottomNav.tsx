@@ -1,10 +1,11 @@
 
+
 "use client";
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, Users, BrainCircuit, ShieldCheck, MoreHorizontal, Package, UserCheck, ListChecks, Book } from 'lucide-react';
+import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, Users, BrainCircuit, ShieldCheck, MoreHorizontal, Package, UserCheck, ListChecks, Book, Home, ClipboardList } from 'lucide-react';
 import type { UserRole } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCurriculum } from '@/contexts/CurriculumContext';
@@ -30,10 +31,12 @@ const mobileNavItemsData: MobileNavItemData[] = [
   { href: "/modul-ajar", label: "Modul KM", icon: BrainCircuit, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], isKurikulumMerdekaOnly: true },
   { href: "/ai-assistant", label: "AI Materi", icon: Sparkles, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"] },
   
-  { href: "/master-data/subjects", label: "Mapel", icon: Book, roles: ["Admin", "KepalaSekolah", "WakaKurikulum"], isMasterData: true },
-  { href: "/master-data/teachers", label: "Guru", icon: UserCheck, roles: ["Admin", "KepalaSekolah", "WakaKurikulum"], isMasterData: true },
+  { href: "/master-data/subjects", label: "Mapel", icon: Book, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha"], isMasterData: true },
+  { href: "/master-data/teachers", label: "Guru", icon: UserCheck, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha"], isMasterData: true },
+  { href: "/master-data/classes", label: "Kelas", icon: ClipboardList, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha"], isMasterData: true },
   { href: "/timetables", label: "Jadwal", icon: ListChecks, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"]},
 
+  { href: "/school-settings", label: "Profil SKLH", icon: Home, roles: ["Admin", "TataUsaha"] },
   { href: "/admin/user-management", label: "Pengguna", icon: Users, roles: ["Admin", "TataUsaha"] },
   { href: "/settings", label: "Atur Akun", icon: SettingsIcon, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/admin/system-settings", label: "Sys Cfg", icon: ShieldCheck, roles: ["Admin"] },
@@ -57,18 +60,18 @@ export function MobileBottomNav() {
         .filter(item =>
             (!item.roles || item.roles.includes(user.role)) &&
             (!item.isKurikulumMerdekaOnly || defaultCurriculum === "Kurikulum Merdeka") &&
-            (!item.isMasterData || ["Admin", "KepalaSekolah", "WakaKurikulum"].includes(user.role))
+            (!item.isMasterData || ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha"].includes(user.role))
         )
     : [];
 
-  const MAX_ITEMS_IN_BAR = 5; // Number of items directly in the bar, including "More"
+  const MAX_ITEMS_IN_BAR = 5; 
   let finalNavItems: MobileNavItemData[] = [];
   let overflowItems: MobileNavItemData[] = [];
 
   if (filteredFullList.length <= MAX_ITEMS_IN_BAR) {
     finalNavItems = filteredFullList;
   } else {
-    finalNavItems = filteredFullList.slice(0, MAX_ITEMS_IN_BAR - 1); // Leave space for "More"
+    finalNavItems = filteredFullList.slice(0, MAX_ITEMS_IN_BAR - 1); 
     overflowItems = filteredFullList.slice(MAX_ITEMS_IN_BAR - 1);
     finalNavItems.push({
       href: "#more-menu", 
@@ -150,3 +153,4 @@ export function MobileBottomNav() {
     </>
   );
 }
+

@@ -1,16 +1,17 @@
 
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Cog, UserCircle, ShieldCheck, Database, Palette, Upload, Download, FileText, Users, BookCopy, LogOut, Clock } from "lucide-react"; 
+import { Cog, UserCircle, ShieldCheck, Database, Palette, Upload, Download, FileText, Users, BookCopy, LogOut, Clock, Building } from "lucide-react"; 
 import { useAuth } from "@/contexts/AuthContext";
-import { SchoolProfileForm } from "@/components/settings/SchoolProfileForm";
+// import { SchoolProfileForm } from "@/components/settings/SchoolProfileForm"; // Removed
 import { EditUserDialog } from "@/components/settings/EditUserDialog";
 import { AppPreferencesDialog } from "@/components/settings/AppPreferencesDialog"; 
-import type { User, SchoolProfile, ExportedCurriculumData, LessonPlan, AnnualProgram, SemesterProgram, CurriculumFramework, ModulAjar, Subject, Teacher, TimetableEntry, TeachingPeriodSettings } from "@/types"; 
-import { MODUL_AJAR_STORAGE_KEY, SUBJECTS_STORAGE_KEY, TEACHERS_STORAGE_KEY, TIMETABLES_STORAGE_KEY, TEACHING_PERIOD_SETTINGS_KEY, LESSON_PLANS_STORAGE_KEY, ANNUAL_PROGRAMS_STORAGE_KEY, SEMESTER_PROGRAMS_STORAGE_KEY, SCHOOL_PROFILE_STORAGE_KEY, APP_USERS_STORAGE_KEY } from "@/types"; 
+import type { User, SchoolProfile, ExportedCurriculumData, LessonPlan, AnnualProgram, SemesterProgram, CurriculumFramework, ModulAjar, Subject, Teacher, TimetableEntry, TeachingPeriodSettings, SchoolClass } from "@/types"; 
+import { MODUL_AJAR_STORAGE_KEY, SUBJECTS_STORAGE_KEY, TEACHERS_STORAGE_KEY, TIMETABLES_STORAGE_KEY, TEACHING_PERIOD_SETTINGS_KEY, LESSON_PLANS_STORAGE_KEY, ANNUAL_PROGRAMS_STORAGE_KEY, SEMESTER_PROGRAMS_STORAGE_KEY, SCHOOL_PROFILE_STORAGE_KEY, APP_USERS_STORAGE_KEY, SCHOOL_CLASSES_STORAGE_KEY } from "@/types"; 
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -64,7 +65,7 @@ export default function SettingsPage() {
   const canSeeAppSettings = ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"].includes(user.role);
   const canManageCurriculumSettings = ["Admin", "WakaKurikulum"].includes(user.role);
   
-  const canManageSchoolProfile = ["Admin", "TataUsaha"].includes(user.role);
+  const canAccessSchoolSettingsPage = ["Admin", "TataUsaha"].includes(user.role); 
   const canManageUsers = ["Admin", "TataUsaha"].includes(user.role); 
   
   const canManageData = ["Admin", "WakaKurikulum"].includes(user.role);
@@ -91,6 +92,7 @@ export default function SettingsPage() {
       const subjectsData = JSON.parse(localStorage.getItem(SUBJECTS_STORAGE_KEY) || "[]") as Subject[];
       const teachersData = JSON.parse(localStorage.getItem(TEACHERS_STORAGE_KEY) || "[]") as Teacher[];
       const timetablesData = JSON.parse(localStorage.getItem(TIMETABLES_STORAGE_KEY) || "[]") as TimetableEntry[];
+      const schoolClassesData = JSON.parse(localStorage.getItem(SCHOOL_CLASSES_STORAGE_KEY) || "[]") as SchoolClass[];
       const teachingPeriodSettingsData = JSON.parse(localStorage.getItem(TEACHING_PERIOD_SETTINGS_KEY) || "null") as TeachingPeriodSettings | null;
       
       const dataToExport: ExportedCurriculumData = {
@@ -103,6 +105,7 @@ export default function SettingsPage() {
         subjects: subjectsData,
         teachers: teachersData,
         timetables: timetablesData,
+        schoolClasses: schoolClassesData,
         teachingPeriodSettings: teachingPeriodSettingsData,
       };
 
@@ -145,10 +148,9 @@ export default function SettingsPage() {
         const content = e.target?.result as string;
         const importedData = JSON.parse(content) as ExportedCurriculumData;
 
-        // Basic validation for all expected top-level keys
         const requiredKeys: (keyof ExportedCurriculumData)[] = [
           'lessonPlans', 'annualPrograms', 'semesterPrograms', 'modulAjar', 
-          'schoolProfile', 'appUsers', 'subjects', 'teachers', 'timetables', 'teachingPeriodSettings'
+          'schoolProfile', 'appUsers', 'subjects', 'teachers', 'timetables', 'schoolClasses', 'teachingPeriodSettings'
         ];
         for (const key of requiredKeys) {
           if (typeof importedData[key] === 'undefined') {
@@ -156,10 +158,6 @@ export default function SettingsPage() {
           }
         }
         
-        // More specific validation (optional, can be expanded)
-        if (!Array.isArray(importedData.lessonPlans)) throw new Error("Data RPP tidak valid.");
-        // ... (add more checks as needed for each data type)
-
         localStorage.setItem(LESSON_PLANS_STORAGE_KEY, JSON.stringify(importedData.lessonPlans || []));
         localStorage.setItem(ANNUAL_PROGRAMS_STORAGE_KEY, JSON.stringify(importedData.annualPrograms || []));
         localStorage.setItem(SEMESTER_PROGRAMS_STORAGE_KEY, JSON.stringify(importedData.semesterPrograms || []));
@@ -169,6 +167,7 @@ export default function SettingsPage() {
         localStorage.setItem(SUBJECTS_STORAGE_KEY, JSON.stringify(importedData.subjects || []));
         localStorage.setItem(TEACHERS_STORAGE_KEY, JSON.stringify(importedData.teachers || []));
         localStorage.setItem(TIMETABLES_STORAGE_KEY, JSON.stringify(importedData.timetables || []));
+        localStorage.setItem(SCHOOL_CLASSES_STORAGE_KEY, JSON.stringify(importedData.schoolClasses || []));
         localStorage.setItem(TEACHING_PERIOD_SETTINGS_KEY, JSON.stringify(importedData.teachingPeriodSettings || null));
         
         toast({
@@ -224,12 +223,6 @@ export default function SettingsPage() {
           </div>
         </CardHeader>
       </Card>
-
-      {canManageSchoolProfile && (
-        <div className="mt-6">
-          <SchoolProfileForm />
-        </div>
-      )}
       
       <Card className="mt-6 shadow-lg rounded-lg overflow-hidden">
         <CardHeader className="p-6 bg-muted/20">
@@ -301,6 +294,24 @@ export default function SettingsPage() {
                   </p>
                 </CardContent>
               </Card>
+            )}
+
+            {canAccessSchoolSettingsPage && (
+                 <Card className="shadow-md rounded-md">
+                    <CardHeader className="p-5">
+                        <div className="flex items-center gap-3">
+                            <Building className="h-7 w-7 text-primary" />
+                            <CardTitle className="text-xl font-semibold">Profil Sekolah</CardTitle>
+                        </div>
+                        <CardDescription className="text-base text-muted-foreground">Kelola data identitas sekolah Anda.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-5 pt-0">
+                         <p className="text-base text-muted-foreground mb-3">Akses panel pengaturan profil sekolah.</p>
+                        <Button asChild variant="outline" className="text-base w-full sm:w-auto">
+                           <Link href="/school-settings">Buka Profil Sekolah</Link>
+                        </Button>
+                    </CardContent>
+                </Card>
             )}
 
 
@@ -393,8 +404,7 @@ export default function SettingsPage() {
           </div>
 
 
-           {!(canSeeProfileSettings || canSeeAppSettings || canManageData || canSeeSystemSettings || canManageUsers || canManageCurriculumSettings) && 
-            !canManageSchoolProfile && ( 
+           {!(canSeeProfileSettings || canSeeAppSettings || canManageData || canSeeSystemSettings || canManageUsers || canManageCurriculumSettings || canAccessSchoolSettingsPage) && ( 
               <p className="text-base text-muted-foreground">Tidak ada pengaturan yang tersedia untuk peran Anda saat ini.</p>
             )}
         </CardContent>
@@ -416,3 +426,4 @@ export default function SettingsPage() {
     </div>
   );
 }
+

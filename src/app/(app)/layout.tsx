@@ -1,11 +1,12 @@
 
+
 "use client";
 import type { PropsWithChildren } from 'react';
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset, SidebarRail, SidebarGroup, SidebarGroupLabel } from '@/components/ui/sidebar';
 import { AppLogo } from '@/components/layout/AppLogo';
 import { UserProfile } from '@/components/layout/UserProfile';
-import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, ShieldCheck, Activity, Users, Info, BrainCircuit, FileText, LogOut, Package, UserCheck, ListChecks, Book, CaseSensitive } from 'lucide-react';
+import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, ShieldCheck, Activity, Users, Info, BrainCircuit, FileText, LogOut, Package, UserCheck, ListChecks, Book, CaseSensitive, Home, ClipboardList } from 'lucide-react';
 import Link from 'next/link';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
@@ -40,9 +41,11 @@ const allNavItems: NavItem[] = [
   // Master Data Section
   { href: "/master-data/subjects", label: "Mata Pelajaran", originalLabel: "Mata Pelajaran", icon: Book, roles: ["Admin", "KepalaSekolah", "WakaKurikulum"], isMasterData: true },
   { href: "/master-data/teachers", label: "Data Guru", originalLabel: "Data Guru", icon: UserCheck, roles: ["Admin", "KepalaSekolah", "WakaKurikulum"], isMasterData: true },
+  { href: "/master-data/classes", label: "Data Kelas", originalLabel: "Data Kelas", icon: ClipboardList, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha"], isMasterData: true },
   
-  { href: "/timetables", label: "Jadwal Pelajaran", originalLabel: "Jadwal Pelajaran", icon: ListChecks, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"] }, // Guru and TU can view
+  { href: "/timetables", label: "Jadwal Pelajaran", originalLabel: "Jadwal Pelajaran", icon: ListChecks, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"] }, 
   
+  { href: "/school-settings", label: "Profil Sekolah", originalLabel: "Profil Sekolah", icon: Home, roles: ["Admin", "TataUsaha"] },
   { href: "/admin/user-management", label: "Manajemen Pengguna", originalLabel: "Manajemen Pengguna", icon: Users, roles: ["Admin", "TataUsaha"], isSystemSetting: false },
   { href: "/settings", label: "Pengaturan Akun", originalLabel: "Pengaturan Akun", icon: SettingsIcon, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/admin/system-settings", label: "Pengaturan Sistem", originalLabel: "Pengaturan Sistem", icon: ShieldCheck, roles: ["Admin"], isSystemSetting: true },
@@ -83,7 +86,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
       .filter(item =>
         item.roles.includes(user.role) &&
         !item.isHiddenFromSidebar &&
-        (!item.isMasterData || ["Admin", "KepalaSekolah", "WakaKurikulum"].includes(user.role)) && // Master data visibility
+        (!item.isMasterData || ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha"].includes(user.role)) &&
         (item.isSystemSetting === false || (item.isSystemSetting === true && user.role === 'Admin') || item.roles.includes(user.role) ) &&
         (!item.isKurikulumMerdekaOnly || defaultCurriculum === "Kurikulum Merdeka")
     ).sort((a,b) => {
@@ -91,13 +94,13 @@ export default function AppLayout({ children }: PropsWithChildren) {
         if (!a.isSystemSetting && b.isSystemSetting) return -1;
         if (a.isSystemSetting && b.isSystemSetting) return a.label.localeCompare(b.label);
 
-        if (a.isMasterData && !b.isMasterData) return 1; // Push master data towards settings
+        if (a.isMasterData && !b.isMasterData) return 1; 
         if (!a.isMasterData && b.isMasterData) return -1;
         if (a.isMasterData && b.isMasterData) return a.label.localeCompare(b.label);
 
 
-        if (a.href === "/settings") return 1;
-        if (b.href === "/settings") return -1;
+        if (a.href === "/settings" || a.href === "/school-settings") return 1;
+        if (b.href === "/settings" || b.href === "/school-settings") return -1;
         const aiOrder = ["/modul-ajar", "/ai-assistant"];
         const aIsAI = aiOrder.includes(a.href);
         const bIsAI = aiOrder.includes(b.href);
@@ -127,13 +130,13 @@ export default function AppLayout({ children }: PropsWithChildren) {
             router.push("/dashboard");
             return;
         }
-         if (currentNavItem.isMasterData && !["Admin", "KepalaSekolah", "WakaKurikulum"].includes(user.role)) {
+         if (currentNavItem.isMasterData && !["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha"].includes(user.role)) {
             toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengakses menu Master Data.", variant: "destructive"});
             router.push("/dashboard");
             return;
         }
-      } else if (pathname === "/settings") {
-         const settingsBaseAccess = allNavItems.find(item => item.href === "/settings" && item.roles.includes(user.role));
+      } else if (pathname === "/settings" || pathname === "/school-settings") {
+         const settingsBaseAccess = allNavItems.find(item => (item.href === "/settings" || item.href === "/school-settings") && item.roles.includes(user.role));
          if (!settingsBaseAccess) {
             router.push("/dashboard");
          }
@@ -146,10 +149,10 @@ export default function AppLayout({ children }: PropsWithChildren) {
     return <LoadingSpinner message="Memuat Sesi Anda..." icon={<Sparkles className="h-16 w-16 animate-pulse text-primary mb-6" />} />;
   }
 
-  const curriculumPlanningItems = filteredNavItems.filter(item => !item.isSystemSetting && !item.isMasterData && item.href !== "/dashboard" && item.href !== "/settings" && !item.href.includes("/ai-"));
+  const curriculumPlanningItems = filteredNavItems.filter(item => !item.isSystemSetting && !item.isMasterData && item.href !== "/dashboard" && item.href !== "/settings" && item.href !== "/school-settings" && !item.href.includes("/ai-"));
   const aiToolsItems = filteredNavItems.filter(item => item.href.includes("/ai-"));
   const masterDataItems = filteredNavItems.filter(item => item.isMasterData);
-  const settingsItems = filteredNavItems.filter(item => item.isSystemSetting || item.href === "/settings" || item.href === "/admin/user-management");
+  const settingsItems = filteredNavItems.filter(item => item.isSystemSetting || item.href === "/settings" || item.href === "/admin/user-management" || item.href === "/school-settings");
 
 
   return (
