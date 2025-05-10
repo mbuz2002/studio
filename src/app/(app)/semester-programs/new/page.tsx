@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -16,12 +17,20 @@ import { generateSemesterProgram, type GenerateSemesterProgramInput, type Genera
 
 const SEMESTER_PROGRAMS_STORAGE_KEY = "appSemesterPrograms";
 
-const basePromesData: Omit<SemesterProgram, 'id' | 'createdAt' | 'updatedAt' | 'createdByUserId' | 'curriculumType'> = {
-  type: 'Promes', title: '', subject: '', gradeLevel: '', semester: '1', year: '',
-  capaianPembelajaranUmum: '',
-  alokasiWaktuTotalSemester: '',
-  komponenMingguan: [],
+const getInitialPromesData = (curriculum: CurriculumFramework): Partial<SemesterProgram & PromesFormState> => {
+    return {
+        type: 'Promes' as const, title: '', subject: '', gradeLevel: '', semester: '1', year: '',
+        capaianPembelajaranUmum: '',
+        alokasiWaktuTotalSemester: '',
+        komponenMingguan: [],
+        curriculumType: curriculum,
+        // Textarea fields for form binding
+        capaianPembelajaranUmum_textarea: '',
+        alokasiWaktuTotalSemester_input: '',
+        komponenMingguan_textarea: '',
+    };
 };
+
 
 type PromesFormState = {
   capaianPembelajaranUmum_textarea?: string; 
@@ -72,14 +81,8 @@ export default function NewSemesterProgramPage() {
   const { defaultCurriculum, availableCurriculums } = useCurriculum();
   const { addLog } = useLog();
 
-  const [formData, setFormData] = useState<Partial<SemesterProgram & PromesFormState>>(
-     { 
-        ...basePromesData, 
-        curriculumType: defaultCurriculum,
-        capaianPembelajaranUmum_textarea: '', // Initialize as empty
-     }
-  );
   const [selectedCurriculum, setSelectedCurriculum] = useState<CurriculumFramework>(defaultCurriculum);
+  const [formData, setFormData] = useState<Partial<SemesterProgram & PromesFormState>>(getInitialPromesData(defaultCurriculum));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
@@ -88,12 +91,8 @@ export default function NewSemesterProgramPage() {
       toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk membuat Promes baru.", variant: "destructive" });
       router.push("/semester-programs");
     }
-    setFormData(prev => ({ 
-        ...prev, 
-        curriculumType: defaultCurriculum,
-        capaianPembelajaranUmum_textarea: prev.capaianPembelajaranUmum_textarea || '', // Keep existing if any, else empty
-    }));
     setSelectedCurriculum(defaultCurriculum);
+    setFormData(getInitialPromesData(defaultCurriculum));
   }, [user, router, toast, defaultCurriculum]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -107,16 +106,17 @@ export default function NewSemesterProgramPage() {
         toast({ title: "Informasi", description: "Jenis kurikulum ditentukan oleh pengaturan global dan tidak dapat diubah oleh Guru.", variant: "default" });
         return;
       }
-      setSelectedCurriculum(value as CurriculumFramework);
+      const newCurriculum = value as CurriculumFramework;
+      setSelectedCurriculum(newCurriculum);
       setFormData(prev => ({
-        ...basePromesData, // Reset to base, then apply new curriculum type and common fields
-        curriculumType: value as CurriculumFramework,
+        // Preserve common fields
         title: prev.title,
         subject: prev.subject,
-        gradeLevel: prev.gradeLevel,
+        // gradeLevel: prev.gradeLevel, // Will be reset by form field component
         year: prev.year,
         semester: prev.semester,
-        capaianPembelajaranUmum_textarea: '', // Reset this field for new curriculum
+        // Set new curriculum type and specific fields
+        ...getInitialPromesData(newCurriculum),
       }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
@@ -150,8 +150,7 @@ export default function NewSemesterProgramPage() {
         setFormData(prev => ({
             ...prev,
             title: result.title || prev.title || `Promes ${formData.subject} ${formData.gradeLevel} Sem ${formData.semester} ${formData.year}`,
-            capaianPembelajaranUmum: result.capaianPembelajaranUmum || '', // AI returns 'capaianPembelajaranUmum'
-             // For display in textarea, sync it
+            capaianPembelajaranUmum: result.capaianPembelajaranUmum || '', 
             capaianPembelajaranUmum_textarea: result.capaianPembelajaranUmum || '',
             alokasiWaktuTotalSemester_input: result.alokasiWaktuTotalSemester || '',
             komponenMingguan_textarea: formatWeeklyUnitsToString(result.komponenMingguan || []),
@@ -255,4 +254,3 @@ export default function NewSemesterProgramPage() {
     </div>
   );
 }
-

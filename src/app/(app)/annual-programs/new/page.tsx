@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -15,10 +16,34 @@ import { generateAnnualProgram, type GenerateAnnualProgramInput, type GenerateAn
 
 const ANNUAL_PROGRAMS_STORAGE_KEY = "appAnnualPrograms";
 
-const baseProtaData: Omit<AnnualProgram, 'id' | 'createdAt' | 'updatedAt' | 'createdByUserId' | 'curriculumType'> = {
-  type: 'PROTA', title: '', subject: '', gradeLevel: '', year: '',
-  semester1Components: [],
-  semester2Components: [],
+const getInitialProtaData = (curriculum: CurriculumFramework): Partial<AnnualProgram & ProtaFormState> => {
+    const common = {
+        type: 'PROTA' as const, title: '', subject: '', gradeLevel: '', year: '',
+        semester1Components: [],
+        semester2Components: [],
+        curriculumType: curriculum,
+        // Textarea fields for form binding
+        semester1_topics_textarea: '',
+        semester1_elements_textarea: '',
+        semester1_allocations_textarea: '',
+        semester2_topics_textarea: '',
+        semester2_elements_textarea: '',
+        semester2_allocations_textarea: '',
+    };
+    if (curriculum === "Kurikulum Merdeka") {
+        return {
+            ...common,
+            capaianPembelajaran_textarea: '',
+            profilPelajarPancasilaFocus_textarea: '',
+        };
+    }
+    return {
+        ...common,
+        capaianPembelajaran_textarea: undefined,
+        capaianPembelajaran: undefined,
+        profilPelajarPancasilaFocus_textarea: undefined,
+        profilPelajarPancasilaFocus: undefined,
+    };
 };
 
 type ProtaFormState = {
@@ -40,15 +65,8 @@ export default function NewAnnualProgramPage() {
   const { defaultCurriculum, availableCurriculums } = useCurriculum();
   const { addLog } = useLog();
 
-  const [formData, setFormData] = useState<Partial<AnnualProgram & ProtaFormState>>(
-    { 
-        ...baseProtaData, 
-        curriculumType: defaultCurriculum,
-        capaianPembelajaran_textarea: defaultCurriculum === "Kurikulum Merdeka" ? '' : undefined,
-        profilPelajarPancasilaFocus_textarea: defaultCurriculum === "Kurikulum Merdeka" ? '' : undefined,
-    }
-  );
   const [selectedCurriculum, setSelectedCurriculum] = useState<CurriculumFramework>(defaultCurriculum);
+  const [formData, setFormData] = useState<Partial<AnnualProgram & ProtaFormState>>(getInitialProtaData(defaultCurriculum));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
@@ -57,13 +75,8 @@ export default function NewAnnualProgramPage() {
       toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk membuat PROTA baru.", variant: "destructive" });
       router.push("/annual-programs");
     }
-    setFormData(prev => ({ 
-        ...prev, 
-        curriculumType: defaultCurriculum,
-        capaianPembelajaran_textarea: defaultCurriculum === "Kurikulum Merdeka" ? prev.capaianPembelajaran_textarea || '' : undefined,
-        profilPelajarPancasilaFocus_textarea: defaultCurriculum === "Kurikulum Merdeka" ? prev.profilPelajarPancasilaFocus_textarea || '' : undefined,
-    }));
     setSelectedCurriculum(defaultCurriculum);
+    setFormData(getInitialProtaData(defaultCurriculum));
   }, [user, router, toast, defaultCurriculum]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -77,16 +90,16 @@ export default function NewAnnualProgramPage() {
         toast({ title: "Informasi", description: "Jenis kurikulum ditentukan oleh pengaturan global dan tidak dapat diubah oleh Guru.", variant: "default" });
         return;
       }
-      setSelectedCurriculum(value as CurriculumFramework);
+      const newCurriculum = value as CurriculumFramework;
+      setSelectedCurriculum(newCurriculum);
       setFormData(prev => ({
-          ...baseProtaData, // Reset to base, then apply new curriculum type and common fields
-          curriculumType: value as CurriculumFramework,
+          // Preserve common fields
           title: prev.title,
           subject: prev.subject,
-          gradeLevel: prev.gradeLevel,
+          // gradeLevel: prev.gradeLevel, // Will be reset by form field component
           year: prev.year,
-          capaianPembelajaran_textarea: value === "Kurikulum Merdeka" ? '' : undefined,
-          profilPelajarPancasilaFocus_textarea: value === "Kurikulum Merdeka" ? '' : undefined,
+          // Set new curriculum type and specific fields
+          ...getInitialProtaData(newCurriculum),
       }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
@@ -248,4 +261,3 @@ export default function NewAnnualProgramPage() {
     </div>
   );
 }
-

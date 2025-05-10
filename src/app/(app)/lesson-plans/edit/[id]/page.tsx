@@ -17,6 +17,10 @@ import { generateLessonPlanFromTopic, type GenerateLessonPlanInput, type Generat
 
 const LESSON_PLANS_STORAGE_KEY = "appLessonPlans";
 
+// Dummy initial data for canEdit logic, replace with actual check or remove if not needed
+const initialLessonPlansData: Partial<LessonPlan>[] = [ {id: "rpp1"}, {id: "rpp2"}];
+
+
 export default function EditLessonPlanPage() {
   const router = useRouter();
   const params = useParams();
@@ -75,24 +79,60 @@ export default function EditLessonPlanPage() {
       }
       const newCurriculum = value as CurriculumFramework;
       setSelectedCurriculum(newCurriculum);
-      setFormData(prev => ({
-        ...prev,
-        curriculumType: newCurriculum,
-        // Kurikulum Merdeka specific
-        bidangKeahlian: newCurriculum === "Kurikulum Merdeka" ? prev.bidangKeahlian || '' : undefined,
-        programKeahlian: newCurriculum === "Kurikulum Merdeka" ? prev.programKeahlian || '' : undefined,
-        capaianPembelajaran: newCurriculum === "Kurikulum Merdeka" ? prev.capaianPembelajaran || [] : undefined,
-        pemahamanBermakna: newCurriculum === "Kurikulum Merdeka" ? prev.pemahamanBermakna || [] : undefined,
-        pertanyaanPemantik: newCurriculum === "Kurikulum Merdeka" ? prev.pertanyaanPemantik || [] : undefined,
-        differentiationStrategies: newCurriculum === "Kurikulum Merdeka" ? prev.differentiationStrategies || [] : undefined,
-        profilPelajarPancasilaFocus: newCurriculum === "Kurikulum Merdeka" ? prev.profilPelajarPancasilaFocus || [] : undefined,
-        // KTSP/K-13 specific
-        standarKompetensi: newCurriculum === "KTSP 2006" ? prev.standarKompetensi || [] : undefined,
-        kompetensiInti: newCurriculum === "K-13" ? prev.kompetensiInti || [] : undefined,
-        kompetensiDasar: newCurriculum !== "Kurikulum Merdeka" ? prev.kompetensiDasar || [] : undefined,
-        indikatorPencapaianKompetensi: newCurriculum !== "Kurikulum Merdeka" ? prev.indikatorPencapaianKompetensi || [] : undefined,
-        metodePembelajaran: newCurriculum !== "Kurikulum Merdeka" ? prev.metodePembelajaran || [] : undefined,
-      }));
+      setFormData(prev => {
+        const newFormData: Partial<LessonPlan> = {
+            ...prev,
+            curriculumType: newCurriculum,
+            // Reset gradeLevel, it will be re-selected by user based on new curriculum options
+            gradeLevel: '', 
+        };
+
+        if (newCurriculum === "Kurikulum Merdeka") {
+            // Initialize/keep Kurikulum Merdeka fields
+            newFormData.bidangKeahlian = prev.bidangKeahlian || '';
+            newFormData.programKeahlian = prev.programKeahlian || '';
+            newFormData.capaianPembelajaran = prev.capaianPembelajaran || [];
+            newFormData.pemahamanBermakna = prev.pemahamanBermakna || [];
+            newFormData.pertanyaanPemantik = prev.pertanyaanPemantik || [];
+            newFormData.differentiationStrategies = prev.differentiationStrategies || [];
+            newFormData.profilPelajarPancasilaFocus = prev.profilPelajarPancasilaFocus || [];
+            // Clear KTSP/K-13 specific fields
+            newFormData.standarKompetensi = undefined;
+            newFormData.kompetensiInti = undefined;
+            newFormData.kompetensiDasar = undefined;
+            newFormData.indikatorPencapaianKompetensi = undefined;
+            newFormData.metodePembelajaran = undefined;
+        } else if (newCurriculum === "K-13") {
+            newFormData.kompetensiInti = prev.kompetensiInti || [];
+            newFormData.kompetensiDasar = prev.kompetensiDasar || [];
+            newFormData.indikatorPencapaianKompetensi = prev.indikatorPencapaianKompetensi || [];
+            newFormData.metodePembelajaran = prev.metodePembelajaran || [];
+            // Clear Kurikulum Merdeka and KTSP specific fields
+            newFormData.bidangKeahlian = undefined;
+            newFormData.programKeahlian = undefined;
+            newFormData.capaianPembelajaran = undefined;
+            newFormData.pemahamanBermakna = undefined;
+            newFormData.pertanyaanPemantik = undefined;
+            newFormData.differentiationStrategies = undefined;
+            newFormData.profilPelajarPancasilaFocus = undefined;
+            newFormData.standarKompetensi = undefined;
+        } else if (newCurriculum === "KTSP 2006") {
+            newFormData.standarKompetensi = prev.standarKompetensi || [];
+            newFormData.kompetensiDasar = prev.kompetensiDasar || [];
+            newFormData.indikatorPencapaianKompetensi = prev.indikatorPencapaianKompetensi || [];
+            newFormData.metodePembelajaran = prev.metodePembelajaran || [];
+            // Clear Kurikulum Merdeka and K-13 specific fields
+            newFormData.bidangKeahlian = undefined;
+            newFormData.programKeahlian = undefined;
+            newFormData.capaianPembelajaran = undefined;
+            newFormData.pemahamanBermakna = undefined;
+            newFormData.pertanyaanPemantik = undefined;
+            newFormData.differentiationStrategies = undefined;
+            newFormData.profilPelajarPancasilaFocus = undefined;
+            newFormData.kompetensiInti = undefined;
+        }
+        return newFormData;
+      });
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
@@ -104,7 +144,7 @@ export default function EditLessonPlanPage() {
   };
 
   const handleLangkahPembelajaranChange = (part: 'pendahuluan' | 'kegiatanInti' | 'penutup', value: string) => {
-    const valuesArray = value.split('\n').filter(s => s.trim().length > 0); // Preserve internal spaces, filter out lines that are only whitespace
+    const valuesArray = value.split('\n').filter(s => s.trim().length > 0); 
     setFormData(prev => {
       const currentLangkah = prev.langkahPembelajaran || { pendahuluan: [], kegiatanInti: [], penutup: [] };
       return {
@@ -300,5 +340,3 @@ export default function EditLessonPlanPage() {
     </div>
   );
 }
-// Dummy initial data for canEdit logic, replace with actual check or remove if not needed
-const initialLessonPlansData: Partial<LessonPlan>[] = [ {id: "rpp1"}, {id: "rpp2"}];

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -69,7 +70,7 @@ export default function EditSemesterProgramPage() {
   const [selectedCurriculum, setSelectedCurriculum] = useState<CurriculumFramework>("Kurikulum Merdeka");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
-  const [isGeneratingAI, setIsGeneratingAI] = false);
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -116,9 +117,22 @@ export default function EditSemesterProgramPage() {
         toast({ title: "Informasi", description: "Jenis kurikulum tidak dapat diubah oleh Guru.", variant: "default" });
         return;
       }
-      setSelectedCurriculum(value as CurriculumFramework);
-      // No specific fields to clear for Promes based on curriculum type for now beyond default form structure
-      setFormData(prev => ({...prev, [name]: value}));
+      const newCurriculum = value as CurriculumFramework;
+      setSelectedCurriculum(newCurriculum);
+      setFormData(prev => {
+        const newFormData: Partial<SemesterProgram & PromesFormState> = {
+            ...prev,
+            curriculumType: newCurriculum,
+            gradeLevel: '', // Reset gradeLevel
+        };
+        // For Promes, capaianPembelajaranUmum_textarea and komponenMingguan_textarea might need to be cleared
+        // or re-evaluated by AI, as their content structure/meaning might change.
+        newFormData.capaianPembelajaranUmum_textarea = '';
+        newFormData.komponenMingguan_textarea = ''; 
+        newFormData.capaianPembelajaranUmum = '';
+        newFormData.komponenMingguan = [];
+        return newFormData;
+      });
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
@@ -135,8 +149,6 @@ export default function EditSemesterProgramPage() {
          addLog("WARN", `Gagal membuat draf Promes dengan AI: Informasi kurang. Promes ID: ${promesId}`, source);
          return;
     }
-    // For Kurikulum Merdeka, it's good to have CP, but not strictly blocking if user wants to generate without it
-    // This is different from RPP and PROTA where CP is more crucial for AI.
 
     setIsGeneratingAI(true);
     addLog("INFO", `Memulai pembuatan draf Promes dengan AI untuk Promes ID: ${promesId}. Kurikulum: ${selectedCurriculum}. Jenjang: "${formData.gradeLevel}". Mapel: "${formData.subject}". Tahun: "${formData.year}". Semester: "${formData.semester}". Input CP/SK-KD: ${formData.capaianPembelajaranUmum_textarea || 'Tidak ada'}`, source);
@@ -153,8 +165,8 @@ export default function EditSemesterProgramPage() {
         setFormData(prev => ({
             ...prev,
             title: result.title || prev.title,
-            capaianPembelajaranUmum: result.capaianPembelajaranUmum || '', // Note: AI returns 'capaianPembelajaranUmum' not '_textarea'
-            capaianPembelajaranUmum_textarea: result.capaianPembelajaranUmum || '', // Sync with textarea
+            capaianPembelajaranUmum: result.capaianPembelajaranUmum || '', 
+            capaianPembelajaranUmum_textarea: result.capaianPembelajaranUmum || '', 
             alokasiWaktuTotalSemester_input: result.alokasiWaktuTotalSemester || '',
             komponenMingguan_textarea: formatWeeklyUnitsToString(result.komponenMingguan || []),
         }));
@@ -282,4 +294,3 @@ export default function EditSemesterProgramPage() {
     </div>
   );
 }
-

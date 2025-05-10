@@ -23,11 +23,73 @@ const baseRppData: Omit<LessonPlan, 'id' | 'createdAt' | 'updatedAt' | 'createdB
   langkahPembelajaran: { pendahuluan: [], kegiatanInti: [], penutup: [] },
   assessment: '',
   materials: '',
-  // Initialize new Kurikulum Merdeka fields
   bidangKeahlian: '',
   programKeahlian: '',
   profilPelajarPancasilaFocus: [],
+  capaianPembelajaran: [],
+  pemahamanBermakna: [],
+  pertanyaanPemantik: [],
+  differentiationStrategies: [],
+  standarKompetensi: [],
+  kompetensiInti: [],
+  kompetensiDasar: [],
+  indikatorPencapaianKompetensi: [],
+  metodePembelajaran: [],
 };
+
+const getInitialFormData = (curriculum: CurriculumFramework): Partial<LessonPlan> => {
+  const common = { ...baseRppData, curriculumType: curriculum, gradeLevel: '' };
+  if (curriculum === "Kurikulum Merdeka") {
+    return {
+      ...common,
+      capaianPembelajaran: [],
+      pemahamanBermakna: [],
+      pertanyaanPemantik: [],
+      differentiationStrategies: [],
+      profilPelajarPancasilaFocus: [],
+      bidangKeahlian: '',
+      programKeahlian: '',
+      standarKompetensi: undefined,
+      kompetensiInti: undefined,
+      kompetensiDasar: undefined,
+      indikatorPencapaianKompetensi: undefined,
+      metodePembelajaran: undefined,
+    };
+  } else if (curriculum === "K-13") {
+    return {
+      ...common,
+      kompetensiInti: [],
+      kompetensiDasar: [],
+      indikatorPencapaianKompetensi: [],
+      metodePembelajaran: [],
+      capaianPembelajaran: undefined,
+      pemahamanBermakna: undefined,
+      pertanyaanPemantik: undefined,
+      differentiationStrategies: undefined,
+      profilPelajarPancasilaFocus: undefined,
+      bidangKeahlian: undefined,
+      programKeahlian: undefined,
+      standarKompetensi: undefined,
+    };
+  } else { // KTSP 2006
+    return {
+      ...common,
+      standarKompetensi: [],
+      kompetensiDasar: [],
+      indikatorPencapaianKompetensi: [],
+      metodePembelajaran: [],
+      capaianPembelajaran: undefined,
+      pemahamanBermakna: undefined,
+      pertanyaanPemantik: undefined,
+      differentiationStrategies: undefined,
+      profilPelajarPancasilaFocus: undefined,
+      bidangKeahlian: undefined,
+      programKeahlian: undefined,
+      kompetensiInti: undefined,
+    };
+  }
+};
+
 
 export default function NewLessonPlanPage() {
   const router = useRouter();
@@ -36,26 +98,8 @@ export default function NewLessonPlanPage() {
   const { defaultCurriculum, availableCurriculums } = useCurriculum();
   const { addLog } = useLog();
 
-  const [formData, setFormData] = useState<Partial<LessonPlan>>(
-     { 
-        ...baseRppData, 
-        curriculumType: defaultCurriculum,
-        // Specific initializations based on default curriculum
-        capaianPembelajaran: defaultCurriculum === "Kurikulum Merdeka" ? [] : undefined,
-        pemahamanBermakna: defaultCurriculum === "Kurikulum Merdeka" ? [] : undefined,
-        pertanyaanPemantik: defaultCurriculum === "Kurikulum Merdeka" ? [] : undefined,
-        differentiationStrategies: defaultCurriculum === "Kurikulum Merdeka" ? [] : undefined,
-        profilPelajarPancasilaFocus: defaultCurriculum === "Kurikulum Merdeka" ? [] : undefined,
-        bidangKeahlian: defaultCurriculum === "Kurikulum Merdeka" ? '' : undefined,
-        programKeahlian: defaultCurriculum === "Kurikulum Merdeka" ? '' : undefined,
-        standarKompetensi: defaultCurriculum === "KTSP 2006" ? [] : undefined,
-        kompetensiInti: defaultCurriculum === "K-13" ? [] : undefined,
-        kompetensiDasar: defaultCurriculum !== "Kurikulum Merdeka" ? [] : undefined,
-        indikatorPencapaianKompetensi: defaultCurriculum !== "Kurikulum Merdeka" ? [] : undefined,
-        metodePembelajaran: defaultCurriculum !== "Kurikulum Merdeka" ? [] : undefined,
-     }
-  );
   const [selectedCurriculum, setSelectedCurriculum] = useState<CurriculumFramework>(defaultCurriculum);
+  const [formData, setFormData] = useState<Partial<LessonPlan>>(getInitialFormData(defaultCurriculum));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
@@ -64,24 +108,10 @@ export default function NewLessonPlanPage() {
       toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk membuat item ini.", variant: "destructive" });
       router.push("/lesson-plans");
     }
-    // Reset form data when defaultCurriculum changes
+    // Reset form data when defaultCurriculum changes ONLY if the user hasn't started typing
+    // For simplicity, we'll reset it every time defaultCurriculum changes on this NEW page.
     setSelectedCurriculum(defaultCurriculum);
-    setFormData({
-      ...baseRppData,
-      curriculumType: defaultCurriculum,
-      capaianPembelajaran: defaultCurriculum === "Kurikulum Merdeka" ? [] : undefined,
-      pemahamanBermakna: defaultCurriculum === "Kurikulum Merdeka" ? [] : undefined,
-      pertanyaanPemantik: defaultCurriculum === "Kurikulum Merdeka" ? [] : undefined,
-      differentiationStrategies: defaultCurriculum === "Kurikulum Merdeka" ? [] : undefined,
-      profilPelajarPancasilaFocus: defaultCurriculum === "Kurikulum Merdeka" ? [] : undefined,
-      bidangKeahlian: defaultCurriculum === "Kurikulum Merdeka" ? '' : undefined,
-      programKeahlian: defaultCurriculum === "Kurikulum Merdeka" ? '' : undefined,
-      standarKompetensi: defaultCurriculum === "KTSP 2006" ? [] : undefined,
-      kompetensiInti: defaultCurriculum === "K-13" ? [] : undefined,
-      kompetensiDasar: defaultCurriculum !== "Kurikulum Merdeka" ? [] : undefined,
-      indikatorPencapaianKompetensi: defaultCurriculum !== "Kurikulum Merdeka" ? [] : undefined,
-      metodePembelajaran: defaultCurriculum !== "Kurikulum Merdeka" ? [] : undefined,
-    });
+    setFormData(getInitialFormData(defaultCurriculum));
   }, [user, router, toast, defaultCurriculum]);
 
 
@@ -98,26 +128,16 @@ export default function NewLessonPlanPage() {
       }
       const newCurriculum = value as CurriculumFramework;
       setSelectedCurriculum(newCurriculum);
+      // Reset form data based on new curriculum, preserving common fields if desired
       setFormData(prev => ({
-        ...baseRppData, 
-        curriculumType: newCurriculum,
+        // Preserve some common fields if they exist from previous state
         title: prev.title,
         subject: prev.subject,
-        gradeLevel: prev.gradeLevel,
+        // gradeLevel will be reset because options change
         topic: prev.topic,
         alokasiWaktuJP: prev.alokasiWaktuJP,
-        capaianPembelajaran: newCurriculum === "Kurikulum Merdeka" ? [] : undefined,
-        pemahamanBermakna: newCurriculum === "Kurikulum Merdeka" ? [] : undefined,
-        pertanyaanPemantik: newCurriculum === "Kurikulum Merdeka" ? [] : undefined,
-        differentiationStrategies: newCurriculum === "Kurikulum Merdeka" ? [] : undefined,
-        profilPelajarPancasilaFocus: newCurriculum === "Kurikulum Merdeka" ? [] : undefined,
-        bidangKeahlian: newCurriculum === "Kurikulum Merdeka" ? '' : undefined,
-        programKeahlian: newCurriculum === "Kurikulum Merdeka" ? '' : undefined,
-        standarKompetensi: newCurriculum === "KTSP 2006" ? [] : undefined,
-        kompetensiInti: newCurriculum === "K-13" ? [] : undefined,
-        kompetensiDasar: newCurriculum !== "Kurikulum Merdeka" ? [] : undefined,
-        indikatorPencapaianKompetensi: newCurriculum !== "Kurikulum Merdeka" ? [] : undefined,
-        metodePembelajaran: newCurriculum !== "Kurikulum Merdeka" ? [] : undefined,
+        // Set new curriculum type and specific fields
+        ...getInitialFormData(newCurriculum),
       }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
@@ -130,7 +150,7 @@ export default function NewLessonPlanPage() {
   };
 
   const handleLangkahPembelajaranChange = (part: 'pendahuluan' | 'kegiatanInti' | 'penutup', value: string) => {
-    const valuesArray = value.split('\n').filter(s => s.trim().length > 0); // Preserve internal spaces, filter out lines that are only whitespace
+    const valuesArray = value.split('\n').filter(s => s.trim().length > 0); 
     setFormData(prev => {
       const currentLangkah = prev.langkahPembelajaran || { pendahuluan: [], kegiatanInti: [], penutup: [] };
       return {
@@ -155,13 +175,16 @@ export default function NewLessonPlanPage() {
          return;
     }
     if (selectedCurriculum === "Kurikulum Merdeka" && (!formData.capaianPembelajaran || formData.capaianPembelajaran.length === 0)) {
-        toast({
-            title: "Informasi Kurang untuk Kurikulum Merdeka",
-            description: "Harap isi Capaian Pembelajaran untuk hasil AI yang lebih optimal.",
-            variant: "destructive"
-        });
-        addLog("WARN", `Gagal membuat draf ATP/Modul Ajar dengan AI (Kurikulum Merdeka): Capaian Pembelajaran kosong.`, source);
-        return;
+        const isPAUD = formData.gradeLevel?.toUpperCase().includes("PAUD");
+        if (!isPAUD) { // For PAUD, CP is optional for AI generation in this context
+            toast({
+                title: "Informasi Kurang untuk Kurikulum Merdeka",
+                description: "Harap isi Capaian Pembelajaran untuk hasil AI yang lebih optimal.",
+                variant: "destructive"
+            });
+            addLog("WARN", `Gagal membuat draf ATP/Modul Ajar dengan AI (Kurikulum Merdeka): Capaian Pembelajaran kosong.`, source);
+            return;
+        }
     }
 
     setIsGeneratingAI(true);
@@ -172,8 +195,8 @@ export default function NewLessonPlanPage() {
           jenjangFaseKelas: formData.gradeLevel as string,
           curriculumType: selectedCurriculum,
           subject: formData.subject,
-          bidangKeahlian: formData.bidangKeahlian,
-          programKeahlian: formData.programKeahlian,
+          bidangKeahlian: selectedCurriculum === "Kurikulum Merdeka" ? formData.bidangKeahlian : undefined,
+          programKeahlian: selectedCurriculum === "Kurikulum Merdeka" ? formData.programKeahlian : undefined,
           capaianPembelajaran: selectedCurriculum === "Kurikulum Merdeka" ? formData.capaianPembelajaran || [] : undefined,
         };
         const result: GenerateLessonPlanOutput = await generateLessonPlanFromTopic(aiInput);
@@ -219,8 +242,8 @@ export default function NewLessonPlanPage() {
     setIsSubmitting(true);
 
     const newLessonPlan: LessonPlan = {
-      id: `rpp-${Date.now()}`, // ID can remain generic, type distinguishes it
-      type: 'RPP', // This 'type' field is for broad categorization in storage/display
+      id: `rpp-${Date.now()}`,
+      type: 'RPP', 
       title: formData.title || '',
       subject: formData.subject || '',
       gradeLevel: formData.gradeLevel || '',
@@ -229,7 +252,6 @@ export default function NewLessonPlanPage() {
       learningObjectives: formData.learningObjectives || [],
       alokasiWaktuJP: formData.alokasiWaktuJP || '',
       
-      // Kurikulum Merdeka specific
       bidangKeahlian: selectedCurriculum === "Kurikulum Merdeka" ? formData.bidangKeahlian || undefined : undefined,
       programKeahlian: selectedCurriculum === "Kurikulum Merdeka" ? formData.programKeahlian || undefined : undefined,
       capaianPembelajaran: selectedCurriculum === "Kurikulum Merdeka" ? formData.capaianPembelajaran || [] : undefined,
@@ -238,7 +260,6 @@ export default function NewLessonPlanPage() {
       differentiationStrategies: selectedCurriculum === "Kurikulum Merdeka" ? formData.differentiationStrategies || [] : undefined,
       profilPelajarPancasilaFocus: selectedCurriculum === "Kurikulum Merdeka" ? formData.profilPelajarPancasilaFocus || [] : undefined,
       
-      // KTSP / K-13 specific
       standarKompetensi: selectedCurriculum === "KTSP 2006" ? formData.standarKompetensi || [] : undefined,
       kompetensiInti: selectedCurriculum === "K-13" ? formData.kompetensiInti || [] : undefined,
       kompetensiDasar: (selectedCurriculum === "K-13" || selectedCurriculum === "KTSP 2006") ? formData.kompetensiDasar || [] : undefined,
@@ -322,4 +343,3 @@ export default function NewLessonPlanPage() {
     </div>
   );
 }
-

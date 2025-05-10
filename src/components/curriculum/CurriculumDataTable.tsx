@@ -151,7 +151,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
                       </table><hr class="content-hr">`;
     } else {
         contentHtml += `<div class="doc-info">
-            <h2>${item.title}</h2>
+            <h2 class="rpp-main-title">${item.title}</h2>
             <p class="doc-subtitle">${documentTypeDisplay}</p>
             <table class="info-table">
                 <tr><td>Kurikulum</td><td>: ${item.curriculumType}</td></tr>
@@ -375,7 +375,8 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
             .kop-text .kop-contact { font-size: 9pt; }
 
             .doc-info { margin-top: 15px; margin-bottom: 10px; text-align: center; }
-            .doc-info h2 { font-size: 14pt; margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
+            .rpp-main-title, .atp-main-title { font-size: 14pt; margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
+            .atp-main-title { margin-bottom: 15px; } /* Add space below ATP title */
             .doc-info .doc-subtitle { font-size: 12pt; margin-bottom: 15px; font-weight: bold; text-transform: uppercase; }
             
             .info-table { width: auto; margin: 0 auto 15px auto; font-size: 11pt; border-collapse: collapse;}
@@ -384,9 +385,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
             .info-table td:nth-child(2) { font-weight: normal; text-align: left; }
 
             .atp-header { text-align: center; margin-bottom: 15px; }
-            .atp-main-title { font-size: 14pt; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
             .atp-sub-title { font-size: 13pt; font-weight: bold; margin-bottom: 15px; text-transform: uppercase; }
-            .atp-info-table { width: 100%; max-width: 700px; margin: 0 auto 20px auto; font-size: 11pt; }
             .atp-info-table td { padding: 4px 8px; vertical-align: top;}
             .atp-info-table td:first-child { font-weight: bold; width: 30%; }
             
@@ -413,7 +412,7 @@ export function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, 
             
             @media print {
               body { margin: 0.75in; font-size: 11pt; } 
-              .print-button-container { display: none; }
+              .print-button-container, .kop-surat img[data-ai-hint="school logo"] { display: none; }
               .kop-surat { border-bottom: 4px double black !important; } 
               h1, h2, h3, h4, table, ul, ol, p, div { page-break-inside: avoid; }
               h3, h4 { page-break-after: avoid; }

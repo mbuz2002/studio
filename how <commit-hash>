@@ -1,0 +1,948 @@
+[33mcommit b3a403324d517920acb1d3207e374e8342c39d28[m[33m ([m[1;36mHEAD[m[33m, [m[1;32mmaster[m[33m)[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Fri May 9 14:41:35 2025 +0000
+
+    perbaiki form terdapat yang gak bisa smasi
+
+[33mcommit 6bf1aeb1ea5be196abfa81aeff226455e0ad5c77[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Fri May 9 14:28:05 2025 +0000
+
+    Update format prota untuk jenjang sd sesuai dengan jenjang masing masing
+
+[33mcommit 87127eb215b31b8ffa43e8d298134b9fca3134ec[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Fri May 9 11:58:26 2025 +0000
+
+    perbaiki tampilan cetak pdfnya dengan default ukuran kertasnya f4 dan buat agar lebih profesional dan lebih rapi
+
+[33mcommit abcd5a19394b17d3b7c7bbef04549733c41a5893[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Fri May 9 11:51:53 2025 +0000
+
+    hapus filter Mata Pelajaran
+
+[33mcommit 5384e6c1ab0b1134f8f96f3997ae848ad1211178[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Fri May 9 11:45:37 2025 +0000
+
+    implementasikan fitur filternya
+
+[33mcommit 12ff8f1cc2e6ceed582cd2f8a14fdb2a782c61e0[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Fri May 9 11:40:15 2025 +0000
+
+    seaikan form atp nya sesuai dengan fasenya sesuai kurikulum merdeka
+
+[33mcommit 8ae8f2efb7d01393ceb53b9ec01bc9d456e71ee9[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Fri May 9 07:20:37 2025 +0000
+
+    perbaiki CurriculumDataTable.tsx
+
+[33mcommit 85491f39dae999eb724c7568e38dbfa11793336c[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Fri May 9 07:05:37 2025 +0000
+
+    bagian form Capaian Pembelajaran (CP) (satu per baris) tidak bisa spasi
+
+[33mcommit 51d1489ef1c545c8c58571a21ffdeb22c033e2ad[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Fri May 9 07:02:58 2025 +0000
+
+    perbaiki form atp tidak bisa ketik spasi
+
+[33mcommit df3e3c3b9fa0909f818d49387b239aa59b37aedf[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Fri May 9 04:58:05 2025 +0000
+
+    untuk kop saat kurmer mengikuti profil sekolah
+
+[33mcommit 163ae00e428a9487f83ae8592dad65ce08a47d9a[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Fri May 9 04:51:06 2025 +0000
+
+    jika kurikulum merdeka di set maka menu Rencana Pembelajaran digssnti menjsdi ATP
+
+[33mcommit 1c95b495e5a1032bd2472fb469304c62d481f4de[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Fri May 9 04:29:38 2025 +0000
+
+    I see this error with the app, reported by NextJS, please fix it. The error is reported as HTML but presented visually to the user).
+    
+    A > before the line number in the error source usually indicates the line of interest:
+    
+    > Runtime Error: Error: ./src/ai/flows/export-rpp-to-text.ts:17:1
+    > Export id doesn't exist in target module
+    >   15 | import type { LessonPlan, CurriculumFramework } from '@/types';
+    >   16 | import { format } from 'date-fns';
+    > > 17 | import { id as indonesianLocale } from 'date-fns';
+    >      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    >   18 |
+    >   19 | const LessonPlanSchema = z.object({
+    >   20 |   id: z.string(),
+    >
+    > The export id was not found in module [project]/node_modules/date-fns/index.mjs [app-rsc] (ecmascript) <exports>.
+    > Did you mean to import isWednesday?
+    > All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+    >
+    > . Error source: Call Stack
+    > 7
+    >
+    > Show 5 ignore-listed frame(s)
+    > <unknown>
+    > error: ./src/ai/flows/export-rpp-to-text.ts (17:1)
+    > <unknown> (Error:
+    > ./src/ai/flows/export-rpp-to-text.ts (17:1)
+
+[33mcommit b998f9c8eda6f640273df350951ca2afeedb226f[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Fri May 9 04:23:18 2025 +0000
+
+    update ketika kurukulum di ubah menjadi kurikulum merdeka maka fitur rpp diganti menjadi ATP dengan template ATP seperti contoh berikut
+
+[33mcommit edbfb68daff709421c3ca7f227569f283136ee85[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 16:56:24 2025 +0000
+
+    Update agar Jika waka kurikulum, kepala sekolah, admin meng setting kurikulum dan menetapkannya maka secara keseluruhan akan sesuai dengan yang disetting. Pihak guru tidak bisa menggantinya baik itu di rpp, prota, dan promesnya
+
+[33mcommit bbb63e45fe1a6fbb8ea6206fedb9eebad33d4d0b[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 16:46:18 2025 +0000
+
+    Untuk mobile tambahkan tombol singout pada pengaturan
+
+[33mcommit 21a336c87d236b00a00269e06ca466d9bce49255[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 15:15:50 2025 +0000
+
+    untuk rpp jika kurikulum merdeka maka yang dibuat adalah ATP buat agar formatnya sesuai dan terintegrasi ai
+
+[33mcommit 74bcefae54be24893c67bfb64fd05b2ff4887941[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 15:04:14 2025 +0000
+
+    update untunk jenjang/kelas sesuaikan dengan kurikulum
+
+[33mcommit 0e28c60011dd9ef24e5d63b28953c0825015680b[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 14:39:54 2025 +0000
+
+    tambahkan JP pada RPP, Prota, Promes
+    dan sesuaikan formnya sesuai kurikulumnya
+    jika Kurikulum merdeka terdapat form memasukan CP yang nanti singkron dengan topik dan mempengaruhi hasil ai nya
+
+[33mcommit 54d886d0754d3943261d35bcc630007e13d26673[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 14:23:16 2025 +0000
+
+    loh kok malah mobilebottomnav nya hilang
+    perbaiki agar responsive
+
+[33mcommit 005c4eec6de06c6fffd68cd6a376b6236c517288[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 14:17:10 2025 +0000
+
+    buat agar sidebar menunya bisa diminimize dan menjadi icon only saat dekstop mode
+
+[33mcommit 6e7348e08a79ff9788868f8e6ccbbbc183b0ec44[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 12:49:38 2025 +0000
+
+    I see this error with the app, reported by NextJS, please fix it. The error is reported as HTML but presented visually to the user).
+    
+    A > before the line number in the error source usually indicates the line of interest:
+    
+    > Unhandled Runtime Error: Error: selectedCurikulum is not defined. Error source: src/app/(app)/lesson-plans/new/page.tsx (112:77) @ <unknown>
+    >
+    >   110 |             pemahamanBermakna: result.pemahamanBermakna || (selectedCurriculum === "Kurikulum Merdeka" ? [] : undefined),
+    >   111 |             pertanyaanPemantik: result.pertanyaanPemantik || (selectedCurriculum === "Kurikulum Merdeka" ? [] : undefined),
+    > > 112 |             differentiationStrategies: result.differentiationStrategies || (selectedCurikulum === "Kurikulum Merdeka" ? [] : undefined),
+    >       |                                                                             ^
+    >   113 |             standarKompetensi: result.standarKompetensi || (selectedCurriculum === "KTSP 2006" ? [] : undefined),
+    >   114 |             kompetensiInti: result.kompetensiInti || (selectedCurriculum === "K-13" ? [] : undefined),
+    >   115 |             kompetensiDasar: result.kompetensiDasar || (selectedCurriculum !== "Kurikulum Merdeka" ? [] : undefined),
+    >
+    > Call Stack
+    > 8
+    >
+    > Show 6 ignore-listed frame(s)
+    > <unknown>
+    > src/app/(app)/lesson-plans/new/page.tsx (112:77)
+    > NewLessonPlanPage
+    > src/app/(app)/lesson-plans/new/page.tsx (35:42)
+
+[33mcommit b54dff84c0a1930a2eb5565e376907c0abaa2232[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 12:11:03 2025 +0000
+
+    ubah dialog buat rpp,promes, prota formnya menjadi page sja agar terlihat semua dan responsive
+    
+    dan juga fix this issue
+    Error: You specified knownHelpersOnly, but used the unknown helper eq - 14:10
+        at <anonymous> (rsc://React/Server/file:///home/user/studio/.next/server/chunks/ssr/%5Broot%20of%20the%20server%5D__b2313ef2._.js?8:573:24)
+        at resolveErrorDev (https://6000-firebase-studio-1746630314842.cluster-bg6uurscprhn6qxr6xwtrhvkf6.cloudworkstations.dev/_next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js:17512:48)
+        at processFullStringRow (https://6000-firebase-studio-1746630314842.cluster-bg6uurscprhn6qxr6xwtrhvkf6.cloudworkstations.dev/_next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js:17728:23)
+        at processFullBinaryRow (https://6000-firebase-studio-1746630314842.cluster-bg6uurscprhn6qxr6xwtrhvkf6.cloudworkstations.dev/_next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js:17716:9)
+        at progress (https://6000-firebase-studio-1746630314842.cluster-bg6uurscprhn6qxr6xwtrhvkf6.cloudworkstations.dev/_next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js:17862:102)
+
+[33mcommit 2cd0ad6141e741423ca91f88db28cf5bca8f8438[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 11:50:27 2025 +0000
+
+    perbaiki file pada folder curriculum
+
+[33mcommit 56caa6155525fc659ba6de447242dd0434acd667[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 11:45:49 2025 +0000
+
+    untuk rpp,prota,promes pada role guru hanya ditampilkan yang user itu buat sendiri
+
+[33mcommit 421d71fc49036fe9e5b6e94618b6290d1045b7c7[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 10:34:16 2025 +0000
+
+    perbaiki agar tidak terpotong
+
+[33mcommit bae561df316f889c47f9340dc6cfa1d82dc2940d[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 10:23:47 2025 +0000
+
+    pada bagian ini tidak responsive
+
+[33mcommit 749f3b1c7e3292fe7c122c4215bdbbc727b7bdcc[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 10:05:43 2025 +0000
+
+    perbaiki semuanya
+
+[33mcommit 93265725134bd40f249d29cacd30a4523c962646[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 10:02:20 2025 +0000
+
+    input semua menu pada mobile bootom nav sesuai dengan rolenya
+
+[33mcommit 6dcf8861a5b2f272e4a29df89b84ed14603de8f0[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 09:57:39 2025 +0000
+
+    perbaiki tampilannya semua agar lebih profesional
+
+[33mcommit ddd31066c12762779b6c2329ac8def345fbdae30[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 09:47:27 2025 +0000
+
+    reviso tampilan mobile nya semua agar lebih profesional
+
+[33mcommit 4b2e4ad8a55e3b83690164e5a67d9985f413ad9b[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 09:37:42 2025 +0000
+
+    buat agar responsive
+
+[33mcommit 1c46991031896319f89436cbdb0dc1fcf0b54fe8[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 09:32:43 2025 +0000
+
+    Prota dan promes nya juga masukan kedalam MobileBottomNav
+    bagian tabel prota, promes dan rpp buat agar responsive di mobile
+
+[33mcommit c61774d305aa1bd93cc493dc3fd84e9826ba3a42[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 09:28:04 2025 +0000
+
+    perbaiki fitur rpp, prota, promes, pengaturan akun, managemen pengguna dan pengaturan sistem agar mobile responsif
+
+[33mcommit 2ab6d4f884adb26fffdbe197e426e3ee8a236103[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 09:03:31 2025 +0000
+
+    Tambahkan Fitur Pengaturan Kurikulum, yang mana terdapat pilihan jenis kurikulum
+    - KTSP 2006
+    - K-13
+    - Kurikulum Merdeka
+    yang mana nanti berdampak pada template dan form RPP, PROMES dan PROTA
+    buat dan sesuaikan dengan benar
+
+[33mcommit 1e7eb6a7f9c5d818a180960a5fcca210ae1b5011[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 08:52:25 2025 +0000
+
+    Tambahkan Footer kredit created by RIFQY IZA FAHRIZAL
+
+[33mcommit 43da3a97535dbe605cd0339a5e5dd81352a70d73[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 08:10:58 2025 +0000
+
+    ubah tampilannya agar modern gradient color
+
+[33mcommit 9a3a51cfb22c644bf54a1f1f79928ac46b143430[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 08:06:20 2025 +0000
+
+    perbaiki Buat Materi Ajar dengan AI gak bisa digeser
+
+[33mcommit 87428e41a23dc0d802506d37607e5d92cf699c42[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 08:01:31 2025 +0000
+
+    updatefitur Buat Materi Ajar dengan AI menjadi lebih kompleks dan layoutnya lebih bagus dan rapi dan juga bisa ada tabel, bisa tulisan arab berharokat (Jika ada materi yang berbahasa arab)
+
+[33mcommit 27dc334388724f06453dde03c504785754be7b60[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 07:53:26 2025 +0000
+
+    perbaiki tampilannya semua dan agar lebih responsif dan modern icon
+
+[33mcommit 82d3d826cb60761425b95e83fe7ec9b461556721[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 07:40:20 2025 +0000
+
+    perbaiki profil user agar fix content/fill ke 1;1
+
+[33mcommit 1aecab2c4be6143f22d208c556fb73679dad16dc[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 07:38:30 2025 +0000
+
+    I see this error with the app, reported by NextJS, please fix it. The error is reported as HTML but presented visually to the user).
+    
+    A > before the line number in the error source usually indicates the line of interest:
+    
+    > Console Error: Cannot update a component (`LogProvider`) while rendering a different component (`AuthProvider`). To locate the bad setState() call inside `AuthProvider`, follow the stack trace as described in https://react.dev/link/setstate-in-render. Error source: src/contexts/LogContext.tsx (38:5) @ LogProvider.useCallback[addLog]
+    >
+    >   36 |       source,
+    >   37 |     };
+    > > 38 |     setLogs(prevLogs => {
+    >      |     ^
+    >   39 |       const updatedLogs = [newLogEntry, ...prevLogs];
+    >   40 |       if (updatedLogs.length > MAX_LOGS) {
+    >   41 |         return updatedLogs.slice(0, MAX_LOGS);
+    >
+    > Call Stack
+    > 15
+    >
+    > Show 11 ignore-listed frame(s)
+    > LogProvider.useCallback[addLog]
+    > src/contexts/LogContext.tsx (38:5)
+    > AuthProvider.useCallback[updateUser]
+    > src/contexts/AuthContext.tsx (81:9)
+    > AuthProvider
+    > src/contexts/AuthContext.tsx (31:34)
+    > RootLayout
+    > src/app/layout.tsx (35:15)
+
+[33mcommit 7c8ff5b5eb9edb7577d78beb0adf4e1d7b8df823[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 07:33:20 2025 +0000
+
+    ubah agar untuk ubah avatar atau profil pengguna agar upload filenya aja jangan url
+
+[33mcommit ed4d5ac45502a5509167c38b81a969850aa9100c[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 07:28:10 2025 +0000
+
+    I see this error with the app, reported by NextJS, please fix it. The error is reported as HTML but presented visually to the user).
+    
+    A > before the line number in the error source usually indicates the line of interest:
+    
+    > Unhandled Runtime Error: Error: Invalid src prop (https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSNvHPq6d78QMya52n3-iU6hW-jwu3TxCgfMg&s) on `next/image`, hostname "encrypted-tbn0.gstatic.com" is not configured under images in your `next.config.js`
+    > See more info: https://nextjs.org/docs/messages/next-image-unconfigured-host. Error source: src/components/settings/SchoolProfileForm.tsx (202:25) @ SchoolProfileForm
+    >
+    >   200 |                     <Label>Pratinjau Logo:</Label>
+    >   201 |                     <div className="mt-2 w-32 h-32 relative border rounded-md p-2 flex items-center justify-center bg-muted/30">
+    > > 202 |                         <Image
+    >       |                         ^
+    >   203 |                             src={logoPreview}
+    >   204 |                             alt="Pratinjau Logo Sekolah"
+    >   205 |                             fill
+    >
+    > Call Stack
+    > 9
+    >
+    > Show 6 ignore-listed frame(s)
+    > Array.map
+    > <anonymous> (0:0)
+    > SchoolProfileForm
+    > src/components/settings/SchoolProfileForm.tsx (202:25)
+    > SettingsPage
+    > src/app/(app)/settings/page.tsx (196:11)
+
+[33mcommit 7f290c35d1519ec030c68007128c6dcae91def9b[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 07:27:46 2025 +0000
+
+    update fitur pilihan untuk logo/image bisa memakai link gambarnya atau upload file
+
+[33mcommit ca8d84d7ef281c91e9820c499f0faf77e98ce7a5[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 07:21:28 2025 +0000
+
+    I see this error with the app, reported by NextJS, please fix it. The error is reported as HTML but presented visually to the user).
+    
+    A > before the line number in the error source usually indicates the line of interest:
+    
+    > Console Error: Error: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent: [400 Bad Request] * GenerateContentRequest.generation_config.response_schema.properties[suggestedSources].items.properties[url].format: only 'enum' and 'date-time' are supported for STRING type
+    > . Error source: src/ai/flows/generate-teaching-material.ts (77:22) @ <anonymous>
+    >
+    >   75 |   },
+    >   76 |   async (input: GenerateTeachingMaterialInput) => {
+    > > 77 |     const {output} = await prompt(input);
+    >      |                      ^
+    >   78 |     return output!;
+    >   79 |   }
+    >   80 | );
+    >
+    > Call Stack
+    > 5
+    >
+    > Show 4 ignore-listed frame(s)
+    > <anonymous>
+    > src/ai/flows/generate-teaching-material.ts (77:22)
+
+[33mcommit 41b37d0b248726864192e64889ec762bede5bd4a[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 07:18:06 2025 +0000
+
+    untuk fitur Manajemen Pengguna pisahkan dari pengaturan akun dan buatkan menu sendiri
+
+[33mcommit 58ca93126e9023e3b9847fe31bd52b62134786ff[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 07:12:23 2025 +0000
+
+    I see this error with the app, reported by NextJS, please fix it. The error is reported as HTML but presented visually to the user).
+    
+    A > before the line number in the error source usually indicates the line of interest:
+    
+    > Runtime Error: Error: ./src/app/(app)/ai-assistant/page.tsx:17:1
+    > Module not found: Can't resolve 'react-markdown'
+    >   15 | import { useLog } from "@/contexts/LogContext";
+    >   16 | import { ScrollArea } from "@/components/ui/scroll-area";
+    > > 17 | import ReactMarkdown from 'react-markdown';
+    >      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    >   18 | import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+    >   19 |
+    >   20 |
+    >
+    >
+    >
+    > https://nextjs.org/docs/messages/module-not-found
+    >
+    > . Error source: Call Stack
+    > 9
+    >
+    > Show 7 ignore-listed frame(s)
+    > <unknown>
+    > error: ./src/app/(app)/ai-assistant/page.tsx (17:1)
+    > <unknown> (Error:
+    > ./src/app/(app)/ai-assistant/page.tsx (17:1)
+
+[33mcommit 327f95ad35f59b2ca0cf32982ca67208074a4456[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 07:09:49 2025 +0000
+
+    kembangkan fitur pada Rencana pembelajaran, Prota, Promes agar terintegrasi dengan AI dan juga formatnya yang lengkap dan sesuai dengan kurikulum merdeka
+    untuk fitur asisten ai itu untuk membuat Materi dan terdapat/tercantum sumbernya yang terintegrasi dengan ai
+
+[33mcommit d0ef237078594616f5e9ae64f94e1a9933b72f64[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 06:58:46 2025 +0000
+
+    kembangkan fitur asisten ai
+
+[33mcommit efb710f44ad3707e3d8ff9f7bb1c52d92157460e[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 06:52:21 2025 +0000
+
+    tambahkan Nama Guru/ Pembuat pada list tabel RPP, Prota dan promes
+
+[33mcommit f65fc7034f95bad5b0ebbf7eb92f39218e06c90d[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 06:47:59 2025 +0000
+
+    ubah font nya menjadi roboto family
+
+[33mcommit ffa1a1327a0ec0f91d221823b106c57ae508ed1a[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 04:58:46 2025 +0000
+
+    ReferenceError: MAX_LOGS is not defined
+        at SystemLogsPage (https://6000-firebase-studio-1746630314842.cluster-bg6uurscprhn6qxr6xwtrhvkf6.cloudworkstations.dev/_next/static/chunks/src_ef6526e7._.js:1179:29)
+        at ClientPageRoot (https://6000-firebase-studio-1746630314842.cluster-bg6uurscprhn6qxr6xwtrhvkf6.cloudworkstations.dev/_next/static/chunks/node_modules_next_dist_1a6ee436._.js:2053:50)
+
+[33mcommit cb5f61843dbf09621aeac96468a0030881f31886[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 04:46:48 2025 +0000
+
+    I see this error with the app, reported by NextJS, please fix it. The error is reported as HTML but presented visually to the user).
+    
+    A > before the line number in the error source usually indicates the line of interest:
+    
+    > Unhandled Runtime Error: Error: useLog must be used within a LogProvider. Error source: src/contexts/LogContext.tsx (71:11) @ useLog
+    >
+    >   69 |   const context = useContext(LogContext);
+    >   70 |   if (context === undefined) {
+    > > 71 |     throw new Error('useLog must be used within a LogProvider');
+    >      |           ^
+    >   72 |   }
+    >   73 |   return context;
+    >   74 | };
+    >
+    > Call Stack
+    > 3
+    >
+    > useLog
+    > src/contexts/LogContext.tsx (71:11)
+    > AuthProvider
+    > src/contexts/AuthContext.tsx (34:27)
+    > RootLayout
+    > src/app/layout.tsx (33:13)
+
+[33mcommit 28275e09e0d1a79a60a1fe6276eefe76f3e0e528[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 04:43:00 2025 +0000
+
+    belom log sistemnya sinkron
+
+[33mcommit 6a4547fa64eb21d88d16a64d6d444d5fa18b7e03[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 03:51:44 2025 +0000
+
+    Fitur log sistemnya terapkan
+
+[33mcommit 506704626d8d05ef1e9f237257f88f7cb8eb8843[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 03:45:58 2025 +0000
+
+    kok gak bisa digunakan temanya
+
+[33mcommit 7b68b96bf44c7a81527d0c3eb7a9c3de7fcae02c[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 03:41:06 2025 +0000
+
+    buat agar Tema tampilan rimba teduh (Gelap) dengan warna gelap dan second colornya hijau#1F7D53
+
+[33mcommit 9b177eea7fa7c15803b9e22f5a529ef8cf36bdd6[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 03:32:37 2025 +0000
+
+    I see this error with the app, reported by NextJS, please fix it. The error is reported as HTML but presented visually to the user).
+    
+    A > before the line number in the error source usually indicates the line of interest:
+    
+    > Unhandled Runtime Error: Error: A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.. Error source: src/components/ui/select.tsx (118:3) @ _c8
+    >
+    >   116 |   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
+    >   117 | >(({ className, children, ...props }, ref) => (
+    > > 118 |   <SelectPrimitive.Item
+    >       |   ^
+    >   119 |     ref={ref}
+    >   120 |     className={cn(
+    >   121 |       "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+    >
+    > Call Stack
+    > 4
+    >
+    > Show 2 ignore-listed frame(s)
+    > _c8
+    > src/components/ui/select.tsx (118:3)
+    > AIAssistantPage
+    > src/app/(app)/ai-assistant/page.tsx (249:23)
+
+[33mcommit c089aa5962680b19b24c11d2914fa0c6ae529c52[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 03:29:58 2025 +0000
+
+    I see this error with the app, reported by NextJS, please fix it. The error is reported as HTML but presented visually to the user).
+    
+    A > before the line number in the error source usually indicates the line of interest:
+    
+    > Runtime Error: Error: ./src/types/index.ts:145:4
+    > Parsing ecmascript source code failed
+    >   143 | }
+    >   144 |
+    > > 145 | ```
+    >       |    ^
+    >
+    > Unexpected eof
+    >
+    > . Error source: Call Stack
+    > 7
+    >
+    > Show 5 ignore-listed frame(s)
+    > <unknown>
+    > error: ./src/types/index.ts (145:4)
+    > <unknown> (Error:
+    > ./src/types/index.ts (145:4)
+
+[33mcommit 298d5eb8050ec26d43933af9645d74d4bf089e13[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 03:28:59 2025 +0000
+
+    I see this error with the app, reported by NextJS, please fix it. The error is reported as HTML but presented visually to the user).
+    
+    A > before the line number in the error source usually indicates the line of interest:
+    
+    > ./src/app/(app)/annual-programs/page.tsx:269:4
+    > Parsing ecmascript source code failed
+    >   267 | }
+    >   268 |
+    > > 269 | ```
+    >       |    ^
+    >
+    > Unexpected eof
+    >
+    >
+
+[33mcommit b93bd4dfea482584189a163c4f1a61fcebb214e8[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 03:22:40 2025 +0000
+
+    perbaiki CurriculumDataTable.tsx
+
+[33mcommit 932d33bc3c9f90bfbfe9c62e07d9daf4d2ddd310[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 03:09:13 2025 +0000
+
+    perbaiki tampilan dan layout nya semua agar lebih modern dan keren dan gunakan font plus jakarta sans
+
+[33mcommit 3f85fef1b1ecdfb10049649cf8f5993abf1582f6[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 03:05:35 2025 +0000
+
+    Perbaiki tema Rimba Teduh
+
+[33mcommit fc172146d8f234e7099f9841c2c859915c21fe22[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 03:03:18 2025 +0000
+
+    implementasikan semua preferensi temanya, ada beberapa tema yang belum berubah
+
+[33mcommit 60b7c9effbd46119679204d9e0c5fc089dc77796[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 03:00:14 2025 +0000
+
+    Menu pengaturannya pada mobilebottomnav nya?
+
+[33mcommit bf97a2ef5d4b803871f012222931b9dd697e8dbe[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 02:59:08 2025 +0000
+
+    buat agar mobile bottomnavnya sesuai dengan user rolenya
+
+[33mcommit 8f94e8d51a062ea82420e08638abed62ad2dde37[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 02:57:21 2025 +0000
+
+    The mobile menu sticky bottom icon is a navigation bar that sticks to the bottom of the screen on mobile devices, even when the user scrolls. The menu typically contains icons that provide quick access to core app functionalities, such as:
+    
+    Dashboard
+    Lesson Plans
+    Annual Programs
+    Semester Programs
+    AI Assistant
+    
+    make now
+
+[33mcommit 6482961a8f451a891df610d799d30ab5af5e8c07[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 02:55:14 2025 +0000
+
+    mobile menu sticky bottom icon,
+
+[33mcommit 64a55b66509f1dc0f0d84e766d24c2910dd5d1bd[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 02:53:28 2025 +0000
+
+    buat agar tampilannya semua terlihat keren, modern, mobile resposive, mobile menu sticky icon, dan terdapat preferensi banyak tema
+
+[33mcommit 3191d643e50f2117c132c067e0ee754b70bc9e6f[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 02:49:21 2025 +0000
+
+    buat agar tampilannya semua terlihat keren, modern, mobile resposive, mobile menu sticky icon, dan cyber color
+
+[33mcommit 2169bb257549032da3b4c07668dc23581d0b455c[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 02:40:07 2025 +0000
+
+    I see this error with the app, reported by NextJS, please fix it. The error is reported as HTML but presented visually to the user).
+    
+    A > before the line number in the error source usually indicates the line of interest:
+    
+    > ./src/ai/flows/generate-semester-program.ts:68:10
+    > Parsing ecmascript source code failed
+    >   66 | 3.  **Alokasi Waktu Total Semester**: Berikan estimasi perhitungan total alokasi waktu, misalnya dengan asumsi jumlah minggu efektif dan JP per minggu (contoh: "18 Minggu Efektif x 4 JP/Minggu = 72 JP").
+    >   67 | 4.  **Komponen Mingguan**: Rincikan rencana pembelajaran untuk **3 sampai 5 minggu pertama** sebagai contoh. Untuk setiap minggu:
+    > > 68 |     *   `mingguKe`: Nomor minggu.
+    >      |          ^^^^^^^^
+    >   69 |     *   `bulan`: Perkiraan bulan.
+    >   70 |     *   `materiPokokAtauTujuanPembelajaran`: Materi pokok atau tujuan pembelajaran spesifik.
+    >   71 |     *   `alokasiWaktu`: Alokasi waktu untuk minggu itu (misal "6 JP").
+    >
+    > Expected ',', got 'mingguKe'
+    >
+    >
+
+[33mcommit 120549aa20955db0037ca5143c2e4ace76b3fb6b[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 02:37:29 2025 +0000
+
+    implementasikan ainya pada buat rpp, prota dan promesnya
+
+[33mcommit 4173de5e938b21f4cef0a5128f6325fabb7f6997[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 02:34:04 2025 +0000
+
+    I see this error with the app, reported by NextJS, please fix it. The error is reported as HTML but presented visually to the user).
+    
+    A > before the line number in the error source usually indicates the line of interest:
+    
+    > ./src/app/(app)/admin/system-settings/page.tsx:14:21
+    > Parsing ecmascript source code failed
+    >   12 | import { useToast } from "@/hooks/use-toast";
+    >   13 | import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+    > > 14 | import { useRouter }_CLIENT_ तरफ से "@/../../../../../../../next/navigation";
+    >      |                     ^^^^^^^^
+    >   15 |
+    >   16 | export default function AdminSystemSettingsPage() {
+    >   17 |   const { user, loading } = useAuth();
+    >
+    > Expected 'from', got '_CLIENT_'
+    >
+    >
+
+[33mcommit 3a95eee6c8f45a6a81b8d0989d7b85456e0cefd4[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 02:32:52 2025 +0000
+
+    perrbaiki fitur Pengaturan Sistem (Khusus Admin)
+
+[33mcommit 9fa8cb79dec2a056a987afa14773f109c71360bc[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 02:30:00 2025 +0000
+
+    I see this error with the app, reported by NextJS, please fix it. The error is reported as HTML but presented visually to the user).
+    
+    A > before the line number in the error source usually indicates the line of interest:
+    
+    > Unhandled Runtime Error: Error: DialogTrigger is not defined. Error source: src/components/curriculum/CurriculumFormDialog.tsx (545:11) @ CurriculumFormDialog
+    >
+    >   543 |     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+    >   544 |       {!isEditMode && triggerButtonText !== "Pemicu Edit Tersembunyi" && (
+    > > 545 |          <DialogTrigger asChild>
+    >       |           ^
+    >   546 |             <Button className="bg-accent hover:bg-accent/90 text-accent-foreground w-full sm:w-auto">
+    >   547 |             <PlusCircle className="mr-2 h-5 w-5" /> {triggerButtonText}
+    >   548 |             </Button>
+    >
+    > Call Stack
+    > 3
+    >
+    > Show 1 ignore-listed frame(s)
+    > CurriculumFormDialog
+    > src/components/curriculum/CurriculumFormDialog.tsx (545:11)
+    > AnnualProgramsPage
+    > src/app/(app)/annual-programs/page.tsx (191:19)
+
+[33mcommit 51e4c78aa9e85d4110000d0c2fd7d8182ed988f4[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 02:28:25 2025 +0000
+
+    buat agar ai nya terintegrasi dengan Buat RPP, Protadan promes
+
+[33mcommit 4c609e4968caeb320fef55a6e5f2e86377619bb2[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 02:14:33 2025 +0000
+
+    perbaiki fitur preferensi aplikasinya
+
+[33mcommit ee69ca1389e834780f148fc4929cbba28345a7cd[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 02:12:02 2025 +0000
+
+    perbaiki form edit profil pengguna agar resposif
+
+[33mcommit 39697818e690e9765d2175c0f517b4b2014c8f7a[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 02:08:30 2025 +0000
+
+    tambahkan fitur keamanan yang mana bisa mengganti kata sandi
+
+[33mcommit 6f2c4aa7615f8d38d1e604a0c1a0a8c51c186996[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 02:06:23 2025 +0000
+
+    perbaikinfitur edit profil pengguna
+
+[33mcommit d6aa35c68db3ad98d26231f8f4ded19576102ee9[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 01:42:37 2025 +0000
+
+    buat menu atur kop pada admin dan tata usaha
+
+[33mcommit e29f7dd3f4563d561456130e17de06273ec8e87b[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 01:32:56 2025 +0000
+
+    untuk kop cetaknya terintegrasi dengan profil sekolah
+
+[33mcommit 1414d90cce7632497be1d3b1de5bb3a4cb218db8[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 01:30:21 2025 +0000
+
+    template cetaknya bisa di adjust manual
+
+[33mcommit f91e948061ee77ae672257185468ff3cfee4fef6[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 01:12:38 2025 +0000
+
+    untuk template cetaknya terdapat KOP nya seperti logo sekolah, nama sekolah, alamat npsn
+    dan buat agar juga tercantum nama guru yang membuat dan mata pelajarannya
+    dan buat agar template cetaknya profesional dan rapi dan menggunakan font times new roman
+
+[33mcommit 518d7db08c2d95975e0fca6ce78df1b4579a1c4d[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 01:04:46 2025 +0000
+
+    buat agar user tata usaha juga bisa melihat semua  RPP, PROTA, PROMES dan juga terdapat fitur cetak nya dan atur template cetaknya
+
+[33mcommit 014261ad126c9bdfd4e81e0349cb10472148e61d[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 00:58:37 2025 +0000
+
+    untuk admin dan tata usaha terdapat fitur setting profil sekolah dan bisa menambahkan user
+    untuk Kepala sekolah dan waka kurikulum terdapat fitur untuk melihat rpp, prota dan promes dari semua guru
+
+[33mcommit c7d1dc7126a35c6b1a8db4b0e3cc4c86a6f6ec25[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Thu May 8 00:52:22 2025 +0000
+
+    login untuk admin dan berikan hak akses yang sesuai untuk setiap role
+    untuk rolenya
+    
+    Admin
+    Kepala Sekolah
+    Waka Kurikulum
+    Tata Usaha
+
+[33mcommit 9f8882490df2181f5e59ffee350c062232c3ce01[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Wed May 7 15:45:40 2025 +0000
+
+    perbarui template PROTA dan Promes sesuai dengan Kurikulum merdeka
+
+[33mcommit 1a7348a307cbb82710bcc8dc1465921f907dc24b[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Wed May 7 15:41:40 2025 +0000
+
+    I see this error with the app, reported by NextJS, please fix it. The error is reported as HTML but presented visually to the user).
+    
+    A > before the line number in the error source usually indicates the line of interest:
+    
+    > Console Error: `DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+    >
+    > If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+    >
+    > For more information, see https://radix-ui.com/primitives/docs/components/dialog. Error source: src/components/ui/sheet.tsx (62:5) @ _c1
+    >
+    >   60 |   <SheetPortal>
+    >   61 |     <SheetOverlay />
+    > > 62 |     <SheetPrimitive.Content
+    >      |     ^
+    >   63 |       ref={ref}
+    >   64 |       className={cn(sheetVariants({ side }), className)}
+    >   65 |       {...props}
+    >
+    > Call Stack
+    > 27
+    >
+    > Show 23 ignore-listed frame(s)
+    > _c1
+    > src/components/ui/sheet.tsx (62:5)
+    > _c1
+    > src/components/ui/sheet.tsx (60:3)
+    > Sidebar
+    > src/components/ui/sidebar.tsx (198:11)
+    > AppLayout
+    > src/app/(app)/layout.tsx (21:7)
+
+[33mcommit f8baa3bb6600e53187bcf187135ebfa8b5683568[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Wed May 7 15:38:28 2025 +0000
+
+    buat agar mobile responsive dan perbaiki pada aksi eksportnya dan juga perbaiki template rpp nya
+
+[33mcommit 079d7bb691c22408534f075aef8703acee18aedf[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Wed May 7 15:32:10 2025 +0000
+
+    I see this error with the app, reported by NextJS, please fix it. The error is reported as HTML but presented visually to the user).
+    
+    A > before the line number in the error source usually indicates the line of interest:
+    
+    > Console Error: GenkitError: INVALID_ARGUMENT: Schema validation failed. Parse Errors:
+    >
+    > - (root): must have required property 'jenjangFaseKelas'
+    >
+    > Provided data:
+    >
+    > {
+    >   "topic": "2D Editorial",
+    >   "gradeLevel": "Fase F (Kelas 11-12 SMA/SMK)"
+    > }
+    >
+    > Required JSON schema:
+    >
+    > {
+    >   "type": "object",
+    >   "properties": {
+    >     "topic": {
+    >       "type": "string",
+    >       "description": "Topik atau materi pembelajaran."
+    >     },
+    >     "jenjangFaseKelas": {
+    >       "type": "string",
+    >       "description": "Jenjang, fase, atau kelas sasaran (misalnya, \"Fase D (Kelas 7 SMP)\", \"PAUD\", \"Kelas 10 SMAK\")."
+    >     }
+    >   },
+    >   "required": [
+    >     "topic",
+    >     "jenjangFaseKelas"
+    >   ],
+    >   "additionalProperties": true,
+    >   "$schema": "http://json-schema.org/draft-07/schema#"
+    > }. Error source: src/ai/flows/generate-lesson-plan-from-topic.ts (31:10) @ generateLessonPlanFromTopic
+    >
+    >   29 |
+    >   30 | export async function generateLessonPlanFromTopic(input: GenerateLessonPlanInput): Promise<GenerateLessonPlanOutput> {
+    > > 31 |   return generateLessonPlanFromTopicFlow(input);
+    >      |          ^
+    >   32 | }
+    >   33 |
+    >   34 | const prompt = ai.definePrompt({
+    >
+    > Call Stack
+    > 5
+    >
+    > Show 4 ignore-listed frame(s)
+    > generateLessonPlanFromTopic
+    > src/ai/flows/generate-lesson-plan-from-topic.ts (31:10)
+
+[33mcommit 2294b919f22ddabb3d6eb2093eecd4f4509320e5[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Wed May 7 15:30:06 2025 +0000
+
+    buat agar bahasa indonesia dan juga sesuai dengan kurikulum merdeka
+
+[33mcommit 46ef51c4dddbadcd53febe88228b5eb2be14a36a[m
+Author: Rifqy Iza Fahrizal <rifqyizafahrizal1@gmail.com>
+Date:   Wed May 7 15:19:15 2025 +0000
+
+    Update app
+
+[33mcommit 828b9e2cf505628d5b47bdae044d448c3646a92f[m
+Author: Your Name <you@example.com>
+Date:   Tue May 6 18:58:30 2025 +0000
+
+    initial scaffold

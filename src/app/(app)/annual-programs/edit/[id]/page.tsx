@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -92,13 +93,34 @@ export default function EditAnnualProgramPage() {
         toast({ title: "Informasi", description: "Jenis kurikulum tidak dapat diubah oleh Guru.", variant: "default" });
         return;
       }
-      setSelectedCurriculum(value as CurriculumFramework);
-      setFormData(prev => ({
-        ...prev,
-        [name]: value,
-        capaianPembelajaran_textarea: value === "Kurikulum Merdeka" ? prev.capaianPembelajaran_textarea || '' : undefined,
-        profilPelajarPancasilaFocus_textarea: value === "Kurikulum Merdeka" ? prev.profilPelajarPancasilaFocus_textarea || '' : undefined,
-      }));
+      const newCurriculum = value as CurriculumFramework;
+      setSelectedCurriculum(newCurriculum);
+      setFormData(prev => {
+        const newFormData: Partial<AnnualProgram & ProtaFormState> = {
+            ...prev,
+            curriculumType: newCurriculum,
+            gradeLevel: '', // Reset gradeLevel
+        };
+        if (newCurriculum === "Kurikulum Merdeka") {
+            newFormData.capaianPembelajaran_textarea = prev.capaianPembelajaran_textarea || '';
+            newFormData.profilPelajarPancasilaFocus_textarea = prev.profilPelajarPancasilaFocus_textarea || '';
+        } else {
+            newFormData.capaianPembelajaran_textarea = undefined;
+            newFormData.capaianPembelajaran = undefined;
+            newFormData.profilPelajarPancasilaFocus_textarea = undefined;
+            newFormData.profilPelajarPancasilaFocus = undefined;
+        }
+        // Reset semester components as their structure (elemenCapaianPembelajaran vs KD) changes meaning
+        newFormData.semester1_topics_textarea = '';
+        newFormData.semester1_elements_textarea = '';
+        newFormData.semester1_allocations_textarea = '';
+        newFormData.semester2_topics_textarea = '';
+        newFormData.semester2_elements_textarea = '';
+        newFormData.semester2_allocations_textarea = '';
+        newFormData.semester1Components = [];
+        newFormData.semester2Components = [];
+        return newFormData;
+      });
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
@@ -286,4 +308,3 @@ export default function EditAnnualProgramPage() {
     </div>
   );
 }
-
