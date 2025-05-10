@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { CurriculumDataTable } from "@/components/curriculum/CurriculumDataTable";
-import type { ModulAjar, AnyCurriculumItem, SchoolProfile } from "@/types"; // SchoolProfile for creator
+import type { ModulAjar, AnyCurriculumItem, SchoolProfile } from "@/types"; 
 import { MODUL_AJAR_STORAGE_KEY } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,10 +18,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-const initialModulAjarData: ModulAjar[] = []; // Start with empty, or provide demo data if needed
+const initialModulAjarData: ModulAjar[] = []; 
 
 export default function ModulAjarPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth(); // Added authLoading
   const { toast } = useToast();
   const router = useRouter();
   const { defaultCurriculum } = useCurriculum();
@@ -33,15 +33,15 @@ export default function ModulAjarPage() {
   
   useEffect(() => {
     setIsClient(true);
+    if (authLoading) return; // Wait for auth to load
+    
     if (typeof window !== 'undefined') {
       try {
         const storedModulAjar = localStorage.getItem(MODUL_AJAR_STORAGE_KEY);
         if (storedModulAjar) {
           setModulAjarItems(JSON.parse(storedModulAjar));
         } else {
-          // Optionally seed with initialModulAjarData if empty
-          // setModulAjarItems(initialModulAjarData);
-          // localStorage.setItem(MODUL_AJAR_STORAGE_KEY, JSON.stringify(initialModulAjarData));
+          // setModulAjarItems(initialModulAjarData); // Already initialized
         }
       } catch (error) {
         console.error("Failed to access or parse localStorage for Modul Ajar:", error);
@@ -53,7 +53,7 @@ export default function ModulAjarPage() {
         });
       }
     }
-  }, [toast]);
+  }, [toast, authLoading]); // Depend on authLoading
 
   const uniqueFases = useMemo(() => {
     if (!isClient) return [];
@@ -68,7 +68,6 @@ export default function ModulAjarPage() {
     const modulAjarItem = item as ModulAjar;
     if (user.role === "Admin" || user.role === "WakaKurikulum") return true;
     if (user.role === "Guru" && modulAjarItem.createdByUserId === user.id) return true; 
-    // Add logic for initial demo data if applicable
     return false;
   }, [user]);
 
@@ -77,7 +76,6 @@ export default function ModulAjarPage() {
      const modulAjarItem = item as ModulAjar;
     if (user.role === "Admin" || user.role === "WakaKurikulum") return true;
     if (user.role === "Guru" && modulAjarItem.createdByUserId === user.id) return true;
-    // Add logic for initial demo data if applicable
     return false;
   }, [user]);
 
@@ -88,9 +86,7 @@ export default function ModulAjarPage() {
         toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengedit Modul Ajar ini.", variant: "destructive" });
         return;
     }
-    // Placeholder, as edit page is not fully implemented in this step
-    toast({ title: "Fitur Dalam Pengembangan", description: `Edit untuk "${item.title}" akan segera hadir.`, variant: "default"});
-    // router.push(`/modul-ajar/edit/${item.id}`); 
+    router.push(`/modul-ajar/edit/${item.id}`); 
   }, [canEditItem, router, toast]);
 
   const handleDelete = useCallback((itemToDelete: AnyCurriculumItem) => {
@@ -107,8 +103,6 @@ export default function ModulAjarPage() {
   }, [canDeleteItem, modulAjarItems, toast]);
   
   const handleView = useCallback((item: AnyCurriculumItem) => {
-    // This could navigate to a detail view page, or open a modal with details.
-    // For now, let's use a simple JSON view in a new tab.
     const prettyPrintJson = JSON.stringify(item, null, 2);
     const newWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
     newWindow?.document.write(`<pre>${prettyPrintJson}</pre>`);
@@ -134,15 +128,23 @@ export default function ModulAjarPage() {
 
   const activeFilterCount = [searchTerm, faseFilter].filter(f => f !== "" && f !== "ALL").length;
 
-  if (!isClient || !user) {
+  if (!isClient || authLoading) { // Check authLoading
     return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="ml-2">Memuat Modul Ajar...</p>
+      <div className="flex h-[calc(100vh-150px)] items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        <p className="ml-4 text-lg text-muted-foreground">Memuat Modul Ajar...</p>
       </div>
     );
   }
   
+  if (!user) { // If still no user after loading
+      return (
+          <div className="flex h-[calc(100vh-150px)] items-center justify-center">
+              <p className="text-lg text-muted-foreground">Silakan login untuk melihat Modul Ajar.</p>
+          </div>
+      );
+  }
+
   if (defaultCurriculum !== "Kurikulum Merdeka") {
       return (
           <div className="container mx-auto py-6 md:py-8">
@@ -200,7 +202,7 @@ export default function ModulAjarPage() {
               {canCreate && (
                   <div className="w-full md:w-auto">
                       <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground w-full sm:w-auto">
-                        <Link href="/ai-kurikulum-merdeka-module"> {/* Link to the AI creation page */}
+                        <Link href="/ai-kurikulum-merdeka-module"> 
                           <PlusCircle className="mr-2 h-5 w-5" /> Buat Modul Ajar Baru (AI)
                         </Link>
                       </Button>

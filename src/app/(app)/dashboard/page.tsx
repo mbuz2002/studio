@@ -3,12 +3,12 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpenText, CalendarDays, CalendarClock, Sparkles, PlusCircle, Users, FileText, LayoutDashboard, BrainCircuit } from "lucide-react";
+import { BookOpenText, CalendarDays, CalendarClock, Sparkles, PlusCircle, Users, FileText, LayoutDashboard, BrainCircuit, Loader2 } from "lucide-react"; // Added Loader2
 import Link from "next/link";
 import Image from "next/image";
 import { useAuth } from "@/contexts/AuthContext";
 import type { UserRole } from "@/types";
-import { useCurriculum } from "@/contexts/CurriculumContext"; // Import useCurriculum
+import { useCurriculum } from "@/contexts/CurriculumContext"; 
 
 const featureCardsConfig: {
   title: string;
@@ -69,8 +69,8 @@ const featureCardsConfig: {
 ];
 
 export default function DashboardPage() {
-  const { user } = useAuth();
-  const { defaultCurriculum } = useCurriculum(); // Get default curriculum
+  const { user, loading: authLoading } = useAuth(); // Added authLoading
+  const { defaultCurriculum } = useCurriculum(); 
 
   const canCreateNewPlan = user && (user.role === "Admin" || user.role === "WakaKurikulum" || user.role === "Guru");
 
@@ -80,6 +80,15 @@ export default function DashboardPage() {
         (!card.isKurikulumMerdekaOnly || defaultCurriculum === "Kurikulum Merdeka")
       ) 
     : [];
+
+  if (authLoading || !user) { // Added loading state check
+    return (
+      <div className="flex h-[calc(100vh-150px)] items-center justify-center"> {/* Adjust height as needed */}
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        <p className="ml-4 text-lg text-muted-foreground">Memuat dasbor...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-6 md:py-8">

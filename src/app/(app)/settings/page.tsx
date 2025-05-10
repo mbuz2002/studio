@@ -4,13 +4,13 @@
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Cog, UserCircle, ShieldCheck, Database, Palette, Upload, Download, FileText, Users, BookCopy, LogOut } from "lucide-react"; 
+import { Cog, UserCircle, ShieldCheck, Database, Palette, Upload, Download, FileText, Users, BookCopy, LogOut, Loader2 } from "lucide-react"; // Added Loader2
 import { useAuth } from "@/contexts/AuthContext";
 import { SchoolProfileForm } from "@/components/settings/SchoolProfileForm";
 import { EditUserDialog } from "@/components/settings/EditUserDialog";
 import { AppPreferencesDialog } from "@/components/settings/AppPreferencesDialog"; 
-import type { User, SchoolProfile, ExportedCurriculumData, LessonPlan, AnnualProgram, SemesterProgram, CurriculumFramework, ModulAjar } from "@/types"; // Added ModulAjar
-import { MODUL_AJAR_STORAGE_KEY } from "@/types"; // Added MODUL_AJAR_STORAGE_KEY
+import type { User, SchoolProfile, ExportedCurriculumData, LessonPlan, AnnualProgram, SemesterProgram, CurriculumFramework, ModulAjar } from "@/types"; 
+import { MODUL_AJAR_STORAGE_KEY } from "@/types"; 
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -28,7 +28,7 @@ const APP_USERS_STORAGE_KEY = "appUsers";
 
 
 export default function SettingsPage() {
-  const { user, updateUser, logout } = useAuth(); 
+  const { user, updateUser, logout, loading: authLoading } = useAuth(); // Added authLoading
   const { toast } = useToast();
   const { addLog } = useLog(); 
   const { defaultCurriculum, setDefaultCurriculum, availableCurriculums } = useCurriculum(); 
@@ -40,24 +40,29 @@ export default function SettingsPage() {
 
 
   useEffect(() => {
-    if (user) { 
+    if (user && !authLoading) { 
       addLog("INFO", `Pengguna ${user.email} mengakses halaman Pengaturan Akun.`, "SettingsPage");
     }
     setSelectedGlobalCurriculum(defaultCurriculum); 
-  }, [user, addLog, defaultCurriculum]);
+  }, [user, addLog, defaultCurriculum, authLoading]);
 
-  if (!user) {
+  if (authLoading) { // Check for authLoading first
     return (
-       <div className="space-y-6 py-8">
-        <Card className="shadow-xl rounded-lg overflow-hidden">
-          <CardHeader className="p-6 rounded-t-lg bg-gradient-to-br from-primary via-accent to-secondary text-primary-foreground">
-            <CardTitle className="text-2xl md:text-3xl font-bold">Memuat Pengaturan...</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6 pt-0"><p className="text-lg">Silakan tunggu...</p></CardContent>
-        </Card>
+       <div className="flex h-[calc(100vh-150px)] items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        <p className="ml-4 text-lg text-muted-foreground">Memuat Pengaturan...</p>
       </div>
     );
   }
+  
+  if (!user) { // Then check if user is null (should be handled by layout, but as a fallback)
+    return (
+       <div className="flex h-[calc(100vh-150px)] items-center justify-center">
+        <p className="text-lg text-muted-foreground">Silakan login untuk mengakses pengaturan.</p>
+      </div>
+    );
+  }
+
 
   const canSeeProfileSettings = ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"].includes(user.role);
   const canSeeAppSettings = ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"].includes(user.role);
@@ -141,7 +146,7 @@ export default function SettingsPage() {
           typeof importedData.lessonPlans === 'undefined' ||
           typeof importedData.annualPrograms === 'undefined' ||
           typeof importedData.semesterPrograms === 'undefined' ||
-          typeof importedData.modulAjar === 'undefined' || // Check for modulAjar
+          typeof importedData.modulAjar === 'undefined' || 
           typeof importedData.schoolProfile === 'undefined' || 
           typeof importedData.appUsers === 'undefined'
         ) {
@@ -370,7 +375,6 @@ export default function SettingsPage() {
             
           </div>
           
-          {/* Mobile Only Sign Out Button */}
           <div className="mt-8 sm:hidden">
             <Button
               variant="destructive"

@@ -5,7 +5,7 @@ import { useEffect, useMemo } from 'react';
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset, SidebarRail } from '@/components/ui/sidebar';
 import { AppLogo } from '@/components/layout/AppLogo';
 import { UserProfile } from '@/components/layout/UserProfile';
-import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, ShieldCheck, Activity, Users, Info, BrainCircuit } from 'lucide-react';
+import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, ShieldCheck, Activity, Users, Info, BrainCircuit, Loader2 } from 'lucide-react'; // Added Loader2 and ensured Info is present
 import Link from 'next/link';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
@@ -13,6 +13,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import type { UserRole } from '@/types';
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
 import { useCurriculum } from '@/contexts/CurriculumContext';
+import { useToast } from '@/hooks/use-toast'; // Import useToast
 
 interface NavItem {
   href: string;
@@ -44,6 +45,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
   const { defaultCurriculum } = useCurriculum(); 
   const router = useRouter();
   const pathname = usePathname();
+  const { toast } = useToast(); // Initialize useToast
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -66,29 +68,17 @@ export default function AppLayout({ children }: PropsWithChildren) {
         (item.isSystemSetting === false || (item.isSystemSetting === true && user.role === 'Admin') || item.roles.includes(user.role) ) &&
         (!item.isKurikulumMerdekaOnly || defaultCurriculum === "Kurikulum Merdeka") 
     ).sort((a,b) => { 
-        // Prioritize non-system settings
         if (a.isSystemSetting && !b.isSystemSetting) return 1; 
         if (!a.isSystemSetting && b.isSystemSetting) return -1; 
-        
-        // Sort system settings alphabetically if both are system settings
-        if (a.isSystemSetting && b.isSystemSetting) {
-            return a.label.localeCompare(b.label); 
-        }
-
-        // Push /settings to the bottom of non-system settings
+        if (a.isSystemSetting && b.isSystemSetting) return a.label.localeCompare(b.label); 
         if (a.href === "/settings") return 1; 
         if (b.href === "/settings") return -1;
-
-        // Group AI features
-        const aiOrder = ["/modul-ajar", "/ai-assistant"]; // "/ai-kurikulum-merdeka-module" is hidden
+        const aiOrder = ["/modul-ajar", "/ai-assistant"]; 
         const aIsAI = aiOrder.includes(a.href);
         const bIsAI = aiOrder.includes(b.href);
-
-        if (aIsAI && !bIsAI) return 1; // Push AI features towards bottom (before settings)
+        if (aIsAI && !bIsAI) return 1; 
         if (!aIsAI && bIsAI) return -1;
-        if (aIsAI && bIsAI) return aiOrder.indexOf(a.href) - aiOrder.indexOf(b.href); // Sort AI features among themselves
-
-        // Default sort (can be alphabetical or by original order if stable sort is used by browser)
+        if (aIsAI && bIsAI) return aiOrder.indexOf(a.href) - aiOrder.indexOf(b.href); 
         return 0;
     });
   }, [user, defaultCurriculum]); 
@@ -103,7 +93,6 @@ export default function AppLayout({ children }: PropsWithChildren) {
           if (dashboardAccess) router.push("/dashboard"); else logout(); 
           return;
         }
-        // Check for Kurikulum Merdeka only routes
         if (currentNavItem.isKurikulumMerdekaOnly && defaultCurriculum !== "Kurikulum Merdeka") {
             toast({
                 title: "Fitur Tidak Tersedia",
@@ -120,13 +109,16 @@ export default function AppLayout({ children }: PropsWithChildren) {
          }
       }
     }
-  }, [loading, isAuthenticated, user, pathname, router, logout, defaultCurriculum]);
+  }, [loading, isAuthenticated, user, pathname, router, logout, defaultCurriculum, toast]);
 
 
   if (loading || !isAuthenticated || !user) { 
     return (
       <div className="flex h-screen items-center justify-center bg-background text-foreground">
-        <p className="flex items-center text-lg"> <Info className="mr-2 h-5 w-5 animate-pulse text-primary" /> Memuat sesi pengguna...</p>
+        <div className="flex items-center text-lg"> 
+            <Loader2 className="mr-3 h-6 w-6 animate-spin text-primary" /> 
+            Memuat sesi pengguna...
+        </div>
       </div>
     );
   }
@@ -177,4 +169,4 @@ export default function AppLayout({ children }: PropsWithChildren) {
 }
 
 // Dummy toast for role check, replace with actual toast hook usage later
-const toast = (params: {title: string, description: string, variant?: string}) => console.warn("Toast:", params);
+// const toast = (params: {title: string, description: string, variant?: string}) => console.warn("Toast:", params);

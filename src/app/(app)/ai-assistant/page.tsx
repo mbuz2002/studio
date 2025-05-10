@@ -8,8 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Sparkles, BookOpenCheck, ExternalLink, FileText, Video, Book, Newspaper, Globe, Search, TableIcon, Languages, MessageSquareWarning } from "lucide-react";
-import { generateTeachingMaterial, type GenerateTeachingMaterialInput, type GenerateTeachingMaterialOutput } from "@/ai/flows/generate-teaching-material"; // AISuggestedSource removed as it is part of GenerateTeachingMaterialOutput
-import type { SuggestedSourceSchema as AISuggestedSource } from "@/ai/flows/generate-teaching-material"; // Keep this for type consistency
+import { generateTeachingMaterial, type GenerateTeachingMaterialInput, type GenerateTeachingMaterialOutput } from "@/ai/flows/generate-teaching-material"; 
+import type { SuggestedSourceSchema as AISuggestedSource } from "@/ai/flows/generate-teaching-material"; 
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLog } from "@/contexts/LogContext";
@@ -36,7 +36,6 @@ const sourceIcons: Record<AISuggestedSource['type'], React.ElementType> = {
     'lainnya': FileText,
 };
 
-// Using Kurikulum Merdeka grade levels as AI Assistant is primarily focused on it
 const merdekaGradeLevels = [
   { value: "PAUD (Kurikulum Merdeka)", label: "PAUD (Kurikulum Merdeka)" },
   { value: "Fase A (Kelas 1-2 SD/MI)", label: "Fase A (Kelas 1-2 SD/MI)" },
@@ -52,7 +51,7 @@ const merdekaGradeLevels = [
 
 export default function AIAssistantPage() {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth(); // Added authLoading
   const { addLog } = useLog();
 
   const [materialTopic, setMaterialTopic] = useState("");
@@ -99,21 +98,23 @@ export default function AIAssistantPage() {
   };
 
 
-  if (!isClient || !user) {
+  if (!isClient || authLoading) { // Check authLoading as well
     return (
-      <div className="container mx-auto py-6 md:py-8">
-        <Card className="shadow-lg rounded-lg">
-          <CardHeader className="p-6 rounded-t-lg bg-gradient-to-br from-primary to-accent text-primary-foreground">
-            <CardTitle className="text-2xl md:text-3xl font-bold">Memuat Asisten AI...</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6 pt-4 flex items-center">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="ml-3 text-lg">Silakan tunggu...</p>
-          </CardContent>
-        </Card>
+      <div className="flex h-[calc(100vh-150px)] items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        <p className="ml-4 text-lg text-muted-foreground">Memuat Asisten AI...</p>
       </div>
     );
   }
+
+  if (!user) { // If still no user after loading, show a message or redirect (already handled by layout)
+    return (
+         <div className="flex h-[calc(100vh-150px)] items-center justify-center">
+            <p className="text-lg text-muted-foreground">Silakan login untuk menggunakan Asisten AI.</p>
+        </div>
+    );
+  }
+
 
   return (
     <div className="container mx-auto py-6 md:py-8">
@@ -186,12 +187,15 @@ export default function AIAssistantPage() {
 
         <div className="lg:col-span-2">
           {isGeneratingMaterial && (
-            <Card className="shadow-lg animate-pulse rounded-lg border-border/50">
+            <Card className="shadow-lg rounded-lg border-border/50">
               <CardHeader className="p-6 rounded-t-lg bg-muted/30">
-                <CardTitle className="text-2xl font-semibold text-muted-foreground">AI sedang meracik materi untuk Anda...</CardTitle>
-                <CardDescription className="text-base text-muted-foreground mt-1">Proses ini mungkin memerlukan beberapa saat. Mohon tunggu.</CardDescription>
+                <div className="flex items-center">
+                    <Loader2 className="h-7 w-7 animate-spin text-primary mr-3" />
+                    <CardTitle className="text-2xl font-semibold text-muted-foreground">AI sedang meracik materi untuk Anda...</CardTitle>
+                </div>
+                <CardDescription className="text-base text-muted-foreground mt-2">Proses ini mungkin memerlukan beberapa saat. Mohon tunggu.</CardDescription>
               </CardHeader>
-              <CardContent className="p-6 space-y-5">
+              <CardContent className="p-6 space-y-5 animate-pulse">
                 <div className="h-10 bg-muted rounded w-3/4"></div>
                 <div className="h-6 bg-muted rounded w-full"></div>
                 <div className="h-6 bg-muted rounded w-5/6"></div>
@@ -216,7 +220,7 @@ export default function AIAssistantPage() {
                   </h3>
                   <Separator className="my-4" />
                   <ScrollArea className="h-auto max-h-[70vh] rounded-md border shadow-inner bg-background">
-                    <div className="p-4 md:p-5"> {/* Padding moved inside ScrollArea Viewport */}
+                    <div className="p-4 md:p-5"> 
                       <ReactMarkdown
                         className="markdown-content"
                         remarkPlugins={[remarkGfm]}
@@ -323,20 +327,15 @@ export default function AIAssistantPage() {
   );
 }
 
-// Add some basic styles for markdown content if not covered by prose
-// This can be in globals.css or a style tag if scoped CSS is preferred
-// For now, I'm assuming prose handles most things, and I added specific styling for table elements within ReactMarkdown components prop.
-// Basic style for Arabic text to ensure RTL display
 const style = `
   .markdown-content [dir="rtl"] {
     direction: rtl;
-    text-align: right; /* Or start if you prefer */
-    font-family: 'Noto Naskh Arabic', 'Amiri', serif; /* Example Arabic fonts */
+    text-align: right; 
+    font-family: 'Noto Naskh Arabic', 'Amiri', serif; 
   }
-  /* Additional responsive table styling if needed */
   .prose table { width: 100%; display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; } 
-  .prose th, .prose td { white-space: nowrap; } /* Prevent text wrapping in table cells to force scroll */
-  @media (min-width: 768px) { /* For larger screens, allow normal table behavior */
+  .prose th, .prose td { white-space: nowrap; } 
+  @media (min-width: 768px) { 
     .prose table { display: table; overflow-x: visible; }
     .prose th, .prose td { white-space: normal; }
   }

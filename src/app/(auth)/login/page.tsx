@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BookMarked, LogIn, UserCircle } from "lucide-react";
+import { BookMarked, LogIn, UserCircle, Loader2 } from "lucide-react"; // Added Loader2
 import Link from "next/link";
 import type { FormEvent} from 'react';
 import { useState } from 'react';
@@ -26,11 +26,17 @@ export default function LoginPage() {
   const { login } = useAuth();
   const [email, setEmail] = useState("pengguna@sekolah.id"); 
   const [selectedRole, setSelectedRole] = useState<UserRole>("WakaKurikulum"); 
+  const [isLoading, setIsLoading] = useState(false); // Added isLoading state
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (email && selectedRole) {
-      login(email, selectedRole);
+      setIsLoading(true); // Set loading to true
+      // Simulate a short delay for visual feedback if login is too fast
+      // setTimeout(() => { 
+        login(email, selectedRole);
+        // setIsLoading(false); // Usually not needed if login navigates away
+      // }, 500); 
     } else {
       alert("Harap isi email dan pilih peran.");
     }
@@ -62,11 +68,12 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required 
                 className="text-base h-11 rounded-md focus:border-primary"
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="role" className="text-sm font-medium text-foreground">Pilih Peran (Demo)</Label>
-              <Select value={selectedRole} onValueChange={(value) => setSelectedRole(value as UserRole)}>
+              <Select value={selectedRole} onValueChange={(value) => setSelectedRole(value as UserRole)} disabled={isLoading}>
                 <SelectTrigger id="role" className="text-base h-11 rounded-md focus:border-primary">
                   <SelectValue placeholder="Pilih peran Anda" />
                 </SelectTrigger>
@@ -84,11 +91,12 @@ export default function LoginPage() {
                   Lupa kata sandi?
                 </Link>
               </div>
-              <Input id="password" type="password" placeholder="••••••••" defaultValue="password" className="text-base h-11 rounded-md focus:border-primary" />
+              <Input id="password" type="password" placeholder="••••••••" defaultValue="password" className="text-base h-11 rounded-md focus:border-primary" disabled={isLoading} />
                <p className="text-xs text-muted-foreground pt-1">Kata sandi diabaikan untuk mode demo ini.</p>
             </div>
-            <Button type="submit" className="w-full bg-gradient-to-r from-accent to-primary hover:from-accent/90 hover:to-primary/90 text-accent-foreground text-base py-3 h-12 rounded-md shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <LogIn className="mr-2.5 h-5 w-5" /> Masuk
+            <Button type="submit" className="w-full bg-gradient-to-r from-accent to-primary hover:from-accent/90 hover:to-primary/90 text-accent-foreground text-base py-3 h-12 rounded-md shadow-lg hover:shadow-xl transition-shadow duration-300" disabled={isLoading}>
+              {isLoading ? <Loader2 className="mr-2.5 h-5 w-5 animate-spin" /> : <LogIn className="mr-2.5 h-5 w-5" />}
+              {isLoading ? "Memproses..." : "Masuk"}
             </Button>
           </form>
         </CardContent>

@@ -44,7 +44,7 @@ const merdekaGradeLevels = [
 
 export default function NewAIKurikulumMerdekaModulePage() {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth(); // Added authLoading
   const { addLog } = useLog();
   const { defaultCurriculum } = useCurriculum();
   const router = useRouter();
@@ -71,14 +71,14 @@ export default function NewAIKurikulumMerdekaModulePage() {
     if (user) {
       addLog("INFO", `Pengguna ${user.email} mengakses halaman Pembuatan Modul Ajar AI Baru.`, pageSource);
     }
-    if (defaultCurriculum !== "Kurikulum Merdeka" && user) {
+    if (defaultCurriculum !== "Kurikulum Merdeka" && user && !authLoading) {
         toast({
             title: "Fitur Khusus Kurikulum Merdeka",
             description: "Halaman ini untuk pembuatan Modul Ajar Kurikulum Merdeka. Kurikulum default Anda saat ini bukan Kurikulum Merdeka.",
             variant: "default",
         });
          addLog("WARN", `Pengguna ${user.email} mengakses halaman Modul Ajar AI, namun kurikulum default bukan Kurikulum Merdeka.`, pageSource);
-         router.push("/dashboard"); // Redirect if not Kurikulum Merdeka context
+         router.push("/dashboard"); 
          return;
     }
     if (typeof window !== 'undefined') {
@@ -92,7 +92,7 @@ export default function NewAIKurikulumMerdekaModulePage() {
         }
       }
     }
-  }, [user, addLog, defaultCurriculum, toast, router]);
+  }, [user, addLog, defaultCurriculum, toast, router, authLoading]);
 
   const handleGenerateModule = async (e: FormEvent) => {
     e.preventDefault();
@@ -139,7 +139,7 @@ export default function NewAIKurikulumMerdekaModulePage() {
         type: 'ModulAjar',
         title: generatedModule.judulModul,
         subject: generatedModule.identitasModul.mataPelajaran,
-        gradeLevel: generatedModule.identitasModul.fase, // Or kelasSemester, depends on desired display
+        gradeLevel: generatedModule.identitasModul.fase, 
         curriculumType: "Kurikulum Merdeka",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -207,7 +207,7 @@ export default function NewAIKurikulumMerdekaModulePage() {
     const nextLetter = () => String.fromCharCode(65 + sectionCounter++);
 
     if (options.showMAIdentitas) {
-        sectionCounter = 0; // Reset for main sections
+        sectionCounter = 0; 
         contentHtml += `<h3>${nextLetter()}. INFORMASI UMUM</h3>`;
         contentHtml += `<table class="info-table">
             <tr><td>Nama Penyusun</td><td>: ${modul.identitasModul.namaPenyusun}</td></tr>
@@ -238,9 +238,8 @@ export default function NewAIKurikulumMerdekaModulePage() {
         contentHtml += `<h3>${nextLetter()}. MODEL PEMBELAJARAN</h3><p>${modul.modelPembelajaran}</p>`;
     }
 
-    // Komponen Inti
-    sectionCounter = 0; // Reset for Komponen Inti sections
-    contentHtml += `<h3>KOMPONEN INTI</h3>`;
+    sectionCounter = 0; 
+    contentHtml += `<hr class="content-hr"><h3>KOMPONEN INTI</h3>`;
     const ki = modul.komponenInti;
     if (options.showMAKomponenInti_TujuanPembelajaran && ki.tujuanPembelajaran.length > 0) {
         contentHtml += `<h4>${nextLetter()}. Tujuan Pembelajaran</h4><ol>${ki.tujuanPembelajaran.map(tp => `<li>${tp}</li>`).join('')}</ol>`;
@@ -276,10 +275,9 @@ export default function NewAIKurikulumMerdekaModulePage() {
         contentHtml += `<h4>${nextLetter()}. Refleksi Peserta Didik dan Guru</h4><p><strong>Refleksi Peserta Didik:</strong> ${ki.refleksiPesertaDidikGuru.refleksiPesertaDidik}</p><p><strong>Refleksi Guru:</strong> ${ki.refleksiPesertaDidikGuru.refleksiGuru}</p>`;
     }
 
-    // Lampiran
     if (modul.lampiran && (options.showMALampiran_LKPD || options.showMALampiran_BahanBacaan || options.showMALampiran_Glosarium || options.showMALampiran_DaftarPustaka)) {
-        sectionCounter = 0; // Reset for Lampiran sections
-        contentHtml += `<h3>LAMPIRAN</h3>`;
+        sectionCounter = 0; 
+        contentHtml += `<hr class="content-hr"><h3>LAMPIRAN</h3>`;
         const lamp = modul.lampiran;
         if (options.showMALampiran_LKPD && lamp.lembarKerjaPesertaDidik) {
             contentHtml += `<h4>${nextLetter()}. Lembar Kerja Peserta Didik (LKPD)</h4><div>${lamp.lembarKerjaPesertaDidik.replace(/\n/g, '<br>')}</div>`;
@@ -305,7 +303,7 @@ export default function NewAIKurikulumMerdekaModulePage() {
           ${schoolProfile?.npsn ? `<p class="signature-nip">NIP/NPSN: ${schoolProfile.npsn}</p>` : ''}
         </div>
         <div class="signature-block">
-          <p>${modul.identitasModul.institusi.split(" ")[0] || "Kota"}, ${isClient ? format(new Date(), "dd MMMM yyyy", { locale: indonesianLocale }) : new Date().toLocaleDateString()}</p>
+          <p>${schoolProfile?.kotaSekolah || "Kota"}, ${isClient ? format(new Date(), "dd MMMM yyyy", { locale: indonesianLocale }) : new Date().toLocaleDateString()}</p>
           <p>Guru Mata Pelajaran</p>
           <br><br><br>
           <p class="signature-name">${modul.identitasModul.namaPenyusun || '(.........................................)'}</p>
@@ -314,14 +312,13 @@ export default function NewAIKurikulumMerdekaModulePage() {
       </div>
     `;
 
-
     return `
       <html>
         <head>
           <title>Cetak Modul Ajar: ${modul.judulModul}</title>
           <style>
             @page { 
-              size: 21cm 33cm; /* F4 Paper Size */
+              size: 21cm 33cm; 
               margin: 0.75in; 
             }
             body { font-family: 'Times New Roman', Times, serif; margin: 0; line-height: 1.4; font-size: 11pt; color: #333; }
@@ -336,8 +333,9 @@ export default function NewAIKurikulumMerdekaModulePage() {
             .modul-main-title { font-size: 14pt; margin-top: 15px; margin-bottom: 15px; font-weight: bold; text-transform: uppercase; text-align: center; }
             .info-table { width: 100%; margin-bottom: 15px; font-size: 11pt; border-collapse: collapse;}
             .info-table td { padding: 3px 0px; vertical-align: top;}
-            .info-table td:first-child { font-weight: normal; width: 35%; } /* Adjusted width */
+            .info-table td:first-child { font-weight: normal; width: 35%; } 
             .info-table td:nth-child(2) { font-weight: normal; }
+            .content-hr { border: 0; border-top: 1.5px solid #888; margin: 20px 0; }
             h3 { font-size: 12pt; margin-top: 18px; margin-bottom: 8px; font-weight: bold; text-transform: uppercase; }
             h4 { font-size: 11pt; margin-top: 12px; margin-bottom: 6px; font-weight: bold; }
             h5 { font-size: 11pt; margin-top: 8px; margin-bottom: 4px; font-weight: bold; }
@@ -388,19 +386,19 @@ export default function NewAIKurikulumMerdekaModulePage() {
   }, [generatedModule, generatePrintableHtmlModulAjar, addLog, toast]);
 
 
-  if (!isClient || !user) {
+  if (!isClient || authLoading) { // Check authLoading
     return (
-      <div className="container mx-auto py-6 md:py-8">
-        <Card className="shadow-lg rounded-lg">
-          <CardHeader className="p-6 rounded-t-lg bg-gradient-to-br from-primary to-accent text-primary-foreground">
-            <CardTitle className="text-2xl md:text-3xl font-bold">Memuat Pembuat Modul Ajar AI...</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6 pt-4 flex items-center">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="ml-3 text-lg">Silakan tunggu...</p>
-          </CardContent>
-        </Card>
+      <div className="flex h-[calc(100vh-150px)] items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        <p className="ml-4 text-lg text-muted-foreground">Memuat Pembuat Modul Ajar AI...</p>
       </div>
+    );
+  }
+   if (!user) { // If still no user after loading, show a message or redirect
+    return (
+         <div className="flex h-[calc(100vh-150px)] items-center justify-center">
+            <p className="text-lg text-muted-foreground">Silakan login untuk menggunakan fitur ini.</p>
+        </div>
     );
   }
    if (defaultCurriculum !== "Kurikulum Merdeka") {
@@ -488,12 +486,15 @@ export default function NewAIKurikulumMerdekaModulePage() {
 
         <div className="lg:col-span-2">
           {isGeneratingModule && (
-            <Card className="shadow-lg animate-pulse rounded-lg border-border/50">
-              <CardHeader className="p-6 rounded-t-lg bg-muted/30">
-                <CardTitle className="text-2xl font-semibold text-muted-foreground">AI sedang merancang Modul Ajar...</CardTitle>
-                <CardDescription className="text-base text-muted-foreground mt-1">Proses ini mungkin memerlukan waktu. Mohon tunggu.</CardDescription>
+            <Card className="shadow-lg rounded-lg border-border/50">
+               <CardHeader className="p-6 rounded-t-lg bg-muted/30">
+                <div className="flex items-center">
+                    <Loader2 className="h-7 w-7 animate-spin text-primary mr-3" />
+                    <CardTitle className="text-2xl font-semibold text-muted-foreground">AI sedang merancang Modul Ajar...</CardTitle>
+                </div>
+                <CardDescription className="text-base text-muted-foreground mt-2">Proses ini mungkin memerlukan waktu. Mohon tunggu.</CardDescription>
               </CardHeader>
-              <CardContent className="p-6 space-y-5">
+              <CardContent className="p-6 space-y-5 animate-pulse">
                 <div className="h-10 bg-muted rounded w-3/4"></div>
                 <div className="h-6 bg-muted rounded w-full"></div>
                 <div className="h-6 bg-muted rounded w-5/6"></div>
@@ -506,7 +507,7 @@ export default function NewAIKurikulumMerdekaModulePage() {
               <CardHeader className="p-6 bg-muted/30 border-b rounded-t-lg">
                 <CardTitle className="text-2xl md:text-3xl text-primary font-bold tracking-tight">{generatedModule.judulModul}</CardTitle>
               </CardHeader>
-              <ScrollArea className="h-auto max-h-[calc(100vh-280px)] lg:max-h-[calc(100vh-240px)] rounded-b-md"> {/* Adjusted max-h */}
+              <ScrollArea className="h-auto max-h-[calc(100vh-280px)] lg:max-h-[calc(100vh-240px)] rounded-b-md"> 
               <CardContent className="p-6 space-y-6">
                 
                 <section>
