@@ -42,13 +42,11 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         if (storedUser && !didCancel) {
           const parsedUser = JSON.parse(storedUser);
           setUser(parsedUser);
-          // Log restoration success (deferred if needed, but usually fine as it's post-initial setUser)
-          // setTimeout(() => addLog("INFO", `Sesi pengguna ${parsedUser.email} dipulihkan.`, "AuthContext"),0);
+          // No direct addLog here to avoid issues during initial render/hydration
         }
       } catch (error) {
         console.error("Gagal memulihkan sesi pengguna:", error);
         if (!didCancel) {
-          // Defer the addLog call to prevent issues during render phases
           setTimeout(() => {
             addLog("ERROR", `Gagal memulihkan sesi pengguna dari penyimpanan lokal: ${error instanceof Error ? error.message : String(error)}`, "AuthContext");
           }, 0);
@@ -66,7 +64,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     return () => {
       didCancel = true;
     };
-  }, [addLog]);
+  }, [addLog]); // addLog is stable
 
   const login = useCallback((email: string, role: UserRole) => {
     const baseUser = mockUsers[role] || mockUsers.Guru; 
@@ -79,15 +77,17 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     };
     setUser(loggedInUser);
     localStorage.setItem('currentUser', JSON.stringify(loggedInUser));
-    // addLog is called after state updates and navigation, generally safe.
-    addLog("INFO", `Pengguna ${email} (Peran: ${role}) berhasil masuk.`, "AuthContext");
+    setTimeout(() => { // Defer log
+        addLog("INFO", `Pengguna ${email} (Peran: ${role}) berhasil masuk.`, "AuthContext-Login");
+    },0);
     router.push('/dashboard');
   }, [addLog, router]);
 
   const logout = useCallback(() => {
-    if (user) {
+    const userEmail = user?.email; // Capture before setting user to null
+    if (userEmail) {
       // addLog is called before state updates, potentially defer if issues arise.
-      addLog("INFO", `Pengguna ${user.email} keluar.`, "AuthContext");
+      addLog("INFO", `Pengguna ${userEmail} keluar.`, "AuthContext-Logout");
     }
     setUser(null);
     localStorage.removeItem('currentUser');
@@ -100,9 +100,8 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         const newUser = { ...currentUser, ...updatedUserData, updatedAt: new Date().toISOString() };
         localStorage.setItem('currentUser', JSON.stringify(newUser));
         
-        // Defer the addLog call to prevent issues during render phases
-        setTimeout(() => {
-          addLog("INFO", `Profil pengguna ${currentUser.email} diperbarui. Data baru: ${JSON.stringify(Object.keys(updatedUserData))}`, "AuthContext");
+        setTimeout(() => { // Defer log
+          addLog("INFO", `Profil pengguna ${currentUser.email} diperbarui. Data baru: ${JSON.stringify(Object.keys(updatedUserData))}`, "AuthContext-UpdateUser");
         }, 0);
         
         return newUser;

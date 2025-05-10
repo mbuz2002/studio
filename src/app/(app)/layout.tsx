@@ -1,7 +1,7 @@
 
 "use client";
 import type { PropsWithChildren } from 'react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset, SidebarRail } from '@/components/ui/sidebar';
 import { AppLogo } from '@/components/layout/AppLogo';
 import { UserProfile } from '@/components/layout/UserProfile';
@@ -14,7 +14,7 @@ import type { UserRole } from '@/types';
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
 import { useCurriculum } from '@/contexts/CurriculumContext';
 import { useToast } from '@/hooks/use-toast';
-import LoadingSpinner from '@/components/ui/loading-spinner'; // Corrected import path
+import LoadingSpinner from '@/components/ui/loading-spinner'; 
 
 interface NavItem {
   href: string;
@@ -54,7 +54,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
     setIsPageLoading(true);
     const timer = setTimeout(() => setIsPageLoading(false), 300); // Simulate loading time
     return () => clearTimeout(timer);
-  }, [pathname]);
+  }, [pathname]); // Only depend on pathname for visual loading effect
 
 
   useEffect(() => {
@@ -173,3 +173,4 @@ export default function AppLayout({ children }: PropsWithChildren) {
       </SidebarProvider>
   );
 }
+

@@ -147,8 +147,13 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
         const maOptions = options as PrintOptionsModulAjar;
         contentHtml += `<h2 class="modul-main-title">${ma.judulModul}</h2>`;
         
+        let sectionCounter = 0;
+        const nextLetter = () => String.fromCharCode(65 + sectionCounter++);
+
         if (maOptions.showMAIdentitas) {
-            contentHtml += `<h3>A. INFORMASI UMUM</h3><table class="info-table">
+            sectionCounter = 0; 
+            contentHtml += `<h3>${nextLetter()}. INFORMASI UMUM</h3>`;
+            contentHtml += `<table class="info-table">
                 <tr><td>Nama Penyusun</td><td>: ${ma.identitasModul.namaPenyusun}</td></tr>
                 <tr><td>Institusi</td><td>: ${ma.identitasModul.institusi}</td></tr>
                 <tr><td>Tahun Ajar</td><td>: ${ma.identitasModul.tahunAjar}</td></tr>
@@ -160,22 +165,22 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
                 ${ma.identitasModul.elemenCapaianPembelajaran && ma.identitasModul.elemenCapaianPembelajaran.length > 0 ? `<tr><td>Elemen Capaian Pembelajaran</td><td>: ${ma.identitasModul.elemenCapaianPembelajaran.join(', ')}</td></tr>` : ''}
             </table>`;
         }
-        if (maOptions.showMAKompetensiAwal && ma.kompetensiAwal && ma.kompetensiAwal.length > 0) contentHtml += `<h3>B. KOMPETENSI AWAL</h3><ul>${ma.kompetensiAwal.map(k => `<li>${k}</li>`).join('')}</ul>`;
-        if (maOptions.showMAProfilPelajarPancasila && ma.profilPelajarPancasila.length > 0) contentHtml += `<h3>C. PROFIL PELAJAR PANCASILA</h3><ul>${ma.profilPelajarPancasila.map(p => `<li>${p}</li>`).join('')}</ul>`;
-        if (maOptions.showMASaranaPrasarana && ma.saranaPrasarana.length > 0) contentHtml += `<h3>D. SARANA DAN PRASARANA</h3><ul>${ma.saranaPrasarana.map(s => `<li>${s}</li>`).join('')}</ul>`;
-        if (maOptions.showMATargetPesertaDidik) contentHtml += `<h3>E. TARGET PESERTA DIDIK</h3><p>${ma.targetPesertaDidik}</p>`;
-        if (maOptions.showMAModelPembelajaran) contentHtml += `<h3>F. MODEL PEMBELAJARAN</h3><p>${ma.modelPembelajaran}</p>`;
+        if (maOptions.showMAKompetensiAwal && ma.kompetensiAwal && ma.kompetensiAwal.length > 0) contentHtml += `<h3>${nextLetter()}. KOMPETENSI AWAL</h3><ul>${ma.kompetensiAwal.map(k => `<li>${k}</li>`).join('')}</ul>`;
+        if (maOptions.showMAProfilPelajarPancasila && ma.profilPelajarPancasila.length > 0) contentHtml += `<h3>${nextLetter()}. PROFIL PELAJAR PANCASILA</h3><ul>${ma.profilPelajarPancasila.map(p => `<li>${p}</li>`).join('')}</ul>`;
+        if (maOptions.showMASaranaPrasarana && ma.saranaPrasarana.length > 0) contentHtml += `<h3>${nextLetter()}. SARANA DAN PRASARANA</h3><ul>${ma.saranaPrasarana.map(s => `<li>${s}</li>`).join('')}</ul>`;
+        if (maOptions.showMATargetPesertaDidik) contentHtml += `<h3>${nextLetter()}. TARGET PESERTA DIDIK</h3><p>${ma.targetPesertaDidik}</p>`;
+        if (maOptions.showMAModelPembelajaran) contentHtml += `<h3>${nextLetter()}. MODEL PEMBELAJARAN</h3><p>${ma.modelPembelajaran}</p>`;
 
+        sectionCounter = 0; 
         contentHtml += `<hr class="content-hr"><h3>KOMPONEN INTI</h3>`;
         const ki = ma.komponenInti;
-        let kiSectionCounter = 0;
-        const nextKiLetter = () => String.fromCharCode(65 + kiSectionCounter++);
-        if (maOptions.showMAKomponenInti_TujuanPembelajaran && ki.tujuanPembelajaran.length > 0) contentHtml += `<h4>${nextKiLetter()}. Tujuan Pembelajaran</h4><ol>${ki.tujuanPembelajaran.map(tp => `<li>${tp}</li>`).join('')}</ol>`;
-        if (maOptions.showMAKomponenInti_PemahamanBermakna && ki.pemahamanBermakna.length > 0) contentHtml += `<h4>${nextKiLetter()}. Pemahaman Bermakna</h4><ul>${ki.pemahamanBermakna.map(pb => `<li>${pb}</li>`).join('')}</ul>`;
-        if (maOptions.showMAKomponenInti_PertanyaanPemantik && ki.pertanyaanPemantik.length > 0) contentHtml += `<h4>${nextKiLetter()}. Pertanyaan Pemantik</h4><ul>${ki.pertanyaanPemantik.map(pp => `<li>${pp}</li>`).join('')}</ul>`;
+        
+        if (maOptions.showMAKomponenInti_TujuanPembelajaran && ki.tujuanPembelajaran.length > 0) contentHtml += `<h4>${nextLetter()}. Tujuan Pembelajaran</h4><ol>${ki.tujuanPembelajaran.map(tp => `<li>${tp}</li>`).join('')}</ol>`;
+        if (maOptions.showMAKomponenInti_PemahamanBermakna && ki.pemahamanBermakna.length > 0) contentHtml += `<h4>${nextLetter()}. Pemahaman Bermakna</h4><ul>${ki.pemahamanBermakna.map(pb => `<li>${pb}</li>`).join('')}</ul>`;
+        if (maOptions.showMAKomponenInti_PertanyaanPemantik && ki.pertanyaanPemantik.length > 0) contentHtml += `<h4>${nextLetter()}. Pertanyaan Pemantik</h4><ul>${ki.pertanyaanPemantik.map(pp => `<li>${pp}</li>`).join('')}</ul>`;
         
         if (maOptions.showMAKomponenInti_KegiatanPembelajaran) {
-            contentHtml += `<h4>${nextKiLetter()}. Kegiatan Pembelajaran</h4>`;
+            contentHtml += `<h4>${nextLetter()}. Kegiatan Pembelajaran</h4>`;
             if (maOptions.showMAKomponenInti_Kegiatan_Pendahuluan && ki.kegiatanPembelajaran.pendahuluan.length > 0) contentHtml += `<h5>1. Pendahuluan</h5><ul>${ki.kegiatanPembelajaran.pendahuluan.map(p => `<li>${p}</li>`).join('')}</ul>`;
             if (maOptions.showMAKomponenInti_Kegiatan_Inti && ki.kegiatanPembelajaran.inti.length > 0) contentHtml += `<h5>2. Kegiatan Inti</h5><ol class="kegiatan-inti-list">${ki.kegiatanPembelajaran.inti.map(k => `<li><strong>${k.langkah}</strong><ul>${k.detailAktivitas.map(d => `<li>${d}</li>`).join('')}</ul></li>`).join('')}</ol>`;
             if (maOptions.showMAKomponenInti_Kegiatan_Penutup && ki.kegiatanPembelajaran.penutup.length > 0) contentHtml += `<h5>3. Penutup</h5><ul>${ki.kegiatanPembelajaran.penutup.map(p => `<li>${p}</li>`).join('')}</ul>`;
@@ -539,7 +544,7 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
             
             @media print {
               body { margin: 0.75in; font-size: 11pt; } 
-              .print-button-container, .kop-surat img[data-ai-hint="school logo"] { display: none; }
+              .print-button-container { display: none; }
               .kop-surat { border-bottom: 4px double black !important; } 
               h1, h2, h3, h4, h5, table, ul, ol, p, div { page-break-inside: avoid; }
               h3, h4, h5 { page-break-after: avoid; }
@@ -863,7 +868,7 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
           </TableBody>
         </Table>
       </div>
-      {itemToPrint && itemToPrint.type !== 'ModulAjar' && (
+      {isPrintOptionsOpen && itemToPrint && itemToPrint.type !== 'ModulAjar' && (
         <PrintOptionsDialog
             isOpen={isPrintOptionsOpen}
             onOpenChange={setIsPrintOptionsOpen}
@@ -874,7 +879,7 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
             hasSchoolProfile={!!schoolProfile} 
         />
       )}
-      {itemToPrint && itemToPrint.type === 'ModulAjar' && (
+      {isModulAjarPrintOptionsOpen && itemToPrint && itemToPrint.type === 'ModulAjar' && (
         <PrintOptionsModulAjarDialog
             isOpen={isModulAjarPrintOptionsOpen}
             onOpenChange={setIsModulAjarPrintOptionsOpen}
@@ -886,3 +891,4 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
     </>
   );
 });
+

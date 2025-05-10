@@ -15,13 +15,16 @@ export default function LoadingSpinner({
   message = "Memuat...",
   icon,
   className,
-  iconClassName,
+  iconClassName, // This is for overriding/adding to default icon classes from this component
   textClassName,
 }: LoadingSpinnerProps) {
-  const defaultIcon = <Sparkles className={cn("h-12 w-12 animate-pulse text-primary mb-4", iconClassName)} />;
-  const displayIcon = icon ? React.cloneElement(icon, { 
-    className: cn("h-12 w-12 animate-pulse text-primary mb-4", iconClassName, icon.props.className) 
-  }) : defaultIcon;
+  const defaultIconClasses = "h-12 w-12 animate-pulse text-primary mb-4";
+  
+  const displayIcon = icon 
+    ? React.cloneElement(icon, { 
+        className: cn(defaultIconClasses, icon.props.className, iconClassName) 
+      }) 
+    : <Sparkles className={cn(defaultIconClasses, iconClassName)} />;
 
   return (
     <div
@@ -39,3 +42,4 @@ export default function LoadingSpinner({
     </div>
   );
 }
+
