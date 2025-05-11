@@ -35,6 +35,11 @@ const GenerateSemesterProgramInputSchema = z.object({
 });
 export type GenerateSemesterProgramInput = z.infer<typeof GenerateSemesterProgramInputSchema>;
 
+// Internal schema that includes the boolean flag for Kurikulum Merdeka
+const PromptInputSchemaInternal = GenerateSemesterProgramInputSchema.extend({
+  isKurikulumMerdeka: z.boolean(),
+});
+
 const GenerateSemesterProgramOutputSchema = z.object({
   title: z.string().describe('Judul Program Semester yang informatif dan menarik.'),
   capaianPembelajaranUmum: z.string().describe('Deskripsi Capaian Pembelajaran (CP) umum (Kurikulum Merdeka) atau rangkuman SK/KD (KTSP/K-13) untuk semester ini.'),
@@ -44,12 +49,16 @@ const GenerateSemesterProgramOutputSchema = z.object({
 export type GenerateSemesterProgramOutput = z.infer<typeof GenerateSemesterProgramOutputSchema>;
 
 export async function generateSemesterProgram(input: GenerateSemesterProgramInput): Promise<GenerateSemesterProgramOutput> {
-  return generateSemesterProgramFlow(input);
+  const promptInputWithFlags = {
+    ...input,
+    isKurikulumMerdeka: input.curriculumType === "Kurikulum Merdeka",
+  };
+  return generateSemesterProgramFlow(promptInputWithFlags);
 }
 
 const prompt = ai.definePrompt({
   name: 'generateSemesterProgramPrompt',
-  input: {schema: GenerateSemesterProgramInputSchema},
+  input: {schema: PromptInputSchemaInternal}, // Use the schema with the flag
   output: {schema: GenerateSemesterProgramOutputSchema},
   prompt: `Anda adalah seorang ahli perancang kurikulum yang bertugas membuat draf Program Semester (Promes).
 Buatlah draf Promes untuk:
@@ -60,8 +69,11 @@ Tahun Ajaran: {{{year}}}
 Semester: {{{semester}}} (1 = Ganjil, 2 = Genap)
 Kurikulum Acuan: {{{curriculumType}}}
 {{#if capaianPembelajaranUmumInput}}
-{{#eq curriculumType "Kurikulum Merdeka"}}Capaian Pembelajaran (CP) Umum Semester yang diberikan (gunakan sebagai acuan utama):{{{/eq}}
-{{#not (eq curriculumType "Kurikulum Merdeka")}}Rangkuman SK/KD yang diberikan:{{{/not}}
+  {{#if isKurikulumMerdeka}}
+Capaian Pembelajaran (CP) Umum Semester yang diberikan (gunakan sebagai acuan utama):
+  {{else}}
+Rangkuman SK/KD yang diberikan:
+  {{/if}}
 {{{capaianPembelajaranUmumInput}}}
 {{/if}}
 
@@ -73,14 +85,14 @@ Promes harus mencakup:
     {{#if capaianPembelajaranUmumInput}}Gunakan atau adaptasi dari input yang diberikan.{{else}}Jika tidak ada input CP/SK-KD yang diberikan, buatlah satu yang sesuai.{{/if}}
 3.  **Alokasi Waktu Total Semester**: Berikan estimasi perhitungan total alokasi waktu dalam Jam Pelajaran (JP), contoh: "18 Minggu Efektif x 4 JP/Minggu = 72 JP".
 4.  **Komponen Mingguan**: Rincikan rencana pembelajaran untuk **3 sampai 5 minggu pertama** sebagai contoh. Untuk setiap minggu:
-    *   \\\`mingguKe\\\`: Nomor minggu.
-    *   \\\`bulan\\\`: Perkiraan bulan.
-    *   \\\`materiPokokAtauTujuanPembelajaran\\\`: Materi pokok/Tema (KTSP/K-13) atau Tujuan Pembelajaran spesifik (Kurikulum Merdeka).
-    *   \\\`alokasiWaktu\\\`: Alokasi waktu untuk minggu itu (misal "6 JP").
-    *   \\\`metodeStrategi\\\` (opsional): Beberapa contoh metode/strategi.
-    *   \\\`sumberBelajar\\\` (opsional): Beberapa contoh sumber belajar.
-    *   \\\`rencanaAsesmen\\\` (opsional): Ide singkat untuk asesmen.
-    *   \\\`catatanIntegrasiP5\\\` (opsional): Catatan singkat tentang integrasi Profil Pelajar Pancasila (utamanya untuk Kurikulum Merdeka, atau nilai karakter untuk KTSP/K-13 jika relevan).
+    *   \`mingguKe\`: Nomor minggu.
+    *   \`bulan\`: Perkiraan bulan.
+    *   \`materiPokokAtauTujuanPembelajaran\`: Materi pokok/Tema (KTSP/K-13) atau Tujuan Pembelajaran spesifik (Kurikulum Merdeka) untuk minggu tersebut.
+    *   \`alokasiWaktu\`: Alokasi waktu untuk minggu itu (misal "6 JP").
+    *   \`metodeStrategi\` (opsional): Beberapa contoh metode/strategi.
+    *   \`sumberBelajar\` (opsional): Beberapa contoh sumber belajar.
+    *   \`rencanaAsesmen\` (opsional): Ide singkat untuk asesmen.
+    *   \`catatanIntegrasiP5\` (opsional): Catatan singkat tentang integrasi Profil Pelajar Pancasila (utamanya untuk Kurikulum Merdeka, atau nilai karakter untuk KTSP/K-13 jika relevan).
 
 Pastikan output yang dihasilkan sesuai dengan skema JSON yang diharapkan dan menggunakan Bahasa Indonesia yang baik dan benar.
 `,
@@ -89,10 +101,10 @@ Pastikan output yang dihasilkan sesuai dengan skema JSON yang diharapkan dan men
 const generateSemesterProgramFlow = ai.defineFlow(
   {
     name: 'generateSemesterProgramFlow',
-    inputSchema: GenerateSemesterProgramInputSchema,
+    inputSchema: PromptInputSchemaInternal, // Expect input with the flag
     outputSchema: GenerateSemesterProgramOutputSchema,
   },
-  async (input: GenerateSemesterProgramInput) => {
+  async (input: z.infer<typeof PromptInputSchemaInternal>) => {
     const {output} = await prompt(input);
     return output!;
   }
