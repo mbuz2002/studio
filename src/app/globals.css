@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -58,7 +57,7 @@
   }
 
   .dark {
-    /* Default Dark Theme: Professional Deep Blue */
+    /* Default Dark Theme: Professional Deep Blue / Cyber */
     --background: 220 20% 10%; 
     --foreground: 220 15% 88%; 
 
@@ -161,53 +160,53 @@
 
   .theme-forest-haven {
     /* Forest Haven Theme (Dark) */
-    --background: 140 25% 10%; 
-    --foreground: 90 20% 88%; 
+    --background: 140 25% 10%; /* Deep Forest Green */
+    --foreground: 90 20% 88%; /* Light Moss Green/Off-white */
 
-    --card: 140 25% 13%; 
-    --card-foreground: 90 20% 88%; 
+    --card: 140 25% 13%; /* Darker Forest Green */
+    --card-foreground: 90 20% 88%; /* Light Moss Green/Off-white */
 
-    --popover: 140 25% 12%; 
-    --popover-foreground: 90 20% 88%; 
+    --popover: 140 25% 12%; /* Even Darker Forest Green */
+    --popover-foreground: 90 20% 88%; /* Light Moss Green/Off-white */
 
-    --primary: 120 55% 42%; /* Slightly brighter Leaf Green */
-    --primary-foreground: 60 70% 95%; 
+    --primary: 120 55% 42%; /* Leaf Green - Adjusted for better visibility in dark theme */
+    --primary-foreground: 60 70% 95%; /* Very Light Yellow/Cream */
     --primary-hsl: 120 55% 42%;
 
 
-    --secondary: 153 60% 28%; /* Darker #1F7D53 for secondary */
-    --secondary-foreground: 90 20% 88%; 
+    --secondary: 153 60% 28%; /* Darker Emerald/Teal Green */
+    --secondary-foreground: 90 20% 88%; /* Light Moss Green */
 
-    --muted: 140 20% 18%; 
-    --muted-foreground: 100 15% 65%; 
+    --muted: 140 20% 18%; /* Dark Brownish Green */
+    --muted-foreground: 100 15% 65%; /* Muted Greenish Gray */
 
-    --accent: 35 75% 55%; /* Brighter Golden Amber/Sunlight */
-    --accent-foreground: 25 50% 10%; 
+    --accent: 35 75% 55%; /* Golden Amber/Sunlight */
+    --accent-foreground: 25 50% 10%; /* Dark Brown for text on accent */
     --accent-hsl: 35 75% 55%;
 
 
-    --destructive: 0 70% 48%; /* Slightly brighter Deep Red */
-    --destructive-foreground: 0 0% 95%; 
+    --destructive: 0 70% 48%; /* Deep Red/Rust */
+    --destructive-foreground: 0 0% 95%; /* Off-white */
 
-    --border: 140 25% 18%; 
-    --input: 140 25% 15%; 
-    --ring: 120 55% 42%; 
+    --border: 140 25% 18%; /* Dark Greenish Brown Border */
+    --input: 140 25% 15%; /* Dark Greenish Input Background */
+    --ring: 120 55% 42%; /* Leaf Green for focus rings */
     
     /* Sidebar for Forest Haven */
     --sidebar-background: 140 25% 9%; /* Slightly darker for sidebar */
-    --sidebar-foreground: 90 20% 85%; 
-    --sidebar-primary: 120 55% 42%; 
-    --sidebar-primary-foreground: 60 70% 95%; 
-    --sidebar-accent: 140 25% 16%; /* Hover background */
-    --sidebar-accent-foreground: 120 55% 60%; /* Brighter primary on hover */
-    --sidebar-border: 140 25% 14%; 
-    --sidebar-ring: 120 55% 42%; 
+    --sidebar-foreground: 90 20% 85%; /* Light Moss Green */
+    --sidebar-primary: 120 55% 42%; /* Leaf Green */
+    --sidebar-primary-foreground: 60 70% 95%; /* Very Light Yellow/Cream */
+    --sidebar-accent: 140 25% 16%; /* Darker Green for hover */
+    --sidebar-accent-foreground: 120 55% 60%; /* Brighter Leaf Green on hover */
+    --sidebar-border: 140 25% 14%; /* Very Dark Greenish Border */
+    --sidebar-ring: 120 55% 42%; /* Leaf Green for focus rings */
     
-    --chart-1: 120 55% 42%; 
-    --chart-2: 35 75% 55%; 
-    --chart-3: 153 60% 50%; 
-    --chart-4: 25 40% 45%; 
-    --chart-5: 0 60% 60%; 
+    --chart-1: 120 55% 42%; /* Leaf Green */
+    --chart-2: 35 75% 55%; /* Golden Amber */
+    --chart-3: 153 60% 50%; /* Medium Emerald */
+    --chart-4: 25 40% 45%; /* Dark Brown */
+    --chart-5: 0 60% 60%; /* Medium Red */
   }
 }
 
