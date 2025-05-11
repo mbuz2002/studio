@@ -1,3 +1,4 @@
+
 export type UserRole = "Admin" | "KepalaSekolah" | "WakaKurikulum" | "TataUsaha" | "Guru" | "SuperAdmin";
 export type CurriculumFramework = "Kurikulum Merdeka" | "K-13" | "KTSP 2006";
 export type EducationLevel = "PAUD" | "SD/MI" | "SMP/MTs" | "SMA/MA" | "SMK/MAK" | "SLB" | "PKBM/Kesetaraan";
@@ -30,22 +31,22 @@ export interface School {
   id: string;
   name: string; 
   jenjangPendidikan: EducationLevel;
-  alamat: string;
-  nomorTelepon: string;
-  emailSekolah: string;
-  namaKepalaSekolah: string;
+  alamat?: string; // Made optional for initial signup
+  nomorTelepon?: string; // Made optional
+  emailSekolah?: string; // Made optional
+  namaKepalaSekolah?: string; // Made optional
   npsn?: string; 
   logoUrl?: string; 
-  kotaSekolah?: string;
-  adminEmail?: string; 
+  kotaSekolah?: string; // Made optional
+  adminEmail: string; // Keep adminEmail required for school identification/contact
   subscriptionStatus: 'active' | 'inactive' | 'trial';
-  subscriptionStartDate?: string; // ISO Date string
-  subscriptionEndDate?: string;   // ISO Date string
+  subscriptionStartDate?: string; 
+  subscriptionEndDate?: string;   
   paymentDetails?: string; 
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
-  featureSettings?: SchoolFeatureSettings; 
+  featureSettings: SchoolFeatureSettings; // Ensure this is not optional, use DEFAULT_FEATURE_SETTINGS
 }
 
 export interface AppSettings {

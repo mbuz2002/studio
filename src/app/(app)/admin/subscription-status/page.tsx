@@ -15,7 +15,7 @@ import { id as indonesianLocale } from "date-fns/locale";
 import { useLog } from "@/contexts/LogContext";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast"; // Import useToast
+import { useToast } from "@/hooks/use-toast"; 
 
 interface FeatureDisplayItem {
   key: keyof SchoolFeatureSettings;
@@ -28,7 +28,7 @@ export default function AdminSubscriptionStatusPage() {
   const { user, currentSchool, loading: authLoading } = useAuth();
   const router = useRouter();
   const { addLog } = useLog();
-  const { toast } = useToast(); // Initialize useToast
+  const { toast } = useToast(); 
   const [isClient, setIsClient] = useState(false);
   const [schoolData, setSchoolData] = useState<School | null>(null);
 
@@ -103,11 +103,26 @@ export default function AdminSubscriptionStatusPage() {
   ] : [];
 
   const handleUpgradeSubscription = () => {
-    addLog("INFO", `Admin ${user?.email} dari sekolah ${schoolData?.name} mengklik tombol Upgrade Langganan.`, "AdminSubscriptionStatusPage");
+    if (!user || !schoolData) {
+      toast({
+        title: "Gagal Memproses Permintaan",
+        description: "Informasi pengguna atau sekolah tidak tersedia.",
+        variant: "destructive",
+      });
+      return;
+    }
+    addLog("INFO", `Admin ${user.email} dari sekolah ${schoolData.name} mengklik tombol Upgrade Langganan.`, "AdminSubscriptionStatusPage");
+    
+    const schoolName = schoolData.name || "sekolah saya";
+    const message = encodeURIComponent(`Halo GUMPLA AI, saya tertarik untuk meningkatkan langganan layanan untuk sekolah ${schoolName}. Mohon informasinya. Terima kasih.`);
+    const whatsappLink = `https://wa.me/6282131100121?text=${message}`;
+    
+    window.open(whatsappLink, '_blank');
+    
     toast({
-      title: "Tingkatkan Langganan",
-      description: "Untuk meningkatkan paket langganan sekolah Anda, silakan hubungi Super Administrator aplikasi. Kami akan membantu Anda memilih paket terbaik!",
-      duration: 8000, // Show for longer
+      title: "Hubungi Kami via WhatsApp",
+      description: "Anda akan diarahkan ke WhatsApp untuk diskusi lebih lanjut mengenai peningkatan langganan.",
+      duration: 8000, 
     });
   };
 

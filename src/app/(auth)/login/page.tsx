@@ -13,10 +13,9 @@ import { useState, useEffect } from 'react';
 import { useAuth } from "@/contexts/AuthContext";
 import type { UserRole } from "@/types";
 import Image from "next/image";
-import { initialSchoolAdminUser, initialGuruUser } from '@/lib/initial-data'; // Import initial users for demo
+import { initialSchoolAdminUser, initialGuruUser } from '@/lib/initial-data'; 
 
 const roles: { value: UserRole; label: string }[] = [
-  // SuperAdmin removed from this list
   { value: "Admin", label: "Admin Sekolah" },
   { value: "KepalaSekolah", label: "Kepala Sekolah" },
   { value: "WakaKurikulum", label: "Waka Kurikulum" },
@@ -31,7 +30,6 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false); 
 
   useEffect(() => {
-    // Pre-fill email for demo users based on role for convenience
     if (selectedRole === "Admin") {
       setEmail(initialSchoolAdminUser.email);
     } else if (selectedRole === "Guru") {
@@ -49,7 +47,6 @@ export default function LoginPage() {
       
       setTimeout(() => { 
         login(email, selectedRole);
-        // setIsLoading(false); // Login will redirect, so no need to set loading false here
       }, 300); 
     } else {
       alert("Harap isi email dan pilih peran.");
@@ -112,14 +109,17 @@ export default function LoginPage() {
             </Button>
           </form>
         </CardContent>
-        <CardFooter className="flex flex-col items-center space-y-2 pb-8 pt-4 bg-muted/30 border-t">
+        <CardFooter className="flex flex-col items-center space-y-3 pb-8 pt-4 bg-muted/30 border-t">
           <p className="text-sm text-muted-foreground">
             Email Admin Demo: {initialSchoolAdminUser.email}
           </p>
            <p className="text-sm text-muted-foreground">
             Email Guru Demo: {initialGuruUser.email}
           </p>
-          <Link href="/superadmin/login" className="text-sm text-primary hover:underline font-medium mt-2">
+          <Link href="/signup" className="text-sm text-accent hover:underline font-medium">
+              Belum punya akun sekolah? Daftar di sini.
+          </Link>
+          <Link href="/superadmin/login" className="text-sm text-primary hover:underline font-medium mt-1">
             Masuk sebagai Super Admin?
           </Link>
         </CardFooter>
