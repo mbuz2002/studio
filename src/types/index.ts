@@ -13,6 +13,19 @@ export interface User {
   updatedAt?: string; 
 }
 
+export interface SchoolFeatureSettings {
+  aiToolsEnabled: boolean;
+  academicCalendarEnabled: boolean;
+  timetableManagementEnabled: boolean;
+  masterDataManagementEnabled: boolean;
+}
+
+export const DEFAULT_FEATURE_SETTINGS: SchoolFeatureSettings = {
+  aiToolsEnabled: true,
+  academicCalendarEnabled: true,
+  timetableManagementEnabled: true,
+  masterDataManagementEnabled: true,
+};
 export interface School {
   id: string;
   name: string; 
@@ -30,6 +43,7 @@ export interface School {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  featureSettings?: SchoolFeatureSettings; // Added feature settings
 }
 
 export interface AppSettings {
@@ -426,4 +440,3 @@ export const CURRICULUM_STORAGE_KEY = "app-default-curriculum";
 export const THEME_STORAGE_KEY = "app-theme";
 export const ACADEMIC_EVENTS_STORAGE_KEY = "appAcademicEvents";
 export const SAAS_APP_SETTINGS_STORAGE_KEY = "appSaasSettings"; 
-

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { ShieldCheck, Eye, EyeOff, Trash2, ExternalLink, Activity, Settings as SettingsIcon, Layers, KeyRound, PackageOpen, Clock } from "lucide-react";
+import { ShieldCheck, Trash2, ExternalLink, Activity, Settings as SettingsIcon, PackageOpen, Clock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -25,8 +25,6 @@ export default function AdminSystemSettingsPage() {
   const { addLog } = useLog();
 
   const [maintenanceMode, setMaintenanceMode] = useState(false);
-  const [apiKey, setApiKey] = useState("********************");
-  const [showApiKey, setShowApiKey] = useState(false);
   const [jpDurationMinutes, setJpDurationMinutes] = useState<number>(45); // Default JP duration
 
   useEffect(() => {
@@ -59,7 +57,7 @@ export default function AdminSystemSettingsPage() {
         }
         router.push("/dashboard");
       } else {
-         addLog("INFO", `Admin ${user.email} mengakses halaman Pengaturan Sistem.`, "AdminSystemSettings");
+         addLog("INFO", `Admin ${user.email} mengakses halaman Pengaturan Sistem Sekolah.`, "AdminSystemSettings");
       }
     }
   }, [user, authLoading, isClient, router, toast, addLog]); 
@@ -87,20 +85,6 @@ export default function AdminSystemSettingsPage() {
     addLog(newMode ? "WARN" : "INFO", message, "AdminSystemSettings");
   };
 
-  const handleRevealApiKey = () => {
-    if (!showApiKey) {
-      setTimeout(() => {
-        setApiKey("genkit_gcp_mock_key_xxxxxxxxxxxx"); 
-        setShowApiKey(true);
-        toast({ title: "Kunci API Ditampilkan", description: "Hanya untuk tujuan demonstrasi."});
-        addLog("WARN", `Kunci API Google AI (Genkit) ditampilkan oleh Admin ${user?.email}.`, "AdminSystemSettings");
-      }, 300); 
-    } else {
-      setApiKey("********************");
-      setShowApiKey(false);
-    }
-  };
-
   const handleClearCache = () => {
     toast({
       title: "Cache Aplikasi Dibersihkan",
@@ -110,7 +94,7 @@ export default function AdminSystemSettingsPage() {
   };
 
   const handleViewLogs = () => {
-    addLog("INFO", `Admin ${user?.email} membuka halaman Log Sistem dari Pengaturan Sistem.`, "AdminSystemSettings");
+    addLog("INFO", `Admin ${user?.email} membuka halaman Log Sistem dari Pengaturan Sistem Sekolah.`, "AdminSystemSettings");
     router.push('/admin/system-logs');
   };
   
@@ -150,9 +134,9 @@ export default function AdminSystemSettingsPage() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <ShieldCheck className="h-10 w-10 text-primary-foreground drop-shadow-lg flex-shrink-0" />
             <div>
-                <CardTitle className="text-3xl md:text-4xl font-bold">Pengaturan Sistem</CardTitle>
+                <CardTitle className="text-3xl md:text-4xl font-bold">Pengaturan Sistem Sekolah</CardTitle>
                 <CardDescription className="text-lg md:text-xl text-primary-foreground/90 mt-1">
-                    Kelola konfigurasi inti dan pengaturan operasional aplikasi (Khusus Admin/SuperAdmin).
+                    Kelola konfigurasi sekolah dan pengaturan operasional (Khusus Admin).
                 </CardDescription>
             </div>
           </div>
@@ -189,33 +173,8 @@ export default function AdminSystemSettingsPage() {
         <Card className="shadow-md rounded-md">
           <CardHeader className="p-5">
             <div className="flex items-center gap-2">
-                <KeyRound className="h-6 w-6 text-primary" />
-                <CardTitle className="text-xl font-semibold">Manajemen Kunci API</CardTitle>
-            </div>
-            <CardDescription className="text-base text-muted-foreground">Kelola kunci API untuk layanan eksternal (misalnya, Google AI Genkit).</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4 p-5 pt-0">
-            <div className="space-y-1.5">
-              <Label htmlFor="api-key" className="text-base">Kunci API Google AI (Genkit)</Label>
-              <div className="flex items-center gap-2">
-                <Input id="api-key" type={showApiKey ? "text" : "password"} value={apiKey} readOnly className="text-base" />
-                <Button variant="outline" size="icon" onClick={handleRevealApiKey} aria-label={showApiKey ? "Sembunyikan Kunci API" : "Tampilkan Kunci API"}>
-                  {showApiKey ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </Button>
-              </div>
-               <p className="text-xs text-muted-foreground">Kunci ini digunakan untuk layanan GenAI. Hanya untuk tujuan demo.</p>
-            </div>
-            <Button variant="secondary" onClick={handleGenkitDashboard} className="text-base w-full sm:w-auto">
-              <ExternalLink className="mr-2 h-5 w-5" /> Buka Dasbor Genkit (Dev)
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-md rounded-md">
-          <CardHeader className="p-5">
-             <div className="flex items-center gap-2">
-              <PackageOpen className="h-6 w-6 text-primary" />
-              <CardTitle className="text-xl font-semibold">Manajemen Cache</CardTitle>
+                <PackageOpen className="h-6 w-6 text-primary" />
+                <CardTitle className="text-xl font-semibold">Manajemen Cache</CardTitle>
             </div>
             <CardDescription className="text-base text-muted-foreground">Kontrol cache aplikasi untuk memastikan data terbaru ditampilkan.</CardDescription>
           </CardHeader>
@@ -277,16 +236,33 @@ export default function AdminSystemSettingsPage() {
           </CardContent>
         </Card>
 
+         <Card className="shadow-md rounded-md">
+          <CardHeader className="p-5">
+            <div className="flex items-center gap-2">
+                <ExternalLink className="h-6 w-6 text-primary" />
+                <CardTitle className="text-xl font-semibold">Dasbor Genkit (Dev)</CardTitle>
+            </div>
+            <CardDescription className="text-base text-muted-foreground">Akses dasbor pengembangan Genkit untuk memantau alur AI.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3 p-5 pt-0">
+             <Button variant="secondary" onClick={handleGenkitDashboard} className="text-base w-full sm:w-auto">
+              Buka Dasbor Genkit
+            </Button>
+            <p className="text-sm text-muted-foreground">
+              Hanya untuk tujuan pengembangan dan debugging alur GenAI.
+            </p>
+          </CardContent>
+        </Card>
+
       </div>
 
       <Alert variant="destructive" className="mt-8 shadow-md rounded-md">
         <ShieldCheck className="h-6 w-6" />
         <AlertTitle className="text-lg font-semibold">Perhatian Keamanan</AlertTitle>
         <AlertDescription className="text-base">
-          Pengaturan di halaman ini memiliki dampak signifikan pada operasional aplikasi. Harap lakukan perubahan dengan hati-hati dan hanya jika Anda memahami implikasinya.
+          Pengaturan di halaman ini memiliki dampak signifikan pada operasional aplikasi sekolah Anda. Harap lakukan perubahan dengan hati-hati.
         </AlertDescription>
       </Alert>
     </div>
   );
 }
-

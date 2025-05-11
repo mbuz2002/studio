@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { SlidersHorizontal, Save, UploadCloud, Link2, Image as ImageIcon } from "lucide-react";
+import { SlidersHorizontal, Save, UploadCloud, Link2, Image as ImageIcon, KeyRound, Eye, EyeOff } from "lucide-react";
 import type { AppSettings } from "@/types";
 import { SAAS_APP_SETTINGS_STORAGE_KEY } from "@/types";
 import Image from "next/image";
@@ -34,6 +34,11 @@ export default function AppSettingsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoInputMethod, setLogoInputMethod] = useState<'url' | 'upload'>('url');
+
+  // API Key State
+  const [apiKey, setApiKey] = useState("********************"); // Store your actual key securely, this is a placeholder
+  const [showApiKey, setShowApiKey] = useState(false);
+
 
   useEffect(() => {
     if (!authLoading) {
@@ -62,6 +67,14 @@ export default function AppSettingsPage() {
       } else {
         setSettings(initialAppSettings); // Use initial if nothing stored
       }
+
+      // Load API Key (example, replace with secure storage if real)
+      const storedApiKey = localStorage.getItem("genkitApiKey_superadmin_demo"); // Example key
+      if (storedApiKey) {
+        setApiKey(storedApiKey); // Display the real key if showApiKey is true, otherwise placeholder
+      }
+
+
       setPageLoading(false);
     }
   }, [user, authLoading, router, toast]);
@@ -99,11 +112,53 @@ export default function AppSettingsPage() {
     const finalSettings = { ...settings, appLogoUrl: logoPreview };
 
     localStorage.setItem(SAAS_APP_SETTINGS_STORAGE_KEY, JSON.stringify(finalSettings));
+    
+    // Save API Key (example, replace with secure storage if real)
+    if(apiKey !== "********************") { // Only save if it's not the placeholder
+        localStorage.setItem("genkitApiKey_superadmin_demo", apiKey);
+    }
+
+
     setIsLoading(false);
     toast({ title: "Pengaturan Aplikasi Disimpan", description: "Perubahan telah berhasil disimpan." });
     addLog("INFO", `SuperAdmin ${user?.email} memperbarui pengaturan aplikasi.`, "AppSettingsPage");
-    // No redirect needed, stay on the page. Potentially trigger a context update if settings are used globally.
   };
+
+  const handleRevealApiKey = () => {
+    if (!showApiKey) {
+      // In a real app, you'd fetch the key from a secure backend or env var
+      // For demo, we'll just reveal what's in the apiKey state if it's not the placeholder
+      // Or, if it is the placeholder, set it to a demo key.
+      const currentStoredKey = localStorage.getItem("genkitApiKey_superadmin_demo");
+      if (currentStoredKey) {
+        setApiKey(currentStoredKey);
+      } else {
+        // If no key is stored, maybe prompt to set one or show a demo one
+        setApiKey("genkit_gcp_mock_key_superadmin_xxxxxxxx"); 
+      }
+      setShowApiKey(true);
+      toast({ title: "Kunci API Ditampilkan", description: "Pastikan untuk menjaga kerahasiaan kunci ini."});
+      addLog("WARN", `Kunci API Google AI (Genkit) ditampilkan oleh SuperAdmin ${user?.email}.`, "AppSettingsPage-APIKey");
+    } else {
+      const currentStoredKey = localStorage.getItem("genkitApiKey_superadmin_demo");
+      if (currentStoredKey && apiKey !== currentStoredKey) {
+          // If the key was edited and is being hidden, keep the edited version visible as placeholder
+          // No, revert to placeholder to ensure security by default
+          setApiKey("********************");
+      } else if (!currentStoredKey){
+          setApiKey("********************");
+      } else {
+          // If it was revealed and not changed, or it matches storage, hide it.
+          setApiKey("********************");
+      }
+      setShowApiKey(false);
+    }
+  };
+  
+  const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      setApiKey(e.target.value);
+  };
+
 
   if (pageLoading || authLoading) {
     return <LoadingSpinner message="Memuat Pengaturan Aplikasi..." icon={<SlidersHorizontal className="h-12 w-12 animate-pulse text-primary mb-4"/>} />;
@@ -118,7 +173,7 @@ export default function AppSettingsPage() {
             <div>
               <CardTitle className="text-2xl md:text-3xl">Pengaturan Aplikasi Global</CardTitle>
               <CardDescription className="text-primary-foreground/90 mt-1">
-                Konfigurasi nama aplikasi dan logo yang akan ditampilkan secara global.
+                Konfigurasi nama aplikasi, logo, kunci API, dan aspek global lainnya.
               </CardDescription>
             </div>
           </div>
@@ -203,6 +258,28 @@ export default function AppSettingsPage() {
               )}
               <p className="text-sm text-muted-foreground">Logo ini akan menggantikan logo default di sidebar.</p>
             </div>
+
+            <hr className="my-6"/>
+            <h3 className="text-xl font-semibold mb-3">Pengaturan Kunci API</h3>
+            <div className="space-y-2">
+                <Label htmlFor="apiKeyGenkit" className="text-lg font-medium">Kunci API Google AI (Genkit)</Label>
+                <div className="flex items-center gap-2">
+                <Input 
+                    id="apiKeyGenkit" 
+                    name="apiKeyGenkit" 
+                    type={showApiKey ? "text" : "password"} 
+                    value={apiKey} 
+                    onChange={handleApiKeyChange} 
+                    className="text-base h-11"
+                    placeholder="Masukkan Kunci API Genkit Anda"
+                />
+                <Button variant="outline" size="icon" onClick={handleRevealApiKey} aria-label={showApiKey ? "Sembunyikan Kunci API" : "Tampilkan Kunci API"}>
+                    {showApiKey ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </Button>
+                </div>
+                <p className="text-sm text-muted-foreground">Kunci ini digunakan untuk semua fitur GenAI dalam aplikasi. Simpan dengan aman.</p>
+            </div>
+
 
             <div className="pt-6 border-t">
               <Button type="submit" disabled={isLoading} className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-md">

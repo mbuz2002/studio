@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
@@ -5,18 +6,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { CreditCard, Search, MoreHorizontal, Edit2, AlertTriangle } from "lucide-react";
+import { CreditCard, Search, Edit2, AlertTriangle, Sparkles, CalendarCheck, ListChecks, BookOpen } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLog } from "@/contexts/LogContext";
-import type { School } from "@/types";
-import { SCHOOLS_STORAGE_KEY } from "@/types";
+import type { School, SchoolFeatureSettings } from "@/types";
+import { SCHOOLS_STORAGE_KEY, DEFAULT_FEATURE_SETTINGS } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { SubscriptionEditDialog } from "@/components/superadmin/SubscriptionEditDialog"; // To be created
+import { SubscriptionEditDialog } from "@/components/superadmin/SubscriptionEditDialog"; 
 
 export default function SuperAdminSubscriptionsPage() {
   const { user, loading: authLoading } = useAuth();
@@ -48,7 +48,13 @@ export default function SuperAdminSubscriptionsPage() {
 
     try {
       const storedSchools = localStorage.getItem(SCHOOLS_STORAGE_KEY);
-      setSchools(storedSchools ? JSON.parse(storedSchools) : []);
+      const parsedSchools = storedSchools ? JSON.parse(storedSchools) : [];
+      // Ensure all schools have featureSettings initialized
+      const schoolsWithFeatureFlags = parsedSchools.map((school: School) => ({
+        ...school,
+        featureSettings: school.featureSettings || { ...DEFAULT_FEATURE_SETTINGS }
+      }));
+      setSchools(schoolsWithFeatureFlags);
     } catch (error) {
       console.error("Gagal memuat data sekolah:", error);
       toast({ title: "Gagal Memuat Data Sekolah", variant: "destructive" });
@@ -75,8 +81,8 @@ export default function SuperAdminSubscriptionsPage() {
       localStorage.setItem(SCHOOLS_STORAGE_KEY, JSON.stringify(updatedSchoolsList));
       return updatedSchoolsList;
     });
-    toast({ title: "Langganan Diperbarui", description: `Status langganan untuk ${updatedSchool.name} telah diperbarui.` });
-    addLog("INFO", `Langganan sekolah "${updatedSchool.name}" (ID: ${updatedSchool.id}) diperbarui oleh SuperAdmin ${user?.email}. Status baru: ${updatedSchool.subscriptionStatus}.`, "SuperAdminSubscriptionsPage");
+    toast({ title: "Langganan & Fitur Diperbarui", description: `Pengaturan untuk ${updatedSchool.name} telah diperbarui.` });
+    addLog("INFO", `Langganan dan fitur sekolah "${updatedSchool.name}" (ID: ${updatedSchool.id}) diperbarui oleh SuperAdmin ${user?.email}. Status: ${updatedSchool.subscriptionStatus}, Fitur: ${JSON.stringify(updatedSchool.featureSettings)}.`, "SuperAdminSubscriptionsPage");
     setIsEditDialogOpen(false);
     setEditingSchool(null);
   };
@@ -88,6 +94,25 @@ export default function SuperAdminSubscriptionsPage() {
       case 'inactive': return 'destructive';
       default: return 'outline';
     }
+  };
+
+  const renderFeatureStatus = (settings?: SchoolFeatureSettings) => {
+    if (!settings) return <span className="text-xs text-muted-foreground italic">Default</span>;
+    const enabledFeatures: string[] = [];
+    if (settings.aiToolsEnabled) enabledFeatures.push("AI");
+    if (settings.academicCalendarEnabled) enabledFeatures.push("Kalender");
+    if (settings.timetableManagementEnabled) enabledFeatures.push("Jadwal");
+    if (settings.masterDataManagementEnabled) enabledFeatures.push("Master");
+    
+    if (enabledFeatures.length === 0) return <span className="text-xs text-destructive">Tidak Ada</span>;
+    return (
+      <div className="flex flex-wrap gap-1">
+        {settings.aiToolsEnabled && <Badge variant="outline" className="text-xs border-violet-500/50 text-violet-600"><Sparkles size={12} className="mr-1"/>AI</Badge>}
+        {settings.academicCalendarEnabled && <Badge variant="outline" className="text-xs border-sky-500/50 text-sky-600"><CalendarCheck size={12} className="mr-1"/>Kalender</Badge>}
+        {settings.timetableManagementEnabled && <Badge variant="outline" className="text-xs border-amber-500/50 text-amber-600"><ListChecks size={12} className="mr-1"/>Jadwal</Badge>}
+        {settings.masterDataManagementEnabled && <Badge variant="outline" className="text-xs border-rose-500/50 text-rose-600"><BookOpen size={12} className="mr-1"/>Master</Badge>}
+      </div>
+    );
   };
 
 
@@ -110,9 +135,9 @@ export default function SuperAdminSubscriptionsPage() {
           <div className="flex items-center gap-3">
             <CreditCard className="h-8 w-8 text-primary-foreground drop-shadow" />
             <div>
-              <CardTitle className="text-2xl md:text-3xl">Manajemen Langganan Sekolah</CardTitle>
+              <CardTitle className="text-2xl md:text-3xl">Manajemen Langganan & Fitur Sekolah</CardTitle>
               <CardDescription className="text-primary-foreground/90 mt-1">
-                Kelola status langganan dan detail pembayaran untuk setiap sekolah.
+                Kelola status langganan, detail pembayaran, dan fitur aktif untuk setiap sekolah.
               </CardDescription>
             </div>
           </div>
@@ -138,7 +163,7 @@ export default function SuperAdminSubscriptionsPage() {
                   <TableHead className="min-w-[200px] px-3 sm:px-4 py-3 text-sm">Nama Sekolah</TableHead>
                   <TableHead className="min-w-[150px] px-3 sm:px-4 py-3 text-sm hidden md:table-cell">Email Admin</TableHead>
                   <TableHead className="min-w-[120px] px-3 sm:px-4 py-3 text-sm text-center">Status Langganan</TableHead>
-                  <TableHead className="min-w-[200px] px-3 sm:px-4 py-3 text-sm hidden lg:table-cell">Catatan Pembayaran</TableHead>
+                  <TableHead className="min-w-[200px] px-3 sm:px-4 py-3 text-sm">Fitur Aktif</TableHead>
                   <TableHead className="text-right min-w-[80px] px-3 sm:px-4 py-3 text-sm">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
@@ -162,8 +187,8 @@ export default function SuperAdminSubscriptionsPage() {
                           {school.subscriptionStatus}
                         </Badge>
                       </TableCell>
-                      <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top text-xs text-muted-foreground hidden lg:table-cell truncate max-w-xs">
-                        {school.paymentDetails || "-"}
+                      <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top">
+                         {renderFeatureStatus(school.featureSettings)}
                       </TableCell>
                       <TableCell className="text-right px-3 sm:px-4 py-2 sm:py-3 align-top">
                         <Button variant="outline" size="sm" onClick={() => handleEditSubscription(school)} className="text-xs">
@@ -179,9 +204,10 @@ export default function SuperAdminSubscriptionsPage() {
            {schools.length > 0 && (
                 <Alert variant="default" className="mt-6 border-primary/30">
                     <AlertTriangle className="h-5 w-5 text-primary"/>
-                    <AlertTitle className="text-primary">Informasi Langganan</AlertTitle>
+                    <AlertTitle className="text-primary">Informasi Langganan & Fitur</AlertTitle>
                     <AlertDescription>
-                        Kelola status langganan dan catatan pembayaran untuk setiap sekolah. Pastikan data pembayaran dicatat dengan akurat (jika sistem pembayaran otomatis belum terintegrasi).
+                        Kelola status langganan, catatan pembayaran, dan fitur yang aktif untuk setiap sekolah.
+                        Fitur yang tidak aktif tidak akan muncul di menu atau dapat diakses oleh pengguna sekolah tersebut.
                     </AlertDescription>
                 </Alert>
             )}

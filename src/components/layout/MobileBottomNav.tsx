@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, Users, BrainCircuit, ShieldCheck, MoreHorizontal, Building, SlidersHorizontal, UserCheck, ListChecks, Book, Home, ClipboardList, CalendarCheck, CreditCard } from 'lucide-react';
-import type { UserRole } from '@/types';
+import type { UserRole, SchoolFeatureSettings } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCurriculum } from '@/contexts/CurriculumContext';
 import { useState, useMemo } from 'react';
@@ -16,13 +16,14 @@ import { Button } from '@/components/ui/button';
 interface MobileNavItemData {
   href: string;
   label: string;
-  originalLabel?: string; // To store the base label before dynamic changes
+  originalLabel?: string; 
   icon: React.ElementType;
   roles?: UserRole[];
   isKurikulumMerdekaOnly?: boolean;
   isMasterData?: boolean;
   isSuperAdminOnly?: boolean;
-  isSystemSetting?: boolean; // For admin-specific settings
+  isSystemSetting?: boolean; 
+  featureFlag?: keyof SchoolFeatureSettings; // Added for feature toggling
 }
 
 const allMobileNavItemsData: MobileNavItemData[] = [
@@ -30,21 +31,21 @@ const allMobileNavItemsData: MobileNavItemData[] = [
   { href: "/superadmin/dashboard", label: "SA Dasbor", originalLabel: "SA Dasbor", icon: LayoutDashboard, roles: ["SuperAdmin"], isSuperAdminOnly: true },
   { href: "/superadmin/schools", label: "Sekolah", originalLabel: "Manajemen Sekolah", icon: Building, roles: ["SuperAdmin"], isSuperAdminOnly: true },
   { href: "/superadmin/app-settings", label: "Pengaturan App", originalLabel: "Pengaturan App", icon: SlidersHorizontal, roles: ["SuperAdmin"], isSuperAdminOnly: true },
-  // { href: "/superadmin/subscriptions", label: "Langganan", originalLabel:"Langganan", icon: CreditCard, roles: ["SuperAdmin"], isSuperAdminOnly: true },
+  // { href: "/superadmin/subscriptions", label: "Langganan", originalLabel:"Langganan", icon: CreditCard, roles: ["SuperAdmin"], isSuperAdminOnly: true }, // Keep short for mobile
 
   // Regular App Menu
   { href: "/dashboard", label: "Dasbor", originalLabel: "Dasbor", icon: LayoutDashboard, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/lesson-plans", label: "RPP/ATP", originalLabel: "RPP / ATP", icon: BookOpenText, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/annual-programs", label: "PROTA", originalLabel: "Program Tahunan", icon: CalendarDays, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/semester-programs", label: "Promes", originalLabel: "Program Semester", icon: CalendarClock, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
-  { href: "/modul-ajar", label: "Modul KM", originalLabel: "Modul Ajar (KM)", icon: BrainCircuit, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], isKurikulumMerdekaOnly: true },
-  { href: "/ai-assistant", label: "AI Materi", originalLabel: "Asisten AI Materi", icon: Sparkles, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"] },
-  { href: "/academic-calendar", label: "Kalender", originalLabel: "Kalender Pendidikan", icon: CalendarCheck, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+  { href: "/modul-ajar", label: "Modul KM", originalLabel: "Modul Ajar (KM)", icon: BrainCircuit, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], isKurikulumMerdekaOnly: true, featureFlag: "aiToolsEnabled" },
+  { href: "/ai-assistant", label: "AI Materi", originalLabel: "Asisten AI Materi", icon: Sparkles, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], featureFlag: "aiToolsEnabled" },
+  { href: "/academic-calendar", label: "Kalender", originalLabel: "Kalender Pendidikan", icon: CalendarCheck, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"], featureFlag: "academicCalendarEnabled" },
   
-  { href: "/master-data/subjects", label: "Mapel", originalLabel: "Mata Pelajaran", icon: Book, roles: ["Admin", "KepalaSekolah", "WakaKurikulum"], isMasterData: true },
-  { href: "/master-data/teachers", label: "Data Guru", originalLabel: "Data Guru", icon: UserCheck, roles: ["Admin", "KepalaSekolah", "WakaKurikulum"], isMasterData: true },
-  { href: "/master-data/classes", label: "Data Kelas", originalLabel: "Data Kelas", icon: ClipboardList, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha"], isMasterData: true },
-  { href: "/timetables", label: "Jadwal", originalLabel: "Jadwal Pelajaran", icon: ListChecks, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"]}, 
+  { href: "/master-data/subjects", label: "Mapel", originalLabel: "Mata Pelajaran", icon: Book, roles: ["Admin", "KepalaSekolah", "WakaKurikulum"], isMasterData: true, featureFlag: "masterDataManagementEnabled" },
+  { href: "/master-data/teachers", label: "Guru", originalLabel: "Data Guru", icon: UserCheck, roles: ["Admin", "KepalaSekolah", "WakaKurikulum"], isMasterData: true, featureFlag: "masterDataManagementEnabled" },
+  { href: "/master-data/classes", label: "Kelas", originalLabel: "Data Kelas", icon: ClipboardList, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha"], isMasterData: true, featureFlag: "masterDataManagementEnabled" },
+  { href: "/timetables", label: "Jadwal", originalLabel: "Jadwal Pelajaran", icon: ListChecks, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"], featureFlag: "timetableManagementEnabled"}, 
   
   { href: "/school-settings", label: "Profil SKLH", originalLabel: "Profil Sekolah", icon: Home, roles: ["Admin", "TataUsaha", "KepalaSekolah"] }, 
   { href: "/admin/user-management", label: "Pengguna", originalLabel: "Manajemen Pengguna", icon: Users, roles: ["Admin", "TataUsaha"] },
@@ -55,7 +56,7 @@ const allMobileNavItemsData: MobileNavItemData[] = [
 
 export function MobileBottomNav() {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, currentSchool } = useAuth(); // Added currentSchool
   const { defaultCurriculum } = useCurriculum();
   const [isMoreSheetOpen, setIsMoreSheetOpen] = useState(false);
 
@@ -68,6 +69,24 @@ export function MobileBottomNav() {
         if (item.href === "/lesson-plans") {
           currentLabel = defaultCurriculum === "Kurikulum Merdeka" ? "ATP" : "RPP";
         }
+        // Shorten label for mobile if it's the original long one
+        if (item.label.length > 10 && item.originalLabel && item.label === item.originalLabel) {
+            // Example shortening logic, can be more sophisticated
+            if (item.originalLabel.includes("Program Tahunan")) currentLabel = "PROTA";
+            else if (item.originalLabel.includes("Program Semester")) currentLabel = "Promes";
+            else if (item.originalLabel.includes("Modul Ajar")) currentLabel = "Modul KM";
+            else if (item.originalLabel.includes("Asisten AI Materi")) currentLabel = "AI Materi";
+            else if (item.originalLabel.includes("Kalender Pendidikan")) currentLabel = "Kalender";
+            else if (item.originalLabel.includes("Jadwal Pelajaran")) currentLabel = "Jadwal";
+            else if (item.originalLabel.includes("Profil Sekolah")) currentLabel = "Profil SKLH";
+            else if (item.originalLabel.includes("Manajemen Pengguna")) currentLabel = "Pengguna";
+            else if (item.originalLabel.includes("Pengaturan Akun")) currentLabel = "Atur Akun";
+            else if (item.originalLabel.includes("Pengaturan Sistem")) currentLabel = "Sys Cfg";
+            else if (item.originalLabel.includes("Data Guru")) currentLabel = "Guru";
+            else if (item.originalLabel.includes("Data Kelas")) currentLabel = "Kelas";
+             else if (item.originalLabel.includes("Mata Pelajaran")) currentLabel = "Mapel";
+        }
+
         return { ...item, label: currentLabel };
       })
       .filter(item => {
@@ -75,18 +94,24 @@ export function MobileBottomNav() {
         if (item.isKurikulumMerdekaOnly && defaultCurriculum !== "Kurikulum Merdeka") return false;
         if (item.isMasterData && !["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha"].includes(user.role)) return false;
         if (item.isSystemSetting && !["Admin"].includes(user.role)) return false;
-        // Segregate SuperAdmin menus
+        
         if (user.role === "SuperAdmin") return item.isSuperAdminOnly === true;
-        return !item.isSuperAdminOnly;
+        if (item.isSuperAdminOnly) return false; // Hide SA items for non-SA users
+
+        // Feature flag check for non-SuperAdmin users
+        if (item.featureFlag && !(currentSchool?.featureSettings?.[item.featureFlag] ?? true)) {
+            return false;
+        }
+        return true;
       })
-      .sort((a,b) => { // Basic sort to attempt to keep dashboard first, settings last
+      .sort((a,b) => { 
         if (a.href.includes("dashboard")) return -1;
         if (b.href.includes("dashboard")) return 1;
         if (a.href.includes("setting")) return 1;
         if (b.href.includes("setting")) return -1;
         return 0;
       });
-  }, [user, defaultCurriculum]);
+  }, [user, defaultCurriculum, currentSchool]); // Added currentSchool dependency
 
   const MAX_ITEMS_IN_BAR = 5;
   let displayNavItems: MobileNavItemData[] = [];

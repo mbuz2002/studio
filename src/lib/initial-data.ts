@@ -1,5 +1,5 @@
-
 import type { LessonPlan, AnnualProgram, SemesterProgram, ModulAjar, Subject, Teacher, SchoolClass, User, School, AcademicEvent } from '@/types';
+import { DEFAULT_FEATURE_SETTINGS } from '@/types'; // Import default feature settings
 
 // Note: These IDs should be unique if you plan to merge them later.
 // For this setup, they will be assigned to the defaultSchoolId.
@@ -35,7 +35,8 @@ export const initialDefaultSchool: School = {
   isActive: true,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
-  adminEmail: 'admin@sekolahdemo.sch.id'
+  adminEmail: 'admin@sekolahdemo.sch.id',
+  featureSettings: DEFAULT_FEATURE_SETTINGS, // Initialize with default feature settings
 };
 
 export const initialSchoolAdminUser: User = {
