@@ -227,83 +227,79 @@ export default function AnnualProgramsPage() {
           </div>
         </CardHeader>
         <CardContent className="p-4 sm:p-6">
-          <div className="flex flex-col gap-4 mb-6">
-            <div className="flex flex-col md:flex-row gap-3 md:items-center">
-              <div className="flex-grow relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Cari PROTA (judul, tahun, kurikulum)..."
-                  className="pl-10 w-full text-base md:text-sm h-10"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-              <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-                  {canImport && (
-                    <Button variant="outline" className="w-full sm:w-auto text-base md:text-sm h-10" onClick={() => toast({title: "Fitur Belum Tersedia", description: "Impor PROTA akan segera hadir!"})}>
-                        <FileUp className="mr-2 h-4 w-4" /> Impor
-                    </Button>
-                  )}
-                  {activeFilterCount > 0 && (
-                    <Button variant="outline" onClick={resetFilters} className="w-full sm:w-auto text-base md:text-sm h-10">
-                      <X className="mr-2 h-4 w-4" /> Reset Filter ({activeFilterCount})
-                    </Button>
-                  )}
-              </div>
+          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 items-center justify-between mb-6">
+            <div className="w-full sm:flex-grow sm:max-w-xs md:max-w-sm lg:max-w-md relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Cari PROTA (judul, tahun, kurikulum)..."
+                className="pl-10 w-full text-base md:text-sm h-10"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col xs:flex-row xs:flex-wrap gap-3 w-full sm:w-auto justify-center xs:justify-end">
+              {canImport && (
+                <Button variant="outline" className="w-full xs:w-auto text-base md:text-sm h-10" onClick={() => toast({title: "Fitur Belum Tersedia", description: "Impor PROTA akan segera hadir!"})}>
+                    <FileUp className="mr-2 h-4 w-4" /> Impor
+                </Button>
+              )}
+              {activeFilterCount > 0 && (
+                <Button variant="outline" onClick={resetFilters} className="w-full xs:w-auto text-base md:text-sm h-10">
+                  <X className="mr-2 h-4 w-4" /> Reset Filter ({activeFilterCount})
+                </Button>
+              )}
               {canCreate && (
-                <div className="w-full md:w-auto">
-                   <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground w-full sm:w-auto">
-                      <Link href="/annual-programs/new">
-                          <PlusCircle className="mr-2 h-5 w-5" /> Buat Program Baru
-                      </Link>
-                    </Button>
-                </div>
+                <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground w-full xs:w-auto">
+                  <Link href="/annual-programs/new">
+                      <PlusCircle className="mr-2 h-5 w-5" /> Buat Program Baru
+                  </Link>
+                </Button>
               )}
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-              <div>
-                <Label htmlFor="curriculumFilter" className="text-xs">Kurikulum</Label>
-                <Select value={curriculumFilter} onValueChange={(value) => setCurriculumFilter(value as CurriculumFramework | "ALL")}>
-                  <SelectTrigger id="curriculumFilter" className="h-10 text-sm">
-                    <SelectValue placeholder="Filter Kurikulum" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ALL">Semua Kurikulum</SelectItem>
-                    {availableCurriculums.map(curr => (
-                      <SelectItem key={curr.value} value={curr.value}>{curr.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="gradeFilter" className="text-xs">Jenjang/Fase</Label>
-                <Select value={gradeFilter} onValueChange={(value) => setGradeFilter(value)}>
-                  <SelectTrigger id="gradeFilter" className="h-10 text-sm">
-                    <SelectValue placeholder="Filter Jenjang/Fase" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ALL">Semua Jenjang/Fase</SelectItem>
-                    {uniqueGradeLevels.map(grade => (
-                      <SelectItem key={grade} value={grade}>{grade}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="yearFilter" className="text-xs">Tahun Ajaran</Label>
-                <Select value={yearFilter} onValueChange={(value) => setYearFilter(value)}>
-                  <SelectTrigger id="yearFilter" className="h-10 text-sm">
-                    <SelectValue placeholder="Filter Tahun Ajaran" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ALL">Semua Tahun</SelectItem>
-                    {uniqueYears.map(year => (
-                      <SelectItem key={year} value={year}>{year}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mb-6">
+            <div>
+              <Label htmlFor="curriculumFilter" className="text-xs">Kurikulum</Label>
+              <Select value={curriculumFilter} onValueChange={(value) => setCurriculumFilter(value as CurriculumFramework | "ALL")}>
+                <SelectTrigger id="curriculumFilter" className="h-10 text-sm">
+                  <SelectValue placeholder="Filter Kurikulum" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">Semua Kurikulum</SelectItem>
+                  {availableCurriculums.map(curr => (
+                    <SelectItem key={curr.value} value={curr.value}>{curr.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="gradeFilter" className="text-xs">Jenjang/Fase</Label>
+              <Select value={gradeFilter} onValueChange={(value) => setGradeFilter(value)}>
+                <SelectTrigger id="gradeFilter" className="h-10 text-sm">
+                  <SelectValue placeholder="Filter Jenjang/Fase" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">Semua Jenjang/Fase</SelectItem>
+                  {uniqueGradeLevels.map(grade => (
+                    <SelectItem key={grade} value={grade}>{grade}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="yearFilter" className="text-xs">Tahun Ajaran</Label>
+              <Select value={yearFilter} onValueChange={(value) => setYearFilter(value)}>
+                <SelectTrigger id="yearFilter" className="h-10 text-sm">
+                  <SelectValue placeholder="Filter Tahun Ajaran" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">Semua Tahun</SelectItem>
+                  {uniqueYears.map(year => (
+                    <SelectItem key={year} value={year}>{year}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           {filteredAnnualPrograms.length === 0 && searchTerm && (
@@ -340,3 +336,4 @@ export default function AnnualProgramsPage() {
     </div>
   );
 }
+

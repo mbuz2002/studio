@@ -48,7 +48,7 @@ const initialLessonPlansData: LessonPlan[] = [
     assessment: "Observasi keaktifan diskusi, Penilaian storyboard, Penilaian hasil animasi bola memantul (rubrik).",
     differentiationStrategies: ["Memberikan contoh storyboard yang lebih kompleks untuk siswa mahir.", "Memberikan template storyboard untuk siswa yang membutuhkan."],
     materials: "Komputer dengan software animasi (Blender/Adobe Animate), Proyektor, Video contoh animasi, Referensi 12 Prinsip Animasi.",
-    alokasiWaktuJP: "72 JP (Untuk keseluruhan ATP)",
+    alokasiWaktuJP: "72 JP",
     createdAt: new Date("2023-09-01T10:00:00Z").toISOString(),
     updatedAt: new Date("2023-09-05T14:30:00Z").toISOString(),
     createdByUserId: "user-4"
@@ -57,22 +57,22 @@ const initialLessonPlansData: LessonPlan[] = [
     id: "rpp2",
     type: "RPP",
     curriculumType: "K-13",
-    title: "RPP Proses Fotosintesis (K-13)",
+    title: "RPP Proses Fotosintesis (K-13 Demo)",
     subject: "IPA",
     gradeLevel: "Kelas VII SMP",
     topic: "Fotosintesis",
-    kompetensiInti: ["KI-3: Memahami pengetahuan (faktual, konseptual, dan prosedural) berdasarkan rasa ingin tahunya tentang ilmu pengetahuan...", "KI-4: Mencoba, mengolah, dan menyaji dalam ranah konkret..."],
-    kompetensiDasar: ["3.7 Menganalisis konsep energi, berbagai sumber energi, dan perubahan bentuk energi dalam kehidupan sehari-hari termasuk fotosintesis", "4.7 Menyajikan hasil penyelidikan tentang perubahan bentuk energi termasuk fotosintesis"],
-    indikatorPencapaianKompetensi: ["Menjelaskan proses fotosintesis", "Mengidentifikasi faktor-faktor yang mempengaruhi fotosintesis"],
-    learningObjectives: ["Setelah pembelajaran, siswa dapat menjelaskan proses fotosintesis dengan benar.", "Setelah pembelajaran, siswa dapat mengidentifikasi minimal 3 faktor yang mempengaruhi fotosintesis."],
-    metodePembelajaran: ["Diskusi", "Eksperimen", "Tanya Jawab"],
+    kompetensiInti: ["KI-3: Memahami pengetahuan...", "KI-4: Mencoba, mengolah, dan menyaji..."],
+    kompetensiDasar: ["3.7 Menganalisis konsep energi...", "4.7 Menyajikan hasil penyelidikan..."],
+    indikatorPencapaianKompetensi: ["Menjelaskan proses fotosintesis", "Mengidentifikasi faktor-faktor fotosintesis"],
+    learningObjectives: ["Siswa dapat menjelaskan proses fotosintesis.", "Siswa dapat mengidentifikasi faktor fotosintesis."],
+    metodePembelajaran: ["Diskusi", "Eksperimen"],
     langkahPembelajaran: {
-      pendahuluan: ["Salam, doa, presensi", "Apersepsi: Menanyakan tumbuhan di sekitar", "Menyampaikan KD dan tujuan"],
-      kegiatanInti: ["Mengamati video fotosintesis", "Diskusi kelompok tentang bahan dan hasil fotosintesis", "Melakukan percobaan sederhana (opsional)", "Presentasi kelompok"],
-      penutup: ["Kesimpulan", "Refleksi", "Pemberian tugas"],
+      pendahuluan: ["Salam, doa, presensi", "Apersepsi"],
+      kegiatanInti: ["Mengamati video", "Diskusi kelompok", "Presentasi"],
+      penutup: ["Kesimpulan", "Refleksi"],
     },
-    assessment: "Penilaian sikap (observasi), Penilaian pengetahuan (tes tulis), Penilaian keterampilan (laporan praktikum/presentasi).",
-    materials: "Buku teks IPA K-13, Video animasi fotosintesis, Gambar/Charta, Alat dan bahan praktikum (jika ada)",
+    assessment: "Observasi, Tes tulis, Laporan praktikum.",
+    materials: "Buku teks, Video animasi",
     alokasiWaktuJP: "3 JP",
     createdAt: new Date("2023-10-10T09:00:00Z").toISOString(),
     updatedAt: new Date("2023-10-12T11:00:00Z").toISOString(),
@@ -243,69 +243,65 @@ export default function LessonPlansPage() {
           </div>
         </CardHeader>
         <CardContent className="p-4 sm:p-6">
-          <div className="flex flex-col gap-4 mb-6">
-            <div className="flex flex-col md:flex-row gap-3 md:items-center">
-              <div className="flex-grow relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder={`Cari ${documentTypeForTable} (judul, jenjang, kurikulum, topik)...`}
-                  className="pl-10 w-full text-base md:text-sm h-10"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-              <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-                {canImport && (
-                  <Button variant="outline" className="w-full sm:w-auto text-base md:text-sm h-10" onClick={() => toast({title: "Fitur Belum Tersedia", description: "Impor dokumen akan segera hadir!"})}>
-                      <FileUp className="mr-2 h-4 w-4" /> Impor
-                  </Button>
-                )}
-                {activeFilterCount > 0 && (
-                  <Button variant="outline" onClick={resetFilters} className="w-full sm:w-auto text-base md:text-sm h-10">
-                    <X className="mr-2 h-4 w-4" /> Reset Filter ({activeFilterCount})
-                  </Button>
-                )}
-              </div>
+          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 items-center justify-between mb-6">
+            <div className="w-full sm:flex-grow sm:max-w-xs md:max-w-sm lg:max-w-md relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder={`Cari ${documentTypeForTable} (judul, jenjang, kurikulum, topik)...`}
+                className="pl-10 w-full text-base md:text-sm h-10"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col xs:flex-row xs:flex-wrap gap-3 w-full sm:w-auto justify-center xs:justify-end">
+              {canImport && (
+                <Button variant="outline" className="w-full xs:w-auto text-base md:text-sm h-10" onClick={() => toast({title: "Fitur Belum Tersedia", description: "Impor dokumen akan segera hadir!"})}>
+                    <FileUp className="mr-2 h-4 w-4" /> Impor
+                </Button>
+              )}
+              {activeFilterCount > 0 && (
+                <Button variant="outline" onClick={resetFilters} className="w-full xs:w-auto text-base md:text-sm h-10">
+                  <X className="mr-2 h-4 w-4" /> Reset Filter ({activeFilterCount})
+                </Button>
+              )}
               {canCreate && (
-                  <div className="w-full md:w-auto">
-                      <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground w-full sm:w-auto">
-                        <Link href="/lesson-plans/new">
-                          <PlusCircle className="mr-2 h-5 w-5" /> Buat Dokumen Baru
-                        </Link>
-                      </Button>
-                  </div>
+                <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground w-full xs:w-auto">
+                  <Link href="/lesson-plans/new">
+                    <PlusCircle className="mr-2 h-5 w-5" /> Buat Dokumen Baru
+                  </Link>
+                </Button>
                )}
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <Label htmlFor="curriculumFilterLp" className="text-xs">Kurikulum</Label>
-                <Select value={curriculumFilter} onValueChange={(value) => setCurriculumFilter(value as CurriculumFramework | "ALL")}>
-                  <SelectTrigger id="curriculumFilterLp" className="h-10 text-sm">
-                    <SelectValue placeholder="Filter Kurikulum" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ALL">Semua Kurikulum</SelectItem>
-                    {availableCurriculums.map(curr => (
-                      <SelectItem key={curr.value} value={curr.value}>{curr.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="gradeFilterLp" className="text-xs">Jenjang/Fase</Label>
-                <Select value={gradeFilter} onValueChange={(value) => setGradeFilter(value)}>
-                  <SelectTrigger id="gradeFilterLp" className="h-10 text-sm">
-                    <SelectValue placeholder="Filter Jenjang/Fase" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ALL">Semua Jenjang/Fase</SelectItem>
-                    {uniqueGradeLevels.map(grade => (
-                      <SelectItem key={grade} value={grade}>{grade}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+            <div>
+              <Label htmlFor="curriculumFilterLp" className="text-xs">Kurikulum</Label>
+              <Select value={curriculumFilter} onValueChange={(value) => setCurriculumFilter(value as CurriculumFramework | "ALL")}>
+                <SelectTrigger id="curriculumFilterLp" className="h-10 text-sm">
+                  <SelectValue placeholder="Filter Kurikulum" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">Semua Kurikulum</SelectItem>
+                  {availableCurriculums.map(curr => (
+                    <SelectItem key={curr.value} value={curr.value}>{curr.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="gradeFilterLp" className="text-xs">Jenjang/Fase</Label>
+              <Select value={gradeFilter} onValueChange={(value) => setGradeFilter(value)}>
+                <SelectTrigger id="gradeFilterLp" className="h-10 text-sm">
+                  <SelectValue placeholder="Filter Jenjang/Fase" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">Semua Jenjang/Fase</SelectItem>
+                  {uniqueGradeLevels.map(grade => (
+                    <SelectItem key={grade} value={grade}>{grade}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           {filteredLessonPlans.length === 0 && searchTerm && (
@@ -342,3 +338,4 @@ export default function LessonPlansPage() {
     </div>
   );
 }
+

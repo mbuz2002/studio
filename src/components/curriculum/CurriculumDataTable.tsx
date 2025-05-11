@@ -769,7 +769,7 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="min-w-[200px] sm:min-w-[250px] w-2/5 px-3 sm:px-4 py-3 text-sm">Judul</TableHead>
+              <TableHead className="min-w-[200px] sm:min-w-[250px] px-3 sm:px-4 py-3 text-sm">Judul</TableHead>
               <TableHead className="min-w-[120px] px-3 sm:px-4 py-3 text-sm hidden md:table-cell">Jenis Dokumen</TableHead>
               <TableHead className="min-w-[140px] sm:min-w-[160px] px-3 sm:px-4 py-3 text-sm">Kurikulum</TableHead>
               <TableHead className="min-w-[150px] sm:min-w-[180px] px-3 sm:px-4 py-3 text-sm hidden md:table-cell">Jenjang/Fase/Kelas</TableHead>
@@ -905,5 +905,6 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
     </>
   );
 });
+
 
 
