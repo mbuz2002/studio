@@ -1,3 +1,4 @@
+
 "use client";
 import type { PropsWithChildren } from 'react';
 import { useEffect, useMemo, useState, useCallback } from 'react';
@@ -107,7 +108,8 @@ export default function AppLayout({ children }: PropsWithChildren) {
         (item.isSystemSetting === undefined || item.isSystemSetting === false || (item.isSystemSetting === true && ["Admin"].includes(user.role)) || (item.isSuperAdminOnly && user.role === "SuperAdmin")) && 
         (!item.isKurikulumMerdekaOnly || defaultCurriculum === "Kurikulum Merdeka") &&
         (user.role === "SuperAdmin" ? item.isSuperAdminOnly === true : !item.isSuperAdminOnly) &&
-        (user.role === "SuperAdmin" || !item.featureFlag || (currentSchool?.featureSettings?.[item.featureFlag] ?? true))
+        // For non-SuperAdmin users, check feature flag against currentSchool. SuperAdmin bypasses this school-specific check.
+        (user.role === "SuperAdmin" || !item.featureFlag || (currentSchool && (currentSchool.featureSettings?.[item.featureFlag] ?? true)))
     );
   }, [user, defaultCurriculum, currentSchool]);
 
@@ -145,7 +147,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
             router.push(user.role === "SuperAdmin" ? "/superadmin/dashboard" : "/dashboard");
             return;
         }
-        if (user.role !== "SuperAdmin" && currentNavItem.featureFlag && !(currentSchool?.featureSettings?.[currentNavItem.featureFlag] ?? true)) {
+        if (user.role !== "SuperAdmin" && currentNavItem.featureFlag && currentSchool && !(currentSchool.featureSettings?.[currentNavItem.featureFlag] ?? true)) {
             toast({ title: "Fitur Dinonaktifkan", description: `Fitur '${currentNavItem.originalLabel || currentNavItem.label}' tidak aktif untuk sekolah Anda.`, variant: "destructive"});
             router.push("/dashboard");
             return;
@@ -178,19 +180,21 @@ export default function AppLayout({ children }: PropsWithChildren) {
   const academicManagementItems = filteredNavItems.filter(item =>
     ["/academic-calendar", "/timetables"].includes(item.href) &&
     !item.isSuperAdminOnly &&
-    (!item.featureFlag || (currentSchool?.featureSettings?.[item.featureFlag] ?? true))
+    // For non-SA, check feature flag against currentSchool.
+    // This implicitly means SA doesn't need currentSchool for this check.
+    (user.role === "SuperAdmin" || (currentSchool && (currentSchool.featureSettings?.[item.featureFlag] ?? true)))
   );
 
   const aiToolsItems = filteredNavItems.filter(item =>
     item.href === "/ai-assistant" &&
     !item.isSuperAdminOnly &&
-    (!item.featureFlag || (currentSchool?.featureSettings?.[item.featureFlag] ?? true))
+    (user.role === "SuperAdmin" || (currentSchool && (currentSchool.featureSettings?.[item.featureFlag] ?? true)))
   );
 
   const masterDataItems = filteredNavItems.filter(item =>
     item.isMasterData &&
     !item.isSuperAdminOnly &&
-    (!item.featureFlag || (currentSchool?.featureSettings?.[item.featureFlag] ?? true))
+    (user.role === "SuperAdmin" || (currentSchool && (currentSchool.featureSettings?.[item.featureFlag] ?? true)))
   );
   
   const generalSettingsItems = filteredNavItems.filter(item =>
@@ -377,10 +381,11 @@ export default function AppLayout({ children }: PropsWithChildren) {
               </div>
            )}
             <footer className="mt-auto pt-8 text-center text-xs text-muted-foreground">
-              <p>&copy; {new Date().getFullYear()} {useAuth().currentSchool?.name || "GUMPLA AI"}. Created by RIFQY IZA FAHRIZAL.</p>
+              <p>&copy; {new Date().getFullYear()} {currentSchool?.name || "GUMPLA AI"}. Created by RIFQY IZA FAHRIZAL.</p>
             </footer>
           </main>
         </SidebarInset>
       </SidebarProvider>
   );
 }
+

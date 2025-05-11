@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { PropsWithChildren} from 'react';
@@ -51,7 +52,7 @@ const initializeDefaultData = () => {
 
   // Initialize Schools
   if (!schoolsExist) {
-    localStorage.setItem(SCHOOLS_STORAGE_KEY, JSON.stringify([{...initialDefaultSchool, featureSettings: DEFAULT_FEATURE_SETTINGS }]));
+    localStorage.setItem(SCHOOLS_STORAGE_KEY, JSON.stringify([{...initialDefaultSchool, featureSettings: { ...DEFAULT_FEATURE_SETTINGS } }]));
   }
 
   // Initialize Users
@@ -140,6 +141,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
               const schools: School[] = JSON.parse(schoolsData);
               const school = schools.find(s => s.id === parsedUser.schoolId);
               if (school) {
+                // Ensure featureSettings is always an object
                 setCurrentSchool({ ...school, featureSettings: school.featureSettings || { ...DEFAULT_FEATURE_SETTINGS } });
               }
             }
@@ -229,13 +231,13 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         router.push('/superadmin/dashboard');
       } else if (roleToAttempt !== "SuperAdmin" && email === initialSchoolAdminUser.email && roleToAttempt === "Admin") {
         setUser(initialSchoolAdminUser);
-        setCurrentSchool({ ...initialDefaultSchool, featureSettings: initialDefaultSchool.featureSettings || DEFAULT_FEATURE_SETTINGS });
+        setCurrentSchool({ ...initialDefaultSchool, featureSettings: initialDefaultSchool.featureSettings || { ...DEFAULT_FEATURE_SETTINGS } });
         localStorage.setItem('currentUser', JSON.stringify(initialSchoolAdminUser));
         addLog("INFO", `Admin Sekolah Demo ${email} (akun default) berhasil masuk.`, "AuthContext-Login");
         router.push('/dashboard');
       } else if (roleToAttempt !== "SuperAdmin" && email === initialGuruUser.email && roleToAttempt === "Guru") {
         setUser(initialGuruUser);
-        setCurrentSchool({ ...initialDefaultSchool, featureSettings: initialDefaultSchool.featureSettings || DEFAULT_FEATURE_SETTINGS });
+        setCurrentSchool({ ...initialDefaultSchool, featureSettings: initialDefaultSchool.featureSettings || { ...DEFAULT_FEATURE_SETTINGS } });
         localStorage.setItem('currentUser', JSON.stringify(initialGuruUser));
         addLog("INFO", `Guru Demo ${email} (akun default) berhasil masuk.`, "AuthContext-Login");
         router.push('/dashboard');
@@ -301,3 +303,4 @@ export const useAuth = () => {
   }
   return context;
 };
+

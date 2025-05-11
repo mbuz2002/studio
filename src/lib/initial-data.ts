@@ -1,3 +1,4 @@
+
 import type { LessonPlan, AnnualProgram, SemesterProgram, ModulAjar, Subject, Teacher, SchoolClass, User, School, AcademicEvent } from '@/types';
 import { DEFAULT_FEATURE_SETTINGS } from '@/types'; // Import default feature settings
 
@@ -41,7 +42,7 @@ export const initialDefaultSchool: School = {
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
   adminEmail: 'admin@sekolahdemo.sch.id',
-  featureSettings: DEFAULT_FEATURE_SETTINGS, 
+  featureSettings: { ...DEFAULT_FEATURE_SETTINGS }, 
 };
 
 export const initialSchoolAdminUser: User = {
@@ -191,3 +192,4 @@ export const initialAcademicEventsData: Omit<AcademicEvent, 'id' | 'createdAt' |
     description: "Periode Ujian Tengah Semester Ganjil.",
   },
 ];
+

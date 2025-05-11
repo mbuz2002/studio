@@ -7,18 +7,19 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { ShieldCheck, Trash2, ExternalLink, Activity, Settings as SettingsIcon, PackageOpen, Clock } from "lucide-react";
+import { ShieldCheck, Trash2, ExternalLink, Activity, Settings as SettingsIcon, PackageOpen, Clock, Sparkles, CalendarCheck, ListChecks, BookOpen } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useRouter } from "next/navigation";
 import { useLog } from "@/contexts/LogContext";
-import type { TeachingPeriodSettings } from "@/types";
+import type { TeachingPeriodSettings, SchoolFeatureSettings } from "@/types";
 import { TEACHING_PERIOD_SETTINGS_KEY } from "@/types";
+import { Badge } from "@/components/ui/badge";
 
 
 export default function AdminSystemSettingsPage() {
-  const { user, loading: authLoading } = useAuth(); 
+  const { user, currentSchool, loading: authLoading } = useAuth(); 
   const { toast } = useToast();
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
@@ -126,6 +127,13 @@ export default function AdminSystemSettingsPage() {
     toast({ title: "Pengaturan Disimpan", description: `Durasi 1 Jam Pelajaran (JP) diatur ke ${jpDurationMinutes} menit.` });
     addLog("INFO", `Admin ${user?.email} mengatur durasi JP menjadi ${jpDurationMinutes} menit.`, "AdminSystemSettings");
   };
+
+  const schoolFeatures: { label: string; icon: React.ElementType; enabled: boolean }[] = [
+    { label: "Alat AI (Materi & Modul Ajar)", icon: Sparkles, enabled: currentSchool?.featureSettings?.aiToolsEnabled ?? true },
+    { label: "Kalender Akademik", icon: CalendarCheck, enabled: currentSchool?.featureSettings?.academicCalendarEnabled ?? true },
+    { label: "Manajemen Jadwal Pelajaran", icon: ListChecks, enabled: currentSchool?.featureSettings?.timetableManagementEnabled ?? true },
+    { label: "Master Data (Mapel, Guru, Kelas)", icon: BookOpen, enabled: currentSchool?.featureSettings?.masterDataManagementEnabled ?? true },
+  ];
 
   return (
     <div className="space-y-6 py-4 md:py-8">
@@ -254,6 +262,34 @@ export default function AdminSystemSettingsPage() {
           </CardContent>
         </Card>
 
+        <Card className="shadow-md rounded-md md:col-span-2 lg:col-span-1">
+          <CardHeader className="p-5">
+            <div className="flex items-center gap-2">
+                <SettingsIcon className="h-6 w-6 text-primary" />
+                <CardTitle className="text-xl font-semibold">Status Fitur Sekolah</CardTitle>
+            </div>
+            <CardDescription className="text-base text-muted-foreground">
+              Lihat fitur yang aktif untuk sekolah Anda berdasarkan paket langganan. Diatur oleh Super Admin.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3 p-5 pt-0">
+            {schoolFeatures.map(feature => (
+              <div key={feature.label} className="flex items-center justify-between p-2 border-b last:border-b-0">
+                <div className="flex items-center gap-2">
+                  <feature.icon className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-sm">{feature.label}</span>
+                </div>
+                <Badge variant={feature.enabled ? "default" : "destructive"}>
+                  {feature.enabled ? "Aktif" : "Nonaktif"}
+                </Badge>
+              </div>
+            ))}
+            {!currentSchool?.featureSettings && (
+                <p className="text-sm text-muted-foreground text-center py-2">Pengaturan fitur sekolah tidak ditemukan.</p>
+            )}
+          </CardContent>
+        </Card>
+
       </div>
 
       <Alert variant="destructive" className="mt-8 shadow-md rounded-md">
@@ -266,3 +302,4 @@ export default function AdminSystemSettingsPage() {
     </div>
   );
 }
+
