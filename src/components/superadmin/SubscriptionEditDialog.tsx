@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, type FormEvent } from "react";
@@ -99,69 +100,70 @@ export function SubscriptionEditDialog({ isOpen, onOpenChange, school, onSave }:
             Perbarui status langganan, catatan pembayaran, dan fitur yang aktif untuk sekolah ini.
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="flex-grow px-6">
-        <form onSubmit={handleSubmit} id="edit-subscription-form">
-          <div className="grid gap-4 py-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="subscriptionStatus">Status Langganan</Label>
-              <Select value={status} onValueChange={(value) => setStatus(value as School['subscriptionStatus'])}>
-                <SelectTrigger id="subscriptionStatus">
-                  <SelectValue placeholder="Pilih Status Langganan" />
-                </SelectTrigger>
-                <SelectContent>
-                  {subscriptionStatusOptions.map(opt => (
-                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+        <form onSubmit={handleSubmit} id="edit-subscription-form" className="flex flex-col flex-grow overflow-hidden">
+          <ScrollArea className="flex-grow px-6 overflow-y-auto">
+            <div className="grid gap-4 py-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="subscriptionStatus">Status Langganan</Label>
+                <Select value={status} onValueChange={(value) => setStatus(value as School['subscriptionStatus'])}>
+                  <SelectTrigger id="subscriptionStatus">
+                    <SelectValue placeholder="Pilih Status Langganan" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {subscriptionStatusOptions.map(opt => (
+                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="paymentDetails">Catatan Pembayaran (Manual)</Label>
+                <Textarea 
+                  id="paymentDetails" 
+                  value={paymentDetails} 
+                  onChange={(e) => setPaymentDetails(e.target.value)} 
+                  placeholder="cth., Transfer Bank ABC, Tgl XX/YY/ZZZZ, Sejumlah Rp. X.XXX.XXX"
+                  rows={3}
+                />
+              </div>
+              
+              <hr className="my-4"/>
+              <div className="space-y-1">
+                  <Label className="text-md font-semibold flex items-center gap-2"><Settings2 className="h-5 w-5 text-primary"/>Kontrol Fitur Aplikasi</Label>
+                  <p className="text-sm text-muted-foreground">Pilih fitur yang akan diaktifkan untuk sekolah ini.</p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                  {featureToggleOptions.map(feature => (
+                       <div key={feature.key} className="flex items-start space-x-2 p-3 border rounded-md bg-muted/20 hover:bg-muted/40 transition-colors">
+                          <Checkbox
+                              id={`feature-${feature.key}`}
+                              checked={featureSettings[feature.key]}
+                              onCheckedChange={() => handleFeatureToggle(feature.key)}
+                              className="mt-1"
+                          />
+                          <div className="grid gap-1.5 leading-none">
+                              <Label htmlFor={`feature-${feature.key}`} className="font-medium flex items-center gap-1.5 cursor-pointer">
+                                  <feature.icon className="h-4 w-4 text-primary/80"/> {feature.label}
+                              </Label>
+                              <p className="text-xs text-muted-foreground">{feature.description}</p>
+                          </div>
+                      </div>
                   ))}
-                </SelectContent>
-              </Select>
+              </div>
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="paymentDetails">Catatan Pembayaran (Manual)</Label>
-              <Textarea 
-                id="paymentDetails" 
-                value={paymentDetails} 
-                onChange={(e) => setPaymentDetails(e.target.value)} 
-                placeholder="cth., Transfer Bank ABC, Tgl XX/YY/ZZZZ, Sejumlah Rp. X.XXX.XXX"
-                rows={3}
-              />
-            </div>
-            
-            <hr className="my-4"/>
-            <div className="space-y-1">
-                <Label className="text-md font-semibold flex items-center gap-2"><Settings2 className="h-5 w-5 text-primary"/>Kontrol Fitur Aplikasi</Label>
-                <p className="text-sm text-muted-foreground">Pilih fitur yang akan diaktifkan untuk sekolah ini.</p>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                {featureToggleOptions.map(feature => (
-                     <div key={feature.key} className="flex items-start space-x-2 p-3 border rounded-md bg-muted/20 hover:bg-muted/40 transition-colors">
-                        <Checkbox
-                            id={`feature-${feature.key}`}
-                            checked={featureSettings[feature.key]}
-                            onCheckedChange={() => handleFeatureToggle(feature.key)}
-                            className="mt-1"
-                        />
-                        <div className="grid gap-1.5 leading-none">
-                            <Label htmlFor={`feature-${feature.key}`} className="font-medium flex items-center gap-1.5 cursor-pointer">
-                                <feature.icon className="h-4 w-4 text-primary/80"/> {feature.label}
-                            </Label>
-                            <p className="text-xs text-muted-foreground">{feature.description}</p>
-                        </div>
-                    </div>
-                ))}
-            </div>
-          </div>
+          </ScrollArea>
+          <DialogFooter className="mt-auto pt-4 px-6 pb-6 border-t sm:justify-end">
+            <DialogClose asChild>
+              <Button type="button" variant="outline" disabled={isLoading}>Batal</Button>
+            </DialogClose>
+            <Button type="submit" form="edit-subscription-form" disabled={isLoading}>
+              <Save className="mr-2 h-4 w-4" />
+              {isLoading ? "Menyimpan..." : "Simpan Perubahan"}
+            </Button>
+          </DialogFooter>
         </form>
-        </ScrollArea>
-        <DialogFooter className="mt-auto pt-4 px-6 pb-6 border-t sm:justify-end">
-          <DialogClose asChild>
-            <Button type="button" variant="outline" disabled={isLoading}>Batal</Button>
-          </DialogClose>
-          <Button type="submit" form="edit-subscription-form" disabled={isLoading}>
-            <Save className="mr-2 h-4 w-4" />
-            {isLoading ? "Menyimpan..." : "Simpan Perubahan"}
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
+
