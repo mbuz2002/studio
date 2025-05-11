@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -22,7 +23,7 @@ interface MobileNavItemData {
   isMasterData?: boolean;
   isSuperAdminOnly?: boolean;
   isSystemSetting?: boolean; 
-  featureFlag?: keyof SchoolFeatureSettings; // Added for feature toggling
+  featureFlag?: keyof SchoolFeatureSettings; 
 }
 
 const allMobileNavItemsData: MobileNavItemData[] = [
@@ -30,7 +31,7 @@ const allMobileNavItemsData: MobileNavItemData[] = [
   { href: "/superadmin/dashboard", label: "SA Dasbor", originalLabel: "SA Dasbor", icon: LayoutDashboard, roles: ["SuperAdmin"], isSuperAdminOnly: true },
   { href: "/superadmin/schools", label: "Sekolah", originalLabel: "Manajemen Sekolah", icon: Building, roles: ["SuperAdmin"], isSuperAdminOnly: true },
   { href: "/superadmin/app-settings", label: "Pengaturan App", originalLabel: "Pengaturan App", icon: SlidersHorizontal, roles: ["SuperAdmin"], isSuperAdminOnly: true },
-  // { href: "/superadmin/subscriptions", label: "Langganan", originalLabel:"Langganan", icon: CreditCard, roles: ["SuperAdmin"], isSuperAdminOnly: true }, // Keep short for mobile
+  { href: "/superadmin/subscriptions", label: "Langganan SA", originalLabel:"Langganan", icon: CreditCard, roles: ["SuperAdmin"], isSuperAdminOnly: true },
 
   // Regular App Menu
   { href: "/dashboard", label: "Dasbor", originalLabel: "Dasbor", icon: LayoutDashboard, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
@@ -50,12 +51,13 @@ const allMobileNavItemsData: MobileNavItemData[] = [
   { href: "/admin/user-management", label: "Pengguna", originalLabel: "Manajemen Pengguna", icon: Users, roles: ["Admin", "TataUsaha"] },
   { href: "/settings", label: "Atur Akun", originalLabel: "Pengaturan Akun", icon: SettingsIcon, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/admin/system-settings", label: "Sys Cfg", originalLabel: "Pengaturan Sistem", icon: ShieldCheck, roles: ["Admin"], isSystemSetting: true },
+  { href: "/admin/subscription-status", label: "Langganan", originalLabel: "Status Langganan", icon: CreditCard, roles: ["Admin"], isSystemSetting: true },
 ];
 
 
 export function MobileBottomNav() {
   const pathname = usePathname();
-  const { user, currentSchool } = useAuth(); // Added currentSchool
+  const { user, currentSchool } = useAuth(); 
   const { defaultCurriculum } = useCurriculum();
   const [isMoreSheetOpen, setIsMoreSheetOpen] = useState(false);
 
@@ -84,6 +86,7 @@ export function MobileBottomNav() {
             else if (item.originalLabel.includes("Data Guru")) currentLabel = "Guru";
             else if (item.originalLabel.includes("Data Kelas")) currentLabel = "Kelas";
              else if (item.originalLabel.includes("Mata Pelajaran")) currentLabel = "Mapel";
+             else if (item.originalLabel.includes("Status Langganan")) currentLabel = "Langganan";
         }
 
         return { ...item, label: currentLabel };
@@ -110,7 +113,7 @@ export function MobileBottomNav() {
         if (b.href.includes("setting")) return -1;
         return 0;
       });
-  }, [user, defaultCurriculum, currentSchool]); // Added currentSchool dependency
+  }, [user, defaultCurriculum, currentSchool]); 
 
   const MAX_ITEMS_IN_BAR = 5;
   let displayNavItems: MobileNavItemData[] = [];
@@ -201,3 +204,4 @@ export function MobileBottomNav() {
     </>
   );
 }
+

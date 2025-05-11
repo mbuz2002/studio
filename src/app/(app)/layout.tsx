@@ -62,6 +62,7 @@ const allNavItems: NavItem[] = [
   { href: "/admin/user-management", label: "Manajemen Pengguna", originalLabel: "Manajemen Pengguna", icon: Users, roles: ["Admin", "TataUsaha"] }, 
   { href: "/settings", label: "Pengaturan Akun", originalLabel: "Pengaturan Akun", icon: SettingsIcon, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/admin/system-settings", label: "Pengaturan Sekolah", originalLabel: "Pengaturan Sekolah", icon: ShieldCheck, roles: ["Admin"], isSystemSetting: true }, 
+  { href: "/admin/subscription-status", label: "Status Langganan", originalLabel: "Status Langganan", icon: CreditCard, roles: ["Admin"], isSystemSetting: true },
   { href: "/admin/system-logs", label: "Log Sistem", originalLabel: "Log Sistem", icon: Activity, roles: ["Admin"], isSystemSetting: true, isHiddenFromSidebar: true }, 
 ];
 
@@ -153,8 +154,8 @@ export default function AppLayout({ children }: PropsWithChildren) {
             return;
         }
 
-      } else if (pathname === "/settings" || pathname === "/school-settings") {
-         const settingsBaseAccess = allNavItems.find(item => (item.href === "/settings" || item.href === "/school-settings") && item.roles.includes(user.role));
+      } else if (pathname === "/settings" || pathname === "/school-settings" || pathname === "/admin/subscription-status") {
+         const settingsBaseAccess = allNavItems.find(item => (item.href === "/settings" || item.href === "/school-settings" || item.href === "/admin/subscription-status") && item.roles.includes(user.role));
          if (!settingsBaseAccess) {
             router.push(user.role === "SuperAdmin" ? "/superadmin/dashboard" : "/dashboard");
          }

@@ -1,0 +1,203 @@
+
+"use client";
+
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { AlertCircle, CheckCircle2, XCircle, CalendarDays, Sparkles, CalendarCheck, ListChecks, BookOpen, CreditCard, ShieldAlert } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
+import type { School, SchoolFeatureSettings } from "@/types";
+import { SCHOOLS_STORAGE_KEY } from "@/types";
+import LoadingSpinner from "@/components/ui/loading-spinner";
+import { format, parseISO, isBefore, isAfter, differenceInDays } from "date-fns";
+import { id as indonesianLocale } from "date-fns/locale";
+import { useLog } from "@/contexts/LogContext";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+
+interface FeatureDisplayItem {
+  key: keyof SchoolFeatureSettings;
+  label: string;
+  icon: React.ElementType;
+  enabled: boolean;
+}
+
+export default function AdminSubscriptionStatusPage() {
+  const { user, currentSchool, loading: authLoading } = useAuth();
+  const router = useRouter();
+  const { addLog } = useLog();
+  const [isClient, setIsClient] = useState(false);
+  const [schoolData, setSchoolData] = useState<School | null>(null);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (isClient && !authLoading) {
+      if (!user || user.role !== "Admin") {
+        router.push("/dashboard");
+        addLog("WARN", `Pengguna ${user?.email || 'tidak dikenal'} mencoba mengakses status langganan tanpa izin Admin.`, "AdminSubscriptionStatusPage");
+        return;
+      }
+      if (currentSchool) {
+        // Attempt to load the most up-to-date school data from localStorage,
+        // as SuperAdmin might have changed it.
+        const allSchoolsData = localStorage.getItem(SCHOOLS_STORAGE_KEY);
+        if (allSchoolsData) {
+          try {
+            const allSchools: School[] = JSON.parse(allSchoolsData);
+            const updatedCurrentSchool = allSchools.find(s => s.id === currentSchool.id);
+            if (updatedCurrentSchool) {
+              setSchoolData(updatedCurrentSchool);
+            } else {
+              setSchoolData(currentSchool); // Fallback to context if not found (should not happen)
+            }
+          } catch (e) {
+            console.error("Failed to parse schools data from localStorage for subscription status", e);
+            setSchoolData(currentSchool); // Fallback
+          }
+        } else {
+          setSchoolData(currentSchool);
+        }
+        addLog("INFO", `Admin ${user.email} melihat status langganan untuk sekolah: ${currentSchool.name}.`, "AdminSubscriptionStatusPage");
+      } else if (user.role === "Admin" && !currentSchool) {
+         addLog("ERROR", `Admin ${user.email} tidak memiliki data sekolah yang terkait.`, "AdminSubscriptionStatusPage");
+         // Potentially redirect or show an error message that school data is missing
+      }
+    }
+  }, [isClient, user, currentSchool, authLoading, router, addLog]);
+
+  const getSubscriptionBadgeVariant = (status: School['subscriptionStatus'] | undefined): "default" | "secondary" | "destructive" | "outline" => {
+    switch (status) {
+      case 'active': return 'default';
+      case 'trial': return 'secondary';
+      case 'inactive': return 'destructive';
+      default: return 'outline';
+    }
+  };
+
+  const getSubscriptionPeriodText = (school: School | null): string => {
+    if (!school || !school.subscriptionStartDate || !school.subscriptionEndDate) {
+      return "Periode tidak diatur";
+    }
+    const start = format(parseISO(school.subscriptionStartDate), "dd MMMM yyyy", { locale: indonesianLocale });
+    const end = format(parseISO(school.subscriptionEndDate), "dd MMMM yyyy", { locale: indonesianLocale });
+    const daysRemaining = differenceInDays(parseISO(school.subscriptionEndDate), new Date());
+    let statusText = "";
+    if (isAfter(new Date(), parseISO(school.subscriptionEndDate))) {
+      statusText = `(Berakhir ${Math.abs(daysRemaining)} hari lalu)`;
+    } else if (daysRemaining <= 30 && daysRemaining >= 0) { // Highlight if ending within 30 days
+      statusText = `(Berakhir dalam ${daysRemaining} hari)`;
+    } else if (daysRemaining < 0){
+       statusText = `(Telah Berakhir)`;
+    }
+    return `${start} - ${end} ${statusText}`;
+  };
+
+  const featureDisplayList: FeatureDisplayItem[] = schoolData?.featureSettings ? [
+    { key: "aiToolsEnabled", label: "Alat Bantu AI (Materi & Modul Ajar)", icon: Sparkles, enabled: schoolData.featureSettings.aiToolsEnabled },
+    { key: "academicCalendarEnabled", label: "Kalender Pendidikan Interaktif", icon: CalendarCheck, enabled: schoolData.featureSettings.academicCalendarEnabled },
+    { key: "timetableManagementEnabled", label: "Manajemen Jadwal Pelajaran", icon: ListChecks, enabled: schoolData.featureSettings.timetableManagementEnabled },
+    { key: "masterDataManagementEnabled", label: "Pengelolaan Master Data Sekolah", icon: BookOpen, enabled: schoolData.featureSettings.masterDataManagementEnabled },
+  ] : [];
+
+
+  if (!isClient || authLoading || !user) {
+    return <LoadingSpinner message="Memuat Status Langganan..." icon={<CreditCard className="h-12 w-12 animate-pulse text-primary mb-4"/>} />;
+  }
+
+  if (user.role !== "Admin") {
+      return (
+        <div className="flex h-screen items-center justify-center">
+             <p className="text-destructive text-lg">Akses ditolak. Hanya Admin Sekolah yang dapat mengakses halaman ini.</p>
+        </div>
+    );
+  }
+  
+  if (!schoolData) {
+    return (
+      <div className="container mx-auto py-8">
+        <Card className="shadow-lg rounded-lg">
+          <CardHeader>
+            <CardTitle className="text-2xl text-destructive flex items-center gap-2"><AlertCircle /> Data Sekolah Tidak Ditemukan</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">Informasi sekolah Anda tidak dapat dimuat. Mohon hubungi Super Admin untuk bantuan.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+
+  return (
+    <div className="space-y-6 py-4 md:py-8">
+      <Card className="shadow-xl rounded-lg overflow-hidden">
+        <CardHeader className="p-6 rounded-t-lg bg-gradient-to-br from-primary via-accent to-secondary text-primary-foreground">
+          <div className="flex items-center gap-3">
+            <CreditCard className="h-8 w-8 text-primary-foreground drop-shadow" />
+            <div>
+              <CardTitle className="text-2xl md:text-3xl">Status Langganan & Fitur Sekolah</CardTitle>
+              <CardDescription className="text-primary-foreground/90 mt-1">
+                Lihat detail langganan dan fitur yang aktif untuk sekolah Anda: {schoolData.name}.
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-6 p-4 md:p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <Card className="shadow-md rounded-md">
+              <CardHeader>
+                <CardTitle className="text-xl flex items-center gap-2"><CreditCard size={22}/> Detail Langganan</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                <p><strong>Nama Sekolah:</strong> {schoolData.name}</p>
+                <p><strong>Status Langganan:</strong> <Badge variant={getSubscriptionBadgeVariant(schoolData.subscriptionStatus)} className="capitalize">{schoolData.subscriptionStatus || "Tidak Diketahui"}</Badge></p>
+                <p className="flex items-center gap-1.5">
+                    <CalendarDays size={16} className="text-muted-foreground"/>
+                    <strong>Periode Aktif:</strong> {getSubscriptionPeriodText(schoolData)}
+                </p>
+                {schoolData.paymentDetails && <p><strong>Catatan Pembayaran:</strong> {schoolData.paymentDetails}</p>}
+                 {!schoolData.isActive && (
+                  <p className="text-destructive font-semibold flex items-center gap-1.5"><ShieldAlert size={16}/> Status Sekolah: Saat ini NONAKTIF</p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-md rounded-md">
+              <CardHeader>
+                <CardTitle className="text-xl flex items-center gap-2"><Sparkles size={22}/> Fitur Aplikasi yang Aktif</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {featureDisplayList.length > 0 ? (
+                  featureDisplayList.map(feature => (
+                    <div key={feature.key} className={`flex items-center gap-2 p-2 rounded-md ${feature.enabled ? 'bg-green-500/10 text-green-700 dark:text-green-400' : 'bg-red-500/10 text-red-700 dark:text-red-400 line-through'}`}>
+                      {feature.enabled ? <CheckCircle2 size={18} /> : <XCircle size={18} />}
+                      <span className="font-medium text-sm">{feature.label}</span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">Tidak ada pengaturan fitur khusus, fitur default aktif.</p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+            <div className="mt-6 text-sm text-muted-foreground p-4 border rounded-md bg-secondary/30">
+                <p className="font-semibold mb-1">Informasi:</p>
+                <ul className="list-disc pl-5 space-y-1">
+                    <li>Jika status langganan Anda 'Tidak Aktif' atau 'Trial' telah berakhir, beberapa fitur mungkin terbatas atau tidak dapat diakses.</li>
+                    <li>Fitur yang tercantum sebagai nonaktif tidak akan muncul di menu navigasi atau tidak dapat digunakan.</li>
+                    <li>Untuk pertanyaan mengenai langganan atau aktivasi fitur, silakan hubungi Super Administrator aplikasi.</li>
+                </ul>
+            </div>
+             <div className="mt-6 flex justify-end">
+                <Button variant="outline" onClick={() => router.push('/dashboard')}>Kembali ke Dasbor</Button>
+            </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
