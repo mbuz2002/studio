@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, type FormEvent, useRef, useMemo } from "react";
@@ -10,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import type { SchoolProfile, EducationLevel, School, CustomDomainStatus } from "@/types";
 import { SCHOOL_PROFILE_STORAGE_KEY, SCHOOLS_STORAGE_KEY } from "@/types";
 import { useToast } from "@/hooks/use-toast";
-import { Building, Save, UploadCloud, Link2, Info, Image as ImageIcon, Globe } from "lucide-react"; // ImageIcon
+import { Building, Save, UploadCloud, Link2, Info, ImageIcon, Globe } from "lucide-react"; // ImageIcon
 import { useLog } from "@/contexts/LogContext";
 import { useAuth } from "@/contexts/AuthContext";
 import Image from "next/image";
@@ -28,13 +27,14 @@ const educationLevels: { value: EducationLevel; label: string }[] = [
   { value: "PKBM/Kesetaraan", label: "Pusat Kegiatan Belajar Masyarakat (PKBM) / Pendidikan Kesetaraan" },
 ];
 
-const customDomainStatusOptions: { value: CustomDomainStatus; label: string }[] = [
-  { value: "unconfigured", label: "Belum Dikonfigurasi (Gunakan Subdomain)" },
-  { value: "pending_verification", label: "Menunggu Verifikasi DNS" },
-  { value: "active", label: "Aktif & Terverifikasi" },
-  { value: "configuration_error", label: "Kesalahan Konfigurasi DNS" },
-  { value: "ssl_error", label: "Kesalahan SSL" },
-];
+const customDomainStatusDisplayMap: Record<CustomDomainStatus, string> = {
+  unconfigured: "Belum Dikonfigurasi (Gunakan Subdomain)",
+  pending_verification: "Menunggu Verifikasi DNS",
+  active: "Aktif & Terverifikasi",
+  configuration_error: "Kesalahan Konfigurasi DNS",
+  ssl_error: "Kesalahan SSL",
+};
+
 
 function slugify(text: string = ""): string {
   if (!text) return "sekolah-anda";
@@ -67,10 +67,11 @@ const initialProfile: SchoolProfile = {
 
 export function SchoolProfileForm() {
   const [profile, setProfile] = useState<SchoolProfile>(initialProfile);
+  const [initialLoadedProfile, setInitialLoadedProfile] = useState<SchoolProfile | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { addLog } = useLog();
-  const { user, currentSchool } = useAuth(); // Get currentSchool from AuthContext
+  const { user, currentSchool } = useAuth(); 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoInputMethod, setLogoInputMethod] = useState<'url' | 'upload'>('url');
@@ -81,10 +82,9 @@ export function SchoolProfileForm() {
     let profileToLoad: SchoolProfile = { ...initialProfile };
 
     if (currentSchool && user && ["Admin", "KepalaSekolah", "TataUsaha"].includes(user.role)) {
-      // If admin is logged in and currentSchool is available, prioritize that
       profileToLoad = {
-        ...initialProfile, // Start with defaults to ensure all fields
-        id: currentSchool.id, // Use currentSchool's ID
+        ...initialProfile, 
+        id: currentSchool.id, 
         namaSekolah: currentSchool.name,
         jenjangPendidikan: currentSchool.jenjangPendidikan,
         alamat: currentSchool.alamat,
@@ -117,6 +117,7 @@ export function SchoolProfileForm() {
     }
     
     setProfile(profileToLoad);
+    setInitialLoadedProfile(profileToLoad); // Store initial state for comparison on save
     setLogoPreview(profileToLoad.logoUrl || null);
     if (profileToLoad.logoUrl && profileToLoad.logoUrl.startsWith("data:image")) {
         setLogoInputMethod("upload");
@@ -136,8 +137,8 @@ export function SchoolProfileForm() {
   };
 
   const handleSelectChange = (name: string, value: string) => {
-     if (name === "jenjangPendidikan" || name === "customDomainStatus") {
-        setProfile(prev => ({ ...prev, [name]: value as EducationLevel | CustomDomainStatus }));
+     if (name === "jenjangPendidikan") {
+        setProfile(prev => ({ ...prev, [name]: value as EducationLevel }));
     } else {
        setProfile(prev => ({ ...prev, [name]: value }));
     }
@@ -173,18 +174,28 @@ export function SchoolProfileForm() {
     const source = "SchoolProfileForm-Submit";
     addLog("INFO", `Pengguna ${user?.email} memulai pembaruan profil sekolah.`, source);
     
+    let newCustomDomainStatus: CustomDomainStatus = profile.customDomainStatus || 'unconfigured';
+    if (profile.customDomain && profile.customDomain.trim() !== "") {
+        // If domain is set/changed and was not already active by SA, or domain text changed
+        if (profile.customDomain !== initialLoadedProfile?.customDomain || initialLoadedProfile?.customDomainStatus !== 'active') {
+            newCustomDomainStatus = 'pending_verification';
+        } else if (profile.customDomain === initialLoadedProfile?.customDomain && initialLoadedProfile?.customDomainStatus === 'active') {
+            newCustomDomainStatus = 'active'; // Keep active if domain unchanged and was active
+        }
+    } else {
+        newCustomDomainStatus = 'unconfigured';
+    }
+
     const finalProfileData: SchoolProfile = { 
       ...profile, 
       logoUrl: logoPreview, 
       updatedAt: new Date().toISOString(),
-      customDomain: profile.customDomain || "", // Ensure it's empty string if undefined
-      customDomainStatus: profile.customDomain ? (profile.customDomainStatus || "unconfigured") : "unconfigured",
+      customDomain: profile.customDomain?.trim() || "", 
+      customDomainStatus: newCustomDomainStatus,
     };
     
-    // Save to SCHOOL_PROFILE_STORAGE_KEY (current school's active profile)
     localStorage.setItem(SCHOOL_PROFILE_STORAGE_KEY, JSON.stringify(finalProfileData));
 
-    // If an admin is editing, also update the school's data in SCHOOLS_STORAGE_KEY
     if (currentSchool && user && ["Admin", "KepalaSekolah", "TataUsaha"].includes(user.role)) {
       try {
         const allSchoolsData = localStorage.getItem(SCHOOLS_STORAGE_KEY);
@@ -193,7 +204,7 @@ export function SchoolProfileForm() {
           const schoolIndex = allSchools.findIndex(s => s.id === currentSchool.id);
           if (schoolIndex > -1) {
             allSchools[schoolIndex] = {
-              ...allSchools[schoolIndex], // Keep existing fields from School type
+              ...allSchools[schoolIndex], 
               name: finalProfileData.namaSekolah,
               jenjangPendidikan: finalProfileData.jenjangPendidikan,
               alamat: finalProfileData.alamat,
@@ -206,7 +217,6 @@ export function SchoolProfileForm() {
               customDomain: finalProfileData.customDomain,
               customDomainStatus: finalProfileData.customDomainStatus,
               updatedAt: finalProfileData.updatedAt,
-              // Keep other School specific fields like adminEmail, subscriptionStatus, etc.
             };
             localStorage.setItem(SCHOOLS_STORAGE_KEY, JSON.stringify(allSchools));
             addLog("INFO", `Data sekolah "${currentSchool.name}" (ID: ${currentSchool.id}) di SCHOOLS_STORAGE_KEY juga diperbarui.`, source);
@@ -218,6 +228,7 @@ export function SchoolProfileForm() {
     }
 
     setProfile(finalProfileData);
+    setInitialLoadedProfile(finalProfileData); // Update initial loaded profile to current saved state
     setIsLoading(false);
     toast({
       title: "Profil Sekolah Diperbarui",
@@ -397,28 +408,22 @@ export function SchoolProfileForm() {
                 <Input id="customDomain" name="customDomain" value={profile.customDomain || ""} onChange={handleChange} placeholder="cth., kurikulum.sekolahanda.sch.id" disabled={!canEdit} />
                 {!profile.customDomain && (
                   <p className="text-sm text-muted-foreground mt-1">
-                    Alamat situs sekolah Anda akan menjadi: <strong>{generatedSubdomain}</strong>
+                    Alamat situs sekolah Anda akan menjadi: <strong className="text-primary">{generatedSubdomain}</strong>
                   </p>
                 )}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="customDomainStatus">Status Domain Kustom</Label>
-                <Select 
-                  name="customDomainStatus" 
-                  value={!profile.customDomain ? "unconfigured" : (profile.customDomainStatus || "unconfigured")} 
-                  onValueChange={(value) => handleSelectChange('customDomainStatus', value)}
-                  disabled={!canEdit || !profile.customDomain}
-                >
-                  <SelectTrigger id="customDomainStatus">
-                    <SelectValue placeholder={!profile.customDomain ? "Otomatis (Subdomain)" : "Pilih Status"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {customDomainStatusOptions.map(opt => (
-                      <SelectItem key={opt.value} value={opt.value} disabled={!profile.customDomain && opt.value !== "unconfigured"}>{opt.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {!profile.customDomain && <p className="text-xs text-muted-foreground mt-1">Status akan aktif jika domain kustom diisi.</p>}
+                 <Input 
+                    id="customDomainStatus" 
+                    name="customDomainStatus" 
+                    value={customDomainStatusDisplayMap[profile.customDomainStatus || 'unconfigured']} 
+                    disabled 
+                    className="bg-muted/50 cursor-not-allowed"
+                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Status domain diatur oleh Super Admin setelah konfigurasi DNS. Jika domain kustom diubah, status akan menjadi "Menunggu Verifikasi DNS".
+                </p>
               </div>
               <Alert variant="default" className="border-amber-500/50 shadow-sm">
                 <Globe className="h-5 w-5 text-amber-500" />

@@ -41,7 +41,7 @@ export default function EditSchoolPage() {
         if (schoolToEdit) {
           setFormData({
             ...schoolToEdit,
-            customDomainStatus: schoolToEdit.customDomain ? (schoolToEdit.customDomainStatus || "unconfigured") : "unconfigured",
+            customDomainStatus: schoolToEdit.customDomain && schoolToEdit.customDomain.trim() !== "" ? (schoolToEdit.customDomainStatus || "pending_verification") : "unconfigured",
           });
           addLog("INFO", `Memuat data sekolah "${schoolToEdit.name}" (ID: ${schoolId}) untuk diedit oleh SuperAdmin ${superAdminUser.email}.`, "EditSchoolPage");
         } else {
@@ -88,8 +88,8 @@ export default function EditSchoolPage() {
       ...formData,
       id: schoolId as string,
       updatedAt: new Date().toISOString(),
-      customDomain: formData.customDomain || undefined,
-      customDomainStatus: formData.customDomain ? (formData.customDomainStatus || "unconfigured") : "unconfigured",
+      customDomain: formData.customDomain?.trim() || undefined,
+      customDomainStatus: (formData.customDomain && formData.customDomain.trim() !== "") ? (formData.customDomainStatus || "pending_verification") : "unconfigured",
     } as School;
 
     try {
@@ -156,5 +156,3 @@ export default function EditSchoolPage() {
     </div>
   );
 }
-
-

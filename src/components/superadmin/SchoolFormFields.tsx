@@ -56,12 +56,12 @@ const slugify = (text: string = ""): string => {
   if (!text) return "";
   return text
     .toLowerCase()
-    .replace(/\s+/g, '-') // Replace spaces with -
-    .replace(/[^\w-]+/g, '') // Remove all non-word chars
-    .replace(/--+/g, '-') // Replace multiple - with single -
-    .replace(/^-+/, '') // Trim - from start of text
-    .replace(/-+$/, '') // Trim - from end of text
-    .substring(0, 50); // Limit length
+    .replace(/\s+/g, '-') 
+    .replace(/[^\w-]+/g, '') 
+    .replace(/--+/g, '-') 
+    .replace(/^-+/, '') 
+    .replace(/-+$/, '') 
+    .substring(0, 50); 
 };
 
 
@@ -142,6 +142,7 @@ export function SchoolFormFields({
   const isBefore = (date1: Date, date2: Date) => date1 < date2;
   
   const generatedSubdomain = formData.name ? `${slugify(formData.name)}.gumpla.ai` : "subdomain.gumpla.ai";
+  const isCustomDomainEmpty = !formData.customDomain || formData.customDomain.trim() === "";
 
 
   return (
@@ -360,24 +361,24 @@ export function SchoolFormFields({
           <Input id="customDomain" name="customDomain" value={formData.customDomain || ""} onChange={handleChange} placeholder="cth., kurikulum.sekolahanda.sch.id" />
            {!formData.customDomain && (
             <p className="text-xs text-muted-foreground mt-1">
-              Jika kosong, akan menggunakan subdomain: <strong>{generatedSubdomain}</strong>
+              Jika kosong, akan menggunakan subdomain: <strong className="text-primary">{generatedSubdomain}</strong>
             </p>
           )}
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="customDomainStatus">Status Domain</Label>
+          <Label htmlFor="customDomainStatus">Status Domain Kustom</Label>
           <Select 
             name="customDomainStatus" 
-            value={!formData.customDomain ? "unconfigured" : (formData.customDomainStatus || "unconfigured")} 
+            value={isCustomDomainEmpty ? "unconfigured" : (formData.customDomainStatus || "unconfigured")} 
             onValueChange={(value) => handleSelectChange('customDomainStatus', value)}
-            disabled={!formData.customDomain}
+            disabled={isCustomDomainEmpty}
           >
             <SelectTrigger id="customDomainStatus">
-              <SelectValue placeholder={!formData.customDomain ? "Subdomain (Otomatis Aktif)" : "Pilih Status Domain"} />
+              <SelectValue placeholder={isCustomDomainEmpty ? "Subdomain (Otomatis Aktif)" : "Pilih Status Domain"} />
             </SelectTrigger>
             <SelectContent>
               {customDomainStatusOptions.map(opt => (
-                <SelectItem key={opt.value} value={opt.value} disabled={!formData.customDomain && opt.value !== "unconfigured"}>{opt.label}</SelectItem>
+                <SelectItem key={opt.value} value={opt.value} disabled={isCustomDomainEmpty && opt.value !== "unconfigured"}>{opt.label}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -388,12 +389,11 @@ export function SchoolFormFields({
         <AlertTitle className="font-semibold text-accent">Informasi Pengaturan Domain</AlertTitle>
         <AlertDescription className="text-sm">
           Jika Anda ingin menggunakan domain kustom, masukkan nama domain di atas. Kemudian, Anda perlu mengkonfigurasi CNAME record domain kustom Anda (misalnya, `kurikulum.sekolahanda.sch.id`) untuk diarahkan ke `app.gumpla.ai` (atau target yang disediakan).
-          Jika kolom domain kustom dikosongkan, sekolah akan otomatis dapat diakses melalui subdomain yang dibuat berdasarkan nama sekolah (contoh: <strong>{generatedSubdomain}</strong>).
+          Status domain akan diatur oleh Super Admin setelah verifikasi DNS.
+          Jika kolom domain kustom dikosongkan, sekolah akan otomatis dapat diakses melalui subdomain yang dibuat berdasarkan nama sekolah (contoh: <strong>{generatedSubdomain}</strong>) dan status domain akan otomatis menjadi "unconfigured".
         </AlertDescription>
       </Alert>
 
     </>
   );
 }
-
-

@@ -37,7 +37,7 @@ export default function NewSchoolPage() {
     isActive: true,
     featureSettings: { ...DEFAULT_FEATURE_SETTINGS },
     customDomain: "",
-    customDomainStatus: "unconfigured", // Default for new school
+    customDomainStatus: "unconfigured", 
   });
   const [adminPassword, setAdminPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -87,6 +87,9 @@ export default function NewSchoolPage() {
     const newSchoolId = `school-${Date.now()}`;
     const newSchoolAdminId = `user-admin-${Date.now()}`;
 
+    const finalCustomDomain = formData.customDomain?.trim() || "";
+    const finalCustomDomainStatus: CustomDomainStatus = finalCustomDomain ? "pending_verification" : "unconfigured";
+
     const newSchool: School = {
       id: newSchoolId,
       name: formData.name!,
@@ -107,8 +110,8 @@ export default function NewSchoolPage() {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       featureSettings: formData.featureSettings || { ...DEFAULT_FEATURE_SETTINGS },
-      customDomain: formData.customDomain || undefined,
-      customDomainStatus: formData.customDomain ? (formData.customDomainStatus || "unconfigured") : "unconfigured",
+      customDomain: finalCustomDomain || undefined, // Store as undefined if empty for cleaner data
+      customDomainStatus: finalCustomDomainStatus,
     };
 
     const newSchoolAdmin: User = {
@@ -124,7 +127,7 @@ export default function NewSchoolPage() {
     try {
       const existingSchools = JSON.parse(localStorage.getItem(SCHOOLS_STORAGE_KEY) || "[]") as School[];
       localStorage.setItem(SCHOOLS_STORAGE_KEY, JSON.stringify([newSchool, ...existingSchools]));
-      addLog("INFO", `Sekolah baru "${newSchool.name}" ditambahkan oleh SuperAdmin ${superAdminUser?.email}.`, "NewSchoolPage");
+      addLog("INFO", `Sekolah baru "${newSchool.name}" ditambahkan oleh SuperAdmin ${superAdminUser?.email}. Domain Kustom: ${newSchool.customDomain || '-'}(${newSchool.customDomainStatus})`, "NewSchoolPage");
 
       const existingUsers = JSON.parse(localStorage.getItem(APP_USERS_STORAGE_KEY) || "[]") as User[];
       localStorage.setItem(APP_USERS_STORAGE_KEY, JSON.stringify([newSchoolAdmin, ...existingUsers]));
@@ -183,5 +186,3 @@ export default function NewSchoolPage() {
     </div>
   );
 }
-
-

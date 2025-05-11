@@ -65,7 +65,7 @@ export default function ManageSchoolsPage() {
       const schoolsWithFeatureFlags = parsedSchools.map((school: School) => ({
         ...school,
         featureSettings: school.featureSettings || { ...DEFAULT_FEATURE_SETTINGS },
-        customDomainStatus: school.customDomain ? (school.customDomainStatus || "unconfigured") : "unconfigured",
+        customDomainStatus: (school.customDomain && school.customDomain.trim() !== "") ? (school.customDomainStatus || "pending_verification") : "unconfigured",
       }));
       setSchools(schoolsWithFeatureFlags);
     } catch (error) {
@@ -107,7 +107,7 @@ export default function ManageSchoolsPage() {
               isActive: newStatus,
               updatedAt: new Date().toISOString(),
               featureSettings: s.featureSettings || { ...DEFAULT_FEATURE_SETTINGS },
-              customDomainStatus: s.customDomain ? (s.customDomainStatus || "unconfigured") : "unconfigured",
+              customDomainStatus: (s.customDomain && s.customDomain.trim() !== "") ? (s.customDomainStatus || "pending_verification") : "unconfigured",
             }
           : s
       );
@@ -151,12 +151,12 @@ export default function ManageSchoolsPage() {
 
   const getCustomDomainStatusBadgeVariant = (status?: CustomDomainStatus): "default" | "secondary" | "destructive" | "outline" => {
     switch (status) {
-      case 'active': return 'default'; // Greenish in default theme
-      case 'pending_verification': return 'secondary'; // Bluish/Yellowish
+      case 'active': return 'default'; 
+      case 'pending_verification': return 'secondary'; 
       case 'configuration_error':
-      case 'ssl_error': return 'destructive'; // Red
-      case 'unconfigured': // Also handles generated subdomains if no specific status
-      default: return 'outline'; // Grayish
+      case 'ssl_error': return 'destructive'; 
+      case 'unconfigured': 
+      default: return 'outline'; 
     }
   };
 
@@ -231,6 +231,7 @@ export default function ManageSchoolsPage() {
                     const schoolNameSlug = slugify(school.name);
                     const displayDomain = school.customDomain || `${schoolNameSlug}.gumpla.ai`;
                     const isSubdomain = !school.customDomain;
+                    const domainStatus = (school.customDomain && school.customDomain.trim() !== "") ? school.customDomainStatus : "unconfigured";
 
                     return (
                       <TableRow key={school.id} className="hover:bg-muted/50">
@@ -242,7 +243,7 @@ export default function ManageSchoolsPage() {
                           <div className="text-xs text-muted-foreground mt-0.5 lg:hidden">
                             Domain: {displayDomain}
                             {isSubdomain && <Badge variant="outline" className="ml-1 text-xs">Subdomain</Badge>}
-                            {!isSubdomain && <Badge variant={getCustomDomainStatusBadgeVariant(school.customDomainStatus)} className="ml-1 text-xs capitalize">{school.customDomainStatus?.replace(/_/g, ' ')}</Badge>}
+                            {!isSubdomain && <Badge variant={getCustomDomainStatusBadgeVariant(domainStatus)} className="ml-1 text-xs capitalize">{domainStatus?.replace(/_/g, ' ')}</Badge>}
                           </div>
                           <div className="text-xs text-muted-foreground mt-0.5 xl:hidden">Admin: {school.adminEmail || "-"}</div>
                         </TableCell>
@@ -260,10 +261,10 @@ export default function ManageSchoolsPage() {
                         </TableCell>
                         <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top text-center hidden md:table-cell">
                           {isSubdomain ? (
-                            <Badge variant="default" className="text-xs">Subdomain Aktif</Badge>
+                            <Badge variant="outline" className="text-xs">Subdomain Aktif</Badge>
                           ) : (
-                            <Badge variant={getCustomDomainStatusBadgeVariant(school.customDomainStatus)} className="text-xs capitalize">
-                              {school.customDomainStatus?.replace(/_/g, ' ') || "Unconfigured"}
+                            <Badge variant={getCustomDomainStatusBadgeVariant(domainStatus)} className="text-xs capitalize">
+                              {domainStatus?.replace(/_/g, ' ') || "Unconfigured"}
                             </Badge>
                           )}
                         </TableCell>
@@ -310,5 +311,3 @@ export default function ManageSchoolsPage() {
     </div>
   );
 }
-
-
