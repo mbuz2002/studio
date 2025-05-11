@@ -384,7 +384,7 @@ export interface TeachingPeriodSettings {
   jpDurationMinutes: number; // Duration of one teaching period (Jam Pelajaran) in minutes
 }
 
-export type AcademicEventType = 'Libur Nasional' | 'Libur Semester' | 'Ujian Sekolah' | 'Kegiatan Sekolah' | 'Tanggal Penting' | 'Lainnya';
+export type AcademicEventType = 'Libur Nasional' | 'Libur Semester' | 'Ujian Sekolah' | 'Kegiatan Sekolah' | 'Tanggal Penting' | 'Periode Semester Aktif' | 'Lainnya';
 
 export interface AcademicEvent {
   id: string;
@@ -416,6 +416,7 @@ export const APP_USERS_STORAGE_KEY = "appUsers";
 export const CURRICULUM_STORAGE_KEY = "app-default-curriculum";
 export const THEME_STORAGE_KEY = "app-theme";
 export const ACADEMIC_EVENTS_STORAGE_KEY = "appAcademicEvents"; // New
+
 
 
 
