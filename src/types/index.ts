@@ -39,11 +39,13 @@ export interface School {
   kotaSekolah?: string;
   adminEmail?: string; 
   subscriptionStatus: 'active' | 'inactive' | 'trial';
+  subscriptionStartDate?: string; // ISO Date string
+  subscriptionEndDate?: string;   // ISO Date string
   paymentDetails?: string; 
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
-  featureSettings?: SchoolFeatureSettings; // Added feature settings
+  featureSettings?: SchoolFeatureSettings; 
 }
 
 export interface AppSettings {
@@ -61,7 +63,7 @@ export interface CurriculumItem {
   updatedAt: string; 
   createdByUserId?: string; 
   curriculumType: CurriculumFramework; 
-  schoolId?: string; // Make schoolId optional for items that might not be school-specific or for initial demo data
+  schoolId?: string; 
 }
 
 export interface LessonPlan extends CurriculumItem {
@@ -280,16 +282,16 @@ export interface ExportedCurriculumData {
   annualPrograms: AnnualProgram[];
   semesterPrograms: SemesterProgram[];
   modulAjar?: ModulAjar[];
-  schoolProfile: SchoolProfile | null; // Updated to allow null if no profile
-  schools?: School[]; // For SuperAdmin export/import
+  schoolProfile: SchoolProfile | null; 
+  schools?: School[]; 
   appUsers: User[];
   subjects?: Subject[];
   teachers?: Teacher[];
   timetables?: TimetableEntry[];
   schoolClasses?: SchoolClass[]; 
-  teachingPeriodSettings?: TeachingPeriodSettings | null; // Updated to allow null
+  teachingPeriodSettings?: TeachingPeriodSettings | null; 
   academicEvents?: AcademicEvent[]; 
-  appSettings?: AppSettings | null; // Updated to allow null
+  appSettings?: AppSettings | null; 
 }
 
 

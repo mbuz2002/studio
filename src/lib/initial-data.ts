@@ -20,6 +20,9 @@ export const initialSuperAdminUser: User = {
   // No schoolId
 };
 
+const today = new Date();
+const oneYearFromToday = new Date(today.getFullYear() + 1, today.getMonth(), today.getDate());
+
 export const initialDefaultSchool: School = {
   id: DEFAULT_SCHOOL_ID,
   name: "Sekolah Demo GUMPLA AI",
@@ -32,11 +35,13 @@ export const initialDefaultSchool: School = {
   logoUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/Tut_Wuri_Handayani_logo_old.svg/100px-Tut_Wuri_Handayani_logo_old.svg.png", // Placeholder logo
   kotaSekolah: "Kota Cerdas",
   subscriptionStatus: 'active',
+  subscriptionStartDate: today.toISOString(),
+  subscriptionEndDate: oneYearFromToday.toISOString(),
   isActive: true,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
   adminEmail: 'admin@sekolahdemo.sch.id',
-  featureSettings: DEFAULT_FEATURE_SETTINGS, // Initialize with default feature settings
+  featureSettings: DEFAULT_FEATURE_SETTINGS, 
 };
 
 export const initialSchoolAdminUser: User = {

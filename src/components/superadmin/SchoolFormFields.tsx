@@ -8,18 +8,23 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { School, EducationLevel } from "@/types";
 import { Button } from "@/components/ui/button";
-import { Image as ImageIcon, Link2, UploadCloud } from "lucide-react";
+import { Image as ImageIcon, Link2, UploadCloud, Calendar as CalendarIcon } from "lucide-react";
 import Image from "next/image";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"; // Added Tabs
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"; 
 import { useToast } from "@/hooks/use-toast";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format, parseISO } from "date-fns";
+import { id as indonesianLocale } from "date-fns/locale";
+
 
 interface SchoolFormFieldsProps {
   formData: Partial<School>;
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleSelectChange: (name: string, value: string) => void;
-  handleLogoUrlChange: (url: string) => void; // For direct URL input or data URI from upload
-  adminPassword?: string; // Only for new school form
-  handleAdminPasswordChange?: (e: React.ChangeEvent<HTMLInputElement>) => void; // Only for new school form
+  handleLogoUrlChange: (url: string) => void; 
+  adminPassword?: string; 
+  handleAdminPasswordChange?: (e: React.ChangeEvent<HTMLInputElement>) => void; 
   isEditMode: boolean;
 }
 
@@ -55,6 +60,10 @@ export function SchoolFormFields({
   );
   const { toast } = useToast();
 
+  const [startDate, setStartDate] = useState<Date | undefined>(formData.subscriptionStartDate ? parseISO(formData.subscriptionStartDate) : undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(formData.subscriptionEndDate ? parseISO(formData.subscriptionEndDate) : undefined);
+
+
   useEffect(() => {
     setLogoPreview(formData.logoUrl || null);
     if (formData.logoUrl && formData.logoUrl.startsWith("data:image")) {
@@ -62,14 +71,17 @@ export function SchoolFormFields({
     } else if (formData.logoUrl) {
       setLogoInputMethod("url");
     } else {
-      setLogoInputMethod("url"); // Default to URL if no logo
+      setLogoInputMethod("url"); 
     }
-  }, [formData.logoUrl]);
+    setStartDate(formData.subscriptionStartDate ? parseISO(formData.subscriptionStartDate) : undefined);
+    setEndDate(formData.subscriptionEndDate ? parseISO(formData.subscriptionEndDate) : undefined);
+  }, [formData.logoUrl, formData.subscriptionStartDate, formData.subscriptionEndDate]);
+  
 
   const onLogoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 2 * 1024 * 1024) { // 2MB limit
+      if (file.size > 2 * 1024 * 1024) { 
         toast({ title: "Ukuran File Logo Terlalu Besar", description: "Maksimal 2MB.", variant: "destructive" });
         if (fileInputRef.current) fileInputRef.current.value = "";
         return;
@@ -78,19 +90,35 @@ export function SchoolFormFields({
       reader.onloadend = () => {
         const dataUri = reader.result as string;
         setLogoPreview(dataUri);
-        handleLogoUrlChange(dataUri); // Update parent form state with data URI
+        handleLogoUrlChange(dataUri); 
       };
       reader.readAsDataURL(file);
     }
   };
   
   const onLogoUrlInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    handleChange(e); // Let parent handle general input change
+    handleChange(e); 
     if (logoInputMethod === 'url') {
-      setLogoPreview(e.target.value); // Update preview for URL input
-      handleLogoUrlChange(e.target.value); // Update parent form state
+      setLogoPreview(e.target.value); 
+      handleLogoUrlChange(e.target.value); 
     }
   };
+
+  const handleDateChange = (date: Date | undefined, fieldName: 'subscriptionStartDate' | 'subscriptionEndDate') => {
+    if (fieldName === 'subscriptionStartDate') {
+      setStartDate(date);
+      handleSelectChange(fieldName, date ? date.toISOString() : "");
+      if (endDate && date && isBefore(endDate, date)) {
+        setEndDate(undefined);
+        handleSelectChange('subscriptionEndDate', "");
+      }
+    } else if (fieldName === 'subscriptionEndDate') {
+      setEndDate(date);
+      handleSelectChange(fieldName, date ? date.toISOString() : "");
+    }
+  };
+
+  const isBefore = (date1: Date, date2: Date) => date1 < date2;
 
 
   return (
@@ -198,7 +226,7 @@ export function SchoolFormFields({
           value={formData.adminEmail || ""} 
           onChange={handleChange} 
           required 
-          disabled={isEditMode} // Disable editing admin email for existing schools for simplicity
+          disabled={isEditMode} 
         />
         {isEditMode && <p className="text-xs text-muted-foreground">Email admin tidak dapat diubah setelah sekolah dibuat.</p>}
       </div>
@@ -245,9 +273,60 @@ export function SchoolFormFields({
           </Select>
         </div>
       </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-1.5">
+          <Label htmlFor="subscriptionStartDate">Tanggal Mulai Langganan</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className="w-full justify-start text-left font-normal h-10"
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {startDate ? format(startDate, "PPP", {locale: indonesianLocale}) : <span>Pilih tanggal</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0">
+              <Calendar
+                mode="single"
+                selected={startDate}
+                onSelect={(date) => handleDateChange(date, 'subscriptionStartDate')}
+                initialFocus
+                locale={indonesianLocale}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="subscriptionEndDate">Tanggal Akhir Langganan</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className="w-full justify-start text-left font-normal h-10"
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {endDate ? format(endDate, "PPP", {locale: indonesianLocale}) : <span>Pilih tanggal</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0">
+              <Calendar
+                mode="single"
+                selected={endDate}
+                onSelect={(date) => handleDateChange(date, 'subscriptionEndDate')}
+                initialFocus
+                locale={indonesianLocale}
+                disabled={ startDate ? { before: startDate } : undefined}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+      </div>
+
       <div className="space-y-1.5">
         <Label htmlFor="paymentDetails">Catatan Pembayaran (Manual)</Label>
-        <Textarea id="paymentDetails" name="paymentDetails" value={formData.paymentDetails || ""} onChange={handleChange} placeholder="cth., Pembayaran terakhir tanggal X, via Transfer Bank ABC" rows={2}/>
+        <Textarea id="paymentDetails" name="paymentDetails" value={formData.paymentDetails || ""} onChange={handleChange} placeholder="cth., Pembayaran terakhir tanggal X, via Transfer Bank ABC untuk periode Y bulan/tahun" rows={2}/>
       </div>
     </>
   );

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
@@ -5,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { CreditCard, Search, Edit2, AlertTriangle, Sparkles, CalendarCheck, ListChecks, BookOpen } from "lucide-react";
+import { CreditCard, Search, Edit2, AlertTriangle, Sparkles, CalendarCheck, ListChecks, BookOpen, CalendarDays } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -16,6 +17,8 @@ import { Badge } from "@/components/ui/badge";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { SubscriptionEditDialog } from "@/components/superadmin/SubscriptionEditDialog"; 
+import { format, parseISO, isBefore, isAfter, differenceInDays } from "date-fns";
+import { id as indonesianLocale } from "date-fns/locale";
 
 export default function SuperAdminSubscriptionsPage() {
   const { user, loading: authLoading } = useAuth();
@@ -47,13 +50,28 @@ export default function SuperAdminSubscriptionsPage() {
 
     try {
       const storedSchools = localStorage.getItem(SCHOOLS_STORAGE_KEY);
-      const parsedSchools = storedSchools ? JSON.parse(storedSchools) : [];
-      // Ensure all schools have featureSettings initialized
-      const schoolsWithFeatureFlags = parsedSchools.map((school: School) => ({
-        ...school,
-        featureSettings: school.featureSettings || { ...DEFAULT_FEATURE_SETTINGS }
-      }));
-      setSchools(schoolsWithFeatureFlags);
+      let parsedSchools: School[] = storedSchools ? JSON.parse(storedSchools) : [];
+      
+      // Check and update subscription status (conceptual auto-update)
+      const today = new Date();
+      let schoolsUpdated = false;
+      parsedSchools = parsedSchools.map(school => {
+        let updatedSchool = { ...school, featureSettings: school.featureSettings || { ...DEFAULT_FEATURE_SETTINGS } };
+        if (updatedSchool.subscriptionEndDate && isBefore(parseISO(updatedSchool.subscriptionEndDate), today) && updatedSchool.subscriptionStatus === 'active') {
+          updatedSchool.subscriptionStatus = 'inactive'; // Suspend if past end date and was active
+          updatedSchool.isActive = false; // Also deactivate the school
+          schoolsUpdated = true;
+          addLog("WARN", `Langganan sekolah "${school.name}" (ID: ${school.id}) otomatis diubah menjadi Tidak Aktif karena melewati batas akhir periode.`, "SuperAdminSubscriptionsPage-AutoUpdate");
+        }
+        return updatedSchool;
+      });
+
+      if(schoolsUpdated) {
+        localStorage.setItem(SCHOOLS_STORAGE_KEY, JSON.stringify(parsedSchools));
+      }
+      
+      setSchools(parsedSchools);
+
     } catch (error) {
       console.error("Gagal memuat data sekolah:", error);
       toast({ title: "Gagal Memuat Data Sekolah", variant: "destructive" });
@@ -81,18 +99,36 @@ export default function SuperAdminSubscriptionsPage() {
       return updatedSchoolsList;
     });
     toast({ title: "Langganan & Fitur Diperbarui", description: `Pengaturan untuk ${updatedSchool.name} telah diperbarui.` });
-    addLog("INFO", `Langganan dan fitur sekolah "${updatedSchool.name}" (ID: ${updatedSchool.id}) diperbarui oleh SuperAdmin ${user?.email}. Status: ${updatedSchool.subscriptionStatus}, Fitur: ${JSON.stringify(updatedSchool.featureSettings)}.`, "SuperAdminSubscriptionsPage");
+    addLog("INFO", `Langganan dan fitur sekolah "${updatedSchool.name}" (ID: ${updatedSchool.id}) diperbarui oleh SuperAdmin ${user?.email}. Status: ${updatedSchool.subscriptionStatus}, Periode: ${updatedSchool.subscriptionStartDate} - ${updatedSchool.subscriptionEndDate}, Fitur: ${JSON.stringify(updatedSchool.featureSettings)}.`, "SuperAdminSubscriptionsPage");
     setIsEditDialogOpen(false);
     setEditingSchool(null);
   };
   
   const getSubscriptionBadgeVariant = (status: School['subscriptionStatus']): "default" | "secondary" | "destructive" | "outline" => {
     switch (status) {
-      case 'active': return 'default'; // Usually primary color
+      case 'active': return 'default'; 
       case 'trial': return 'secondary';
       case 'inactive': return 'destructive';
       default: return 'outline';
     }
+  };
+  
+  const getSubscriptionPeriodText = (school: School): string => {
+    if (school.subscriptionStartDate && school.subscriptionEndDate) {
+      const start = format(parseISO(school.subscriptionStartDate), "dd MMM yyyy", { locale: indonesianLocale });
+      const end = format(parseISO(school.subscriptionEndDate), "dd MMM yyyy", { locale: indonesianLocale });
+      const daysRemaining = differenceInDays(parseISO(school.subscriptionEndDate), new Date());
+      let statusText = "";
+      if (isAfter(new Date(), parseISO(school.subscriptionEndDate))) {
+        statusText = `(Berakhir ${Math.abs(daysRemaining)} hari lalu)`;
+      } else if (daysRemaining <= 7 && daysRemaining >= 0) {
+        statusText = `(Berakhir dalam ${daysRemaining} hari)`;
+      } else if (daysRemaining < 0){
+         statusText = `(Telah Berakhir)`;
+      }
+      return `${start} - ${end} ${statusText}`;
+    }
+    return "Periode tidak diatur";
   };
 
   const renderFeatureStatus = (settings?: SchoolFeatureSettings) => {
@@ -136,7 +172,7 @@ export default function SuperAdminSubscriptionsPage() {
             <div>
               <CardTitle className="text-2xl md:text-3xl">Manajemen Langganan & Fitur Sekolah</CardTitle>
               <CardDescription className="text-primary-foreground/90 mt-1">
-                Kelola status langganan, detail pembayaran, dan fitur yang aktif untuk setiap sekolah.
+                Kelola status langganan, periode, catatan pembayaran, dan fitur yang aktif untuk setiap sekolah.
               </CardDescription>
             </div>
           </div>
@@ -159,9 +195,10 @@ export default function SuperAdminSubscriptionsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="min-w-[200px] px-3 sm:px-4 py-3 text-sm">Nama Sekolah</TableHead>
+                  <TableHead className="min-w-[180px] px-3 sm:px-4 py-3 text-sm">Nama Sekolah</TableHead>
                   <TableHead className="min-w-[150px] px-3 sm:px-4 py-3 text-sm hidden md:table-cell">Email Admin</TableHead>
                   <TableHead className="min-w-[120px] px-3 sm:px-4 py-3 text-sm text-center">Status Langganan</TableHead>
+                  <TableHead className="min-w-[220px] px-3 sm:px-4 py-3 text-sm">Periode Langganan</TableHead>
                   <TableHead className="min-w-[200px] px-3 sm:px-4 py-3 text-sm">Fitur Aktif</TableHead>
                   <TableHead className="text-right min-w-[80px] px-3 sm:px-4 py-3 text-sm">Aksi</TableHead>
                 </TableRow>
@@ -169,7 +206,7 @@ export default function SuperAdminSubscriptionsPage() {
               <TableBody>
                 {filteredSchools.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center h-24 text-muted-foreground px-3 sm:px-4 text-base">
+                    <TableCell colSpan={6} className="text-center h-24 text-muted-foreground px-3 sm:px-4 text-base">
                       Tidak ada data sekolah ditemukan.
                     </TableCell>
                   </TableRow>
@@ -185,6 +222,12 @@ export default function SuperAdminSubscriptionsPage() {
                         <Badge variant={getSubscriptionBadgeVariant(school.subscriptionStatus)} className="text-xs capitalize">
                           {school.subscriptionStatus}
                         </Badge>
+                      </TableCell>
+                      <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top text-xs">
+                        <div className="flex items-center gap-1">
+                            <CalendarDays size={14} className="text-muted-foreground flex-shrink-0"/>
+                            {getSubscriptionPeriodText(school)}
+                        </div>
                       </TableCell>
                       <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top">
                          {renderFeatureStatus(school.featureSettings)}
@@ -205,7 +248,8 @@ export default function SuperAdminSubscriptionsPage() {
                     <AlertTriangle className="h-5 w-5 text-primary"/>
                     <AlertTitle className="text-primary">Informasi Langganan & Fitur</AlertTitle>
                     <AlertDescription>
-                        Kelola status langganan, catatan pembayaran, dan fitur yang aktif untuk setiap sekolah.
+                        Kelola status langganan, periode, catatan pembayaran, dan fitur yang aktif untuk setiap sekolah.
+                        Jika periode langganan berakhir dan status masih 'Aktif', sistem akan otomatis mengubahnya menjadi 'Tidak Aktif'.
                         Fitur yang tidak aktif tidak akan muncul di menu atau dapat diakses oleh pengguna sekolah tersebut.
                     </AlertDescription>
                 </Alert>
@@ -224,3 +268,4 @@ export default function SuperAdminSubscriptionsPage() {
     </div>
   );
 }
+

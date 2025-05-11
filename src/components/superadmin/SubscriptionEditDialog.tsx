@@ -18,9 +18,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import type { School, SchoolFeatureSettings } from "@/types";
 import { DEFAULT_FEATURE_SETTINGS } from "@/types";
-import { Save, CreditCard, Settings2, Sparkles, CalendarCheck, ListChecks, BookOpen } from "lucide-react";
+import { Save, CreditCard, Settings2, Sparkles, CalendarCheck, ListChecks, BookOpen, Calendar as CalendarIcon } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format, parseISO } from "date-fns";
+import { id as indonesianLocale } from "date-fns/locale";
 
 interface SubscriptionEditDialogProps {
   isOpen: boolean;
@@ -55,12 +59,17 @@ export function SubscriptionEditDialog({ isOpen, onOpenChange, school, onSave }:
   const [paymentDetails, setPaymentDetails] = useState(school.paymentDetails || "");
   const [featureSettings, setFeatureSettings] = useState<SchoolFeatureSettings>(school.featureSettings || DEFAULT_FEATURE_SETTINGS);
   const [isLoading, setIsLoading] = useState(false);
+  const [startDate, setStartDate] = useState<Date | undefined>(school.subscriptionStartDate ? parseISO(school.subscriptionStartDate) : undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(school.subscriptionEndDate ? parseISO(school.subscriptionEndDate) : undefined);
+
 
   useEffect(() => {
     if (isOpen) {
       setStatus(school.subscriptionStatus);
       setPaymentDetails(school.paymentDetails || "");
       setFeatureSettings(school.featureSettings || { ...DEFAULT_FEATURE_SETTINGS });
+      setStartDate(school.subscriptionStartDate ? parseISO(school.subscriptionStartDate) : undefined);
+      setEndDate(school.subscriptionEndDate ? parseISO(school.subscriptionEndDate) : undefined);
     }
   }, [isOpen, school]);
 
@@ -79,7 +88,9 @@ export function SubscriptionEditDialog({ isOpen, onOpenChange, school, onSave }:
       ...school,
       subscriptionStatus: status,
       paymentDetails: paymentDetails,
-      featureSettings: featureSettings, // Save feature settings
+      featureSettings: featureSettings, 
+      subscriptionStartDate: startDate ? startDate.toISOString() : undefined,
+      subscriptionEndDate: endDate ? endDate.toISOString() : undefined,
       updatedAt: new Date().toISOString(),
     };
 
@@ -97,7 +108,7 @@ export function SubscriptionEditDialog({ isOpen, onOpenChange, school, onSave }:
             Kelola Langganan & Fitur: {school.name}
           </DialogTitle>
           <DialogDescription>
-            Perbarui status langganan, catatan pembayaran, dan fitur yang aktif untuk sekolah ini.
+            Perbarui status langganan, catatan pembayaran, periode, dan fitur yang aktif untuk sekolah ini.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} id="edit-subscription-form" className="flex flex-col flex-grow overflow-hidden">
@@ -116,13 +127,64 @@ export function SubscriptionEditDialog({ isOpen, onOpenChange, school, onSave }:
                   </SelectContent>
                 </Select>
               </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="subscriptionStartDate">Tanggal Mulai Langganan</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className="w-full justify-start text-left font-normal h-10"
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {startDate ? format(startDate, "PPP", { locale: indonesianLocale }) : <span>Pilih tanggal</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={startDate}
+                        onSelect={setStartDate}
+                        initialFocus
+                        locale={indonesianLocale}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="subscriptionEndDate">Tanggal Akhir Langganan</Label>
+                   <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className="w-full justify-start text-left font-normal h-10"
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {endDate ? format(endDate, "PPP", { locale: indonesianLocale }) : <span>Pilih tanggal</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={endDate}
+                        onSelect={setEndDate}
+                        initialFocus
+                        locale={indonesianLocale}
+                        disabled={{ before: startDate }} 
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+
               <div className="space-y-1.5">
                 <Label htmlFor="paymentDetails">Catatan Pembayaran (Manual)</Label>
                 <Textarea 
                   id="paymentDetails" 
                   value={paymentDetails} 
                   onChange={(e) => setPaymentDetails(e.target.value)} 
-                  placeholder="cth., Transfer Bank ABC, Tgl XX/YY/ZZZZ, Sejumlah Rp. X.XXX.XXX"
+                  placeholder="cth., Transfer Bank ABC, Tgl XX/YY/ZZZZ, Sejumlah Rp. X.XXX.XXX untuk periode Y bulan/tahun"
                   rows={3}
                 />
               </div>

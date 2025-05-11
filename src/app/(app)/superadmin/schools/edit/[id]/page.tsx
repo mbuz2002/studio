@@ -9,7 +9,7 @@ import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLog } from "@/contexts/LogContext";
-import { SchoolFormFields } from "@/components/superadmin/SchoolFormFields"; // To be created
+import { SchoolFormFields } from "@/components/superadmin/SchoolFormFields"; 
 import type { School, EducationLevel } from "@/types";
 import { SCHOOLS_STORAGE_KEY } from "@/types";
 import LoadingSpinner from "@/components/ui/loading-spinner";
@@ -61,7 +61,10 @@ export default function EditSchoolPage() {
         setFormData(prev => ({ ...prev, [name]: value as EducationLevel | 'active' | 'inactive' | 'trial'}));
     } else if (name === "isActive") {
         setFormData(prev => ({ ...prev, [name]: value === "true" }));
-    } else {
+    } else if (name === "subscriptionStartDate" || name === "subscriptionEndDate") {
+        setFormData(prev => ({ ...prev, [name]: value ? new Date(value).toISOString() : undefined }));
+    }
+     else {
        setFormData(prev => ({ ...prev, [name]: value }));
     }
   };
@@ -149,3 +152,4 @@ export default function EditSchoolPage() {
     </div>
   );
 }
+

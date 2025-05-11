@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, type FormEvent } from "react";
@@ -8,10 +9,11 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLog } from "@/contexts/LogContext";
-import { SchoolFormFields } from "@/components/superadmin/SchoolFormFields"; // To be created
+import { SchoolFormFields } from "@/components/superadmin/SchoolFormFields"; 
 import type { School, User, EducationLevel } from "@/types";
 import { SCHOOLS_STORAGE_KEY, APP_USERS_STORAGE_KEY, DEFAULT_FEATURE_SETTINGS } from "@/types";
 import LoadingSpinner from "@/components/ui/loading-spinner";
+import { formatISO } from "date-fns";
 
 export default function NewSchoolPage() {
   const router = useRouter();
@@ -21,7 +23,7 @@ export default function NewSchoolPage() {
 
   const [formData, setFormData] = useState<Partial<School>>({
     name: "",
-    jenjangPendidikan: "SMA/MA", // Default
+    jenjangPendidikan: "SMA/MA", 
     alamat: "",
     nomorTelepon: "",
     emailSekolah: "",
@@ -29,10 +31,12 @@ export default function NewSchoolPage() {
     npsn: "",
     logoUrl: "",
     kotaSekolah: "",
-    adminEmail: "", // For the new school admin
+    adminEmail: "", 
     subscriptionStatus: "trial",
+    subscriptionStartDate: formatISO(new Date(), { representation: 'date' }), // Default to today
+    subscriptionEndDate: formatISO(new Date(new Date().setMonth(new Date().getMonth() + 1)), { representation: 'date' }), // Default to 1 month from today
     isActive: true,
-    featureSettings: { ...DEFAULT_FEATURE_SETTINGS }, // Initialize with defaults
+    featureSettings: { ...DEFAULT_FEATURE_SETTINGS }, 
   });
   const [adminPassword, setAdminPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -50,10 +54,15 @@ export default function NewSchoolPage() {
   };
   
   const handleSelectChange = (name: string, value: string) => {
-    if (name === "jenjangPendidikan" || name === "subscriptionStatus" || name === "isActive") {
-        setFormData(prev => ({ ...prev, [name]: value as EducationLevel | 'active' | 'inactive' | 'trial' | boolean }));
-    } else {
-        setFormData(prev => ({ ...prev, [name]: value }));
+    if (name === "jenjangPendidikan" || name === "subscriptionStatus") {
+        setFormData(prev => ({ ...prev, [name]: value as EducationLevel | 'active' | 'inactive' | 'trial'}));
+    } else if (name === "isActive") {
+        setFormData(prev => ({ ...prev, [name]: value === "true" }));
+    } else if (name === "subscriptionStartDate" || name === "subscriptionEndDate") {
+        setFormData(prev => ({ ...prev, [name]: value ? new Date(value).toISOString() : undefined }));
+    }
+     else {
+       setFormData(prev => ({ ...prev, [name]: value }));
     }
   };
   
@@ -90,32 +99,30 @@ export default function NewSchoolPage() {
       kotaSekolah: formData.kotaSekolah,
       adminEmail: formData.adminEmail!,
       subscriptionStatus: formData.subscriptionStatus || "trial",
+      subscriptionStartDate: formData.subscriptionStartDate,
+      subscriptionEndDate: formData.subscriptionEndDate,
       paymentDetails: formData.paymentDetails,
       isActive: formData.isActive !== undefined ? formData.isActive : true,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      featureSettings: formData.featureSettings || { ...DEFAULT_FEATURE_SETTINGS }, // Ensure featureSettings is saved
+      featureSettings: formData.featureSettings || { ...DEFAULT_FEATURE_SETTINGS }, 
     };
 
     const newSchoolAdmin: User = {
       id: newSchoolAdminId,
       name: `Admin ${formData.name}`,
       email: formData.adminEmail!,
-      role: "Admin", // Default role for new school admin
+      role: "Admin", 
       schoolId: newSchoolId,
       avatarUrl: `https://ui-avatars.com/api/?name=Admin+${encodeURIComponent(formData.name!)}&background=random&color=fff`,
       updatedAt: new Date().toISOString(),
-      // Password handling: In a real app, this would be hashed and sent to a backend.
-      // For demo, we acknowledge it but don't store it directly in the User object in localStorage.
     };
 
     try {
-      // Save School
       const existingSchools = JSON.parse(localStorage.getItem(SCHOOLS_STORAGE_KEY) || "[]") as School[];
       localStorage.setItem(SCHOOLS_STORAGE_KEY, JSON.stringify([newSchool, ...existingSchools]));
       addLog("INFO", `Sekolah baru "${newSchool.name}" ditambahkan oleh SuperAdmin ${superAdminUser?.email}.`, "NewSchoolPage");
 
-      // Save School Admin User
       const existingUsers = JSON.parse(localStorage.getItem(APP_USERS_STORAGE_KEY) || "[]") as User[];
       localStorage.setItem(APP_USERS_STORAGE_KEY, JSON.stringify([newSchoolAdmin, ...existingUsers]));
       addLog("INFO", `Admin sekolah baru "${newSchoolAdmin.email}" untuk sekolah "${newSchool.name}" dibuat. Kata sandi telah di-set (simulasi).`, "NewSchoolPage");
@@ -153,7 +160,7 @@ export default function NewSchoolPage() {
               formData={formData}
               handleChange={handleChange}
               handleSelectChange={handleSelectChange}
-              handleLogoUrlChange={handleLogoUrlChange} // Pass this if SchoolFormFields handles logo URL directly
+              handleLogoUrlChange={handleLogoUrlChange} 
               adminPassword={adminPassword}
               handleAdminPasswordChange={(e) => setAdminPassword(e.target.value)}
               isEditMode={false}
@@ -173,3 +180,4 @@ export default function NewSchoolPage() {
     </div>
   );
 }
+
