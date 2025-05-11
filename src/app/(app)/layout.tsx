@@ -174,8 +174,8 @@ export default function AppLayout({ children }: PropsWithChildren) {
                       tooltip={{children: "Dasbor", className: "ml-1 text-xs"}}
                       isActive={pathname === "/dashboard"}
                     >
-                      <LayoutDashboard className="h-5 w-5" />
-                      <span className="group-data-[state=expanded]:md:inline hidden">Dasbor</span>
+                      <LayoutDashboard />
+                      <span>Dasbor</span>
                     </SidebarMenuButton>
                   </Link>
                 </SidebarMenuItem>
@@ -184,7 +184,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
 
             {curriculumPlanningItems.length > 0 && (
               <SidebarGroup>
-                <SidebarGroupLabel className="group-data-[state=expanded]:md:inline hidden">Perencanaan</SidebarGroupLabel>
+                <SidebarGroupLabel>Perencanaan</SidebarGroupLabel>
                 <SidebarMenu>
                   {curriculumPlanningItems.map((item) => (
                     <SidebarMenuItem key={item.href}>
@@ -194,8 +194,8 @@ export default function AppLayout({ children }: PropsWithChildren) {
                           tooltip={{children: item.label, className: "ml-1 text-xs"}}
                           isActive={pathname.startsWith(item.href)}
                         >
-                          <item.icon className="h-5 w-5" />
-                          <span className="group-data-[state=expanded]:md:inline hidden">{item.label}</span>
+                          <item.icon />
+                          <span>{item.label}</span>
                         </SidebarMenuButton>
                       </Link>
                     </SidebarMenuItem>
@@ -206,7 +206,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
 
             {filteredNavItems.find(item => item.href === "/academic-calendar") && (
                  <SidebarGroup>
-                 <SidebarGroupLabel className="group-data-[state=expanded]:md:inline hidden">Akademik</SidebarGroupLabel>
+                 <SidebarGroupLabel>Akademik</SidebarGroupLabel>
                  <SidebarMenu>
                     <SidebarMenuItem>
                         <Link href="/academic-calendar" legacyBehavior passHref>
@@ -215,8 +215,8 @@ export default function AppLayout({ children }: PropsWithChildren) {
                             tooltip={{children: "Kalender Pendidikan", className: "ml-1 text-xs"}}
                             isActive={pathname.startsWith("/academic-calendar")}
                             >
-                            <CalendarCheck className="h-5 w-5" />
-                            <span className="group-data-[state=expanded]:md:inline hidden">Kalender Pendidikan</span>
+                            <CalendarCheck />
+                            <span>Kalender Pendidikan</span>
                             </SidebarMenuButton>
                         </Link>
                     </SidebarMenuItem>
@@ -227,7 +227,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
 
             {aiToolsItems.length > 0 && (
               <SidebarGroup>
-                <SidebarGroupLabel className="group-data-[state=expanded]:md:inline hidden">Alat AI</SidebarGroupLabel>
+                <SidebarGroupLabel>Alat AI</SidebarGroupLabel>
                 <SidebarMenu>
                   {aiToolsItems.map((item) => (
                     <SidebarMenuItem key={item.href}>
@@ -237,8 +237,8 @@ export default function AppLayout({ children }: PropsWithChildren) {
                           tooltip={{children: item.label, className: "ml-1 text-xs"}}
                           isActive={pathname.startsWith(item.href)}
                         >
-                          <item.icon className="h-5 w-5" />
-                          <span className="group-data-[state=expanded]:md:inline hidden">{item.label}</span>
+                          <item.icon />
+                          <span>{item.label}</span>
                         </SidebarMenuButton>
                       </Link>
                     </SidebarMenuItem>
@@ -249,7 +249,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
             
             {masterDataItems.length > 0 && (
                 <SidebarGroup>
-                    <SidebarGroupLabel className="group-data-[state=expanded]:md:inline hidden">Master Data</SidebarGroupLabel>
+                    <SidebarGroupLabel>Master Data</SidebarGroupLabel>
                     <SidebarMenu>
                     {masterDataItems.map((item) => (
                         <SidebarMenuItem key={item.href}>
@@ -259,8 +259,8 @@ export default function AppLayout({ children }: PropsWithChildren) {
                             tooltip={{children: item.label, className: "ml-1 text-xs"}}
                             isActive={pathname.startsWith(item.href)}
                             >
-                            <item.icon className="h-5 w-5" />
-                            <span className="group-data-[state=expanded]:md:inline hidden">{item.label}</span>
+                            <item.icon />
+                            <span>{item.label}</span>
                             </SidebarMenuButton>
                         </Link>
                         </SidebarMenuItem>
@@ -271,7 +271,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
 
             {settingsItems.length > 0 && (
               <SidebarGroup>
-                <SidebarGroupLabel className="group-data-[state=expanded]:md:inline hidden">Pengaturan</SidebarGroupLabel>
+                <SidebarGroupLabel>Pengaturan</SidebarGroupLabel>
                 <SidebarMenu>
                   {settingsItems.map((item) => (
                     <SidebarMenuItem key={item.href}>
@@ -281,8 +281,8 @@ export default function AppLayout({ children }: PropsWithChildren) {
                           tooltip={{children: item.label, className: "ml-1 text-xs"}}
                           isActive={pathname.startsWith(item.href)}
                         >
-                          <item.icon className="h-5 w-5" />
-                          <span className="group-data-[state=expanded]:md:inline hidden">{item.label}</span>
+                          <item.icon />
+                          <span>{item.label}</span>
                         </SidebarMenuButton>
                       </Link>
                     </SidebarMenuItem>
@@ -299,7 +299,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
         </Sidebar>
         <SidebarInset>
           <MobileBottomNav />
-          <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8 pb-24 sm:pb-8 flex flex-col min-h-screen bg-background text-foreground">
+          <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8 pb-24 sm:pb-8 flex flex-col min-h-screen bg-background text-foreground md:ml-[var(--sidebar-width-icon)] group-data-[state=expanded]/sidebar-wrapper:md:ml-[var(--sidebar-width)] transition-[margin-left] duration-200 ease-linear">
            {isPageLoading ? <LoadingSpinner icon={<Sparkles className="h-16 w-16 animate-pulse text-primary mb-6" />} message="Memuat Halaman..."/> : (
               <div className="flex-grow">
                   {children}
@@ -313,5 +313,3 @@ export default function AppLayout({ children }: PropsWithChildren) {
       </SidebarProvider>
   );
 }
-
-
