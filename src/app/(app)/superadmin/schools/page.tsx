@@ -13,12 +13,13 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLog } from "@/contexts/LogContext";
-import type { School } from "@/types";
+import type { School, User } from "@/types";
 import { SCHOOLS_STORAGE_KEY, APP_USERS_STORAGE_KEY } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { id as indonesianLocale } from "date-fns/locale";
 import LoadingSpinner from "@/components/ui/loading-spinner";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Added import
 
 export default function ManageSchoolsPage() {
   const { user, loading: authLoading } = useAuth();
@@ -221,3 +222,4 @@ export default function ManageSchoolsPage() {
     </div>
   );
 }
+
