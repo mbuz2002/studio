@@ -1,3 +1,4 @@
+
 "use client";
 import type { PropsWithChildren } from 'react';
 import { useEffect, useMemo, useState, useCallback } from 'react';
@@ -26,7 +27,7 @@ interface NavItem {
   isKurikulumMerdekaOnly?: boolean;
   isMasterData?: boolean;
   isSuperAdminOnly?: boolean; 
-  featureFlag?: keyof SchoolFeatureSettings; // Added for feature toggling
+  featureFlag?: keyof SchoolFeatureSettings; 
 }
 
 const allNavItems: NavItem[] = [
@@ -45,7 +46,7 @@ const allNavItems: NavItem[] = [
   { href: "/lesson-plans", label: "RPP", originalLabel: "RPP / ATP", icon: BookOpenText, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/annual-programs", label: "Program Tahunan", originalLabel: "Program Tahunan", icon: CalendarDays, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/semester-programs", label: "Program Semester", originalLabel: "Program Semester", icon: CalendarClock, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
-  { href: "/modul-ajar", label: "Modul Ajar (KM)", originalLabel: "Modul Ajar (KM)", icon: BrainCircuit, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], isKurikulumMerdekaOnly: true, featureFlag: "aiToolsEnabled" }, // Also often considered AI related
+  { href: "/modul-ajar", label: "Modul Ajar (KM)", originalLabel: "Modul Ajar (KM)", icon: BrainCircuit, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], isKurikulumMerdekaOnly: true, featureFlag: "aiToolsEnabled" }, 
   { href: "/ai-assistant", label: "Asisten AI Materi", originalLabel: "Asisten AI Materi", icon: Sparkles, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], featureFlag: "aiToolsEnabled" },
   { href: "/ai-kurikulum-merdeka-module", label: "Buat Modul Ajar AI", originalLabel: "Buat Modul Ajar AI", icon: BrainCircuit, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], isKurikulumMerdekaOnly: true, isHiddenFromSidebar: true, featureFlag: "aiToolsEnabled" },
   
@@ -58,14 +59,14 @@ const allNavItems: NavItem[] = [
   { href: "/timetables", label: "Jadwal Pelajaran", originalLabel: "Jadwal Pelajaran", icon: ListChecks, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"], featureFlag: "timetableManagementEnabled" }, 
   
   { href: "/school-settings", label: "Profil Sekolah", originalLabel: "Profil Sekolah", icon: Home, roles: ["Admin", "TataUsaha", "KepalaSekolah"] },
-  { href: "/admin/user-management", label: "Manajemen Pengguna", originalLabel: "Manajemen Pengguna", icon: Users, roles: ["Admin", "TataUsaha"] }, // Now school Admin can access this
+  { href: "/admin/user-management", label: "Manajemen Pengguna", originalLabel: "Manajemen Pengguna", icon: Users, roles: ["Admin", "TataUsaha"] }, 
   { href: "/settings", label: "Pengaturan Akun", originalLabel: "Pengaturan Akun", icon: SettingsIcon, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
-  { href: "/admin/system-settings", label: "Pengaturan Sekolah", originalLabel: "Pengaturan Sekolah", icon: ShieldCheck, roles: ["Admin"], isSystemSetting: true }, // School Admin system settings
-  { href: "/admin/system-logs", label: "Log Sistem", originalLabel: "Log Sistem", icon: Activity, roles: ["Admin"], isSystemSetting: true, isHiddenFromSidebar: true }, // School Admin logs
+  { href: "/admin/system-settings", label: "Pengaturan Sekolah", originalLabel: "Pengaturan Sekolah", icon: ShieldCheck, roles: ["Admin"], isSystemSetting: true }, 
+  { href: "/admin/system-logs", label: "Log Sistem", originalLabel: "Log Sistem", icon: Activity, roles: ["Admin"], isSystemSetting: true, isHiddenFromSidebar: true }, 
 ];
 
 export default function AppLayout({ children }: PropsWithChildren) {
-  const { user, isAuthenticated, loading, logout, currentSchool } = useAuth(); // Added currentSchool
+  const { user, isAuthenticated, loading, logout, currentSchool } = useAuth(); 
   const { defaultCurriculum } = useCurriculum();
   const router = useRouter();
   const pathname = usePathname();
@@ -99,35 +100,12 @@ export default function AppLayout({ children }: PropsWithChildren) {
         item.roles.includes(user.role) &&
         !item.isHiddenFromSidebar &&
         (!item.isMasterData || ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha"].includes(user.role)) && 
-        (item.isSystemSetting === false || (item.isSystemSetting === true && ["Admin"].includes(user.role)) || (item.isSuperAdminOnly && user.role === "SuperAdmin")) && 
+        (item.isSystemSetting === undefined || item.isSystemSetting === false || (item.isSystemSetting === true && ["Admin"].includes(user.role)) || (item.isSuperAdminOnly && user.role === "SuperAdmin")) && 
         (!item.isKurikulumMerdekaOnly || defaultCurriculum === "Kurikulum Merdeka") &&
         (user.role === "SuperAdmin" ? item.isSuperAdminOnly === true : !item.isSuperAdminOnly) &&
-        // Feature flag check for non-SuperAdmin users
         (user.role === "SuperAdmin" || !item.featureFlag || (currentSchool?.featureSettings?.[item.featureFlag] ?? true))
-    ).sort((a,b) => {
-        if (a.isSuperAdminOnly && !b.isSuperAdminOnly) return -1;
-        if (!a.isSuperAdminOnly && b.isSuperAdminOnly) return 1;
-
-        if (a.isSystemSetting && !b.isSystemSetting) return 1;
-        if (!a.isSystemSetting && b.isSystemSetting) return -1;
-        if (a.isSystemSetting && b.isSystemSetting) return a.label.localeCompare(b.label);
-
-        if (a.isMasterData && !b.isMasterData) return 1; 
-        if (!a.isMasterData && b.isMasterData) return -1;
-        if (a.isMasterData && b.isMasterData) return a.label.localeCompare(b.label);
-
-
-        if (a.href === "/settings" || a.href === "/school-settings") return 1;
-        if (b.href === "/settings" || b.href === "/school-settings") return -1;
-        const aiOrder = ["/modul-ajar", "/ai-assistant"];
-        const aIsAI = aiOrder.includes(a.href);
-        const bIsAI = aiOrder.includes(b.href);
-        if (aIsAI && !bIsAI) return 1;
-        if (!aIsAI && bIsAI) return -1;
-        if (aIsAI && bIsAI) return aiOrder.indexOf(a.href) - aiOrder.indexOf(b.href);
-        return 0;
-    });
-  }, [user, defaultCurriculum, currentSchool]); // Added currentSchool dependency
+    );
+  }, [user, defaultCurriculum, currentSchool]);
 
    useEffect(() => {
     if (!loading && isAuthenticated && user) {
@@ -163,7 +141,6 @@ export default function AppLayout({ children }: PropsWithChildren) {
             router.push(user.role === "SuperAdmin" ? "/superadmin/dashboard" : "/dashboard");
             return;
         }
-        // Feature Flag Check for non-SuperAdmins
         if (user.role !== "SuperAdmin" && currentNavItem.featureFlag && !(currentSchool?.featureSettings?.[currentNavItem.featureFlag] ?? true)) {
             toast({ title: "Fitur Dinonaktifkan", description: `Fitur '${currentNavItem.originalLabel || currentNavItem.label}' tidak aktif untuk sekolah Anda.`, variant: "destructive"});
             router.push("/dashboard");
@@ -177,7 +154,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
          }
       }
     }
-  }, [loading, isAuthenticated, user, pathname, router, logout, defaultCurriculum, toast, currentSchool]); // Added currentSchool
+  }, [loading, isAuthenticated, user, pathname, router, logout, defaultCurriculum, toast, currentSchool]);
 
 
   if (loading || !isAuthenticated || !user) {
@@ -189,11 +166,38 @@ export default function AppLayout({ children }: PropsWithChildren) {
   const dashboardItem = user.role === "SuperAdmin" ? superAdminDashboardItem : regularDashboardItem;
 
   const superAdminItems = filteredNavItems.filter(item => item.isSuperAdminOnly && item.href !== "/superadmin/dashboard");
-  const curriculumPlanningItems = filteredNavItems.filter(item => !item.isSystemSetting && !item.isMasterData && !item.isSuperAdminOnly && item.href !== "/dashboard" && item.href !== "/settings" && item.href !== "/school-settings" && !item.href.includes("/ai-") && item.href !== "/academic-calendar" && item.href !== "/timetables");
-  const aiToolsItems = filteredNavItems.filter(item => item.href.includes("/ai-") && !item.isSuperAdminOnly && (!item.featureFlag || (currentSchool?.featureSettings?.[item.featureFlag] ?? true)));
-  const masterDataItems = filteredNavItems.filter(item => item.isMasterData && !item.isSuperAdminOnly && (!item.featureFlag || (currentSchool?.featureSettings?.[item.featureFlag] ?? true)));
-  const generalSettingsItems = filteredNavItems.filter(item => !item.isSuperAdminOnly && (item.isSystemSetting || item.href === "/settings" || item.href === "/admin/user-management" || item.href === "/school-settings"));
-  const academicManagementItems = filteredNavItems.filter(item => (item.href === "/academic-calendar" || item.href === "/timetables") && !item.isSuperAdminOnly && (!item.featureFlag || (currentSchool?.featureSettings?.[item.featureFlag] ?? true)));
+  
+  const curriculumPlanningItems = filteredNavItems.filter(item =>
+    ["/lesson-plans", "/annual-programs", "/semester-programs", "/modul-ajar"].includes(item.href) && !item.isSuperAdminOnly
+  );
+
+  const academicManagementItems = filteredNavItems.filter(item =>
+    ["/academic-calendar", "/timetables"].includes(item.href) &&
+    !item.isSuperAdminOnly &&
+    (!item.featureFlag || (currentSchool?.featureSettings?.[item.featureFlag] ?? true))
+  );
+
+  const aiToolsItems = filteredNavItems.filter(item =>
+    item.href === "/ai-assistant" &&
+    !item.isSuperAdminOnly &&
+    (!item.featureFlag || (currentSchool?.featureSettings?.[item.featureFlag] ?? true))
+  );
+
+  const masterDataItems = filteredNavItems.filter(item =>
+    item.isMasterData &&
+    !item.isSuperAdminOnly &&
+    (!item.featureFlag || (currentSchool?.featureSettings?.[item.featureFlag] ?? true))
+  );
+  
+  const generalSettingsItems = filteredNavItems.filter(item =>
+    !item.isSuperAdminOnly &&
+    (
+      item.href === "/settings" ||
+      item.href === "/school-settings" ||
+      item.href === "/admin/user-management" ||
+      item.isSystemSetting 
+    )
+  );
 
 
   return (
