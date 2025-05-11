@@ -1,10 +1,9 @@
-
 "use client";
 
 import * as React from "react"; 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { GraduationCap, Sparkles, LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, BrainCircuit, Database, Users, Settings, BarChart3, MessageCircle, ShieldCheck, CheckCircle, ArrowRight, Zap, Star, Palette, Target, TrendingUp, Lightbulb, Info, HelpCircle, FileTextIcon, FileBadgeIcon } from 'lucide-react';
+import { GraduationCap, Sparkles, LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, BrainCircuit, Database, Users, Settings, BarChart3, MessageCircle, ShieldCheck, CheckCircle, ArrowRight, Zap, Star, Palette, Target, TrendingUp, Lightbulb, Info, HelpCircle, FileTextIcon, FileBadgeIcon, BadgePercent, Server, ShieldQuestion } from 'lucide-react';
 import Image from 'next/image';
 import { LandingHeader } from '@/components/landing/LandingHeader';
 import { LandingFooter } from '@/components/landing/LandingFooter';
@@ -18,6 +17,7 @@ import { AboutSection } from '@/components/landing/AboutSection';
 import { FAQSection } from '@/components/landing/FAQSection';
 import { DocumentationSection } from '@/components/landing/DocumentationSection';
 import { TermsOfServiceSection } from '@/components/landing/TermsOfServiceSection';
+import { PricingSection } from '@/components/landing/PricingSection';
 
 
 const features = [
@@ -235,6 +235,9 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
+        
+        {/* Pricing Section */}
+        <PricingSection appName={isClient ? appName : "GUMPLA AI"} />
 
         {/* About Section Preview */}
         <AboutSection />

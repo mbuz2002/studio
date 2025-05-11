@@ -1,9 +1,8 @@
-
 "use client";
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { GraduationCap, LogIn, UserPlus, Menu, Info, HelpCircle, FileTextIcon } from 'lucide-react'; // Added new icons
+import { GraduationCap, LogIn, UserPlus, Menu, Info, HelpCircle, FileTextIcon, BadgePercent, Sparkles } from 'lucide-react'; // Added BadgePercent
 import Image from 'next/image';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import React, { useState } from 'react';
@@ -14,6 +13,8 @@ interface LandingHeaderProps {
 }
 
 const navLinks = [
+  { href: "/#features", label: "Fitur", icon: Sparkles }, // Example, assuming Sparkles for features if not defined
+  { href: "/#pricing", label: "Harga", icon: BadgePercent }, // Added Pricing
   { href: "/about", label: "Tentang Kami", icon: Info },
   { href: "/documentation", label: "Dokumentasi", icon: FileTextIcon },
   { href: "/faq", label: "FAQ", icon: HelpCircle },
@@ -39,7 +40,7 @@ export function LandingHeader({ appName, appLogoUrl }: LandingHeaderProps) {
           {navLinks.map(link => (
             <Button key={link.href} asChild variant="ghost" className="text-slate-300 hover:bg-slate-700/50 hover:text-sky-300 px-3 py-1.5 text-sm rounded-lg transition-colors">
               <Link href={link.href}>
-                <link.icon className="mr-1.5 h-4 w-4" /> {link.label}
+                {link.icon && <link.icon className="mr-1.5 h-4 w-4" />} {link.label}
               </Link>
             </Button>
           ))}
@@ -81,7 +82,7 @@ export function LandingHeader({ appName, appLogoUrl }: LandingHeaderProps) {
                      <SheetClose key={link.href} asChild>
                         <Button asChild variant="ghost" className="w-full justify-start text-slate-200 hover:bg-slate-700/50 hover:text-sky-300 text-base py-3 px-3">
                           <Link href={link.href}>
-                            <link.icon className="mr-2 h-5 w-5" /> {link.label}
+                            {link.icon && <link.icon className="mr-2 h-5 w-5" />} {link.label}
                           </Link>
                         </Button>
                       </SheetClose>
@@ -112,3 +113,4 @@ export function LandingHeader({ appName, appLogoUrl }: LandingHeaderProps) {
     </header>
   );
 }
+
