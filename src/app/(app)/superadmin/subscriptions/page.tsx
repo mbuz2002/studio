@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
@@ -137,7 +136,7 @@ export default function SuperAdminSubscriptionsPage() {
             <div>
               <CardTitle className="text-2xl md:text-3xl">Manajemen Langganan & Fitur Sekolah</CardTitle>
               <CardDescription className="text-primary-foreground/90 mt-1">
-                Kelola status langganan, detail pembayaran, dan fitur aktif untuk setiap sekolah.
+                Kelola status langganan, detail pembayaran, dan fitur yang aktif untuk setiap sekolah.
               </CardDescription>
             </div>
           </div>

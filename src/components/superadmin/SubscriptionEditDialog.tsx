@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, type FormEvent } from "react";
@@ -60,7 +59,7 @@ export function SubscriptionEditDialog({ isOpen, onOpenChange, school, onSave }:
     if (isOpen) {
       setStatus(school.subscriptionStatus);
       setPaymentDetails(school.paymentDetails || "");
-      setFeatureSettings(school.featureSettings || DEFAULT_FEATURE_SETTINGS);
+      setFeatureSettings(school.featureSettings || { ...DEFAULT_FEATURE_SETTINGS });
     }
   }, [isOpen, school]);
 

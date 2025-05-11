@@ -61,7 +61,7 @@ export interface CurriculumItem {
   updatedAt: string; 
   createdByUserId?: string; 
   curriculumType: CurriculumFramework; 
-  schoolId: string; 
+  schoolId?: string; // Make schoolId optional for items that might not be school-specific or for initial demo data
 }
 
 export interface LessonPlan extends CurriculumItem {
@@ -196,7 +196,7 @@ export interface ModulAjar extends GenerateKurikulumMerdekaModuleOutput, Omit<Cu
   createdAt: string;
   updatedAt: string;
   createdByUserId?: string;
-  schoolId: string; 
+  schoolId?: string; 
 }
 
 
@@ -280,15 +280,16 @@ export interface ExportedCurriculumData {
   annualPrograms: AnnualProgram[];
   semesterPrograms: SemesterProgram[];
   modulAjar?: ModulAjar[];
-  schools: School[]; 
+  schoolProfile: SchoolProfile | null; // Updated to allow null if no profile
+  schools?: School[]; // For SuperAdmin export/import
   appUsers: User[];
   subjects?: Subject[];
   teachers?: Teacher[];
   timetables?: TimetableEntry[];
   schoolClasses?: SchoolClass[]; 
-  teachingPeriodSettings?: TeachingPeriodSettings;
+  teachingPeriodSettings?: TeachingPeriodSettings | null; // Updated to allow null
   academicEvents?: AcademicEvent[]; 
-  appSettings?: AppSettings; 
+  appSettings?: AppSettings | null; // Updated to allow null
 }
 
 
@@ -353,7 +354,7 @@ export interface Subject {
   createdAt: string;
   updatedAt: string;
   createdByUserId?: string;
-  schoolId: string; 
+  schoolId?: string; 
 }
 
 export interface Teacher {
@@ -365,7 +366,7 @@ export interface Teacher {
   createdAt: string;
   updatedAt: string;
   createdByUserId?: string;
-  schoolId: string; 
+  schoolId?: string; 
 }
 
 export interface TimeSlot {
@@ -386,7 +387,7 @@ export interface TimetableEntry {
   createdAt: string;
   updatedAt: string;
   createdByUserId?: string;
-  schoolId: string; 
+  schoolId?: string; 
 }
 
 export interface SchoolClass {
@@ -398,7 +399,7 @@ export interface SchoolClass {
   createdAt: string;
   updatedAt: string;
   createdByUserId?: string;
-  schoolId: string; 
+  schoolId?: string; 
 }
 
 
@@ -419,7 +420,7 @@ export interface AcademicEvent {
   createdAt: string;
   updatedAt: string;
   createdByUserId?: string;
-  schoolId: string; 
+  schoolId?: string; 
 }
 
 
@@ -440,3 +441,4 @@ export const CURRICULUM_STORAGE_KEY = "app-default-curriculum";
 export const THEME_STORAGE_KEY = "app-theme";
 export const ACADEMIC_EVENTS_STORAGE_KEY = "appAcademicEvents";
 export const SAAS_APP_SETTINGS_STORAGE_KEY = "appSaasSettings"; 
+

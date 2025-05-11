@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { PropsWithChildren} from 'react';
@@ -6,7 +5,7 @@ import { createContext, useContext, useState, useEffect, useCallback, useMemo } 
 import type { User, UserRole, School } from '@/types'; // Added School
 import { useRouter } from 'next/navigation';
 import { useLog } from './LogContext'; 
-import { APP_USERS_STORAGE_KEY, SCHOOLS_STORAGE_KEY } from '@/types'; // Import storage keys
+import { APP_USERS_STORAGE_KEY, SCHOOLS_STORAGE_KEY, DEFAULT_FEATURE_SETTINGS } from '@/types'; // Import storage keys
 import { initialSuperAdminUser, initialDefaultSchool, initialSchoolAdminUser, initialGuruUser, DEFAULT_SCHOOL_ID } from '@/lib/initial-data'; // Import initial data
 import { 
   initialLessonPlansData, 
@@ -52,7 +51,7 @@ const initializeDefaultData = () => {
 
   // Initialize Schools
   if (!schoolsExist) {
-    localStorage.setItem(SCHOOLS_STORAGE_KEY, JSON.stringify([initialDefaultSchool]));
+    localStorage.setItem(SCHOOLS_STORAGE_KEY, JSON.stringify([{...initialDefaultSchool, featureSettings: DEFAULT_FEATURE_SETTINGS }]));
   }
 
   // Initialize Users
@@ -140,7 +139,10 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
             if (schoolsData) {
               const schools: School[] = JSON.parse(schoolsData);
               const school = schools.find(s => s.id === parsedUser.schoolId);
-              if (school) setCurrentSchool(school);
+              if (school) {
+                 // Ensure school has featureSettings
+                setCurrentSchool({ ...school, featureSettings: school.featureSettings || DEFAULT_FEATURE_SETTINGS });
+              }
             }
           }
         }
@@ -202,7 +204,8 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
           const school = schools.find(s => s.id === userToLogin.schoolId && s.isActive);
           if (school) {
             setUser(userToLogin);
-            setCurrentSchool(school);
+             // Ensure school has featureSettings when setting currentSchool
+            setCurrentSchool({ ...school, featureSettings: school.featureSettings || DEFAULT_FEATURE_SETTINGS });
             localStorage.setItem('currentUser', JSON.stringify(userToLogin));
             addLog("INFO", `Pengguna ${email} (Peran: ${userToLogin.role}, Sekolah: ${school.name}) berhasil masuk.`, "AuthContext-Login");
             router.push('/dashboard');
@@ -226,7 +229,8 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         router.push('/superadmin/dashboard');
       } else if (roleToAttempt !== "SuperAdmin" && email === initialSchoolAdminUser.email && roleToAttempt === "Admin") {
         setUser(initialSchoolAdminUser);
-        setCurrentSchool(initialDefaultSchool);
+         // Ensure school has featureSettings when setting currentSchool
+        setCurrentSchool({ ...initialDefaultSchool, featureSettings: initialDefaultSchool.featureSettings || DEFAULT_FEATURE_SETTINGS });
         localStorage.setItem('currentUser', JSON.stringify(initialSchoolAdminUser));
         addLog("INFO", `Admin Sekolah Demo ${email} (akun default) berhasil masuk.`, "AuthContext-Login");
         router.push('/dashboard');

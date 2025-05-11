@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -11,7 +10,7 @@ import { useCurriculum } from '@/contexts/CurriculumContext';
 import { useState, useMemo } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from "@/components/ui/sheet";
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
 
 interface MobileNavItemData {
   href: string;
