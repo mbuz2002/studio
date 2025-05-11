@@ -15,7 +15,7 @@ import {z} from 'genkit';
 import type { CurriculumFramework } from '@/types';
 
 const WeeklyUnitSchema = z.object({
-  mingguKe: z.number().int().positive().describe('Nomor urut minggu dalam semester.'),
+  mingguKe: z.number().int().describe('Nomor urut minggu dalam semester.'), // Removed .positive()
   bulan: z.string().optional().describe('Nama bulan (misalnya, "Juli", "Agustus"). Opsional.'),
   materiPokokAtauTujuanPembelajaran: z.string().describe('Materi pokok/Tema (KTSP/K-13) atau Tujuan Pembelajaran spesifik (Kurikulum Merdeka) untuk minggu tersebut.'),
   alokasiWaktu: z.string().describe('Alokasi waktu untuk minggu tersebut dalam Jam Pelajaran (JP), contoh: "6 JP" atau "2 Pertemuan x 3 JP".'),
@@ -85,14 +85,14 @@ Promes harus mencakup:
     {{#if capaianPembelajaranUmumInput}}Gunakan atau adaptasi dari input yang diberikan.{{else}}Jika tidak ada input CP/SK-KD yang diberikan, buatlah satu yang sesuai.{{/if}}
 3.  **Alokasi Waktu Total Semester**: Berikan estimasi perhitungan total alokasi waktu dalam Jam Pelajaran (JP), contoh: "18 Minggu Efektif x 4 JP/Minggu = 72 JP".
 4.  **Komponen Mingguan**: Rincikan rencana pembelajaran untuk **3 sampai 5 minggu pertama** sebagai contoh. Untuk setiap minggu:
-    *   \`mingguKe\`: Nomor minggu.
-    *   \`bulan\`: Perkiraan bulan.
-    *   \`materiPokokAtauTujuanPembelajaran\`: Materi pokok/Tema (KTSP/K-13) atau Tujuan Pembelajaran spesifik (Kurikulum Merdeka) untuk minggu tersebut.
-    *   \`alokasiWaktu\`: Alokasi waktu untuk minggu itu (misal "6 JP").
-    *   \`metodeStrategi\` (opsional): Beberapa contoh metode/strategi.
-    *   \`sumberBelajar\` (opsional): Beberapa contoh sumber belajar.
-    *   \`rencanaAsesmen\` (opsional): Ide singkat untuk asesmen.
-    *   \`catatanIntegrasiP5\` (opsional): Catatan singkat tentang integrasi Profil Pelajar Pancasila (utamanya untuk Kurikulum Merdeka, atau nilai karakter untuk KTSP/K-13 jika relevan).
+    *   mingguKe: Nomor minggu (harus berupa angka integer positif).
+    *   bulan: Perkiraan bulan (opsional).
+    *   materiPokokAtauTujuanPembelajaran: Materi pokok/Tema (KTSP/K-13) atau Tujuan Pembelajaran spesifik (Kurikulum Merdeka) untuk minggu tersebut.
+    *   alokasiWaktu: Alokasi waktu untuk minggu itu (misal "6 JP").
+    *   metodeStrategi (opsional): Beberapa contoh metode/strategi.
+    *   sumberBelajar (opsional): Beberapa contoh sumber belajar.
+    *   rencanaAsesmen (opsional): Ide singkat untuk asesmen.
+    *   catatanIntegrasiP5 (opsional): Catatan singkat tentang integrasi Profil Pelajar Pancasila (utamanya untuk Kurikulum Merdeka, atau nilai karakter untuk KTSP/K-13 jika relevan).
 
 Pastikan output yang dihasilkan sesuai dengan skema JSON yang diharapkan dan menggunakan Bahasa Indonesia yang baik dan benar.
 `,
@@ -109,4 +109,5 @@ const generateSemesterProgramFlow = ai.defineFlow(
     return output!;
   }
 );
+
 
