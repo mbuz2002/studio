@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
@@ -38,7 +37,43 @@ const getEventTypeColor = (type: AcademicEventType): string => {
   return eventTypes.find(et => et.value === type)?.color || "bg-gray-500";
 };
 
-const initialAcademicEvents: AcademicEvent[] = [];
+// Example of initial national holidays for the current year (adjust as needed for demo)
+const currentYear = new Date().getFullYear();
+const initialAcademicEvents: AcademicEvent[] = [
+  {
+    id: "holiday-1",
+    title: "Hari Kemerdekaan Republik Indonesia",
+    date: `${currentYear}-08-17`,
+    type: "Libur Nasional",
+    isNationalHoliday: true,
+    description: "Peringatan Proklamasi Kemerdekaan Indonesia.",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    createdByUserId: "system-generated",
+  },
+  {
+    id: "holiday-2",
+    title: "Hari Raya Natal",
+    date: `${currentYear}-12-25`,
+    type: "Libur Nasional",
+    isNationalHoliday: true,
+    description: "Peringatan Hari Kelahiran Yesus Kristus.",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    createdByUserId: "system-generated",
+  },
+  {
+    id: "holiday-3",
+    title: "Tahun Baru Masehi",
+    date: `${currentYear}-01-01`, // Could be next year's if current is late Dec
+    type: "Libur Nasional",
+    isNationalHoliday: true,
+    description: "Pergantian Tahun Baru Masehi.",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    createdByUserId: "system-generated",
+  }
+];
 
 const generatePrintableCalendarTableHtml = (
   month: Date,
@@ -221,7 +256,7 @@ export default function AcademicCalendarPage() {
 
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [events, setEvents] = useState<AcademicEvent[]>(initialAcademicEvents);
+  const [events, setEvents] = useState<AcademicEvent[]>([]); // Initialized as empty, will load from localStorage or use defaults
   const [isClient, setIsClient] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<AcademicEvent | null>(null);
@@ -238,17 +273,36 @@ export default function AcademicCalendarPage() {
     if (user && !authLoading) {
         addLog("INFO", `Pengguna ${user.email} mengakses halaman Kalender Pendidikan.`, "AcademicCalendarPage");
     }
-    const storedEvents = localStorage.getItem(ACADEMIC_EVENTS_STORAGE_KEY);
-    if (storedEvents) {
+    const storedEventsString = localStorage.getItem(ACADEMIC_EVENTS_STORAGE_KEY);
+    let loadedEvents: AcademicEvent[] = [];
+    if (storedEventsString) {
       try {
-        setEvents(JSON.parse(storedEvents).map((e: AcademicEvent) => ({...e, date: e.date ? format(parseISO(e.date), 'yyyy-MM-dd') : ''})));
+        loadedEvents = JSON.parse(storedEventsString).map((e: AcademicEvent) => ({
+            ...e, 
+            date: e.date ? format(parseISO(e.date), 'yyyy-MM-dd') : '',
+            endDate: e.endDate ? format(parseISO(e.endDate), 'yyyy-MM-dd') : undefined,
+        }));
       } catch (error) {
         console.error("Gagal memuat acara dari localStorage:", error);
-        setEvents(initialAcademicEvents);
+        // If parsing fails, consider falling back to initialAcademicEvents or an empty array
+        loadedEvents = [...initialAcademicEvents]; // Merge with predefined, could lead to duplicates if not handled
       }
     } else {
-      setEvents(initialAcademicEvents);
+       // If nothing in localStorage, use the predefined initial events
+       loadedEvents = [...initialAcademicEvents];
+       localStorage.setItem(ACADEMIC_EVENTS_STORAGE_KEY, JSON.stringify(loadedEvents));
     }
+    
+    // Simple merge: add predefined if not already present by ID (or a more complex merge logic)
+    const finalEvents = [...loadedEvents];
+    initialAcademicEvents.forEach(initialEvent => {
+        if (!finalEvents.some(e => e.id === initialEvent.id && e.createdByUserId === "system-generated")) {
+            finalEvents.push(initialEvent);
+        }
+    });
+    setEvents(finalEvents);
+
+
     const storedProfile = localStorage.getItem(SCHOOL_PROFILE_STORAGE_KEY);
     if (storedProfile) {
         try {
@@ -507,7 +561,7 @@ export default function AcademicCalendarPage() {
                             </p>
                              <Badge variant="outline" className="text-xs mt-1">{event.type}</Badge>
                           </div>
-                           {canManageEvents && (
+                           {canManageEvents && event.createdByUserId !== "system-generated" && ( // Prevent editing/deleting system-generated holidays
                               <div className="flex gap-1 flex-shrink-0">
                                 <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditEventClick(event)}>
                                   <Edit2 className="h-3.5 w-3.5" />
@@ -608,4 +662,5 @@ export default function AcademicCalendarPage() {
     </div>
   );
 }
+
 

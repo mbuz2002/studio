@@ -1,5 +1,4 @@
 
-
 export type UserRole = "Admin" | "KepalaSekolah" | "WakaKurikulum" | "TataUsaha" | "Guru";
 export type CurriculumFramework = "Kurikulum Merdeka" | "K-13" | "KTSP 2006";
 export type EducationLevel = "PAUD" | "SD/MI" | "SMP/MTs" | "SMA/MA" | "SMK/MAK" | "SLB" | "PKBM/Kesetaraan";
@@ -416,6 +415,7 @@ export const APP_USERS_STORAGE_KEY = "appUsers";
 export const CURRICULUM_STORAGE_KEY = "app-default-curriculum";
 export const THEME_STORAGE_KEY = "app-theme";
 export const ACADEMIC_EVENTS_STORAGE_KEY = "appAcademicEvents"; // New
+
 
 
 
