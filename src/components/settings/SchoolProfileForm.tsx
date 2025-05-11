@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import type { SchoolProfile, EducationLevel } from "@/types";
 import { SCHOOL_PROFILE_STORAGE_KEY } from "@/types";
 import { useToast } from "@/hooks/use-toast";
-import { Building, Save, UploadCloud, Link2, Info } from "lucide-react";
+import { Building, Save, UploadCloud, Link2, Info, Image as ImageIcon } from "lucide-react"; // Added ImageIcon
 import { useLog } from "@/contexts/LogContext";
 import { useAuth } from "@/contexts/AuthContext";
 import Image from "next/image";
