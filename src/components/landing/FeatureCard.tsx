@@ -1,6 +1,7 @@
 
 "use client";
 
+import * as React from "react"; // Added import for React
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface FeatureCardProps {
