@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, type FormEvent, useCallback } from "react";
@@ -189,11 +190,12 @@ export default function NewAIKurikulumMerdekaModulePage() {
                 ${schoolProfile.logoUrl ? `<img src="${schoolProfile.logoUrl}" alt="Logo Sekolah" class="logo-sekolah" data-ai-hint="school logo">` : '<div class="logo-placeholder">Logo Sekolah</div>'}
                 <div class="kop-text">
                   <h1>${schoolProfile.namaSekolah || 'Nama Sekolah Belum Diatur'}</h1>
+                  ${schoolProfile.jenjangPendidikan ? `<p class="school-level">${schoolProfile.jenjangPendidikan}</p>` : ''}
                   <p class="kop-address">${schoolProfile.alamat || 'Alamat Sekolah Belum Diatur'}</p>
                   <p class="kop-contact">
-                    ${schoolProfile.npsn ? `NPSN: ${schoolProfile.npsn}` : ''}
-                    ${schoolProfile.nomorTelepon ? `${schoolProfile.npsn ? ' | ' : ''}Telp: ${schoolProfile.nomorTelepon}` : ''}
-                    ${schoolProfile.emailSekolah ? `${(schoolProfile.npsn || schoolProfile.nomorTelepon) ? ' | ' : ''}Email: ${schoolProfile.emailSekolah}` : ''}
+                    ${schoolProfile.npsn ? `<span>NPSN: ${schoolProfile.npsn}</span>` : ''}
+                    ${schoolProfile.nomorTelepon ? `<span>${schoolProfile.npsn ? ' | ' : ''}Telp: ${schoolProfile.nomorTelepon}</span>` : ''}
+                    ${schoolProfile.emailSekolah ? `<span>${(schoolProfile.npsn || schoolProfile.nomorTelepon) ? ' | ' : ''}Email: ${schoolProfile.emailSekolah}</span>` : ''}
                   </p>
                 </div>
               </div>
@@ -333,14 +335,27 @@ export default function NewAIKurikulumMerdekaModulePage() {
               margin: 0.75in; 
             }
             body { font-family: 'Times New Roman', Times, serif; margin: 0; line-height: 1.4; font-size: 11pt; color: #333; }
-            .kop-surat { display: flex; align-items: center; margin-bottom: 15px; border-bottom: 4px double black; padding-bottom: 10px; min-height: 80px; }
-            .logo-sekolah { max-height: 75px; max-width: 75px; margin-right: 15px; object-fit: contain; }
-            .logo-placeholder { width: 75px; height: 75px; border: 1px dashed #999; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 9pt; color: #666; margin-right: 15px;}
+            .kop-surat { 
+              display: flex; 
+              align-items: center; 
+              border-bottom: 3px solid black; 
+              padding-bottom: 8px; 
+              margin-bottom: 5px; 
+            }
+            .kop-surat::after { 
+              content: '';
+              display: block;
+              border-bottom: 1px solid black;
+              margin-top: 3px; 
+            }
+            .logo-sekolah { max-height: 80px; max-width: 80px; margin-right: 20px; object-fit: contain; }
+            .logo-placeholder { width: 80px; height: 80px; border: 1px dashed #999; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 9pt; color: #666; margin-right: 20px;}
             .kop-text { text-align: center; flex-grow: 1; }
-            .kop-text h1 { font-size: 16pt; margin: 0 0 2px 0; font-weight: bold; text-transform: uppercase; }
-            .kop-text p { font-size: 10pt; margin: 1px 0; }
-            .kop-text .kop-address { font-size: 9pt; }
-            .kop-text .kop-contact { font-size: 9pt; }
+            .kop-text h1 { font-size: 18pt; margin: 0 0 3px 0; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+            .kop-text .school-level { font-size: 11pt; margin: 0 0 5px 0; font-weight: normal; text-transform: uppercase; }
+            .kop-text p.kop-address { font-size: 10pt; margin: 2px 0; }
+            .kop-text p.kop-contact { font-size: 9pt; margin: 2px 0; }
+            .kop-contact span { margin: 0 5px; }
             .modul-main-title { font-size: 14pt; margin-top: 15px; margin-bottom: 15px; font-weight: bold; text-transform: uppercase; text-align: center; }
             .info-table { width: 100%; margin-bottom: 15px; font-size: 11pt; border-collapse: collapse;}
             .info-table td { padding: 3px 0px; vertical-align: top;}
@@ -363,7 +378,8 @@ export default function NewAIKurikulumMerdekaModulePage() {
             @media print {
               body { margin: 0.75in; font-size: 11pt; } 
               .print-button-container { display: none; }
-              .kop-surat { border-bottom: 4px double black !important; } 
+              .kop-surat { border-bottom: 3px solid black !important; } /* Ensure this is applied */
+              .kop-surat::after { border-bottom: 1px solid black !important; } /* Ensure this is applied */
               h1, h2, h3, h4, h5, table, ul, ol, p, div { page-break-inside: avoid; }
               h3, h4, h5 { page-break-after: avoid; }
             }
@@ -739,3 +755,4 @@ export default function NewAIKurikulumMerdekaModulePage() {
     </div>
   );
 }
+

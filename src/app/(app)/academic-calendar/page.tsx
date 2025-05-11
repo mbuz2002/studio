@@ -52,16 +52,59 @@ const generatePrintableCalendarTableHtml = (
 
   let html = `<html><head><title>Kalender Pendidikan - ${monthName}</title><style>
     body { font-family: 'Times New Roman', Times, serif; margin: 0.5in; font-size: 10pt; }
-    .kop-surat { display: flex; align-items: center; margin-bottom: 15px; border-bottom: 4px double black; padding-bottom: 10px; min-height: 70px; }
-    .logo-sekolah { max-height: 65px; max-width: 65px; margin-right: 15px; object-fit: contain; }
-    .logo-placeholder { width: 65px; height: 65px; border: 1px dashed #999; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 8pt; color: #666; margin-right: 15px;}
+    .kop-surat { 
+      display: flex; 
+      align-items: center; 
+      border-bottom: 3px solid black; /* Thicker single line */
+      padding-bottom: 8px; 
+      margin-bottom: 5px; /* Reduced margin */
+    }
+    .kop-surat::after { /* Second line for double border effect */
+      content: '';
+      display: block;
+      border-bottom: 1px solid black;
+      margin-top: 3px; /* Space between the two lines */
+    }
+    .logo-sekolah { 
+      max-height: 80px; /* Increased size */
+      max-width: 80px; /* Increased size */
+      margin-right: 20px; /* Increased margin */
+      object-fit: contain; 
+    }
+    .logo-placeholder { 
+      width: 80px; height: 80px; 
+      border: 1px dashed #999; 
+      display: flex; align-items: center; justify-content: center; 
+      text-align: center; font-size: 9pt; color: #666; margin-right: 20px;
+    }
     .kop-text { text-align: center; flex-grow: 1; }
-    .kop-text h1 { font-size: 14pt; margin: 0 0 2px 0; font-weight: bold; text-transform: uppercase; }
-    .kop-text p { font-size: 9pt; margin: 1px 0; }
-    h2 { text-align: center; font-size: 14pt; margin-bottom: 10px; text-transform: uppercase; }
+    .kop-text h1 { /* School Name */
+      font-size: 18pt; /* Increased font size */
+      margin: 0 0 3px 0; 
+      font-weight: bold; 
+      text-transform: uppercase; 
+      letter-spacing: 0.5px;
+    }
+    .kop-text .school-level { /* Jenjang Pendidikan */
+      font-size: 11pt;
+      margin: 0 0 5px 0;
+      font-weight: normal;
+      text-transform: uppercase;
+    }
+    .kop-text p.address { /* Address */
+      font-size: 10pt; 
+      margin: 2px 0; 
+    }
+    .kop-text p.contact-info { /* NPSN, Telp, Email */
+      font-size: 9pt;
+      margin: 2px 0;
+    }
+    .contact-info span { margin: 0 5px; } /* Spacing for contact items */
+
+    h2 { text-align: center; font-size: 14pt; margin-bottom: 15px; text-transform: uppercase; font-weight: bold;}
     table { width: 100%; border-collapse: collapse; margin-top: 15px; table-layout: fixed; }
     th, td { border: 1px solid black; padding: 4px; text-align: left; vertical-align: top; height: 70px; word-wrap: break-word; }
-    th { background-color: #f2f2f2; text-align: center; font-weight: bold; }
+    th { background-color: #e9e9e9; text-align: center; font-weight: bold; } /* Light gray background for th */
     td div.day-number { font-weight: bold; margin-bottom: 3px; font-size: 9pt; }
     td ul { margin: 0; padding-left: 12px; font-size: 8pt; list-style-type: none; }
     td li { margin-bottom: 1px; white-space: normal; }
@@ -69,8 +112,8 @@ const generatePrintableCalendarTableHtml = (
     .event-semester-holiday { color: darkorange; }
     .event-active-semester-text { font-style: italic; color: #228B22; } /* ForestGreen */
     td.event-active-semester-bg { background-color: #e8f5e9; } /* Light green background for cell */
-    .weekend { background-color: #f0f0f0; }
-    .other-month { background-color: #f9f9f9; color: #ccc; }
+    .weekend { background-color: #f5f5f5; } /* Lighter weekend color */
+    .other-month { background-color: #fafafa; color: #ccc; } /* Lighter other month color */
     .signature-section { margin-top: 30px; display: flex; justify-content: space-between; page-break-inside: avoid; }
     .signature-block { width: 45%; text-align: center; }
     .signature-name { font-weight: bold; text-decoration: underline; }
@@ -81,12 +124,13 @@ const generatePrintableCalendarTableHtml = (
     html += `<div class="kop-surat">
       ${schoolProfile.logoUrl ? `<img src="${schoolProfile.logoUrl}" alt="Logo Sekolah" class="logo-sekolah" data-ai-hint="school logo">` : '<div class="logo-placeholder">Logo Sekolah</div>'}
       <div class="kop-text">
-        <h1>${schoolProfile.namaSekolah || 'Nama Sekolah'}</h1>
-        <p>${schoolProfile.alamat || 'Alamat Sekolah'}</p>
-        <p>
-          ${schoolProfile.npsn ? `NPSN: ${schoolProfile.npsn}` : ''}
-          ${schoolProfile.nomorTelepon ? `${schoolProfile.npsn ? ' | ' : ''}Telp: ${schoolProfile.nomorTelepon}` : ''}
-          ${schoolProfile.emailSekolah ? `${(schoolProfile.npsn || schoolProfile.nomorTelepon) ? ' | ' : ''}Email: ${schoolProfile.emailSekolah}` : ''}
+        <h1>${schoolProfile.namaSekolah || 'Nama Sekolah Belum Diatur'}</h1>
+        ${schoolProfile.jenjangPendidikan ? `<p class="school-level">${schoolProfile.jenjangPendidikan}</p>` : ''}
+        <p class="address">${schoolProfile.alamat || 'Alamat Sekolah Belum Diatur'}</p>
+        <p class="contact-info">
+          ${schoolProfile.npsn ? `<span>NPSN: ${schoolProfile.npsn}</span>` : ''}
+          ${schoolProfile.nomorTelepon ? `<span>${schoolProfile.npsn ? ' | ' : ''}Telp: ${schoolProfile.nomorTelepon}</span>` : ''}
+          ${schoolProfile.emailSekolah ? `<span>${(schoolProfile.npsn || schoolProfile.nomorTelepon) ? ' | ' : ''}Email: ${schoolProfile.emailSekolah}</span>` : ''}
         </p>
       </div>
     </div>`;
@@ -98,22 +142,20 @@ const generatePrintableCalendarTableHtml = (
   const firstOfMonth = startOfMonth(month);
   const daysInCurrentMonth = getDaysInMonth(month);
   
-  // Adjust to start week on Monday (0 for Sunday, 1 for Monday, etc.)
-  // getDay() returns 0 for Sunday.
-  let dayOfWeekOfFirst = getDay(firstOfMonth); // 0 for Sun, 1 for Mon
-  let startingOffset = (dayOfWeekOfFirst === 0) ? 6 : dayOfWeekOfFirst - 1; // 0 for Mon, ..., 6 for Sun
+  let dayOfWeekOfFirst = getDay(firstOfMonth); 
+  let startingOffset = (dayOfWeekOfFirst === 0) ? 6 : dayOfWeekOfFirst - 1; 
 
   let dayCounter = 1;
-  for (let i = 0; i < 6; i++) { // Max 6 weeks for a month
+  for (let i = 0; i < 6; i++) { 
     html += `<tr>`;
-    for (let j = 0; j < 7; j++) { // 7 days a week (Mon to Sun)
+    for (let j = 0; j < 7; j++) { 
       if ((i === 0 && j < startingOffset) || dayCounter > daysInCurrentMonth) {
         html += `<td class="other-month"></td>`;
       } else {
         const currentDate = new Date(year, monthIndex, dayCounter);
         const formattedCurrentDate = format(currentDate, "yyyy-MM-dd");
         let cellClass = '';
-        if (j === 5 || j === 6) cellClass += ' weekend'; // Saturday or Sunday
+        if (j === 5 || j === 6) cellClass += ' weekend'; 
 
         const dayEvents = events.filter(event => {
           const eventStartDate = format(parseISO(event.date), "yyyy-MM-dd");
@@ -339,18 +381,14 @@ export default function AcademicCalendarPage() {
       fontWeight: 'bold',
     },
     semesterHoliday: {
-      backgroundColor: 'hsl(0 75% 65%)', 
-      color: 'hsl(var(--destructive-foreground))',
+      backgroundColor: 'hsla(30, 90%, 60%, 1)', // A distinct orange color
+      color: 'hsl(var(--primary-foreground))', // White text
       borderRadius: '8px',
       fontWeight: 'bold',
     },
     activeSemesterPeriod: {
-      backgroundColor: 'hsla(var(--accent-hsl), 0.15)', // Light accent color, assuming --accent-hsl is defined in globals.css
-      // Example: if accent is 250 65% 60%, then accent-hsl would be 250 65% 60%
-      // To use this, ensure your globals.css has: --accent-hsl: 250 65% 60%; (or your chosen accent HSL values)
-      // Alternatively, use a direct color: backgroundColor: 'rgba(128, 90, 213, 0.15)' if accent is a violet-like color
-      // For a green: backgroundColor: 'rgba(76, 175, 80, 0.15)',
-      borderRadius: '0px', // For continuous range appearance
+      backgroundColor: 'hsla(var(--accent-hsl), 0.15)', 
+      borderRadius: '0px', 
     }
   };
 
