@@ -2,7 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import { GraduationCap, Github, Linkedin, Twitter, MessageCircle, Phone, Mail } from 'lucide-react';
+import { GraduationCap, Github, Linkedin, Twitter, MessageCircle, Phone, Mail, Info, HelpCircle, FileTextIcon, FileBadgeIcon } from 'lucide-react'; // Added new icons
 
 interface LandingFooterProps {
   appName: string;
@@ -32,10 +32,11 @@ export function LandingFooter({ appName }: LandingFooterProps) {
           <div>
             <h5 className="text-lg font-semibold text-slate-200 mb-4 tracking-wide">Tautan Cepat</h5>
             <ul className="space-y-2 text-sm font-light">
-              <li><Link href="#features" className="hover:text-sky-400 transition-colors duration-200">Fitur Unggulan</Link></li>
+              <li><Link href="/#features" className="hover:text-sky-400 transition-colors duration-200">Fitur Unggulan</Link></li>
+              <li><Link href="/about" className="hover:text-sky-400 transition-colors duration-200 flex items-center gap-1.5"><Info size={16}/> Tentang Kami</Link></li>
+              <li><Link href="/documentation" className="hover:text-sky-400 transition-colors duration-200 flex items-center gap-1.5"><FileTextIcon size={16}/> Dokumentasi</Link></li>
               <li><Link href="/signup" className="hover:text-sky-400 transition-colors duration-200">Pendaftaran</Link></li>
               <li><Link href="/login" className="hover:text-sky-400 transition-colors duration-200">Masuk Akun</Link></li>
-              <li><Link href="https://wa.me/6282131100121?text=Halo%2C%20saya%20ingin%20bertanya%20tentang%20GUMPLA%20AI." target="_blank" rel="noopener noreferrer" className="hover:text-sky-400 transition-colors duration-200">Kontak (WhatsApp)</Link></li>
             </ul>
           </div>
 
@@ -52,20 +53,15 @@ export function LandingFooter({ appName }: LandingFooterProps) {
                     <a href="https://wa.me/6282131100121" target="_blank" rel="noopener noreferrer" className="hover:text-sky-400 transition-colors duration-200">+62 821-3110-0121</a>
                 </li>
             </ul>
-            {/* Social Media Icons - Placeholder */}
-            {/* <div className="flex space-x-4 mt-5">
-              <a href="#" className="hover:text-sky-400 transition-colors"><Github size={22}/></a>
-              <a href="#" className="hover:text-sky-400 transition-colors"><Linkedin size={22}/></a>
-            </div> */}
           </div>
 
-            {/* Legal/More Links - Placeholder */}
+            {/* Legal/More Links */}
           <div className="lg:text-right">
             <h5 className="text-lg font-semibold text-slate-200 mb-4 tracking-wide">Informasi</h5>
             <ul className="space-y-2 text-sm font-light">
+              <li><Link href="/faq" className="hover:text-sky-400 transition-colors duration-200 flex items-center gap-1.5 lg:justify-end"><HelpCircle size={16}/> FAQ</Link></li>
+              <li><Link href="/terms-of-service" className="hover:text-sky-400 transition-colors duration-200 flex items-center gap-1.5 lg:justify-end"><FileBadgeIcon size={16}/> Syarat & Ketentuan</Link></li>
               <li><Link href="#" className="hover:text-sky-400 transition-colors duration-200">Kebijakan Privasi</Link></li>
-              <li><Link href="#" className="hover:text-sky-400 transition-colors duration-200">Syarat & Ketentuan</Link></li>
-              <li><Link href="#" className="hover:text-sky-400 transition-colors duration-200">FAQ</Link></li>
             </ul>
           </div>
 

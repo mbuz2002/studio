@@ -1,10 +1,10 @@
 
 "use client";
 
-import * as React from "react"; // Added this line
+import * as React from "react"; 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { GraduationCap, Sparkles, LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, BrainCircuit, Database, Users, Settings, BarChart3, MessageCircle, ShieldCheck, CheckCircle, ArrowRight, Zap, Star, Palette, Target, TrendingUp, Lightbulb } from 'lucide-react';
+import { GraduationCap, Sparkles, LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, BrainCircuit, Database, Users, Settings, BarChart3, MessageCircle, ShieldCheck, CheckCircle, ArrowRight, Zap, Star, Palette, Target, TrendingUp, Lightbulb, Info, HelpCircle, FileTextIcon, FileBadgeIcon } from 'lucide-react';
 import Image from 'next/image';
 import { LandingHeader } from '@/components/landing/LandingHeader';
 import { LandingFooter } from '@/components/landing/LandingFooter';
@@ -14,6 +14,11 @@ import type { AppSettings } from '@/types';
 import { SAAS_APP_SETTINGS_STORAGE_KEY } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { AboutSection } from '@/components/landing/AboutSection';
+import { FAQSection } from '@/components/landing/FAQSection';
+import { DocumentationSection } from '@/components/landing/DocumentationSection';
+import { TermsOfServiceSection } from '@/components/landing/TermsOfServiceSection';
+
 
 const features = [
   {
@@ -89,22 +94,22 @@ const testimonials = [
 
 const benefits = [
   {
-    icon: <Zap className="h-8 w-8 text-sky-400" />, // Removed animate-subtle-bob as it's applied via React.cloneElement
+    icon: <Zap className="h-8 w-8 text-sky-400" />, 
     title: "Efisiensi Waktu Maksimal",
     description: "Otomatisasi tugas rutin perencanaan dan pembuatan dokumen kurikulum, bebaskan waktu Anda untuk fokus pada pengajaran."
   },
   {
-    icon: <TrendingUp className="h-8 w-8 text-emerald-400" />, // Removed animate-subtle-bob
+    icon: <TrendingUp className="h-8 w-8 text-emerald-400" />, 
     title: "Peningkatan Kualitas Pembelajaran",
     description: "Buat materi ajar yang lebih relevan, inovatif, dan sesuai dengan kebutuhan siswa berkat bantuan AI dan analisis data."
   },
   {
-    icon: <Lightbulb className="h-8 w-8 text-amber-400" />, // Removed animate-subtle-bob
+    icon: <Lightbulb className="h-8 w-8 text-amber-400" />, 
     title: "Inovasi Berbasis AI",
     description: "Manfaatkan teknologi AI terkini untuk mendapatkan ide-ide segar, saran perbaikan, dan otomatisasi cerdas dalam setiap aspek kurikulum."
   },
   {
-    icon: <CheckCircle className="h-8 w-8 text-teal-400" />, // Removed animate-subtle-bob
+    icon: <CheckCircle className="h-8 w-8 text-teal-400" />, 
     title: "Kepatuhan Kurikulum Terjamin",
     description: "Pastikan semua dokumen Anda (RPP, ATP, Modul Ajar) selalu sesuai dengan standar kurikulum terbaru (Merdeka, K-13, KTSP)."
   }
@@ -167,7 +172,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Introduction Section */}
+        {/* Introduction Section (Simplified) */}
         <section className="py-16 md:py-24 bg-slate-800/50">
           <div className="container mx-auto px-6">
             <div className="text-center max-w-3xl mx-auto">
@@ -214,7 +219,6 @@ export default function LandingPage() {
           </div>
         </section>
 
-
         {/* Features Section */}
         <section id="features" className="py-16 md:py-24 bg-slate-800/50">
           <div className="container mx-auto px-6">
@@ -231,6 +235,18 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
+
+        {/* About Section Preview */}
+        <AboutSection />
+
+        {/* FAQ Section Preview */}
+        <FAQSection />
+
+        {/* Documentation Section Preview */}
+        <DocumentationSection />
+        
+        {/* Terms of Service Section Preview */}
+        <TermsOfServiceSection />
 
         {/* Testimonials Section */}
         <section className="py-16 md:py-24 bg-slate-900">

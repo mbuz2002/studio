@@ -1,8 +1,9 @@
+
 "use client";
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { GraduationCap, LogIn, UserPlus, Menu } from 'lucide-react';
+import { GraduationCap, LogIn, UserPlus, Menu, Info, HelpCircle, FileTextIcon } from 'lucide-react'; // Added new icons
 import Image from 'next/image';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import React, { useState } from 'react';
@@ -11,6 +12,12 @@ interface LandingHeaderProps {
   appName: string;
   appLogoUrl: string | null;
 }
+
+const navLinks = [
+  { href: "/about", label: "Tentang Kami", icon: Info },
+  { href: "/documentation", label: "Dokumentasi", icon: FileTextIcon },
+  { href: "/faq", label: "FAQ", icon: HelpCircle },
+];
 
 export function LandingHeader({ appName, appLogoUrl }: LandingHeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -28,7 +35,14 @@ export function LandingHeader({ appName, appLogoUrl }: LandingHeaderProps) {
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden sm:flex items-center gap-2 sm:gap-3">
+        <nav className="hidden sm:flex items-center gap-1 sm:gap-2">
+          {navLinks.map(link => (
+            <Button key={link.href} asChild variant="ghost" className="text-slate-300 hover:bg-slate-700/50 hover:text-sky-300 px-3 py-1.5 text-sm rounded-lg transition-colors">
+              <Link href={link.href}>
+                <link.icon className="mr-1.5 h-4 w-4" /> {link.label}
+              </Link>
+            </Button>
+          ))}
           <Button asChild variant="ghost" className="text-slate-300 hover:bg-slate-700/50 hover:text-sky-300 px-3 sm:px-4 py-1.5 text-sm sm:text-base rounded-lg transition-colors">
             <Link href="/login">
               <LogIn className="mr-1.5 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5" /> Masuk
@@ -62,16 +76,25 @@ export function LandingHeader({ appName, appLogoUrl }: LandingHeaderProps) {
                     <span className="text-xl font-bold tracking-tight text-slate-100">{appName}</span>
                   </Link>
                 </div>
-                <nav className="flex flex-col gap-3 p-6 flex-grow">
+                <nav className="flex flex-col gap-2 p-4 flex-grow">
+                  {navLinks.map(link => (
+                     <SheetClose key={link.href} asChild>
+                        <Button asChild variant="ghost" className="w-full justify-start text-slate-200 hover:bg-slate-700/50 hover:text-sky-300 text-base py-3 px-3">
+                          <Link href={link.href}>
+                            <link.icon className="mr-2 h-5 w-5" /> {link.label}
+                          </Link>
+                        </Button>
+                      </SheetClose>
+                  ))}
                   <SheetClose asChild>
-                    <Button asChild variant="ghost" className="w-full justify-start text-slate-200 hover:bg-slate-700/50 hover:text-sky-300 text-base py-3">
+                    <Button asChild variant="ghost" className="w-full justify-start text-slate-200 hover:bg-slate-700/50 hover:text-sky-300 text-base py-3 px-3">
                       <Link href="/login">
                         <LogIn className="mr-2 h-5 w-5" /> Masuk
                       </Link>
                     </Button>
                   </SheetClose>
                   <SheetClose asChild>
-                    <Button asChild className="w-full justify-start bg-sky-500 hover:bg-sky-600 text-white text-base py-3">
+                    <Button asChild className="w-full justify-start bg-sky-500 hover:bg-sky-600 text-white text-base py-3 px-3">
                       <Link href="/signup">
                         <UserPlus className="mr-2 h-5 w-5" /> Daftar
                       </Link>
