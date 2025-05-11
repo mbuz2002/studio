@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
@@ -7,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CalendarCheck, PlusCircle, Edit2, Trash2, AlertCircle } from "lucide-react";
-import type { DateRange, DayPickerProps, DayProps, SelectSingleEventHandler } from "react-day-picker";
-import { format, parseISO, isValid, startOfMonth, endOfMonth } from 'date-fns';
+import type { DateRange, DayPickerProps, SelectSingleEventHandler } from "react-day-picker";
+import { format, parseISO, isValid } from 'date-fns';
 import { id as indonesianLocale } from 'date-fns/locale';
 import type { AcademicEvent, AcademicEventType, UserRole } from "@/types";
 import { ACADEMIC_EVENTS_STORAGE_KEY } from "@/types";
@@ -117,6 +116,10 @@ export default function AcademicCalendarPage() {
       toast({ title: "Data Tidak Lengkap", description: "Judul, tanggal, dan jenis acara wajib diisi.", variant: "destructive" });
       return;
     }
+    if (newEventData.endDate && newEventData.date && newEventData.endDate < newEventData.date) {
+      toast({ title: "Tanggal Tidak Valid", description: "Tanggal selesai tidak boleh sebelum tanggal mulai.", variant: "destructive" });
+      return;
+    }
 
     let updatedEvents;
     if (editingEvent) {
@@ -133,7 +136,7 @@ export default function AcademicCalendarPage() {
         endDate: newEventData.endDate ? format(parseISO(newEventData.endDate), "yyyy-MM-dd") : undefined,
         type: newEventData.type!,
         description: newEventData.description,
-        isNationalHoliday: newEventData.isNationalHoliday,
+        isNationalHoliday: newEventData.type === 'Libur Nasional' ? newEventData.isNationalHoliday : undefined,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         createdByUserId: user?.id,
@@ -149,23 +152,68 @@ export default function AcademicCalendarPage() {
   };
   
   const eventDateStrings = useMemo(() => events.map(event => event.date), [events]);
-  const eventDates = useMemo(() => eventDateStrings.map(dateStr => parseISO(dateStr)).filter(date => isValid(date)), [eventDateStrings]);
+  const eventDatesForBorder = useMemo(() => eventDateStrings.map(dateStr => parseISO(dateStr)).filter(date => isValid(date)), [eventDateStrings]);
+
+  const getDatesAndRangesForType = useCallback((eventType: AcademicEventType): (Date | DateRange)[] => {
+    const datesAndRanges: (Date | DateRange)[] = [];
+    events.filter(event => event.type === eventType).forEach(event => {
+      const startDate = parseISO(event.date);
+      if (isValid(startDate)) {
+        if (event.endDate) {
+          const endDateValue = parseISO(event.endDate);
+          if (isValid(endDateValue) && endDateValue >= startDate) {
+            datesAndRanges.push({ from: startDate, to: endDateValue });
+          } else {
+            datesAndRanges.push(startDate); 
+          }
+        } else {
+          datesAndRanges.push(startDate);
+        }
+      }
+    });
+    return datesAndRanges;
+  }, [events]);
+
+  const nationalHolidayDates = useMemo(() => getDatesAndRangesForType("Libur Nasional"), [getDatesAndRangesForType]);
+  const semesterHolidayDates = useMemo(() => getDatesAndRangesForType("Libur Semester"), [getDatesAndRangesForType]);
+
 
   const modifiers: DayPickerProps['modifiers'] = {
-    eventDay: eventDates,
+    eventDay: eventDatesForBorder, 
+    nationalHoliday: nationalHolidayDates,
+    semesterHoliday: semesterHolidayDates,
   };
 
   const modifiersStyles: DayPickerProps['modifiersStyles'] = {
-    eventDay: {
+    eventDay: { // General event days
       border: `2px solid hsl(var(--primary))`,
-      borderRadius: '50%',
+      borderRadius: '8px',
+    },
+    nationalHoliday: {
+      backgroundColor: 'hsl(var(--destructive))', 
+      color: 'hsl(var(--destructive-foreground))', 
+      borderRadius: '8px',
+      fontWeight: 'bold',
+    },
+    semesterHoliday: {
+      backgroundColor: 'hsl(0 75% 65%)', // Slightly lighter red for semester holidays
+      color: 'hsl(var(--destructive-foreground))',
+      borderRadius: '8px',
+      fontWeight: 'bold',
     },
   };
 
   const eventsOnSelectedDate = useMemo(() => {
     if (!selectedDate) return [];
     const formattedSelectedDate = format(selectedDate, "yyyy-MM-dd");
-    return events.filter(event => event.date === formattedSelectedDate || (event.endDate && formattedSelectedDate >= event.date && formattedSelectedDate <= event.endDate));
+    return events.filter(event => {
+      const eventStartDate = format(parseISO(event.date), "yyyy-MM-dd");
+      if (event.endDate) {
+        const eventEndDate = format(parseISO(event.endDate), "yyyy-MM-dd");
+        return formattedSelectedDate >= eventStartDate && formattedSelectedDate <= eventEndDate;
+      }
+      return eventStartDate === formattedSelectedDate;
+    });
   }, [selectedDate, events]);
   
   if (!isClient || authLoading) {
@@ -218,9 +266,9 @@ export default function AcademicCalendarPage() {
                   caption_label: "text-lg font-semibold",
                   head_cell: "text-muted-foreground w-10 sm:w-12 text-sm",
                   cell: "h-10 w-10 sm:h-12 sm:w-12 text-center text-sm p-0 relative",
-                  day: "h-10 w-10 sm:h-12 sm:w-12 p-0 font-normal rounded-full hover:bg-accent/50",
-                  day_selected: "bg-primary text-primary-foreground hover:bg-primary focus:bg-primary",
-                  day_today: "bg-accent text-accent-foreground rounded-full",
+                  day: "h-10 w-10 sm:h-12 sm:w-12 p-0 font-normal rounded-md hover:bg-accent/50", // changed to rounded-md
+                  day_selected: "bg-primary text-primary-foreground hover:bg-primary focus:bg-primary rounded-md",
+                  day_today: "bg-accent text-accent-foreground rounded-md",
               }}
             />
           </div>
@@ -241,11 +289,13 @@ export default function AcademicCalendarPage() {
                         <div className="flex justify-between items-start">
                           <div>
                             <div className="flex items-center gap-2 mb-1">
-                                <span className={`inline-block h-3 w-3 rounded-full ${getEventTypeColor(event.type)}`}></span>
-                                <h4 className="font-semibold text-sm text-primary">{event.title}</h4>
+                                <span className={`inline-block h-3 w-3 rounded-full ${getEventTypeColor(event.type)} flex-shrink-0`}></span>
+                                <h4 className="font-semibold text-sm text-primary break-words">{event.title}</h4>
                             </div>
                             <p className="text-xs text-muted-foreground">
-                                {event.date !== event.endDate && event.endDate ? `${format(parseISO(event.date), 'dd MMM', {locale: indonesianLocale})} - ${format(parseISO(event.endDate), 'dd MMM yyyy', {locale: indonesianLocale})}` : format(parseISO(event.date), 'dd MMM yyyy', {locale: indonesianLocale})}
+                                {event.endDate && event.date !== event.endDate 
+                                    ? `${format(parseISO(event.date), 'dd MMM', {locale: indonesianLocale})} - ${format(parseISO(event.endDate), 'dd MMM yyyy', {locale: indonesianLocale})}` 
+                                    : format(parseISO(event.date), 'dd MMMM yyyy', {locale: indonesianLocale})}
                             </p>
                              <Badge variant="outline" className="text-xs mt-1">{event.type}</Badge>
                           </div>
@@ -276,7 +326,7 @@ export default function AcademicCalendarPage() {
                               </div>
                             )}
                         </div>
-                        {event.description && <p className="text-xs mt-1.5 text-foreground/80">{event.description}</p>}
+                        {event.description && <p className="text-xs mt-1.5 text-foreground/80 break-words">{event.description}</p>}
                       </div>
                     ))
                   )}
@@ -304,11 +354,11 @@ export default function AcademicCalendarPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                     <Label htmlFor="eventDate">Tanggal Mulai</Label>
-                    <Input id="eventDate" type="date" value={newEventData.date ? format(parseISO(newEventData.date), 'yyyy-MM-dd') : ''} onChange={(e) => setNewEventData({ ...newEventData, date: e.target.value })} required />
+                    <Input id="eventDate" type="date" value={newEventData.date || ''} onChange={(e) => setNewEventData({ ...newEventData, date: e.target.value })} required />
                 </div>
                 <div className="space-y-1.5">
                     <Label htmlFor="eventEndDate">Tanggal Selesai (Opsional)</Label>
-                    <Input id="eventEndDate" type="date" value={newEventData.endDate ? format(parseISO(newEventData.endDate), 'yyyy-MM-dd') : ''} onChange={(e) => setNewEventData({ ...newEventData, endDate: e.target.value })} min={newEventData.date}/>
+                    <Input id="eventEndDate" type="date" value={newEventData.endDate || ''} onChange={(e) => setNewEventData({ ...newEventData, endDate: e.target.value })} min={newEventData.date}/>
                 </div>
             </div>
             <div className="space-y-1.5">
@@ -350,4 +400,3 @@ export default function AcademicCalendarPage() {
     </div>
   );
 }
-
