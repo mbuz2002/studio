@@ -1,10 +1,9 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, CheckCircle2, XCircle, CalendarDays, Sparkles, CalendarCheck, ListChecks, BookOpen, CreditCard, ShieldAlert } from "lucide-react";
+import { AlertCircle, CheckCircle2, XCircle, CalendarDays, Sparkles, CalendarCheck, ListChecks, BookOpen, CreditCard, ShieldAlert, ArrowUpCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import type { School, SchoolFeatureSettings } from "@/types";
@@ -15,6 +14,7 @@ import { id as indonesianLocale } from "date-fns/locale";
 import { useLog } from "@/contexts/LogContext";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast"; // Import useToast
 
 interface FeatureDisplayItem {
   key: keyof SchoolFeatureSettings;
@@ -27,6 +27,7 @@ export default function AdminSubscriptionStatusPage() {
   const { user, currentSchool, loading: authLoading } = useAuth();
   const router = useRouter();
   const { addLog } = useLog();
+  const { toast } = useToast(); // Initialize useToast
   const [isClient, setIsClient] = useState(false);
   const [schoolData, setSchoolData] = useState<School | null>(null);
 
@@ -42,8 +43,6 @@ export default function AdminSubscriptionStatusPage() {
         return;
       }
       if (currentSchool) {
-        // Attempt to load the most up-to-date school data from localStorage,
-        // as SuperAdmin might have changed it.
         const allSchoolsData = localStorage.getItem(SCHOOLS_STORAGE_KEY);
         if (allSchoolsData) {
           try {
@@ -52,11 +51,11 @@ export default function AdminSubscriptionStatusPage() {
             if (updatedCurrentSchool) {
               setSchoolData(updatedCurrentSchool);
             } else {
-              setSchoolData(currentSchool); // Fallback to context if not found (should not happen)
+              setSchoolData(currentSchool); 
             }
           } catch (e) {
             console.error("Failed to parse schools data from localStorage for subscription status", e);
-            setSchoolData(currentSchool); // Fallback
+            setSchoolData(currentSchool); 
           }
         } else {
           setSchoolData(currentSchool);
@@ -64,7 +63,6 @@ export default function AdminSubscriptionStatusPage() {
         addLog("INFO", `Admin ${user.email} melihat status langganan untuk sekolah: ${currentSchool.name}.`, "AdminSubscriptionStatusPage");
       } else if (user.role === "Admin" && !currentSchool) {
          addLog("ERROR", `Admin ${user.email} tidak memiliki data sekolah yang terkait.`, "AdminSubscriptionStatusPage");
-         // Potentially redirect or show an error message that school data is missing
       }
     }
   }, [isClient, user, currentSchool, authLoading, router, addLog]);
@@ -88,7 +86,7 @@ export default function AdminSubscriptionStatusPage() {
     let statusText = "";
     if (isAfter(new Date(), parseISO(school.subscriptionEndDate))) {
       statusText = `(Berakhir ${Math.abs(daysRemaining)} hari lalu)`;
-    } else if (daysRemaining <= 30 && daysRemaining >= 0) { // Highlight if ending within 30 days
+    } else if (daysRemaining <= 30 && daysRemaining >= 0) { 
       statusText = `(Berakhir dalam ${daysRemaining} hari)`;
     } else if (daysRemaining < 0){
        statusText = `(Telah Berakhir)`;
@@ -103,6 +101,14 @@ export default function AdminSubscriptionStatusPage() {
     { key: "masterDataManagementEnabled", label: "Pengelolaan Master Data Sekolah", icon: BookOpen, enabled: schoolData.featureSettings.masterDataManagementEnabled },
   ] : [];
 
+  const handleUpgradeSubscription = () => {
+    addLog("INFO", `Admin ${user?.email} dari sekolah ${schoolData?.name} mengklik tombol Upgrade Langganan.`, "AdminSubscriptionStatusPage");
+    toast({
+      title: "Tingkatkan Langganan",
+      description: "Untuk meningkatkan paket langganan sekolah Anda, silakan hubungi Super Administrator aplikasi. Kami akan membantu Anda memilih paket terbaik!",
+      duration: 8000, // Show for longer
+    });
+  };
 
   if (!isClient || authLoading || !user) {
     return <LoadingSpinner message="Memuat Status Langganan..." icon={<CreditCard className="h-12 w-12 animate-pulse text-primary mb-4"/>} />;
@@ -136,14 +142,24 @@ export default function AdminSubscriptionStatusPage() {
     <div className="space-y-6 py-4 md:py-8">
       <Card className="shadow-xl rounded-lg overflow-hidden">
         <CardHeader className="p-6 rounded-t-lg bg-gradient-to-br from-primary via-accent to-secondary text-primary-foreground">
-          <div className="flex items-center gap-3">
-            <CreditCard className="h-8 w-8 text-primary-foreground drop-shadow" />
-            <div>
-              <CardTitle className="text-2xl md:text-3xl">Status Langganan & Fitur Sekolah</CardTitle>
-              <CardDescription className="text-primary-foreground/90 mt-1">
-                Lihat detail langganan dan fitur yang aktif untuk sekolah Anda: {schoolData.name}.
-              </CardDescription>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+                <CreditCard className="h-8 w-8 text-primary-foreground drop-shadow" />
+                <div>
+                <CardTitle className="text-2xl md:text-3xl">Status Langganan & Fitur Sekolah</CardTitle>
+                <CardDescription className="text-primary-foreground/90 mt-1">
+                    Lihat detail langganan dan fitur yang aktif untuk sekolah Anda: {schoolData.name}.
+                </CardDescription>
+                </div>
             </div>
+            <Button
+              onClick={handleUpgradeSubscription}
+              className="bg-background/20 hover:bg-background/30 text-primary-foreground shadow-md flex items-center gap-2"
+              aria-label="Tingkatkan Langganan"
+            >
+              <ArrowUpCircle className="h-5 w-5" />
+              Tingkatkan Langganan
+            </Button>
           </div>
         </CardHeader>
         <CardContent className="pt-6 p-4 md:p-6">
@@ -189,7 +205,7 @@ export default function AdminSubscriptionStatusPage() {
                 <ul className="list-disc pl-5 space-y-1">
                     <li>Jika status langganan Anda 'Tidak Aktif' atau 'Trial' telah berakhir, beberapa fitur mungkin terbatas atau tidak dapat diakses.</li>
                     <li>Fitur yang tercantum sebagai nonaktif tidak akan muncul di menu navigasi atau tidak dapat digunakan.</li>
-                    <li>Untuk pertanyaan mengenai langganan atau aktivasi fitur, silakan hubungi Super Administrator aplikasi.</li>
+                    <li>Untuk pertanyaan mengenai langganan, perubahan paket, atau aktivasi fitur, silakan hubungi Super Administrator aplikasi.</li>
                 </ul>
             </div>
              <div className="mt-6 flex justify-end">
@@ -200,4 +216,3 @@ export default function AdminSubscriptionStatusPage() {
     </div>
   );
 }
-
