@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { School, EducationLevel, CustomDomainStatus } from "@/types";
 import { Button } from "@/components/ui/button";
-import { Image as ImageIcon, Link2, UploadCloud, Calendar as CalendarIcon, Globe, AlertTriangle } from "lucide-react";
+import { Image as ImageIcon, Link2, UploadCloud, Calendar as CalendarIcon, Globe, Copy, AlertTriangle } from "lucide-react";
 import Image from "next/image";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
@@ -16,7 +16,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format, parseISO } from "date-fns";
 import { id as indonesianLocale } from "date-fns/locale";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-
 
 interface SchoolFormFieldsProps {
   formData: Partial<School>;
@@ -42,7 +41,7 @@ const subscriptionStatusOptions: { value: School['subscriptionStatus']; label: s
   { value: "active", label: "Aktif" },
   { value: "inactive", label: "Tidak Aktif" },
   { value: "trial", label: "Uji Coba (Trial)" },
-];
+  ];
 
 const customDomainStatusOptions: { value: CustomDomainStatus; label: string }[] = [
   { value: "unconfigured", label: "Belum Dikonfigurasi" },
@@ -51,6 +50,8 @@ const customDomainStatusOptions: { value: CustomDomainStatus; label: string }[] 
   { value: "configuration_error", label: "Kesalahan Konfigurasi DNS" },
   { value: "ssl_error", label: "Kesalahan SSL" },
 ];
+
+const CNAME_TARGET_DOMAIN = "app.gumpla.ai"; // The actual target domain for CNAME records
 
 const slugify = (text: string = ""): string => {
   if (!text) return "";
@@ -137,6 +138,17 @@ export function SchoolFormFields({
       setEndDate(date);
       handleSelectChange(fieldName, date ? date.toISOString() : "");
     }
+  };
+
+  const handleCopyToClipboard = (textToCopy: string) => {
+    navigator.clipboard.writeText(textToCopy)
+      .then(() => {
+        toast({ title: "Tersalin!", description: `${textToCopy} telah disalin ke clipboard.` });
+      })
+      .catch(err => {
+        toast({ title: "Gagal Menyalin", description: "Tidak dapat menyalin ke clipboard.", variant: "destructive" });
+        console.error("Failed to copy to clipboard:", err);
+      });
   };
 
   const isBefore = (date1: Date, date2: Date) => date1 < date2;
@@ -387,10 +399,22 @@ export function SchoolFormFields({
       <Alert variant="default" className="mt-4 border-accent/30">
         <Globe className="h-5 w-5 text-accent" />
         <AlertTitle className="font-semibold text-accent">Informasi Pengaturan Domain</AlertTitle>
-        <AlertDescription className="text-sm">
-          Jika Anda ingin menggunakan domain kustom, masukkan nama domain di atas. Kemudian, Anda perlu mengkonfigurasi CNAME record domain kustom Anda (misalnya, `kurikulum.sekolahanda.sch.id`) untuk diarahkan ke `app.gumpla.ai` (atau target yang disediakan).
-          Status domain akan diatur oleh Super Admin setelah verifikasi DNS.
-          Jika kolom domain kustom dikosongkan, sekolah akan otomatis dapat diakses melalui subdomain yang dibuat berdasarkan nama sekolah (contoh: <strong>{generatedSubdomain}</strong>) dan status domain akan otomatis menjadi "unconfigured".
+        <AlertDescription className="text-sm space-y-2">
+          <p>
+            Untuk menggunakan domain kustom (misalnya, `kurikulum.sekolahanda.sch.id`), masukkan nama domain di atas.
+            Kemudian, Anda perlu mengkonfigurasi <strong className="text-amber-600">CNAME record</strong> di pengaturan DNS domain Anda.
+          </p>
+          <p>Arahkan CNAME record domain kustom Anda ke target berikut:</p>
+          <div className="flex items-center gap-2 p-2 bg-amber-100/50 dark:bg-amber-900/30 border border-amber-500/30 rounded-md">
+            <code className="text-amber-700 dark:text-amber-300 font-mono text-sm flex-grow">{CNAME_TARGET_DOMAIN}</code>
+            <Button type="button" size="sm" variant="ghost" onClick={() => handleCopyToClipboard(CNAME_TARGET_DOMAIN)} className="text-amber-600 dark:text-amber-400 hover:bg-amber-200/50 dark:hover:bg-amber-800/50 h-7 px-2">
+              <Copy size={14} className="mr-1.5"/> Salin
+            </Button>
+          </div>
+          <p>
+            Status domain ini akan diatur oleh Super Admin setelah verifikasi DNS. Jika domain kustom baru dimasukkan atau diubah, statusnya akan menjadi "Menunggu Verifikasi DNS" sampai diverifikasi.
+            Jika kolom domain kustom dikosongkan, sekolah akan dapat diakses melalui subdomain yang dibuat otomatis dan statusnya akan "Belum Dikonfigurasi".
+          </p>
         </AlertDescription>
       </Alert>
 
