@@ -259,29 +259,20 @@
   font-family: 'Noto Naskh Arabic', 'Amiri', serif; /* Ensure specific Arabic fonts are listed */
 }
 
-/* Animated Gradient Text */
-@keyframes animated-gradient-text {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
+/* Animated Gradient Text - Enhanced */
 .animated-gradient-text {
   background-image: linear-gradient(
     to right,
-    hsl(var(--primary)),
-    hsl(var(--accent)),
-    hsl(var(--primary)) 
+    hsl(var(--primary) / 1),
+    hsl(var(--accent) / 0.95),
+    hsl(var(--secondary) / 0.8),
+    hsl(195 80% 60% / 1),      /* Sky Blue like */
+    hsl(280 70% 65% / 0.95),   /* Purple like */
+    hsl(var(--primary) / 1)
   );
-  background-size: 200% auto;
+  background-size: 400% auto;
   color: transparent;
   background-clip: text;
-  -webkit-background-clip: text; /* For Safari */
-  animation: animated-gradient-text 5s linear infinite;
+  -webkit-background-clip: text;
+  animation: animated-gradient-text 8s linear infinite; /* Uses keyframes from tailwind.config.ts */
 }

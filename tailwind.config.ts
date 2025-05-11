@@ -87,11 +87,31 @@ export default {
   				to: {
   					height: '0'
   				}
-  			}
+  			},
+        'animated-gradient-text': {
+          '0%, 100%': { backgroundPosition: '0% 50%' },
+          '50%': { backgroundPosition: '200% 50%' },
+        },
+        'subtle-bob': {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-4px)' },
+        },
+        'fadeInUp': {
+          from: { opacity: '0', transform: 'translateY(25px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        'pulse-slow': { // For SVG grid or other subtle background elements
+          '0%, 100%': { opacity: '0.4' }, // Adjusted opacity for SVG grid
+          '50%': { opacity: '0.7' },
+        },
   		},
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
-  			'accordion-up': 'accordion-up 0.2s ease-out'
+  			'accordion-up': 'accordion-up 0.2s ease-out',
+        'animated-gradient-text': 'animated-gradient-text 8s linear infinite',
+        'subtle-bob': 'subtle-bob 2.5s ease-in-out infinite',
+        'fade-in-up': 'fadeInUp 0.8s ease-out forwards',
+        'pulse-slow': 'pulse-slow 7s ease-in-out infinite alternate',
   		}
   	}
   },
