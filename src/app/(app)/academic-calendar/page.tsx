@@ -1,10 +1,11 @@
 
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import { Checkbox } from "@/components/ui/checkbox";
 import { CalendarCheck, PlusCircle, Edit2, Trash2, AlertCircle } from "lucide-react";
 import type { DateRange, DayPickerProps, DayProps, SelectSingleEventHandler } from "react-day-picker";
 import { format, parseISO, isValid, startOfMonth, endOfMonth } from 'date-fns';
@@ -349,3 +350,4 @@ export default function AcademicCalendarPage() {
     </div>
   );
 }
+
