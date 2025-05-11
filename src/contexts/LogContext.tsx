@@ -2,9 +2,9 @@
 "use client";
 
 import type { PropsWithChildren} from 'react';
-import { createContext, useContext, useState, useCallback, useMemo } from 'react';
+import { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
 
-export type LogLevel = "INFO" | "WARN" | "ERROR";
+export type LogLevel = "INFO" | "WARN" | "ERROR" | "CRITICAL"; // Added CRITICAL
 
 export interface LogEntry {
   id: string;
@@ -22,12 +22,21 @@ interface LogContextType {
 
 const LogContext = createContext<LogContextType | undefined>(undefined);
 
-export const MAX_LOGS = 200; // Keep a maximum of 200 log entries
+export const MAX_LOGS = 200; 
 
 export const LogProvider = ({ children }: PropsWithChildren) => {
   const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const addLog = useCallback((level: LogLevel, message: string, source?: string) => {
+    if (!isMounted) { // Prevent updates if not mounted, though less likely to be called then
+      console.warn("LogProvider: addLog called before component is mounted. Log was not added:", {level, message, source});
+      return;
+    }
     const newLogEntry: LogEntry = {
       id: `log-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
       timestamp: new Date(),
@@ -42,15 +51,13 @@ export const LogProvider = ({ children }: PropsWithChildren) => {
       }
       return updatedLogs;
     });
-  }, []);
+  }, [isMounted]); // isMounted ensures this callback is stable once mounted
 
   const clearLogs = useCallback(() => {
+    if (!isMounted) return;
     setLogs([]);
-    // Optionally, we can add a log entry indicating logs were cleared
-    // addLog("INFO", "Log sistem telah dibersihkan.", "LogContext"); 
-    // However, this might be confusing if the goal is a completely empty log.
-    // For now, just clear.
-  }, []);
+    // addLog("WARN", "Log sistem telah dibersihkan dari tampilan.", "LogContext"); // Use WARN for this type of action.
+  }, [isMounted]); // addLog removed from deps to avoid loop, clearLogs is stable post-mount
   
   const contextValue = useMemo(() => ({
     logs,
