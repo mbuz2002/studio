@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, type FormEvent } from "react";
@@ -9,7 +8,7 @@ import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLog } from "@/contexts/LogContext";
-import { SchoolFormFields } from "@/components/superadmin/SchoolFormFields"; 
+import { SchoolFormFields } from "@/components/superadmin/SchoolFormFields";
 import type { School, EducationLevel, CustomDomainStatus } from "@/types";
 import { SCHOOLS_STORAGE_KEY } from "@/types";
 import LoadingSpinner from "@/components/ui/loading-spinner";
@@ -42,7 +41,7 @@ export default function EditSchoolPage() {
         if (schoolToEdit) {
           setFormData({
             ...schoolToEdit,
-            customDomainStatus: schoolToEdit.customDomainStatus || "unconfigured", // Ensure default if undefined
+            customDomainStatus: schoolToEdit.customDomain ? (schoolToEdit.customDomainStatus || "unconfigured") : "unconfigured",
           });
           addLog("INFO", `Memuat data sekolah "${schoolToEdit.name}" (ID: ${schoolId}) untuk diedit oleh SuperAdmin ${superAdminUser.email}.`, "EditSchoolPage");
         } else {
@@ -58,7 +57,7 @@ export default function EditSchoolPage() {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
-  
+
   const handleSelectChange = (name: string, value: string) => {
      if (name === "jenjangPendidikan" || name === "subscriptionStatus" || name === "customDomainStatus") {
         setFormData(prev => ({ ...prev, [name]: value as EducationLevel | School['subscriptionStatus'] | CustomDomainStatus}));
@@ -71,7 +70,7 @@ export default function EditSchoolPage() {
        setFormData(prev => ({ ...prev, [name]: value }));
     }
   };
-  
+
   const handleLogoUrlChange = (url: string) => {
     setFormData(prev => ({ ...prev, logoUrl: url }));
   };
@@ -89,8 +88,8 @@ export default function EditSchoolPage() {
       ...formData,
       id: schoolId as string,
       updatedAt: new Date().toISOString(),
-      customDomain: formData.customDomain || undefined, // Ensure empty string becomes undefined
-      customDomainStatus: formData.customDomainStatus || "unconfigured",
+      customDomain: formData.customDomain || undefined,
+      customDomainStatus: formData.customDomain ? (formData.customDomainStatus || "unconfigured") : "unconfigured",
     } as School;
 
     try {
@@ -106,11 +105,11 @@ export default function EditSchoolPage() {
       setIsSubmitting(false);
     }
   };
-  
+
   if (isLoadingData || authLoading || !superAdminUser || superAdminUser.role !== "SuperAdmin") {
     return <LoadingSpinner message="Memuat data sekolah..." icon={<Building className="h-12 w-12 animate-pulse text-primary mb-4"/>} />;
   }
-  
+
   if (!formData.id && !isLoadingData) {
       return (
         <div className="flex h-screen items-center justify-center">
@@ -157,4 +156,5 @@ export default function EditSchoolPage() {
     </div>
   );
 }
+
 

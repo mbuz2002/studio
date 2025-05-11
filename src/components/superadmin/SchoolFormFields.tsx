@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useRef, useState, useEffect } from "react";
@@ -10,7 +9,7 @@ import type { School, EducationLevel, CustomDomainStatus } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Image as ImageIcon, Link2, UploadCloud, Calendar as CalendarIcon, Globe, AlertTriangle } from "lucide-react";
 import Image from "next/image";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"; 
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -23,9 +22,9 @@ interface SchoolFormFieldsProps {
   formData: Partial<School>;
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleSelectChange: (name: string, value: string) => void;
-  handleLogoUrlChange: (url: string) => void; 
-  adminPassword?: string; 
-  handleAdminPasswordChange?: (e: React.ChangeEvent<HTMLInputElement>) => void; 
+  handleLogoUrlChange: (url: string) => void;
+  adminPassword?: string;
+  handleAdminPasswordChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   isEditMode: boolean;
 }
 
@@ -52,6 +51,19 @@ const customDomainStatusOptions: { value: CustomDomainStatus; label: string }[] 
   { value: "configuration_error", label: "Kesalahan Konfigurasi DNS" },
   { value: "ssl_error", label: "Kesalahan SSL" },
 ];
+
+const slugify = (text: string = ""): string => {
+  if (!text) return "";
+  return text
+    .toLowerCase()
+    .replace(/\s+/g, '-') // Replace spaces with -
+    .replace(/[^\w-]+/g, '') // Remove all non-word chars
+    .replace(/--+/g, '-') // Replace multiple - with single -
+    .replace(/^-+/, '') // Trim - from start of text
+    .replace(/-+$/, '') // Trim - from end of text
+    .substring(0, 50); // Limit length
+};
+
 
 export function SchoolFormFields({
   formData,
@@ -80,17 +92,17 @@ export function SchoolFormFields({
     } else if (formData.logoUrl) {
       setLogoInputMethod("url");
     } else {
-      setLogoInputMethod("url"); 
+      setLogoInputMethod("url");
     }
     setStartDate(formData.subscriptionStartDate ? parseISO(formData.subscriptionStartDate) : undefined);
     setEndDate(formData.subscriptionEndDate ? parseISO(formData.subscriptionEndDate) : undefined);
   }, [formData.logoUrl, formData.subscriptionStartDate, formData.subscriptionEndDate]);
-  
+
 
   const onLogoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 2 * 1024 * 1024) { 
+      if (file.size > 2 * 1024 * 1024) {
         toast({ title: "Ukuran File Logo Terlalu Besar", description: "Maksimal 2MB.", variant: "destructive" });
         if (fileInputRef.current) fileInputRef.current.value = "";
         return;
@@ -99,17 +111,17 @@ export function SchoolFormFields({
       reader.onloadend = () => {
         const dataUri = reader.result as string;
         setLogoPreview(dataUri);
-        handleLogoUrlChange(dataUri); 
+        handleLogoUrlChange(dataUri);
       };
       reader.readAsDataURL(file);
     }
   };
-  
+
   const onLogoUrlInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    handleChange(e); 
+    handleChange(e);
     if (logoInputMethod === 'url') {
-      setLogoPreview(e.target.value); 
-      handleLogoUrlChange(e.target.value); 
+      setLogoPreview(e.target.value);
+      handleLogoUrlChange(e.target.value);
     }
   };
 
@@ -128,6 +140,8 @@ export function SchoolFormFields({
   };
 
   const isBefore = (date1: Date, date2: Date) => date1 < date2;
+  
+  const generatedSubdomain = formData.name ? `${slugify(formData.name)}.gumpla.ai` : "subdomain.gumpla.ai";
 
 
   return (
@@ -165,7 +179,7 @@ export function SchoolFormFields({
           <Input id="emailSekolah" name="emailSekolah" type="email" value={formData.emailSekolah || ""} onChange={handleChange} />
         </div>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-1.5">
           <Label htmlFor="npsn">NPSN</Label>
@@ -189,21 +203,21 @@ export function SchoolFormFields({
             <TabsTrigger value="upload"><UploadCloud className="mr-2 h-4 w-4"/> Unggah File</TabsTrigger>
           </TabsList>
           <TabsContent value="url" className="pt-2">
-            <Input 
-              name="logoUrl" 
-              type="url" 
-              placeholder="https://example.com/logo.png" 
-              value={logoInputMethod === 'url' ? (formData.logoUrl || '') : ''} 
+            <Input
+              name="logoUrl"
+              type="url"
+              placeholder="https://example.com/logo.png"
+              value={logoInputMethod === 'url' ? (formData.logoUrl || '') : ''}
               onChange={onLogoUrlInputChange}
               disabled={logoInputMethod !== 'url'}
             />
           </TabsContent>
           <TabsContent value="upload" className="pt-2">
-            <Input 
-              type="file" 
-              accept="image/png, image/jpeg, image/svg+xml, image/gif, image/webp" 
-              ref={fileInputRef} 
-              onChange={onLogoFileChange} 
+            <Input
+              type="file"
+              accept="image/png, image/jpeg, image/svg+xml, image/gif, image/webp"
+              ref={fileInputRef}
+              onChange={onLogoFileChange}
               disabled={logoInputMethod !== 'upload'}
               className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
             />
@@ -222,20 +236,20 @@ export function SchoolFormFields({
             </div>
         )}
       </div>
-      
+
       <hr className="my-6"/>
       <h3 className="text-lg font-semibold mb-3">Pengaturan Akun Admin Sekolah</h3>
 
       <div className="space-y-1.5">
         <Label htmlFor="adminEmail">Email Admin Sekolah</Label>
-        <Input 
-          id="adminEmail" 
-          name="adminEmail" 
-          type="email" 
-          value={formData.adminEmail || ""} 
-          onChange={handleChange} 
-          required 
-          disabled={isEditMode} 
+        <Input
+          id="adminEmail"
+          name="adminEmail"
+          type="email"
+          value={formData.adminEmail || ""}
+          onChange={handleChange}
+          required
+          disabled={isEditMode}
         />
         {isEditMode && <p className="text-xs text-muted-foreground">Email admin tidak dapat diubah setelah sekolah dibuat.</p>}
       </div>
@@ -243,19 +257,19 @@ export function SchoolFormFields({
       {!isEditMode && handleAdminPasswordChange && (
         <div className="space-y-1.5">
           <Label htmlFor="adminPassword">Kata Sandi Admin Sekolah</Label>
-          <Input 
-            id="adminPassword" 
-            name="adminPassword" 
-            type="password" 
-            value={adminPassword || ""} 
-            onChange={handleAdminPasswordChange} 
+          <Input
+            id="adminPassword"
+            name="adminPassword"
+            type="password"
+            value={adminPassword || ""}
+            onChange={handleAdminPasswordChange}
             placeholder="Minimal 6 karakter"
-            required 
+            required
             minLength={6}
           />
         </div>
       )}
-      
+
       <hr className="my-6"/>
       <h3 className="text-lg font-semibold mb-3">Status & Langganan</h3>
 
@@ -339,19 +353,31 @@ export function SchoolFormFields({
       </div>
 
       <hr className="my-6"/>
-      <h3 className="text-lg font-semibold mb-3">Pengaturan Domain Kustom</h3>
+      <h3 className="text-lg font-semibold mb-3">Pengaturan Domain</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-1.5">
           <Label htmlFor="customDomain">Domain Kustom (Opsional)</Label>
           <Input id="customDomain" name="customDomain" value={formData.customDomain || ""} onChange={handleChange} placeholder="cth., kurikulum.sekolahanda.sch.id" />
+           {!formData.customDomain && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Jika kosong, akan menggunakan subdomain: <strong>{generatedSubdomain}</strong>
+            </p>
+          )}
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="customDomainStatus">Status Domain Kustom</Label>
-          <Select name="customDomainStatus" value={formData.customDomainStatus || "unconfigured"} onValueChange={(value) => handleSelectChange('customDomainStatus', value)}>
-            <SelectTrigger id="customDomainStatus"><SelectValue /></SelectTrigger>
+          <Label htmlFor="customDomainStatus">Status Domain</Label>
+          <Select 
+            name="customDomainStatus" 
+            value={!formData.customDomain ? "unconfigured" : (formData.customDomainStatus || "unconfigured")} 
+            onValueChange={(value) => handleSelectChange('customDomainStatus', value)}
+            disabled={!formData.customDomain}
+          >
+            <SelectTrigger id="customDomainStatus">
+              <SelectValue placeholder={!formData.customDomain ? "Subdomain (Otomatis Aktif)" : "Pilih Status Domain"} />
+            </SelectTrigger>
             <SelectContent>
               {customDomainStatusOptions.map(opt => (
-                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                <SelectItem key={opt.value} value={opt.value} disabled={!formData.customDomain && opt.value !== "unconfigured"}>{opt.label}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -359,14 +385,15 @@ export function SchoolFormFields({
       </div>
       <Alert variant="default" className="mt-4 border-accent/30">
         <Globe className="h-5 w-5 text-accent" />
-        <AlertTitle className="font-semibold text-accent">Informasi Pengaturan Domain Kustom</AlertTitle>
+        <AlertTitle className="font-semibold text-accent">Informasi Pengaturan Domain</AlertTitle>
         <AlertDescription className="text-sm">
-          Jika Anda ingin menggunakan domain kustom, masukkan nama domain di atas. Kemudian, Super Admin perlu mengkonfigurasi DNS Record untuk sekolah Anda. Arahkan CNAME record domain kustom Anda (misalnya, `kurikulum.sekolahanda.sch.id`) ke `app.gumpla.ai`.
-          Status domain akan diperbarui setelah verifikasi DNS dan propagasi selesai.
+          Jika Anda ingin menggunakan domain kustom, masukkan nama domain di atas. Kemudian, Anda perlu mengkonfigurasi CNAME record domain kustom Anda (misalnya, `kurikulum.sekolahanda.sch.id`) untuk diarahkan ke `app.gumpla.ai` (atau target yang disediakan).
+          Jika kolom domain kustom dikosongkan, sekolah akan otomatis dapat diakses melalui subdomain yang dibuat berdasarkan nama sekolah (contoh: <strong>{generatedSubdomain}</strong>).
         </AlertDescription>
       </Alert>
 
     </>
   );
 }
+
 

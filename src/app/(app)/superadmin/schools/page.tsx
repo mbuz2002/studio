@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
@@ -19,7 +18,19 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { id as indonesianLocale } from "date-fns/locale";
 import LoadingSpinner from "@/components/ui/loading-spinner";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; 
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+
+const slugify = (text: string = ""): string => {
+  if (!text) return "sekolah-anda";
+  return text
+    .toLowerCase()
+    .replace(/\s+/g, '-') // Replace spaces with -
+    .replace(/[^\w-]+/g, '') // Remove all non-word chars
+    .replace(/--+/g, '-') // Replace multiple - with single -
+    .replace(/^-+/, '') // Trim - from start of text
+    .replace(/-+$/, '') // Trim - from end of text
+    .substring(0, 50); // Limit length
+};
 
 export default function ManageSchoolsPage() {
   const { user, loading: authLoading } = useAuth();
@@ -34,7 +45,7 @@ export default function ManageSchoolsPage() {
   useEffect(() => {
     setIsClient(true);
   }, []);
-  
+
   useEffect(() => {
     if (authLoading) return;
 
@@ -43,18 +54,18 @@ export default function ManageSchoolsPage() {
       router.push("/dashboard");
       return;
     }
-    if (isClient) { 
+    if (isClient) {
       addLog("INFO", `SuperAdmin ${user.email} mengakses halaman Manajemen Sekolah.`, "ManageSchoolsPage");
     }
 
     try {
       const storedSchools = localStorage.getItem(SCHOOLS_STORAGE_KEY);
       const parsedSchools = storedSchools ? JSON.parse(storedSchools) : [];
-      
+
       const schoolsWithFeatureFlags = parsedSchools.map((school: School) => ({
         ...school,
         featureSettings: school.featureSettings || { ...DEFAULT_FEATURE_SETTINGS },
-        customDomainStatus: school.customDomainStatus || "unconfigured",
+        customDomainStatus: school.customDomain ? (school.customDomainStatus || "unconfigured") : "unconfigured",
       }));
       setSchools(schoolsWithFeatureFlags);
     } catch (error) {
@@ -66,12 +77,17 @@ export default function ManageSchoolsPage() {
 
   const filteredSchools = useMemo(() => {
     if (!isClient) return [];
-    return schools.filter(school =>
-      school.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (school.npsn && school.npsn.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (school.adminEmail && school.adminEmail.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (school.customDomain && school.customDomain.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
+    return schools.filter(school => {
+      const schoolNameSlug = slugify(school.name);
+      const generatedSubdomain = `${schoolNameSlug}.gumpla.ai`;
+      return (
+        school.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (school.npsn && school.npsn.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (school.adminEmail && school.adminEmail.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (school.customDomain && school.customDomain.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (!school.customDomain && generatedSubdomain.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    });
   }, [isClient, schools, searchTerm]);
 
   const toggleSchoolStatus = useCallback((schoolId: string) => {
@@ -80,26 +96,25 @@ export default function ManageSchoolsPage() {
       console.error("School not found for toggling status:", schoolId);
       return;
     }
-  
+
     const newStatus = !schoolToToggle.isActive;
-  
+
     setSchools(prevSchools => {
       const updatedSchools = prevSchools.map(s =>
         s.id === schoolId
-          ? { 
-              ...s, 
-              isActive: newStatus, 
+          ? {
+              ...s,
+              isActive: newStatus,
               updatedAt: new Date().toISOString(),
-              
               featureSettings: s.featureSettings || { ...DEFAULT_FEATURE_SETTINGS },
-              customDomainStatus: s.customDomainStatus || "unconfigured",
+              customDomainStatus: s.customDomain ? (s.customDomainStatus || "unconfigured") : "unconfigured",
             }
           : s
       );
       localStorage.setItem(SCHOOLS_STORAGE_KEY, JSON.stringify(updatedSchools));
       return updatedSchools;
     });
-  
+
     addLog("WARN", `Status sekolah "${schoolToToggle.name}" (ID: ${schoolId}) diubah menjadi ${newStatus ? 'Aktif' : 'Nonaktif'} oleh SuperAdmin ${user?.email}.`, "ManageSchoolsPage");
     toast({ title: "Status Sekolah Diperbarui", description: `Sekolah "${schoolToToggle.name}" sekarang ${newStatus ? 'Aktif' : 'Nonaktif'}.` });
   }, [schools, user, toast, addLog]);
@@ -115,14 +130,14 @@ export default function ManageSchoolsPage() {
         setSchools(updatedSchools);
         localStorage.setItem(SCHOOLS_STORAGE_KEY, JSON.stringify(updatedSchools));
 
-        
+
         const storedUsers = localStorage.getItem(APP_USERS_STORAGE_KEY);
         if (storedUsers) {
           let usersList: User[] = JSON.parse(storedUsers);
           usersList = usersList.filter(u => u.schoolId !== schoolId);
           localStorage.setItem(APP_USERS_STORAGE_KEY, JSON.stringify(usersList));
         }
-        
+
 
         toast({ title: "Sekolah Dihapus", description: `Sekolah "${schoolToDelete.name}" dan data terkait telah dihapus.` });
         addLog("CRITICAL", `Sekolah "${schoolToDelete.name}" (ID: ${schoolId}) dan semua data terkait DIHAPUS oleh SuperAdmin ${user?.email}.`, "ManageSchoolsPage");
@@ -140,7 +155,7 @@ export default function ManageSchoolsPage() {
       case 'pending_verification': return 'secondary'; // Bluish/Yellowish
       case 'configuration_error':
       case 'ssl_error': return 'destructive'; // Red
-      case 'unconfigured':
+      case 'unconfigured': // Also handles generated subdomains if no specific status
       default: return 'outline'; // Grayish
     }
   };
@@ -148,7 +163,7 @@ export default function ManageSchoolsPage() {
   if (!isClient || authLoading) {
     return <LoadingSpinner message="Memuat Manajemen Sekolah..." icon={<Building className="h-12 w-12 animate-pulse text-primary mb-4"/>} />;
   }
-  
+
   if (user?.role !== "SuperAdmin") {
     return (
         <div className="flex h-screen items-center justify-center">
@@ -196,7 +211,7 @@ export default function ManageSchoolsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="min-w-[200px] px-3 sm:px-4 py-3 text-sm">Nama Sekolah</TableHead>
-                  <TableHead className="min-w-[150px] px-3 sm:px-4 py-3 text-sm hidden lg:table-cell">Domain Kustom</TableHead>
+                  <TableHead className="min-w-[200px] px-3 sm:px-4 py-3 text-sm hidden lg:table-cell">Domain</TableHead>
                   <TableHead className="min-w-[120px] px-3 sm:px-4 py-3 text-sm hidden md:table-cell">NPSN</TableHead>
                   <TableHead className="min-w-[180px] px-3 sm:px-4 py-3 text-sm hidden xl:table-cell">Email Admin Sekolah</TableHead>
                   <TableHead className="px-3 sm:px-4 py-3 text-sm text-center">Status Aktif</TableHead>
@@ -212,58 +227,70 @@ export default function ManageSchoolsPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredSchools.map((school) => (
-                    <TableRow key={school.id} className="hover:bg-muted/50">
-                      <TableCell className="font-medium px-3 sm:px-4 py-2 sm:py-3 align-top text-sm">
-                        <Link href={`/superadmin/schools/edit/${school.id}`} className="hover:underline text-primary">
-                          {school.name}
-                        </Link>
-                        <div className="text-xs text-muted-foreground mt-0.5 md:hidden">NPSN: {school.npsn || "-"}</div>
-                        <div className="text-xs text-muted-foreground mt-0.5 lg:hidden">
-                          Domain: {school.customDomain || "-"} 
-                          {school.customDomain && <Badge variant={getCustomDomainStatusBadgeVariant(school.customDomainStatus)} className="ml-1 text-xs capitalize">{school.customDomainStatus?.replace(/_/g, ' ')}</Badge>}
-                        </div>
-                        <div className="text-xs text-muted-foreground mt-0.5 xl:hidden">Admin: {school.adminEmail || "-"}</div>
-                      </TableCell>
-                      <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top text-sm hidden lg:table-cell">
-                         {school.customDomain || <span className="text-muted-foreground italic">Tidak ada</span>}
-                      </TableCell>
-                      <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top text-sm hidden md:table-cell">{school.npsn || "-"}</TableCell>
-                      <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top text-sm hidden xl:table-cell">{school.adminEmail || "-"}</TableCell>
-                      <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top text-center">
-                        <Badge variant={school.isActive ? "default" : "destructive"} className="text-xs cursor-pointer" onClick={() => toggleSchoolStatus(school.id)}>
-                          {school.isActive ? <ToggleRight className="mr-1 h-3.5 w-3.5"/> : <ToggleLeft className="mr-1 h-3.5 w-3.5"/> }
-                          {school.isActive ? "Aktif" : "Nonaktif"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top text-center hidden md:table-cell">
-                        <Badge variant={getCustomDomainStatusBadgeVariant(school.customDomainStatus)} className="text-xs capitalize">
-                           {school.customDomainStatus?.replace(/_/g, ' ') || "Unconfigured"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right px-3 sm:px-4 py-2 sm:py-3 align-top">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => router.push(`/superadmin/schools/edit/${school.id}`)} className="text-sm">
-                              <Edit2 className="mr-2 h-4 w-4" /> Edit Sekolah
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => toggleSchoolStatus(school.id)} className="text-sm">
-                              {school.isActive ? <ToggleLeft className="mr-2 h-4 w-4" /> : <ToggleRight className="mr-2 h-4 w-4" />}
-                              {school.isActive ? "Nonaktifkan" : "Aktifkan"}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDeleteSchool(school.id)} className="text-destructive focus:bg-destructive/10 focus:text-destructive text-sm">
-                              <Trash2 className="mr-2 h-4 w-4" /> Hapus Sekolah
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                  filteredSchools.map((school) => {
+                    const schoolNameSlug = slugify(school.name);
+                    const displayDomain = school.customDomain || `${schoolNameSlug}.gumpla.ai`;
+                    const isSubdomain = !school.customDomain;
+
+                    return (
+                      <TableRow key={school.id} className="hover:bg-muted/50">
+                        <TableCell className="font-medium px-3 sm:px-4 py-2 sm:py-3 align-top text-sm">
+                          <Link href={`/superadmin/schools/edit/${school.id}`} className="hover:underline text-primary">
+                            {school.name}
+                          </Link>
+                          <div className="text-xs text-muted-foreground mt-0.5 md:hidden">NPSN: {school.npsn || "-"}</div>
+                          <div className="text-xs text-muted-foreground mt-0.5 lg:hidden">
+                            Domain: {displayDomain}
+                            {isSubdomain && <Badge variant="outline" className="ml-1 text-xs">Subdomain</Badge>}
+                            {!isSubdomain && <Badge variant={getCustomDomainStatusBadgeVariant(school.customDomainStatus)} className="ml-1 text-xs capitalize">{school.customDomainStatus?.replace(/_/g, ' ')}</Badge>}
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-0.5 xl:hidden">Admin: {school.adminEmail || "-"}</div>
+                        </TableCell>
+                        <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top text-sm hidden lg:table-cell">
+                          {displayDomain}
+                          {isSubdomain && <Badge variant="outline" className="ml-1 text-xs">Subdomain</Badge>}
+                        </TableCell>
+                        <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top text-sm hidden md:table-cell">{school.npsn || "-"}</TableCell>
+                        <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top text-sm hidden xl:table-cell">{school.adminEmail || "-"}</TableCell>
+                        <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top text-center">
+                          <Badge variant={school.isActive ? "default" : "destructive"} className="text-xs cursor-pointer" onClick={() => toggleSchoolStatus(school.id)}>
+                            {school.isActive ? <ToggleRight className="mr-1 h-3.5 w-3.5"/> : <ToggleLeft className="mr-1 h-3.5 w-3.5"/> }
+                            {school.isActive ? "Aktif" : "Nonaktif"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top text-center hidden md:table-cell">
+                          {isSubdomain ? (
+                            <Badge variant="default" className="text-xs">Subdomain Aktif</Badge>
+                          ) : (
+                            <Badge variant={getCustomDomainStatusBadgeVariant(school.customDomainStatus)} className="text-xs capitalize">
+                              {school.customDomainStatus?.replace(/_/g, ' ') || "Unconfigured"}
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right px-3 sm:px-4 py-2 sm:py-3 align-top">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => router.push(`/superadmin/schools/edit/${school.id}`)} className="text-sm">
+                                <Edit2 className="mr-2 h-4 w-4" /> Edit Sekolah
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => toggleSchoolStatus(school.id)} className="text-sm">
+                                {school.isActive ? <ToggleLeft className="mr-2 h-4 w-4" /> : <ToggleRight className="mr-2 h-4 w-4" />}
+                                {school.isActive ? "Nonaktifkan" : "Aktifkan"}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleDeleteSchool(school.id)} className="text-destructive focus:bg-destructive/10 focus:text-destructive text-sm">
+                                <Trash2 className="mr-2 h-4 w-4" /> Hapus Sekolah
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })
                 )}
               </TableBody>
             </Table>
@@ -283,4 +310,5 @@ export default function ManageSchoolsPage() {
     </div>
   );
 }
+
 

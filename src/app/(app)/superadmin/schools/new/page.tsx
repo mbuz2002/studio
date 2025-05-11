@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, type FormEvent } from "react";
@@ -9,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLog } from "@/contexts/LogContext";
-import { SchoolFormFields } from "@/components/superadmin/SchoolFormFields"; 
+import { SchoolFormFields } from "@/components/superadmin/SchoolFormFields";
 import type { School, User, EducationLevel, CustomDomainStatus } from "@/types";
 import { SCHOOLS_STORAGE_KEY, APP_USERS_STORAGE_KEY, DEFAULT_FEATURE_SETTINGS } from "@/types";
 import LoadingSpinner from "@/components/ui/loading-spinner";
@@ -23,7 +22,7 @@ export default function NewSchoolPage() {
 
   const [formData, setFormData] = useState<Partial<School>>({
     name: "",
-    jenjangPendidikan: "SMA/MA", 
+    jenjangPendidikan: "SMA/MA",
     alamat: "",
     nomorTelepon: "",
     emailSekolah: "",
@@ -31,14 +30,14 @@ export default function NewSchoolPage() {
     npsn: "",
     logoUrl: "",
     kotaSekolah: "",
-    adminEmail: "", 
+    adminEmail: "",
     subscriptionStatus: "trial",
-    subscriptionStartDate: formatISO(new Date(), { representation: 'date' }), 
-    subscriptionEndDate: formatISO(new Date(new Date().setMonth(new Date().getMonth() + 1)), { representation: 'date' }), 
+    subscriptionStartDate: formatISO(new Date(), { representation: 'date' }),
+    subscriptionEndDate: formatISO(new Date(new Date().setMonth(new Date().getMonth() + 1)), { representation: 'date' }),
     isActive: true,
-    featureSettings: { ...DEFAULT_FEATURE_SETTINGS }, 
+    featureSettings: { ...DEFAULT_FEATURE_SETTINGS },
     customDomain: "",
-    customDomainStatus: "unconfigured",
+    customDomainStatus: "unconfigured", // Default for new school
   });
   const [adminPassword, setAdminPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -54,7 +53,7 @@ export default function NewSchoolPage() {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
-  
+
   const handleSelectChange = (name: string, value: string) => {
     if (name === "jenjangPendidikan" || name === "subscriptionStatus" || name === "customDomainStatus") {
         setFormData(prev => ({ ...prev, [name]: value as EducationLevel | School['subscriptionStatus'] | CustomDomainStatus }));
@@ -67,7 +66,7 @@ export default function NewSchoolPage() {
        setFormData(prev => ({ ...prev, [name]: value }));
     }
   };
-  
+
   const handleLogoUrlChange = (url: string) => {
     setFormData(prev => ({ ...prev, logoUrl: url }));
   };
@@ -107,16 +106,16 @@ export default function NewSchoolPage() {
       isActive: formData.isActive !== undefined ? formData.isActive : true,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      featureSettings: formData.featureSettings || { ...DEFAULT_FEATURE_SETTINGS }, 
+      featureSettings: formData.featureSettings || { ...DEFAULT_FEATURE_SETTINGS },
       customDomain: formData.customDomain || undefined,
-      customDomainStatus: formData.customDomainStatus || "unconfigured",
+      customDomainStatus: formData.customDomain ? (formData.customDomainStatus || "unconfigured") : "unconfigured",
     };
 
     const newSchoolAdmin: User = {
       id: newSchoolAdminId,
       name: `Admin ${formData.name}`,
       email: formData.adminEmail!,
-      role: "Admin", 
+      role: "Admin",
       schoolId: newSchoolId,
       avatarUrl: `https://ui-avatars.com/api/?name=Admin+${encodeURIComponent(formData.name!)}&background=random&color=fff`,
       updatedAt: new Date().toISOString(),
@@ -130,7 +129,7 @@ export default function NewSchoolPage() {
       const existingUsers = JSON.parse(localStorage.getItem(APP_USERS_STORAGE_KEY) || "[]") as User[];
       localStorage.setItem(APP_USERS_STORAGE_KEY, JSON.stringify([newSchoolAdmin, ...existingUsers]));
       addLog("INFO", `Admin sekolah baru "${newSchoolAdmin.email}" untuk sekolah "${newSchool.name}" dibuat. Kata sandi telah di-set (simulasi).`, "NewSchoolPage");
-      
+
       toast({ title: "Sekolah Ditambahkan", description: `Sekolah "${newSchool.name}" dan admin awal berhasil dibuat.` });
       router.push("/superadmin/schools");
     } catch (error) {
@@ -139,7 +138,7 @@ export default function NewSchoolPage() {
       setIsSubmitting(false);
     }
   };
-  
+
   if (authLoading || !superAdminUser || superAdminUser.role !== "SuperAdmin") {
     return <LoadingSpinner message="Memuat..." icon={<Building className="h-12 w-12 animate-pulse text-primary mb-4"/>} />;
   }
@@ -164,7 +163,7 @@ export default function NewSchoolPage() {
               formData={formData}
               handleChange={handleChange}
               handleSelectChange={handleSelectChange}
-              handleLogoUrlChange={handleLogoUrlChange} 
+              handleLogoUrlChange={handleLogoUrlChange}
               adminPassword={adminPassword}
               handleAdminPasswordChange={(e) => setAdminPassword(e.target.value)}
               isEditMode={false}
@@ -184,4 +183,5 @@ export default function NewSchoolPage() {
     </div>
   );
 }
+
 
