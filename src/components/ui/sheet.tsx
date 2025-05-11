@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -53,7 +52,8 @@ const sheetVariants = cva(
 interface SheetContentProps
   extends React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content>,
     VariantProps<typeof sheetVariants> {
-  title?: string; // For accessibility, rendered via SheetTitle
+  title?: string; 
+  hideTitle?: boolean; // New prop to control sr-only
 }
 
 const SheetTitle = React.forwardRef<
@@ -72,7 +72,7 @@ SheetTitle.displayName = SheetPrimitive.Title.displayName
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Content>,
   SheetContentProps
->(({ side = "right", className, children, title = "Panel Samping", ...props }, ref) => (
+>(({ side = "right", className, children, title, hideTitle = false, ...props }, ref) => (
   <SheetPortal>
     <SheetOverlay />
     <SheetPrimitive.Content
@@ -80,8 +80,9 @@ const SheetContent = React.forwardRef<
       className={cn(sheetVariants({ side }), className)}
       {...props}
     >
-      {/* Render SheetTitle, potentially visually hidden but accessible */}
-      <SheetTitle className={title ? "sr-only" : undefined }>{title}</SheetTitle>
+      {/* Render SheetTitle if title is provided, apply sr-only if hideTitle is true */}
+      {title && <SheetTitle className={cn(hideTitle && "sr-only")}>{title}</SheetTitle>}
+      {!title && <SheetTitle className="sr-only">Panel Samping</SheetTitle>} {/* Default accessible title if none provided */}
       {children}
       <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
         <X className="h-4 w-4" />
