@@ -265,6 +265,7 @@ export interface ExportedCurriculumData {
   timetables?: TimetableEntry[];
   schoolClasses?: SchoolClass[]; // New
   teachingPeriodSettings?: TeachingPeriodSettings;
+  academicEvents?: AcademicEvent[]; // For Educational Calendar
 }
 
 
@@ -383,6 +384,22 @@ export interface TeachingPeriodSettings {
   jpDurationMinutes: number; // Duration of one teaching period (Jam Pelajaran) in minutes
 }
 
+export type AcademicEventType = 'Libur Nasional' | 'Libur Semester' | 'Ujian Sekolah' | 'Kegiatan Sekolah' | 'Tanggal Penting' | 'Lainnya';
+
+export interface AcademicEvent {
+  id: string;
+  title: string;
+  date: string; // ISO string "YYYY-MM-DD"
+  endDate?: string; // Optional, for multi-day events
+  description?: string;
+  type: AcademicEventType;
+  isNationalHoliday?: boolean; 
+  createdAt: string;
+  updatedAt: string;
+  createdByUserId?: string;
+}
+
+
 // Storage Keys
 export const MODUL_AJAR_STORAGE_KEY = "appModulAjar";
 export const SUBJECTS_STORAGE_KEY = "appSubjects";
@@ -398,5 +415,7 @@ export const SCHOOL_SETTINGS_STORAGE_KEY = "schoolProfile"; // Alias for clarity
 export const APP_USERS_STORAGE_KEY = "appUsers";
 export const CURRICULUM_STORAGE_KEY = "app-default-curriculum";
 export const THEME_STORAGE_KEY = "app-theme";
+export const ACADEMIC_EVENTS_STORAGE_KEY = "appAcademicEvents"; // New
+
 
 

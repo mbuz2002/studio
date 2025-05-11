@@ -5,7 +5,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, Users, BrainCircuit, ShieldCheck, MoreHorizontal, Package, UserCheck, ListChecks, Book, Home, ClipboardList } from 'lucide-react';
+import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, Users, BrainCircuit, ShieldCheck, MoreHorizontal, Package, UserCheck, ListChecks, Book, Home, ClipboardList, CalendarCheck } from 'lucide-react';
 import type { UserRole } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCurriculum } from '@/contexts/CurriculumContext';
@@ -26,6 +26,7 @@ interface MobileNavItemData {
 const mobileNavItemsData: MobileNavItemData[] = [
   { href: "/dashboard", label: "Dasbor", icon: LayoutDashboard, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/lesson-plans", label: "RPP/ATP", icon: BookOpenText, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+  { href: "/academic-calendar", label: "Kalender", icon: CalendarCheck, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/annual-programs", label: "PROTA", icon: CalendarDays, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/semester-programs", label: "Promes", icon: CalendarClock, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/modul-ajar", label: "Modul KM", icon: BrainCircuit, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], isKurikulumMerdekaOnly: true },
@@ -153,4 +154,5 @@ export function MobileBottomNav() {
     </>
   );
 }
+
 

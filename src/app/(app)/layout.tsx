@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState, useCallback } from 'react';
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset, SidebarRail, SidebarGroup, SidebarGroupLabel } from '@/components/ui/sidebar';
 import { AppLogo } from '@/components/layout/AppLogo';
 import { UserProfile } from '@/components/layout/UserProfile';
-import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, ShieldCheck, Activity, Users, Info, BrainCircuit, FileText, LogOut, Package, UserCheck, ListChecks, Book, CaseSensitive, Home, ClipboardList } from 'lucide-react';
+import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, ShieldCheck, Activity, Users, Info, BrainCircuit, FileText, LogOut, Package, UserCheck, ListChecks, Book, CaseSensitive, Home, ClipboardList, CalendarCheck } from 'lucide-react';
 import Link from 'next/link';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
@@ -38,6 +38,8 @@ const allNavItems: NavItem[] = [
   { href: "/ai-assistant", label: "Asisten AI Materi", originalLabel: "Asisten AI Materi", icon: Sparkles, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"] },
   { href: "/ai-kurikulum-merdeka-module", label: "Buat Modul Ajar AI", originalLabel: "Buat Modul Ajar AI", icon: BrainCircuit, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], isKurikulumMerdekaOnly: true, isHiddenFromSidebar: true },
   
+  { href: "/academic-calendar", label: "Kalender Pendidikan", originalLabel: "Kalender Pendidikan", icon: CalendarCheck, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+
   // Master Data Section
   { href: "/master-data/subjects", label: "Mata Pelajaran", originalLabel: "Mata Pelajaran", icon: Book, roles: ["Admin", "KepalaSekolah", "WakaKurikulum"], isMasterData: true },
   { href: "/master-data/teachers", label: "Data Guru", originalLabel: "Data Guru", icon: UserCheck, roles: ["Admin", "KepalaSekolah", "WakaKurikulum"], isMasterData: true },
@@ -149,7 +151,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
     return <LoadingSpinner message="Memuat Sesi Anda..." icon={<Sparkles className="h-16 w-16 animate-pulse text-primary mb-6" />} />;
   }
 
-  const curriculumPlanningItems = filteredNavItems.filter(item => !item.isSystemSetting && !item.isMasterData && item.href !== "/dashboard" && item.href !== "/settings" && item.href !== "/school-settings" && !item.href.includes("/ai-"));
+  const curriculumPlanningItems = filteredNavItems.filter(item => !item.isSystemSetting && !item.isMasterData && item.href !== "/dashboard" && item.href !== "/settings" && item.href !== "/school-settings" && !item.href.includes("/ai-") && item.href !== "/academic-calendar");
   const aiToolsItems = filteredNavItems.filter(item => item.href.includes("/ai-"));
   const masterDataItems = filteredNavItems.filter(item => item.isMasterData);
   const settingsItems = filteredNavItems.filter(item => item.isSystemSetting || item.href === "/settings" || item.href === "/admin/user-management" || item.href === "/school-settings");
@@ -201,6 +203,27 @@ export default function AppLayout({ children }: PropsWithChildren) {
                 </SidebarMenu>
               </SidebarGroup>
             )}
+
+            {filteredNavItems.find(item => item.href === "/academic-calendar") && (
+                 <SidebarGroup>
+                 <SidebarGroupLabel className="group-data-[state=expanded]:md:inline hidden">Akademik</SidebarGroupLabel>
+                 <SidebarMenu>
+                    <SidebarMenuItem>
+                        <Link href="/academic-calendar" legacyBehavior passHref>
+                            <SidebarMenuButton
+                            className="w-full text-base font-medium"
+                            tooltip={{children: "Kalender Pendidikan", className: "ml-1 text-xs"}}
+                            isActive={pathname.startsWith("/academic-calendar")}
+                            >
+                            <CalendarCheck className="h-5 w-5" />
+                            <span className="group-data-[state=expanded]:md:inline hidden">Kalender Pendidikan</span>
+                            </SidebarMenuButton>
+                        </Link>
+                    </SidebarMenuItem>
+                 </SidebarMenu>
+                 </SidebarGroup>
+            )}
+
 
             {aiToolsItems.length > 0 && (
               <SidebarGroup>
@@ -290,4 +313,5 @@ export default function AppLayout({ children }: PropsWithChildren) {
       </SidebarProvider>
   );
 }
+
 
