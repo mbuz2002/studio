@@ -252,12 +252,13 @@ export function SchoolProfileForm() {
                         id="logoFile" 
                         name="logoFile" 
                         type="file" 
-                        accept="image/png, image/jpeg, image/svg+xml, image/gif" 
+                        accept="image/png, image/jpeg, image/svg+xml, image/gif, image/webp" 
                         ref={fileInputRef} 
                         onChange={handleFileChange} 
                         disabled={!canEdit || logoInputMethod !== 'upload'}
+                        className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
                       />
-                      <p className="text-xs text-muted-foreground">Format yang didukung: PNG, JPG, SVG, GIF. Maksimal 2MB.</p>
+                      <p className="text-xs text-muted-foreground">Format yang didukung: PNG, JPG, SVG, GIF, WebP. Maksimal 2MB.</p>
                     </div>
                   </TabsContent>
                 </Tabs>
@@ -285,6 +286,7 @@ export function SchoolProfileForm() {
                    <div className="mt-4">
                         <Label>Pratinjau Logo:</Label>
                         <div className="mt-2 w-32 h-32 border rounded-md p-2 flex items-center justify-center bg-muted/30 text-muted-foreground text-xs text-center">
+                           <ImageIcon className="h-8 w-8 mb-1 text-muted-foreground/70" />
                             Tidak ada logo atau URL tidak valid.
                         </div>
                     </div>
@@ -308,4 +310,8 @@ export function SchoolProfileForm() {
               </div>
             )}
           </form>
-        </
+        </Tabs>
+      </CardContent>
+    </Card>
+  );
+}
