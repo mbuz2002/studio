@@ -4,10 +4,10 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, CheckCircle2, XCircle, CalendarDays, Sparkles, CalendarCheck, ListChecks, BookOpen, CreditCard, ShieldAlert, ArrowUpCircle } from "lucide-react";
+import { AlertCircle, CheckCircle2, XCircle, CalendarDays, Sparkles, CalendarCheck, ListChecks, BookOpen, CreditCard, ShieldAlert, ArrowUpCircle, Globe } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
-import type { School, SchoolFeatureSettings } from "@/types";
+import type { School, SchoolFeatureSettings, CustomDomainStatus } from "@/types";
 import { SCHOOLS_STORAGE_KEY } from "@/types";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { format, parseISO, isBefore, isAfter, differenceInDays } from "date-fns";
@@ -76,6 +76,18 @@ export default function AdminSubscriptionStatusPage() {
       default: return 'outline';
     }
   };
+  
+  const getCustomDomainStatusBadgeVariant = (status?: CustomDomainStatus): "default" | "secondary" | "destructive" | "outline" => {
+    switch (status) {
+      case 'active': return 'default';
+      case 'pending_verification': return 'secondary';
+      case 'configuration_error':
+      case 'ssl_error': return 'destructive';
+      case 'unconfigured':
+      default: return 'outline';
+    }
+  };
+
 
   const getSubscriptionPeriodText = (school: School | null): string => {
     if (!school || !school.subscriptionStartDate || !school.subscriptionEndDate) {
@@ -216,12 +228,35 @@ export default function AdminSubscriptionStatusPage() {
               </CardContent>
             </Card>
           </div>
+
+          {schoolData.customDomain && (
+            <Card className="shadow-md rounded-md mb-6">
+              <CardHeader>
+                <CardTitle className="text-xl flex items-center gap-2"><Globe size={22}/> Domain Kustom</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                <div><strong>Domain:</strong> <a href={`http://${schoolData.customDomain}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{schoolData.customDomain}</a></div>
+                <div className="flex items-center gap-1.5">
+                    <strong>Status Domain:</strong> 
+                    <Badge variant={getCustomDomainStatusBadgeVariant(schoolData.customDomainStatus)} className="capitalize">
+                        {schoolData.customDomainStatus?.replace(/_/g, ' ') || "Belum Dikonfigurasi"}
+                    </Badge>
+                </div>
+                {(schoolData.customDomainStatus === 'pending_verification' || schoolData.customDomainStatus === 'configuration_error') && (
+                    <p className="text-xs text-muted-foreground">
+                        Pastikan CNAME record domain Anda telah diarahkan dengan benar ke target yang disediakan Super Admin (biasanya `app.gumpla.ai` atau sejenisnya). Propagasi DNS mungkin memerlukan waktu.
+                    </p>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
             <div className="mt-6 text-sm text-muted-foreground p-4 border rounded-md bg-secondary/30">
                 <p className="font-semibold mb-1">Informasi:</p>
                 <ul className="list-disc pl-5 space-y-1">
                     <li>Jika status langganan Anda 'Tidak Aktif' atau 'Trial' telah berakhir, beberapa fitur mungkin terbatas atau tidak dapat diakses.</li>
                     <li>Fitur yang tercantum sebagai nonaktif tidak akan muncul di menu navigasi atau tidak dapat digunakan.</li>
-                    <li>Untuk pertanyaan mengenai langganan, perubahan paket, atau aktivasi fitur, silakan hubungi Super Administrator aplikasi.</li>
+                    <li>Untuk pertanyaan mengenai langganan, perubahan paket, aktivasi fitur, atau pengaturan domain kustom, silakan hubungi Super Administrator aplikasi.</li>
                 </ul>
             </div>
              <div className="mt-6 flex justify-end">

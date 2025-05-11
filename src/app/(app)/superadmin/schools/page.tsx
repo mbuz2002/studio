@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
@@ -6,13 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Building, Search, PlusCircle, MoreHorizontal, Edit2, Trash2, ToggleLeft, ToggleRight, AlertTriangle } from "lucide-react";
+import { Building, Search, PlusCircle, MoreHorizontal, Edit2, Trash2, ToggleLeft, ToggleRight, AlertTriangle, Globe } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLog } from "@/contexts/LogContext";
-import type { School, User } from "@/types";
+import type { School, User, CustomDomainStatus } from "@/types";
 import { SCHOOLS_STORAGE_KEY, APP_USERS_STORAGE_KEY, DEFAULT_FEATURE_SETTINGS } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -49,10 +50,11 @@ export default function ManageSchoolsPage() {
     try {
       const storedSchools = localStorage.getItem(SCHOOLS_STORAGE_KEY);
       const parsedSchools = storedSchools ? JSON.parse(storedSchools) : [];
-      // Ensure all schools have featureSettings initialized
+      
       const schoolsWithFeatureFlags = parsedSchools.map((school: School) => ({
         ...school,
-        featureSettings: school.featureSettings || { ...DEFAULT_FEATURE_SETTINGS }
+        featureSettings: school.featureSettings || { ...DEFAULT_FEATURE_SETTINGS },
+        customDomainStatus: school.customDomainStatus || "unconfigured",
       }));
       setSchools(schoolsWithFeatureFlags);
     } catch (error) {
@@ -67,7 +69,8 @@ export default function ManageSchoolsPage() {
     return schools.filter(school =>
       school.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (school.npsn && school.npsn.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (school.adminEmail && school.adminEmail.toLowerCase().includes(searchTerm.toLowerCase()))
+      (school.adminEmail && school.adminEmail.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (school.customDomain && school.customDomain.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   }, [isClient, schools, searchTerm]);
 
@@ -87,8 +90,9 @@ export default function ManageSchoolsPage() {
               ...s, 
               isActive: newStatus, 
               updatedAt: new Date().toISOString(),
-              // Preserve existing featureSettings or initialize if it was null/undefined
-              featureSettings: s.featureSettings || { ...DEFAULT_FEATURE_SETTINGS } 
+              
+              featureSettings: s.featureSettings || { ...DEFAULT_FEATURE_SETTINGS },
+              customDomainStatus: s.customDomainStatus || "unconfigured",
             }
           : s
       );
@@ -111,15 +115,14 @@ export default function ManageSchoolsPage() {
         setSchools(updatedSchools);
         localStorage.setItem(SCHOOLS_STORAGE_KEY, JSON.stringify(updatedSchools));
 
-        // Cascade delete: Remove users associated with this school
+        
         const storedUsers = localStorage.getItem(APP_USERS_STORAGE_KEY);
         if (storedUsers) {
           let usersList: User[] = JSON.parse(storedUsers);
           usersList = usersList.filter(u => u.schoolId !== schoolId);
           localStorage.setItem(APP_USERS_STORAGE_KEY, JSON.stringify(usersList));
         }
-        // TODO: Implement cascade delete for other school-specific data (LessonPlans, etc.) if stored separately or filter them out.
-        // For now, data is filtered by schoolId on retrieval, so deleting the school effectively hides its data.
+        
 
         toast({ title: "Sekolah Dihapus", description: `Sekolah "${schoolToDelete.name}" dan data terkait telah dihapus.` });
         addLog("CRITICAL", `Sekolah "${schoolToDelete.name}" (ID: ${schoolId}) dan semua data terkait DIHAPUS oleh SuperAdmin ${user?.email}.`, "ManageSchoolsPage");
@@ -130,6 +133,17 @@ export default function ManageSchoolsPage() {
       addLog("INFO", `Penghapusan sekolah "${schoolToDelete.name}" dibatalkan.`, "ManageSchoolsPage");
     }
   }, [schools, user, toast, addLog]);
+
+  const getCustomDomainStatusBadgeVariant = (status?: CustomDomainStatus): "default" | "secondary" | "destructive" | "outline" => {
+    switch (status) {
+      case 'active': return 'default'; // Greenish in default theme
+      case 'pending_verification': return 'secondary'; // Bluish/Yellowish
+      case 'configuration_error':
+      case 'ssl_error': return 'destructive'; // Red
+      case 'unconfigured':
+      default: return 'outline'; // Grayish
+    }
+  };
 
   if (!isClient || authLoading) {
     return <LoadingSpinner message="Memuat Manajemen Sekolah..." icon={<Building className="h-12 w-12 animate-pulse text-primary mb-4"/>} />;
@@ -164,7 +178,7 @@ export default function ManageSchoolsPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 type="search"
-                placeholder="Cari sekolah (nama, NPSN, email admin)..."
+                placeholder="Cari sekolah (nama, NPSN, email admin, domain)..."
                 className="pl-10 w-full text-base md:text-sm h-10"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -182,16 +196,18 @@ export default function ManageSchoolsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="min-w-[200px] px-3 sm:px-4 py-3 text-sm">Nama Sekolah</TableHead>
+                  <TableHead className="min-w-[150px] px-3 sm:px-4 py-3 text-sm hidden lg:table-cell">Domain Kustom</TableHead>
                   <TableHead className="min-w-[120px] px-3 sm:px-4 py-3 text-sm hidden md:table-cell">NPSN</TableHead>
-                  <TableHead className="min-w-[180px] px-3 sm:px-4 py-3 text-sm hidden lg:table-cell">Email Admin Sekolah</TableHead>
-                  <TableHead className="px-3 sm:px-4 py-3 text-sm text-center">Status</TableHead>
+                  <TableHead className="min-w-[180px] px-3 sm:px-4 py-3 text-sm hidden xl:table-cell">Email Admin Sekolah</TableHead>
+                  <TableHead className="px-3 sm:px-4 py-3 text-sm text-center">Status Aktif</TableHead>
+                  <TableHead className="px-3 sm:px-4 py-3 text-sm text-center hidden md:table-cell">Status Domain</TableHead>
                   <TableHead className="text-right min-w-[80px] px-3 sm:px-4 py-3 text-sm">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredSchools.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center h-24 text-muted-foreground px-3 sm:px-4 text-base">
+                    <TableCell colSpan={7} className="text-center h-24 text-muted-foreground px-3 sm:px-4 text-base">
                       Tidak ada data sekolah ditemukan.
                     </TableCell>
                   </TableRow>
@@ -203,14 +219,26 @@ export default function ManageSchoolsPage() {
                           {school.name}
                         </Link>
                         <div className="text-xs text-muted-foreground mt-0.5 md:hidden">NPSN: {school.npsn || "-"}</div>
-                        <div className="text-xs text-muted-foreground mt-0.5 lg:hidden">Admin: {school.adminEmail || "-"}</div>
+                        <div className="text-xs text-muted-foreground mt-0.5 lg:hidden">
+                          Domain: {school.customDomain || "-"} 
+                          {school.customDomain && <Badge variant={getCustomDomainStatusBadgeVariant(school.customDomainStatus)} className="ml-1 text-xs capitalize">{school.customDomainStatus?.replace(/_/g, ' ')}</Badge>}
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-0.5 xl:hidden">Admin: {school.adminEmail || "-"}</div>
+                      </TableCell>
+                      <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top text-sm hidden lg:table-cell">
+                         {school.customDomain || <span className="text-muted-foreground italic">Tidak ada</span>}
                       </TableCell>
                       <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top text-sm hidden md:table-cell">{school.npsn || "-"}</TableCell>
-                      <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top text-sm hidden lg:table-cell">{school.adminEmail || "-"}</TableCell>
+                      <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top text-sm hidden xl:table-cell">{school.adminEmail || "-"}</TableCell>
                       <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top text-center">
                         <Badge variant={school.isActive ? "default" : "destructive"} className="text-xs cursor-pointer" onClick={() => toggleSchoolStatus(school.id)}>
                           {school.isActive ? <ToggleRight className="mr-1 h-3.5 w-3.5"/> : <ToggleLeft className="mr-1 h-3.5 w-3.5"/> }
                           {school.isActive ? "Aktif" : "Nonaktif"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top text-center hidden md:table-cell">
+                        <Badge variant={getCustomDomainStatusBadgeVariant(school.customDomainStatus)} className="text-xs capitalize">
+                           {school.customDomainStatus?.replace(/_/g, ' ') || "Unconfigured"}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right px-3 sm:px-4 py-2 sm:py-3 align-top">
@@ -255,3 +283,4 @@ export default function ManageSchoolsPage() {
     </div>
   );
 }
+

@@ -2,6 +2,7 @@
 export type UserRole = "Admin" | "KepalaSekolah" | "WakaKurikulum" | "TataUsaha" | "Guru" | "SuperAdmin";
 export type CurriculumFramework = "Kurikulum Merdeka" | "K-13" | "KTSP 2006";
 export type EducationLevel = "PAUD" | "SD/MI" | "SMP/MTs" | "SMA/MA" | "SMK/MAK" | "SLB" | "PKBM/Kesetaraan";
+export type CustomDomainStatus = "unconfigured" | "pending_verification" | "active" | "configuration_error" | "ssl_error";
 
 
 export interface User {
@@ -31,14 +32,14 @@ export interface School {
   id: string;
   name: string; 
   jenjangPendidikan: EducationLevel;
-  alamat?: string; // Made optional for initial signup
-  nomorTelepon?: string; // Made optional
-  emailSekolah?: string; // Made optional
-  namaKepalaSekolah?: string; // Made optional
+  alamat?: string; 
+  nomorTelepon?: string; 
+  emailSekolah?: string; 
+  namaKepalaSekolah?: string; 
   npsn?: string; 
   logoUrl?: string; 
-  kotaSekolah?: string; // Made optional
-  adminEmail: string; // Keep adminEmail required for school identification/contact
+  kotaSekolah?: string; 
+  adminEmail: string; 
   subscriptionStatus: 'active' | 'inactive' | 'trial';
   subscriptionStartDate?: string; 
   subscriptionEndDate?: string;   
@@ -46,7 +47,9 @@ export interface School {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
-  featureSettings: SchoolFeatureSettings; // Ensure this is not optional, use DEFAULT_FEATURE_SETTINGS
+  featureSettings: SchoolFeatureSettings; 
+  customDomain?: string;
+  customDomainStatus?: CustomDomainStatus;
 }
 
 export interface AppSettings {
@@ -444,3 +447,4 @@ export const CURRICULUM_STORAGE_KEY = "app-default-curriculum";
 export const THEME_STORAGE_KEY = "app-theme";
 export const ACADEMIC_EVENTS_STORAGE_KEY = "appAcademicEvents";
 export const SAAS_APP_SETTINGS_STORAGE_KEY = "appSaasSettings"; 
+

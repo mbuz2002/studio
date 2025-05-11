@@ -6,9 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { School, EducationLevel } from "@/types";
+import type { School, EducationLevel, CustomDomainStatus } from "@/types";
 import { Button } from "@/components/ui/button";
-import { Image as ImageIcon, Link2, UploadCloud, Calendar as CalendarIcon } from "lucide-react";
+import { Image as ImageIcon, Link2, UploadCloud, Calendar as CalendarIcon, Globe, AlertTriangle } from "lucide-react";
 import Image from "next/image";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"; 
 import { useToast } from "@/hooks/use-toast";
@@ -16,6 +16,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format, parseISO } from "date-fns";
 import { id as indonesianLocale } from "date-fns/locale";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 
 interface SchoolFormFieldsProps {
@@ -42,6 +43,14 @@ const subscriptionStatusOptions: { value: School['subscriptionStatus']; label: s
   { value: "active", label: "Aktif" },
   { value: "inactive", label: "Tidak Aktif" },
   { value: "trial", label: "Uji Coba (Trial)" },
+];
+
+const customDomainStatusOptions: { value: CustomDomainStatus; label: string }[] = [
+  { value: "unconfigured", label: "Belum Dikonfigurasi" },
+  { value: "pending_verification", label: "Menunggu Verifikasi DNS" },
+  { value: "active", label: "Aktif & Terverifikasi" },
+  { value: "configuration_error", label: "Kesalahan Konfigurasi DNS" },
+  { value: "ssl_error", label: "Kesalahan SSL" },
 ];
 
 export function SchoolFormFields({
@@ -328,6 +337,35 @@ export function SchoolFormFields({
         <Label htmlFor="paymentDetails">Catatan Pembayaran (Manual)</Label>
         <Textarea id="paymentDetails" name="paymentDetails" value={formData.paymentDetails || ""} onChange={handleChange} placeholder="cth., Pembayaran terakhir tanggal X, via Transfer Bank ABC untuk periode Y bulan/tahun" rows={2}/>
       </div>
+
+      <hr className="my-6"/>
+      <h3 className="text-lg font-semibold mb-3">Pengaturan Domain Kustom</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-1.5">
+          <Label htmlFor="customDomain">Domain Kustom (Opsional)</Label>
+          <Input id="customDomain" name="customDomain" value={formData.customDomain || ""} onChange={handleChange} placeholder="cth., kurikulum.sekolahanda.sch.id" />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="customDomainStatus">Status Domain Kustom</Label>
+          <Select name="customDomainStatus" value={formData.customDomainStatus || "unconfigured"} onValueChange={(value) => handleSelectChange('customDomainStatus', value)}>
+            <SelectTrigger id="customDomainStatus"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {customDomainStatusOptions.map(opt => (
+                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <Alert variant="default" className="mt-4 border-accent/30">
+        <Globe className="h-5 w-5 text-accent" />
+        <AlertTitle className="font-semibold text-accent">Informasi Pengaturan Domain Kustom</AlertTitle>
+        <AlertDescription className="text-sm">
+          Jika Anda ingin menggunakan domain kustom, masukkan nama domain di atas. Kemudian, Super Admin perlu mengkonfigurasi DNS Record untuk sekolah Anda. Arahkan CNAME record domain kustom Anda (misalnya, `kurikulum.sekolahanda.sch.id`) ke `app.gumpla.ai`.
+          Status domain akan diperbarui setelah verifikasi DNS dan propagasi selesai.
+        </AlertDescription>
+      </Alert>
+
     </>
   );
 }

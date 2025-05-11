@@ -10,7 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLog } from "@/contexts/LogContext";
 import { SchoolFormFields } from "@/components/superadmin/SchoolFormFields"; 
-import type { School, User, EducationLevel } from "@/types";
+import type { School, User, EducationLevel, CustomDomainStatus } from "@/types";
 import { SCHOOLS_STORAGE_KEY, APP_USERS_STORAGE_KEY, DEFAULT_FEATURE_SETTINGS } from "@/types";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { formatISO } from "date-fns";
@@ -33,10 +33,12 @@ export default function NewSchoolPage() {
     kotaSekolah: "",
     adminEmail: "", 
     subscriptionStatus: "trial",
-    subscriptionStartDate: formatISO(new Date(), { representation: 'date' }), // Default to today
-    subscriptionEndDate: formatISO(new Date(new Date().setMonth(new Date().getMonth() + 1)), { representation: 'date' }), // Default to 1 month from today
+    subscriptionStartDate: formatISO(new Date(), { representation: 'date' }), 
+    subscriptionEndDate: formatISO(new Date(new Date().setMonth(new Date().getMonth() + 1)), { representation: 'date' }), 
     isActive: true,
     featureSettings: { ...DEFAULT_FEATURE_SETTINGS }, 
+    customDomain: "",
+    customDomainStatus: "unconfigured",
   });
   const [adminPassword, setAdminPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -54,8 +56,8 @@ export default function NewSchoolPage() {
   };
   
   const handleSelectChange = (name: string, value: string) => {
-    if (name === "jenjangPendidikan" || name === "subscriptionStatus") {
-        setFormData(prev => ({ ...prev, [name]: value as EducationLevel | 'active' | 'inactive' | 'trial'}));
+    if (name === "jenjangPendidikan" || name === "subscriptionStatus" || name === "customDomainStatus") {
+        setFormData(prev => ({ ...prev, [name]: value as EducationLevel | School['subscriptionStatus'] | CustomDomainStatus }));
     } else if (name === "isActive") {
         setFormData(prev => ({ ...prev, [name]: value === "true" }));
     } else if (name === "subscriptionStartDate" || name === "subscriptionEndDate") {
@@ -106,6 +108,8 @@ export default function NewSchoolPage() {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       featureSettings: formData.featureSettings || { ...DEFAULT_FEATURE_SETTINGS }, 
+      customDomain: formData.customDomain || undefined,
+      customDomainStatus: formData.customDomainStatus || "unconfigured",
     };
 
     const newSchoolAdmin: User = {

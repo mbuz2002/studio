@@ -10,7 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLog } from "@/contexts/LogContext";
 import { SchoolFormFields } from "@/components/superadmin/SchoolFormFields"; 
-import type { School, EducationLevel } from "@/types";
+import type { School, EducationLevel, CustomDomainStatus } from "@/types";
 import { SCHOOLS_STORAGE_KEY } from "@/types";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 
@@ -40,7 +40,10 @@ export default function EditSchoolPage() {
         const schools: School[] = JSON.parse(storedSchools);
         const schoolToEdit = schools.find(s => s.id === schoolId);
         if (schoolToEdit) {
-          setFormData(schoolToEdit);
+          setFormData({
+            ...schoolToEdit,
+            customDomainStatus: schoolToEdit.customDomainStatus || "unconfigured", // Ensure default if undefined
+          });
           addLog("INFO", `Memuat data sekolah "${schoolToEdit.name}" (ID: ${schoolId}) untuk diedit oleh SuperAdmin ${superAdminUser.email}.`, "EditSchoolPage");
         } else {
           toast({ title: "Sekolah Tidak Ditemukan", variant: "destructive" });
@@ -57,8 +60,8 @@ export default function EditSchoolPage() {
   };
   
   const handleSelectChange = (name: string, value: string) => {
-     if (name === "jenjangPendidikan" || name === "subscriptionStatus") {
-        setFormData(prev => ({ ...prev, [name]: value as EducationLevel | 'active' | 'inactive' | 'trial'}));
+     if (name === "jenjangPendidikan" || name === "subscriptionStatus" || name === "customDomainStatus") {
+        setFormData(prev => ({ ...prev, [name]: value as EducationLevel | School['subscriptionStatus'] | CustomDomainStatus}));
     } else if (name === "isActive") {
         setFormData(prev => ({ ...prev, [name]: value === "true" }));
     } else if (name === "subscriptionStartDate" || name === "subscriptionEndDate") {
@@ -86,6 +89,8 @@ export default function EditSchoolPage() {
       ...formData,
       id: schoolId as string,
       updatedAt: new Date().toISOString(),
+      customDomain: formData.customDomain || undefined, // Ensure empty string becomes undefined
+      customDomainStatus: formData.customDomainStatus || "unconfigured",
     } as School;
 
     try {
@@ -93,7 +98,7 @@ export default function EditSchoolPage() {
       const updatedSchools = existingSchools.map(s => s.id === schoolId ? updatedSchool : s);
       localStorage.setItem(SCHOOLS_STORAGE_KEY, JSON.stringify(updatedSchools));
       toast({ title: "Data Sekolah Diperbarui", description: `Data untuk "${updatedSchool.name}" berhasil diperbarui.` });
-      addLog("INFO", `Data sekolah "${updatedSchool.name}" (ID: ${schoolId}) diperbarui oleh SuperAdmin ${superAdminUser?.email}.`, "EditSchoolPage");
+      addLog("INFO", `Data sekolah "${updatedSchool.name}" (ID: ${schoolId}) diperbarui oleh SuperAdmin ${superAdminUser?.email}. Domain Kustom: ${updatedSchool.customDomain || '-'}(${updatedSchool.customDomainStatus})`, "EditSchoolPage");
       router.push("/superadmin/schools");
     } catch (error) {
       toast({ title: "Gagal Memperbarui", description: "Terjadi kesalahan.", variant: "destructive" });
