@@ -13,10 +13,10 @@ import { useState, useEffect } from 'react';
 import { useAuth } from "@/contexts/AuthContext";
 import type { UserRole } from "@/types";
 import Image from "next/image";
-import { initialSuperAdminUser } from '@/lib/initial-data'; // Import initial SuperAdmin
+import { initialSchoolAdminUser, initialGuruUser } from '@/lib/initial-data'; // Import initial users for demo
 
 const roles: { value: UserRole; label: string }[] = [
-  { value: "SuperAdmin", label: "Super Admin" },
+  // SuperAdmin removed from this list
   { value: "Admin", label: "Admin Sekolah" },
   { value: "KepalaSekolah", label: "Kepala Sekolah" },
   { value: "WakaKurikulum", label: "Waka Kurikulum" },
@@ -31,11 +31,13 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false); 
 
   useEffect(() => {
-    // Pre-fill email for SuperAdmin if that role is selected, for demo convenience
-    if (selectedRole === "SuperAdmin") {
-      setEmail(initialSuperAdminUser.email);
-    } else if (email === initialSuperAdminUser.email && selectedRole !== "SuperAdmin") {
-      setEmail("pengguna@sekolahdemo.sch.id"); // Reset if role changes from SA
+    // Pre-fill email for demo users based on role for convenience
+    if (selectedRole === "Admin") {
+      setEmail(initialSchoolAdminUser.email);
+    } else if (selectedRole === "Guru") {
+      setEmail(initialGuruUser.email);
+    } else if (email === initialSchoolAdminUser.email && selectedRole !== "Admin" || email === initialGuruUser.email && selectedRole !== "Guru") {
+        setEmail("pengguna.lain@sekolahdemo.sch.id"); 
     }
   }, [selectedRole, email]);
 
@@ -63,7 +65,7 @@ export default function LoginPage() {
           </div>
           <CardTitle className="text-3xl md:text-4xl font-bold text-foreground">GUMPLA AI</CardTitle>
           <CardDescription className="text-base md:text-lg text-muted-foreground pt-1.5">
-            Masuk untuk melanjutkan.
+            Masuk untuk melanjutkan ke dasbor sekolah Anda.
           </CardDescription>
         </CardHeader>
         <CardContent className="px-6 md:px-8 pb-6 bg-card">
@@ -73,7 +75,7 @@ export default function LoginPage() {
               <Input 
                 id="email" 
                 type="email" 
-                placeholder="anda@contoh.com" 
+                placeholder="anda@sekolahdemo.sch.id" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required 
@@ -112,11 +114,14 @@ export default function LoginPage() {
         </CardContent>
         <CardFooter className="flex flex-col items-center space-y-2 pb-8 pt-4 bg-muted/30 border-t">
           <p className="text-sm text-muted-foreground">
-            Super Admin: {initialSuperAdminUser.email}
+            Email Admin Demo: {initialSchoolAdminUser.email}
           </p>
            <p className="text-sm text-muted-foreground">
-            Admin Sekolah Demo: admin@sekolahdemo.sch.id
+            Email Guru Demo: {initialGuruUser.email}
           </p>
+          <Link href="/superadmin/login" className="text-sm text-primary hover:underline font-medium mt-2">
+            Masuk sebagai Super Admin?
+          </Link>
         </CardFooter>
       </Card>
     </div>

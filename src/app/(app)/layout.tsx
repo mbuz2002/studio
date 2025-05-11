@@ -82,9 +82,14 @@ export default function AppLayout({ children }: PropsWithChildren) {
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
-      router.push('/login');
+      // If user is not authenticated, redirect to appropriate login page
+      if (pathname.startsWith('/superadmin')) {
+        router.push('/superadmin/login');
+      } else {
+        router.push('/login');
+      }
     }
-  }, [loading, isAuthenticated, router]);
+  }, [loading, isAuthenticated, router, pathname]);
 
   const filteredNavItems = useMemo(() => {
     if (!user) return [];

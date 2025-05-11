@@ -1,12 +1,13 @@
+
 "use client";
 
 import type { PropsWithChildren} from 'react';
 import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import type { User, UserRole, School } from '@/types'; // Added School
+import type { User, UserRole, School } from '@/types'; 
 import { useRouter } from 'next/navigation';
 import { useLog } from './LogContext'; 
-import { APP_USERS_STORAGE_KEY, SCHOOLS_STORAGE_KEY, DEFAULT_FEATURE_SETTINGS } from '@/types'; // Import storage keys
-import { initialSuperAdminUser, initialDefaultSchool, initialSchoolAdminUser, initialGuruUser, DEFAULT_SCHOOL_ID } from '@/lib/initial-data'; // Import initial data
+import { APP_USERS_STORAGE_KEY, SCHOOLS_STORAGE_KEY, DEFAULT_FEATURE_SETTINGS } from '@/types'; 
+import { initialSuperAdminUser, initialDefaultSchool, initialSchoolAdminUser, initialGuruUser, DEFAULT_SCHOOL_ID } from '@/lib/initial-data'; 
 import { 
   initialLessonPlansData, 
   initialAnnualProgramsData, 
@@ -32,11 +33,11 @@ import {
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  login: (email: string, role: UserRole) => void; // Role might be ignored if user exists
+  login: (email: string, role: UserRole) => void; 
   logout: () => void;
   updateUser: (updatedUserData: Partial<User>) => void;
   loading: boolean;
-  currentSchool: School | null; // Add current school context
+  currentSchool: School | null; 
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -47,7 +48,7 @@ const initializeDefaultData = () => {
   const usersExist = localStorage.getItem(APP_USERS_STORAGE_KEY);
   const schoolsExist = localStorage.getItem(SCHOOLS_STORAGE_KEY);
 
-  if (usersExist && schoolsExist) return; // Data already exists or initialized
+  if (usersExist && schoolsExist) return; 
 
   // Initialize Schools
   if (!schoolsExist) {
@@ -125,7 +126,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   const { addLog } = useLog(); 
 
   useEffect(() => {
-    initializeDefaultData(); // Initialize data on first client-side load if needed
+    initializeDefaultData(); 
     
     let didCancel = false;
     const attemptUserRestore = () => {
@@ -140,7 +141,6 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
               const schools: School[] = JSON.parse(schoolsData);
               const school = schools.find(s => s.id === parsedUser.schoolId);
               if (school) {
-                 // Ensure school has featureSettings
                 setCurrentSchool({ ...school, featureSettings: school.featureSettings || DEFAULT_FEATURE_SETTINGS });
               }
             }
@@ -149,9 +149,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       } catch (error) {
         console.error("Gagal memulihkan sesi pengguna:", error);
         if (!didCancel) {
-          setTimeout(() => {
-            addLog("ERROR", `Gagal memulihkan sesi pengguna dari penyimpanan lokal: ${error instanceof Error ? error.message : String(error)}`, "AuthContext");
-          }, 0);
+          addLog("ERROR", `Gagal memulihkan sesi pengguna dari penyimpanan lokal: ${error instanceof Error ? error.message : String(error)}`, "AuthContext");
           localStorage.removeItem('currentUser');
         }
       } finally {
@@ -168,60 +166,63 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     };
   }, [addLog]);
 
-  const login = useCallback((email: string, roleToAttempt: UserRole) => { // roleToAttempt is mainly for demo
+  const login = useCallback((email: string, roleToAttempt: UserRole) => {
     const storedUsers = localStorage.getItem(APP_USERS_STORAGE_KEY);
     const users: User[] = storedUsers ? JSON.parse(storedUsers) : [];
-    const foundUser = users.find(u => u.email === email);
+    let foundUser = users.find(u => u.email === email);
 
     if (foundUser) {
-      // For demo purposes, allow role override if SuperAdmin or if the user found matches the role
+      // If SuperAdmin attempts login, their role must be SuperAdmin
       if (roleToAttempt === "SuperAdmin" && foundUser.role !== "SuperAdmin") {
-         // If trying to log in as SuperAdmin but found user is not, fail
          addLog("WARN", `Login gagal: Email ${email} terdaftar sebagai ${foundUser.role}, bukan SuperAdmin.`, "AuthContext-Login");
          // Optionally show a toast to the user
          return;
       }
       
-      const userToLogin = { ...foundUser };
-      // If not SuperAdmin, ensure their assigned role is used.
-      // For demo convenience, if roleToAttempt is not SuperAdmin, we might use it.
-      // In a real app, role is determined by the backend/stored user data.
-      if (roleToAttempt !== "SuperAdmin") {
-          userToLogin.role = roleToAttempt; // Allow role selection for demo for non-SA
+      // If a non-SuperAdmin role is attempted but the found user is SuperAdmin, this is an invalid attempt from non-SA login page
+      if (roleToAttempt !== "SuperAdmin" && foundUser.role === "SuperAdmin") {
+        addLog("WARN", `Login gagal: SuperAdmin ${email} harus login melalui halaman Super Admin.`, "AuthContext-Login");
+        // Optionally show a toast to the user
+        return;
+      }
+      
+      // For demo, if the found user's role doesn't match the attempted role (and it's not SA case),
+      // update the user's role for demo flexibility if they are not SA.
+      // In a real app, the role from the database/stored user data is authoritative.
+      if (foundUser.role !== "SuperAdmin" && foundUser.role !== roleToAttempt) {
+        foundUser = { ...foundUser, role: roleToAttempt };
+        // Update the user in localStorage if role is changed for demo
+        const updatedUsers = users.map(u => u.id === foundUser!.id ? foundUser : u);
+        localStorage.setItem(APP_USERS_STORAGE_KEY, JSON.stringify(updatedUsers));
       }
 
 
-      if (userToLogin.role === "SuperAdmin") {
-        setUser(userToLogin);
-        setCurrentSchool(null); // SuperAdmin is not tied to a specific school context by default
-        localStorage.setItem('currentUser', JSON.stringify(userToLogin));
+      if (foundUser.role === "SuperAdmin") {
+        setUser(foundUser);
+        setCurrentSchool(null);
+        localStorage.setItem('currentUser', JSON.stringify(foundUser));
         addLog("INFO", `SuperAdmin ${email} berhasil masuk.`, "AuthContext-Login");
-        router.push('/superadmin/dashboard'); // Redirect SuperAdmin to their dashboard
+        router.push('/superadmin/dashboard'); 
       } else {
-        if (userToLogin.schoolId) {
+        if (foundUser.schoolId) {
           const schoolsData = localStorage.getItem(SCHOOLS_STORAGE_KEY);
           const schools: School[] = schoolsData ? JSON.parse(schoolsData) : [];
-          const school = schools.find(s => s.id === userToLogin.schoolId && s.isActive);
+          const school = schools.find(s => s.id === foundUser!.schoolId && s.isActive);
           if (school) {
-            setUser(userToLogin);
-             // Ensure school has featureSettings when setting currentSchool
+            setUser(foundUser);
             setCurrentSchool({ ...school, featureSettings: school.featureSettings || DEFAULT_FEATURE_SETTINGS });
-            localStorage.setItem('currentUser', JSON.stringify(userToLogin));
-            addLog("INFO", `Pengguna ${email} (Peran: ${userToLogin.role}, Sekolah: ${school.name}) berhasil masuk.`, "AuthContext-Login");
+            localStorage.setItem('currentUser', JSON.stringify(foundUser));
+            addLog("INFO", `Pengguna ${email} (Peran: ${foundUser.role}, Sekolah: ${school.name}) berhasil masuk.`, "AuthContext-Login");
             router.push('/dashboard');
           } else {
-            addLog("WARN", `Login gagal untuk ${email}: Sekolah tidak aktif atau tidak ditemukan (ID: ${userToLogin.schoolId}).`, "AuthContext-Login");
-            // Optionally show a toast
+            addLog("WARN", `Login gagal untuk ${email}: Sekolah tidak aktif atau tidak ditemukan (ID: ${foundUser.schoolId}).`, "AuthContext-Login");
           }
         } else {
           addLog("WARN", `Login gagal untuk ${email}: Pengguna tidak memiliki schoolId.`, "AuthContext-Login");
-           // Optionally show a toast
         }
       }
     } else {
-      // Demo: if user not found, create one based on roleToAttempt, but only if it's not SuperAdmin or if the email is the superadmin email
       if (roleToAttempt === "SuperAdmin" && email === initialSuperAdminUser.email) {
-        // This case should ideally be handled by initial data seeding.
         setUser(initialSuperAdminUser);
         setCurrentSchool(null);
         localStorage.setItem('currentUser', JSON.stringify(initialSuperAdminUser));
@@ -229,28 +230,38 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         router.push('/superadmin/dashboard');
       } else if (roleToAttempt !== "SuperAdmin" && email === initialSchoolAdminUser.email && roleToAttempt === "Admin") {
         setUser(initialSchoolAdminUser);
-         // Ensure school has featureSettings when setting currentSchool
         setCurrentSchool({ ...initialDefaultSchool, featureSettings: initialDefaultSchool.featureSettings || DEFAULT_FEATURE_SETTINGS });
         localStorage.setItem('currentUser', JSON.stringify(initialSchoolAdminUser));
         addLog("INFO", `Admin Sekolah Demo ${email} (akun default) berhasil masuk.`, "AuthContext-Login");
         router.push('/dashboard');
+      } else if (roleToAttempt !== "SuperAdmin" && email === initialGuruUser.email && roleToAttempt === "Guru") {
+        setUser(initialGuruUser);
+        setCurrentSchool({ ...initialDefaultSchool, featureSettings: initialDefaultSchool.featureSettings || DEFAULT_FEATURE_SETTINGS });
+        localStorage.setItem('currentUser', JSON.stringify(initialGuruUser));
+        addLog("INFO", `Guru Demo ${email} (akun default) berhasil masuk.`, "AuthContext-Login");
+        router.push('/dashboard');
       }
-      // Handle other demo roles if needed or show error
       else {
-        addLog("WARN", `Login gagal: Pengguna dengan email ${email} tidak ditemukan.`, "AuthContext-Login");
+        addLog("WARN", `Login gagal: Pengguna dengan email ${email} dan peran ${roleToAttempt} tidak ditemukan.`, "AuthContext-Login");
       }
     }
   }, [addLog, router]);
 
   const logout = useCallback(() => {
     const userEmail = user?.email; 
+    const userRole = user?.role;
     if (userEmail) {
       addLog("INFO", `Pengguna ${userEmail} keluar.`, "AuthContext-Logout");
     }
     setUser(null);
     setCurrentSchool(null);
     localStorage.removeItem('currentUser');
-    router.push('/login');
+    // Redirect to appropriate login page based on previous role
+    if (userRole === "SuperAdmin") {
+      router.push('/superadmin/login');
+    } else {
+      router.push('/login');
+    }
   }, [user, addLog, router]);
 
   const updateUser = useCallback((updatedUserData: Partial<User>) => {
@@ -259,9 +270,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         const newUser = { ...currentUser, ...updatedUserData, updatedAt: new Date().toISOString() };
         localStorage.setItem('currentUser', JSON.stringify(newUser));
         
-        setTimeout(() => { 
-          addLog("INFO", `Profil pengguna ${currentUser.email} diperbarui. Data baru: ${JSON.stringify(Object.keys(updatedUserData))}`, "AuthContext-UpdateUser");
-        }, 0);
+        addLog("INFO", `Profil pengguna ${currentUser.email} diperbarui. Data baru: ${JSON.stringify(Object.keys(updatedUserData))}`, "AuthContext-UpdateUser");
         
         return newUser;
       }
