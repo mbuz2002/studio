@@ -1,7 +1,7 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle } from 'lucide-react';
 
 interface FeatureCardProps {
   icon: React.ReactElement;
@@ -11,28 +11,30 @@ interface FeatureCardProps {
 }
 
 export function FeatureCard({ icon, title, description, color = "sky" }: FeatureCardProps) {
-  const colorClasses: Record<string, string> = {
-    sky: 'border-sky-500/30 hover:border-sky-500/70 hover:shadow-sky-500/20',
-    purple: 'border-purple-500/30 hover:border-purple-500/70 hover:shadow-purple-500/20',
-    teal: 'border-teal-500/30 hover:border-teal-500/70 hover:shadow-teal-500/20',
-    emerald: 'border-emerald-500/30 hover:border-emerald-500/70 hover:shadow-emerald-500/20',
-    rose: 'border-rose-500/30 hover:border-rose-500/70 hover:shadow-rose-500/20',
-    amber: 'border-amber-500/30 hover:border-amber-500/70 hover:shadow-amber-500/20',
-    indigo: 'border-indigo-500/30 hover:border-indigo-500/70 hover:shadow-indigo-500/20',
-    pink: 'border-pink-500/30 hover:border-pink-500/70 hover:shadow-pink-500/20',
-    red: 'border-red-500/30 hover:border-red-500/70 hover:shadow-red-500/20',
+  const colorClasses: Record<string, { border: string; shadow: string; iconBg: string; iconText: string }> = {
+    sky: { border: 'border-sky-500/40 hover:border-sky-400/80', shadow: 'hover:shadow-[0_0_30px_-5px_rgba(56,189,248,0.3)]', iconBg: 'bg-sky-500/10', iconText: 'text-sky-400' },
+    purple: { border: 'border-purple-500/40 hover:border-purple-400/80', shadow: 'hover:shadow-[0_0_30px_-5px_rgba(168,85,247,0.3)]', iconBg: 'bg-purple-500/10', iconText: 'text-purple-400' },
+    teal: { border: 'border-teal-500/40 hover:border-teal-400/80', shadow: 'hover:shadow-[0_0_30px_-5px_rgba(20,184,166,0.3)]', iconBg: 'bg-teal-500/10', iconText: 'text-teal-400' },
+    emerald: { border: 'border-emerald-500/40 hover:border-emerald-400/80', shadow: 'hover:shadow-[0_0_30px_-5px_rgba(16,185,129,0.3)]', iconBg: 'bg-emerald-500/10', iconText: 'text-emerald-400' },
+    rose: { border: 'border-rose-500/40 hover:border-rose-400/80', shadow: 'hover:shadow-[0_0_30px_-5px_rgba(244,63,94,0.3)]', iconBg: 'bg-rose-500/10', iconText: 'text-rose-400' },
+    amber: { border: 'border-amber-500/40 hover:border-amber-400/80', shadow: 'hover:shadow-[0_0_30px_-5px_rgba(245,158,11,0.3)]', iconBg: 'bg-amber-500/10', iconText: 'text-amber-400' },
+    indigo: { border: 'border-indigo-500/40 hover:border-indigo-400/80', shadow: 'hover:shadow-[0_0_30px_-5px_rgba(99,102,241,0.3)]', iconBg: 'bg-indigo-500/10', iconText: 'text-indigo-400' },
+    pink: { border: 'border-pink-500/40 hover:border-pink-400/80', shadow: 'hover:shadow-[0_0_30px_-5px_rgba(236,72,153,0.3)]', iconBg: 'bg-pink-500/10', iconText: 'text-pink-400' },
+    red: { border: 'border-red-500/40 hover:border-red-400/80', shadow: 'hover:shadow-[0_0_30px_-5px_rgba(239,68,68,0.3)]', iconBg: 'bg-red-500/10', iconText: 'text-red-400' },
   };
 
+  const selectedColorStyle = colorClasses[color] || colorClasses.sky;
+
   return (
-    <Card className={`bg-slate-800/70 border-2 ${colorClasses[color] || colorClasses.sky} shadow-xl rounded-xl transition-all duration-300 transform hover:scale-105`}>
+    <Card className={`bg-slate-800/70 border-2 ${selectedColorStyle.border} ${selectedColorStyle.shadow} shadow-xl rounded-xl transition-all duration-300 transform hover:scale-105 flex flex-col h-full`}>
       <CardHeader className="items-center text-center pt-8 pb-4">
-        <div className={`mb-4 p-3 rounded-full bg-slate-700 shadow-inner`}>
-          {icon}
+        <div className={`mb-5 p-4 rounded-full ${selectedColorStyle.iconBg} shadow-inner flex-shrink-0`}>
+          {React.cloneElement(icon, { className: `h-10 w-10 ${selectedColorStyle.iconText}` })}
         </div>
         <CardTitle className="text-xl md:text-2xl font-semibold text-slate-100">{title}</CardTitle>
       </CardHeader>
-      <CardContent className="text-center pb-8 px-6">
-        <p className="text-sm md:text-base text-slate-300 leading-relaxed">{description}</p>
+      <CardContent className="text-center pb-8 px-6 flex-grow">
+        <p className="text-sm md:text-base text-slate-300 leading-relaxed font-light">{description}</p>
       </CardContent>
     </Card>
   );
