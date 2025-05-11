@@ -186,4 +186,3 @@ export const initialAcademicEventsData: Omit<AcademicEvent, 'id' | 'createdAt' |
     description: "Periode Ujian Tengah Semester Ganjil.",
   },
 ];
-

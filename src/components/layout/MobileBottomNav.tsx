@@ -91,7 +91,7 @@ export function MobileBottomNav() {
       .filter(item => {
         if (!item.roles?.includes(user.role)) return false;
         if (item.isKurikulumMerdekaOnly && defaultCurriculum !== "Kurikulum Merdeka") return false;
-        if (item.isMasterData && !["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha"].includes(user.role)) return false;
+        if (item.isMasterData && !["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha"].includes(user.role)) return false;
         if (item.isSystemSetting && !["Admin"].includes(user.role)) return false;
         
         if (user.role === "SuperAdmin") return item.isSuperAdminOnly === true;

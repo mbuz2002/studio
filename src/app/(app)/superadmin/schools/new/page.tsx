@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, type FormEvent } from "react";
@@ -11,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLog } from "@/contexts/LogContext";
 import { SchoolFormFields } from "@/components/superadmin/SchoolFormFields"; // To be created
 import type { School, User, EducationLevel } from "@/types";
-import { SCHOOLS_STORAGE_KEY, APP_USERS_STORAGE_KEY } from "@/types";
+import { SCHOOLS_STORAGE_KEY, APP_USERS_STORAGE_KEY, DEFAULT_FEATURE_SETTINGS } from "@/types";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 
 export default function NewSchoolPage() {
@@ -33,6 +32,7 @@ export default function NewSchoolPage() {
     adminEmail: "", // For the new school admin
     subscriptionStatus: "trial",
     isActive: true,
+    featureSettings: { ...DEFAULT_FEATURE_SETTINGS }, // Initialize with defaults
   });
   const [adminPassword, setAdminPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -94,6 +94,7 @@ export default function NewSchoolPage() {
       isActive: formData.isActive !== undefined ? formData.isActive : true,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      featureSettings: formData.featureSettings || { ...DEFAULT_FEATURE_SETTINGS }, // Ensure featureSettings is saved
     };
 
     const newSchoolAdmin: User = {

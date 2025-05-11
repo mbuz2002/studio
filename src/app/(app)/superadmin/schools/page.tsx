@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
@@ -14,7 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLog } from "@/contexts/LogContext";
 import type { School, User } from "@/types";
-import { SCHOOLS_STORAGE_KEY, APP_USERS_STORAGE_KEY } from "@/types";
+import { SCHOOLS_STORAGE_KEY, APP_USERS_STORAGE_KEY, DEFAULT_FEATURE_SETTINGS } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { id as indonesianLocale } from "date-fns/locale";
@@ -33,7 +32,6 @@ export default function ManageSchoolsPage() {
 
   useEffect(() => {
     setIsClient(true);
-    // Initial log moved to after authLoading and user role check
   }, []);
   
   useEffect(() => {
@@ -44,14 +42,19 @@ export default function ManageSchoolsPage() {
       router.push("/dashboard");
       return;
     }
-    // Log access only after role check and not loading
-    if (isClient) { // Ensure this only runs client-side once
+    if (isClient) { 
       addLog("INFO", `SuperAdmin ${user.email} mengakses halaman Manajemen Sekolah.`, "ManageSchoolsPage");
     }
 
     try {
       const storedSchools = localStorage.getItem(SCHOOLS_STORAGE_KEY);
-      setSchools(storedSchools ? JSON.parse(storedSchools) : []);
+      const parsedSchools = storedSchools ? JSON.parse(storedSchools) : [];
+      // Ensure all schools have featureSettings initialized
+      const schoolsWithFeatureFlags = parsedSchools.map((school: School) => ({
+        ...school,
+        featureSettings: school.featureSettings || { ...DEFAULT_FEATURE_SETTINGS }
+      }));
+      setSchools(schoolsWithFeatureFlags);
     } catch (error) {
       console.error("Gagal memuat data sekolah:", error);
       toast({ title: "Gagal Memuat Data Sekolah", variant: "destructive" });
@@ -80,14 +83,19 @@ export default function ManageSchoolsPage() {
     setSchools(prevSchools => {
       const updatedSchools = prevSchools.map(s =>
         s.id === schoolId
-          ? { ...s, isActive: newStatus, updatedAt: new Date().toISOString() }
+          ? { 
+              ...s, 
+              isActive: newStatus, 
+              updatedAt: new Date().toISOString(),
+              // Preserve existing featureSettings or initialize if it was null/undefined
+              featureSettings: s.featureSettings || { ...DEFAULT_FEATURE_SETTINGS } 
+            }
           : s
       );
       localStorage.setItem(SCHOOLS_STORAGE_KEY, JSON.stringify(updatedSchools));
       return updatedSchools;
     });
   
-    // Moved addLog and toast outside of setSchools updater
     addLog("WARN", `Status sekolah "${schoolToToggle.name}" (ID: ${schoolId}) diubah menjadi ${newStatus ? 'Aktif' : 'Nonaktif'} oleh SuperAdmin ${user?.email}.`, "ManageSchoolsPage");
     toast({ title: "Status Sekolah Diperbarui", description: `Sekolah "${schoolToToggle.name}" sekarang ${newStatus ? 'Aktif' : 'Nonaktif'}.` });
   }, [schools, user, toast, addLog]);
@@ -127,7 +135,6 @@ export default function ManageSchoolsPage() {
     return <LoadingSpinner message="Memuat Manajemen Sekolah..." icon={<Building className="h-12 w-12 animate-pulse text-primary mb-4"/>} />;
   }
   
-  // Redundant check, already handled in useEffect, but good for safety if useEffect logic changes
   if (user?.role !== "SuperAdmin") {
     return (
         <div className="flex h-screen items-center justify-center">
@@ -248,4 +255,3 @@ export default function ManageSchoolsPage() {
     </div>
   );
 }
-

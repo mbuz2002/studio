@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { PropsWithChildren} from 'react';
@@ -141,7 +140,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
               const schools: School[] = JSON.parse(schoolsData);
               const school = schools.find(s => s.id === parsedUser.schoolId);
               if (school) {
-                setCurrentSchool({ ...school, featureSettings: school.featureSettings || DEFAULT_FEATURE_SETTINGS });
+                setCurrentSchool({ ...school, featureSettings: school.featureSettings || { ...DEFAULT_FEATURE_SETTINGS } });
               }
             }
           }
@@ -210,7 +209,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
           const school = schools.find(s => s.id === foundUser!.schoolId && s.isActive);
           if (school) {
             setUser(foundUser);
-            setCurrentSchool({ ...school, featureSettings: school.featureSettings || DEFAULT_FEATURE_SETTINGS });
+            setCurrentSchool({ ...school, featureSettings: school.featureSettings || { ...DEFAULT_FEATURE_SETTINGS } });
             localStorage.setItem('currentUser', JSON.stringify(foundUser));
             addLog("INFO", `Pengguna ${email} (Peran: ${foundUser.role}, Sekolah: ${school.name}) berhasil masuk.`, "AuthContext-Login");
             router.push('/dashboard');

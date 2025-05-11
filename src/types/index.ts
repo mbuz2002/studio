@@ -441,4 +441,3 @@ export const CURRICULUM_STORAGE_KEY = "app-default-curriculum";
 export const THEME_STORAGE_KEY = "app-theme";
 export const ACADEMIC_EVENTS_STORAGE_KEY = "appAcademicEvents";
 export const SAAS_APP_SETTINGS_STORAGE_KEY = "appSaasSettings"; 
-
