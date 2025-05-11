@@ -1,48 +1,201 @@
-
 "use client";
 
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CreditCard } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { CreditCard, Search, MoreHorizontal, Edit2, AlertTriangle } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { useLog } from "@/contexts/LogContext";
+import type { School } from "@/types";
+import { SCHOOLS_STORAGE_KEY } from "@/types";
+import { Badge } from "@/components/ui/badge";
 import LoadingSpinner from "@/components/ui/loading-spinner";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { SubscriptionEditDialog } from "@/components/superadmin/SubscriptionEditDialog"; // To be created
 
 export default function SuperAdminSubscriptionsPage() {
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
+  const { addLog } = useLog();
+
+  const [schools, setSchools] = useState<School[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isClient, setIsClient] = useState(false);
+  const [editingSchool, setEditingSchool] = useState<School | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   useEffect(() => {
-    if (!loading && user?.role !== "SuperAdmin") {
-      router.push("/dashboard");
-    }
-  }, [user, loading, router]);
+    setIsClient(true);
+  }, []);
+  
+  useEffect(() => {
+    if (authLoading) return;
 
-  if (loading || !user || user.role !== "SuperAdmin") {
+    if (user?.role !== "SuperAdmin") {
+      toast({ title: "Akses Ditolak", variant: "destructive" });
+      router.push("/dashboard");
+      return;
+    }
+    if (isClient) {
+      addLog("INFO", `SuperAdmin ${user.email} mengakses halaman Manajemen Langganan.`, "SuperAdminSubscriptionsPage");
+    }
+
+    try {
+      const storedSchools = localStorage.getItem(SCHOOLS_STORAGE_KEY);
+      setSchools(storedSchools ? JSON.parse(storedSchools) : []);
+    } catch (error) {
+      console.error("Gagal memuat data sekolah:", error);
+      toast({ title: "Gagal Memuat Data Sekolah", variant: "destructive" });
+    }
+  }, [user, authLoading, router, toast, addLog, isClient]);
+
+  const filteredSchools = useMemo(() => {
+    if (!isClient) return [];
+    return schools.filter(school =>
+      school.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (school.adminEmail && school.adminEmail.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      school.subscriptionStatus.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [isClient, schools, searchTerm]);
+
+  const handleEditSubscription = (school: School) => {
+    setEditingSchool(school);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleSaveSubscription = (updatedSchool: School) => {
+    setSchools(prevSchools => {
+      const updatedSchoolsList = prevSchools.map(s => s.id === updatedSchool.id ? updatedSchool : s);
+      localStorage.setItem(SCHOOLS_STORAGE_KEY, JSON.stringify(updatedSchoolsList));
+      return updatedSchoolsList;
+    });
+    toast({ title: "Langganan Diperbarui", description: `Status langganan untuk ${updatedSchool.name} telah diperbarui.` });
+    addLog("INFO", `Langganan sekolah "${updatedSchool.name}" (ID: ${updatedSchool.id}) diperbarui oleh SuperAdmin ${user?.email}. Status baru: ${updatedSchool.subscriptionStatus}.`, "SuperAdminSubscriptionsPage");
+    setIsEditDialogOpen(false);
+    setEditingSchool(null);
+  };
+  
+  const getSubscriptionBadgeVariant = (status: School['subscriptionStatus']): "default" | "secondary" | "destructive" | "outline" => {
+    switch (status) {
+      case 'active': return 'default'; // Usually primary color
+      case 'trial': return 'secondary';
+      case 'inactive': return 'destructive';
+      default: return 'outline';
+    }
+  };
+
+
+  if (!isClient || authLoading) {
     return <LoadingSpinner message="Memuat Manajemen Langganan..." icon={<CreditCard className="h-12 w-12 animate-pulse text-primary mb-4"/>} />;
+  }
+  
+  if (user?.role !== "SuperAdmin") {
+    return (
+        <div className="flex h-screen items-center justify-center">
+             <p className="text-destructive text-lg">Akses ditolak. Hanya Super Admin yang dapat mengakses halaman ini.</p>
+        </div>
+    );
   }
 
   return (
     <div className="space-y-6 py-4 md:py-8">
-      <Card className="shadow-xl rounded-lg">
+      <Card className="shadow-xl rounded-lg overflow-hidden">
         <CardHeader className="p-6 rounded-t-lg bg-gradient-to-br from-primary via-accent to-secondary text-primary-foreground">
           <div className="flex items-center gap-3">
             <CreditCard className="h-8 w-8 text-primary-foreground drop-shadow" />
             <div>
-              <CardTitle className="text-2xl md:text-3xl">Manajemen Langganan</CardTitle>
+              <CardTitle className="text-2xl md:text-3xl">Manajemen Langganan Sekolah</CardTitle>
               <CardDescription className="text-primary-foreground/90 mt-1">
-                Kelola status langganan untuk semua sekolah. (Fitur Mendatang)
+                Kelola status langganan dan detail pembayaran untuk setiap sekolah.
               </CardDescription>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="pt-6 p-4 md:p-6">
-          <p className="text-muted-foreground">
-            Halaman ini akan berisi fitur untuk mengelola langganan sekolah, termasuk aktivasi, perpanjangan, dan pembatalan.
-            Fitur ini sedang dalam pengembangan.
-          </p>
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex flex-col md:flex-row gap-3 md:items-center mb-6">
+            <div className="flex-grow relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Cari sekolah (nama, email admin, status)..."
+                className="pl-10 w-full text-base md:text-sm h-10"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="rounded-lg border shadow-sm overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="min-w-[200px] px-3 sm:px-4 py-3 text-sm">Nama Sekolah</TableHead>
+                  <TableHead className="min-w-[150px] px-3 sm:px-4 py-3 text-sm hidden md:table-cell">Email Admin</TableHead>
+                  <TableHead className="min-w-[120px] px-3 sm:px-4 py-3 text-sm text-center">Status Langganan</TableHead>
+                  <TableHead className="min-w-[200px] px-3 sm:px-4 py-3 text-sm hidden lg:table-cell">Catatan Pembayaran</TableHead>
+                  <TableHead className="text-right min-w-[80px] px-3 sm:px-4 py-3 text-sm">Aksi</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredSchools.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center h-24 text-muted-foreground px-3 sm:px-4 text-base">
+                      Tidak ada data sekolah ditemukan.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredSchools.map((school) => (
+                    <TableRow key={school.id} className="hover:bg-muted/50">
+                      <TableCell className="font-medium px-3 sm:px-4 py-2 sm:py-3 align-top text-sm">
+                        {school.name}
+                        <div className="text-xs text-muted-foreground mt-0.5 md:hidden">Admin: {school.adminEmail || "-"}</div>
+                      </TableCell>
+                      <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top text-sm hidden md:table-cell">{school.adminEmail || "-"}</TableCell>
+                      <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top text-center">
+                        <Badge variant={getSubscriptionBadgeVariant(school.subscriptionStatus)} className="text-xs capitalize">
+                          {school.subscriptionStatus}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top text-xs text-muted-foreground hidden lg:table-cell truncate max-w-xs">
+                        {school.paymentDetails || "-"}
+                      </TableCell>
+                      <TableCell className="text-right px-3 sm:px-4 py-2 sm:py-3 align-top">
+                        <Button variant="outline" size="sm" onClick={() => handleEditSubscription(school)} className="text-xs">
+                          <Edit2 className="mr-1.5 h-3.5 w-3.5" /> Kelola
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+           {schools.length > 0 && (
+                <Alert variant="default" className="mt-6 border-primary/30">
+                    <AlertTriangle className="h-5 w-5 text-primary"/>
+                    <AlertTitle className="text-primary">Informasi Langganan</AlertTitle>
+                    <AlertDescription>
+                        Kelola status langganan dan catatan pembayaran untuk setiap sekolah. Pastikan data pembayaran dicatat dengan akurat (jika sistem pembayaran otomatis belum terintegrasi).
+                    </AlertDescription>
+                </Alert>
+            )}
         </CardContent>
       </Card>
+
+      {editingSchool && (
+        <SubscriptionEditDialog
+          isOpen={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          school={editingSchool}
+          onSave={handleSaveSubscription}
+        />
+      )}
     </div>
   );
 }

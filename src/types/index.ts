@@ -1,4 +1,3 @@
-
 export type UserRole = "Admin" | "KepalaSekolah" | "WakaKurikulum" | "TataUsaha" | "Guru" | "SuperAdmin";
 export type CurriculumFramework = "Kurikulum Merdeka" | "K-13" | "KTSP 2006";
 export type EducationLevel = "PAUD" | "SD/MI" | "SMP/MTs" | "SMA/MA" | "SMK/MAK" | "SLB" | "PKBM/Kesetaraan";
@@ -10,13 +9,13 @@ export interface User {
   name: string;
   role: UserRole;
   avatarUrl?: string;
-  schoolId?: string; // Added for multi-tenancy; SuperAdmin won't have this.
+  schoolId?: string; 
   updatedAt?: string; 
 }
 
 export interface School {
   id: string;
-  name: string; // Renamed from namaSekolah
+  name: string; 
   jenjangPendidikan: EducationLevel;
   alamat: string;
   nomorTelepon: string;
@@ -25,9 +24,9 @@ export interface School {
   npsn?: string; 
   logoUrl?: string; 
   kotaSekolah?: string;
-  adminEmail?: string; // Email for the initial admin of this school
+  adminEmail?: string; 
   subscriptionStatus: 'active' | 'inactive' | 'trial';
-  paymentDetails?: string; // For manual payment notes
+  paymentDetails?: string; 
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -48,7 +47,7 @@ export interface CurriculumItem {
   updatedAt: string; 
   createdByUserId?: string; 
   curriculumType: CurriculumFramework; 
-  schoolId: string; // Added for multi-tenancy
+  schoolId: string; 
 }
 
 export interface LessonPlan extends CurriculumItem {
@@ -183,7 +182,7 @@ export interface ModulAjar extends GenerateKurikulumMerdekaModuleOutput, Omit<Cu
   createdAt: string;
   updatedAt: string;
   createdByUserId?: string;
-  schoolId: string; // Added for multi-tenancy
+  schoolId: string; 
 }
 
 
@@ -267,7 +266,7 @@ export interface ExportedCurriculumData {
   annualPrograms: AnnualProgram[];
   semesterPrograms: SemesterProgram[];
   modulAjar?: ModulAjar[];
-  schools: School[]; // Changed from schoolProfile to schools array
+  schools: School[]; 
   appUsers: User[];
   subjects?: Subject[];
   teachers?: Teacher[];
@@ -275,7 +274,7 @@ export interface ExportedCurriculumData {
   schoolClasses?: SchoolClass[]; 
   teachingPeriodSettings?: TeachingPeriodSettings;
   academicEvents?: AcademicEvent[]; 
-  appSettings?: AppSettings; // Added for SaaS app settings
+  appSettings?: AppSettings; 
 }
 
 
@@ -340,7 +339,7 @@ export interface Subject {
   createdAt: string;
   updatedAt: string;
   createdByUserId?: string;
-  schoolId: string; // Added for multi-tenancy
+  schoolId: string; 
 }
 
 export interface Teacher {
@@ -352,7 +351,7 @@ export interface Teacher {
   createdAt: string;
   updatedAt: string;
   createdByUserId?: string;
-  schoolId: string; // Added for multi-tenancy
+  schoolId: string; 
 }
 
 export interface TimeSlot {
@@ -373,7 +372,7 @@ export interface TimetableEntry {
   createdAt: string;
   updatedAt: string;
   createdByUserId?: string;
-  schoolId: string; // Added for multi-tenancy
+  schoolId: string; 
 }
 
 export interface SchoolClass {
@@ -385,7 +384,7 @@ export interface SchoolClass {
   createdAt: string;
   updatedAt: string;
   createdByUserId?: string;
-  schoolId: string; // Added for multi-tenancy
+  schoolId: string; 
 }
 
 
@@ -406,7 +405,7 @@ export interface AcademicEvent {
   createdAt: string;
   updatedAt: string;
   createdByUserId?: string;
-  schoolId: string; // Added for multi-tenancy
+  schoolId: string; 
 }
 
 
@@ -420,10 +419,11 @@ export const TEACHING_PERIOD_SETTINGS_KEY = "appTeachingPeriodSettings";
 export const LESSON_PLANS_STORAGE_KEY = "appLessonPlans";
 export const ANNUAL_PROGRAMS_STORAGE_KEY = "appAnnualPrograms";
 export const SEMESTER_PROGRAMS_STORAGE_KEY = "appSemesterPrograms";
-export const SCHOOL_PROFILE_STORAGE_KEY = "schoolProfile"; // This will be for the *current school's profile being managed*
-export const SCHOOLS_STORAGE_KEY = "appSchools"; // For SuperAdmin to manage multiple schools
+export const SCHOOL_PROFILE_STORAGE_KEY = "schoolProfile"; 
+export const SCHOOLS_STORAGE_KEY = "appSchools"; 
 export const APP_USERS_STORAGE_KEY = "appUsers";
 export const CURRICULUM_STORAGE_KEY = "app-default-curriculum";
 export const THEME_STORAGE_KEY = "app-theme";
 export const ACADEMIC_EVENTS_STORAGE_KEY = "appAcademicEvents";
-export const SAAS_APP_SETTINGS_STORAGE_KEY = "appSaasSettings"; // For global app settings like logo
+export const SAAS_APP_SETTINGS_STORAGE_KEY = "appSaasSettings"; 
+

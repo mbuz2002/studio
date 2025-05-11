@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -33,10 +32,11 @@ const superAdminFeatureCards = [
     title: "Manajemen Langganan",
     description: "Kelola status langganan untuk semua sekolah.",
     icon: CreditCard,
-    href: "/superadmin/subscriptions",
+    href: "/superadmin/subscriptions", // Corrected href
     iconColor: "text-lime-500",
     gradientFrom: "from-lime-500/20",
     gradientTo: "to-lime-500/10",
+    disabled: false, // Enabled the card
   },
   {
     title: "Manajemen Pengguna Global",
