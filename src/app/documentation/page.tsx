@@ -2,7 +2,7 @@
 import type { Metadata } from 'next';
 import { LandingHeader } from '@/components/landing/LandingHeader';
 import { LandingFooter } from '@/components/landing/LandingFooter';
-import { FileTextIcon, BookOpen, Users, Settings, Sparkles, CalendarDays, CalendarClock, BrainCircuit, Database, ListChecks, ClipboardList, CalendarCheck, Home, ShieldCheck, CreditCard, LayoutDashboard } from 'lucide-react';
+import { FileTextIcon, BookOpen, Users, Settings, Sparkles, CalendarDays, CalendarClock, BrainCircuit, Database, ListChecks, ClipboardList, CalendarCheck, Home, ShieldCheck, CreditCard, LayoutDashboard, BookOpenText } from 'lucide-react'; // Added BookOpenText
 import { Separator } from '@/components/ui/separator';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
@@ -178,3 +178,4 @@ export default function DocumentationPage() {
     </div>
   );
 }
+
