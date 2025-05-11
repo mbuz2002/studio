@@ -1,6 +1,7 @@
 
 "use client";
 
+import * as React from "react"; // Added this line
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { GraduationCap, Sparkles, LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, BrainCircuit, Database, Users, Settings, BarChart3, MessageCircle, ShieldCheck, CheckCircle, ArrowRight, Zap, Star, Palette, Target, TrendingUp, Lightbulb } from 'lucide-react';
@@ -63,7 +64,6 @@ const features = [
     description: "Pilih dari berbagai tema tampilan (termasuk tema gelap dan terang profesional) untuk kenyamanan visual Anda.",
     color: "pink",
   },
-  // Removed SAAS feature
 ];
 
 const testimonials = [
@@ -89,22 +89,22 @@ const testimonials = [
 
 const benefits = [
   {
-    icon: <Zap className="h-8 w-8 text-sky-400 animate-subtle-bob" />,
+    icon: <Zap className="h-8 w-8 text-sky-400" />, // Removed animate-subtle-bob as it's applied via React.cloneElement
     title: "Efisiensi Waktu Maksimal",
     description: "Otomatisasi tugas rutin perencanaan dan pembuatan dokumen kurikulum, bebaskan waktu Anda untuk fokus pada pengajaran."
   },
   {
-    icon: <TrendingUp className="h-8 w-8 text-emerald-400 animate-subtle-bob [animation-delay:0.2s]" />,
+    icon: <TrendingUp className="h-8 w-8 text-emerald-400" />, // Removed animate-subtle-bob
     title: "Peningkatan Kualitas Pembelajaran",
     description: "Buat materi ajar yang lebih relevan, inovatif, dan sesuai dengan kebutuhan siswa berkat bantuan AI dan analisis data."
   },
   {
-    icon: <Lightbulb className="h-8 w-8 text-amber-400 animate-subtle-bob [animation-delay:0.4s]" />,
+    icon: <Lightbulb className="h-8 w-8 text-amber-400" />, // Removed animate-subtle-bob
     title: "Inovasi Berbasis AI",
     description: "Manfaatkan teknologi AI terkini untuk mendapatkan ide-ide segar, saran perbaikan, dan otomatisasi cerdas dalam setiap aspek kurikulum."
   },
   {
-    icon: <CheckCircle className="h-8 w-8 text-teal-400 animate-subtle-bob [animation-delay:0.6s]" />,
+    icon: <CheckCircle className="h-8 w-8 text-teal-400" />, // Removed animate-subtle-bob
     title: "Kepatuhan Kurikulum Terjamin",
     description: "Pastikan semua dokumen Anda (RPP, ATP, Modul Ajar) selalu sesuai dengan standar kurikulum terbaru (Merdeka, K-13, KTSP)."
   }
@@ -186,7 +186,7 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
-        
+
         {/* Benefits Section */}
         <section className="py-16 md:py-24 bg-slate-900">
           <div className="container mx-auto px-6">
