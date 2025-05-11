@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -169,15 +170,15 @@ export default function AdminSubscriptionStatusPage() {
                 <CardTitle className="text-xl flex items-center gap-2"><CreditCard size={22}/> Detail Langganan</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
-                <p><strong>Nama Sekolah:</strong> {schoolData.name}</p>
-                <p><strong>Status Langganan:</strong> <Badge variant={getSubscriptionBadgeVariant(schoolData.subscriptionStatus)} className="capitalize">{schoolData.subscriptionStatus || "Tidak Diketahui"}</Badge></p>
-                <p className="flex items-center gap-1.5">
+                <div><strong>Nama Sekolah:</strong> {schoolData.name}</div>
+                <div className="flex items-center gap-1.5"><strong>Status Langganan:</strong> <Badge variant={getSubscriptionBadgeVariant(schoolData.subscriptionStatus)} className="capitalize">{schoolData.subscriptionStatus || "Tidak Diketahui"}</Badge></div>
+                <div className="flex items-center gap-1.5">
                     <CalendarDays size={16} className="text-muted-foreground"/>
                     <strong>Periode Aktif:</strong> {getSubscriptionPeriodText(schoolData)}
-                </p>
-                {schoolData.paymentDetails && <p><strong>Catatan Pembayaran:</strong> {schoolData.paymentDetails}</p>}
+                </div>
+                {schoolData.paymentDetails && <div><strong>Catatan Pembayaran:</strong> {schoolData.paymentDetails}</div>}
                  {!schoolData.isActive && (
-                  <p className="text-destructive font-semibold flex items-center gap-1.5"><ShieldAlert size={16}/> Status Sekolah: Saat ini NONAKTIF</p>
+                  <div className="text-destructive font-semibold flex items-center gap-1.5"><ShieldAlert size={16}/> Status Sekolah: Saat ini NONAKTIF</div>
                 )}
               </CardContent>
             </Card>
@@ -216,3 +217,4 @@ export default function AdminSubscriptionStatusPage() {
     </div>
   );
 }
+
