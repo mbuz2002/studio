@@ -21,7 +21,7 @@ export default function SchoolSettingsPage() {
 
   useEffect(() => {
     if (isClient && !authLoading) {
-      if (!user || !["Admin", "TataUsaha"].includes(user.role)) {
+      if (!user || !["Admin", "TataUsaha", "KepalaSekolah"].includes(user.role)) { // Added KepalaSekolah
         toast({
           title: "Akses Ditolak",
           description: "Anda tidak memiliki izin untuk mengakses halaman ini.",
@@ -36,10 +36,10 @@ export default function SchoolSettingsPage() {
     return <LoadingSpinner message="Memuat pengaturan sekolah..." icon={<Building className="h-16 w-16 animate-pulse text-primary mb-6" />} />;
   }
   
-  if (!["Admin", "TataUsaha"].includes(user.role)) {
+  if (!["Admin", "TataUsaha", "KepalaSekolah"].includes(user.role)) { // Added KepalaSekolah
      return (
       <div className="flex h-[calc(100vh-150px)] items-center justify-center">
-        <p className="text-lg text-muted-foreground">Akses ditolak. Hanya Admin dan Tata Usaha yang dapat mengakses halaman ini.</p>
+        <p className="text-lg text-muted-foreground">Akses ditolak. Hanya Admin, Kepala Sekolah, dan Tata Usaha yang dapat mengakses halaman ini.</p>
       </div>
     );
   }
@@ -50,3 +50,4 @@ export default function SchoolSettingsPage() {
     </div>
   );
 }
+

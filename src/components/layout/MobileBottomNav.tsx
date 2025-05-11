@@ -37,7 +37,7 @@ const mobileNavItemsData: MobileNavItemData[] = [
   { href: "/master-data/classes", label: "Kelas", icon: ClipboardList, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha"], isMasterData: true },
   { href: "/timetables", label: "Jadwal", icon: ListChecks, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"]},
 
-  { href: "/school-settings", label: "Profil SKLH", icon: Home, roles: ["Admin", "TataUsaha"] },
+  { href: "/school-settings", label: "Profil SKLH", icon: Home, roles: ["Admin", "TataUsaha", "KepalaSekolah"] }, // Added KepalaSekolah
   { href: "/admin/user-management", label: "Pengguna", icon: Users, roles: ["Admin", "TataUsaha"] },
   { href: "/settings", label: "Atur Akun", icon: SettingsIcon, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/admin/system-settings", label: "Sys Cfg", icon: ShieldCheck, roles: ["Admin"] },

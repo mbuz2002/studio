@@ -47,7 +47,7 @@ const allNavItems: NavItem[] = [
   
   { href: "/timetables", label: "Jadwal Pelajaran", originalLabel: "Jadwal Pelajaran", icon: ListChecks, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"] }, 
   
-  { href: "/school-settings", label: "Profil Sekolah", originalLabel: "Profil Sekolah", icon: Home, roles: ["Admin", "TataUsaha"] },
+  { href: "/school-settings", label: "Profil Sekolah", originalLabel: "Profil Sekolah", icon: Home, roles: ["Admin", "TataUsaha", "KepalaSekolah"] }, // Added KepalaSekolah
   { href: "/admin/user-management", label: "Manajemen Pengguna", originalLabel: "Manajemen Pengguna", icon: Users, roles: ["Admin", "TataUsaha"], isSystemSetting: false },
   { href: "/settings", label: "Pengaturan Akun", originalLabel: "Pengaturan Akun", icon: SettingsIcon, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
   { href: "/admin/system-settings", label: "Pengaturan Sistem", originalLabel: "Pengaturan Sistem", icon: ShieldCheck, roles: ["Admin"], isSystemSetting: true },
