@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState, useCallback } from 'react';
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset, SidebarRail, SidebarGroup, SidebarGroupLabel } from '@/components/ui/sidebar';
 import { AppLogo } from '@/components/layout/AppLogo';
 import { UserProfile } from '@/components/layout/UserProfile';
-import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, ShieldCheck, Activity, Users, Info, BrainCircuit, FileText, LogOut, Package, UserCheck, ListChecks, Book, Home, ClipboardList, CalendarCheck, Building, CreditCard, SlidersHorizontal } from 'lucide-react'; // Added Building, CreditCard
+import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, ShieldCheck, Activity, Users, Info, BrainCircuit, FileText, LogOut, Package, UserCheck, ListChecks, Book, Home, ClipboardList, CalendarCheck, Building, CreditCard, SlidersHorizontal, BarChart3 } from 'lucide-react'; // Added Building, CreditCard, BarChart3
 import Link from 'next/link';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
@@ -33,8 +33,11 @@ const allNavItems: NavItem[] = [
   // SuperAdmin Specific Menu
   { href: "/superadmin/dashboard", label: "SA Dasbor", originalLabel: "SA Dasbor", icon: LayoutDashboard, roles: ["SuperAdmin"], isSuperAdminOnly: true },
   { href: "/superadmin/schools", label: "Manajemen Sekolah", originalLabel: "Manajemen Sekolah", icon: Building, roles: ["SuperAdmin"], isSuperAdminOnly: true },
-  { href: "/superadmin/app-settings", label: "Pengaturan App", originalLabel: "Pengaturan App", icon: SlidersHorizontal, roles: ["SuperAdmin"], isSuperAdminOnly: true },
-  // { href: "/superadmin/subscriptions", label: "Langganan", originalLabel:"Langganan", icon: CreditCard, roles: ["SuperAdmin"], isSuperAdminOnly: true },
+  { href: "/superadmin/app-settings", label: "Pengaturan Global", originalLabel: "Pengaturan Global", icon: SlidersHorizontal, roles: ["SuperAdmin"], isSuperAdminOnly: true },
+  { href: "/superadmin/subscriptions", label: "Langganan", originalLabel:"Langganan", icon: CreditCard, roles: ["SuperAdmin"], isSuperAdminOnly: true },
+  { href: "/superadmin/global-user-management", label: "Pengguna Global", originalLabel: "Manajemen Pengguna Global", icon: Users, roles: ["SuperAdmin"], isSuperAdminOnly: true },
+  { href: "/superadmin/analytics", label: "Analitik Global", originalLabel: "Analitik & Laporan Global", icon: BarChart3, roles: ["SuperAdmin"], isSuperAdminOnly: true },
+  { href: "/superadmin/global-activity-logs", label: "Log Global", originalLabel: "Log Aktivitas Global", icon: Activity, roles: ["SuperAdmin"], isSuperAdminOnly: true },
 
 
   // Regular App Menu
@@ -57,7 +60,7 @@ const allNavItems: NavItem[] = [
   { href: "/school-settings", label: "Profil Sekolah", originalLabel: "Profil Sekolah", icon: Home, roles: ["Admin", "TataUsaha", "KepalaSekolah"] },
   { href: "/admin/user-management", label: "Manajemen Pengguna", originalLabel: "Manajemen Pengguna", icon: Users, roles: ["Admin", "TataUsaha"] }, // Now school Admin can access this
   { href: "/settings", label: "Pengaturan Akun", originalLabel: "Pengaturan Akun", icon: SettingsIcon, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
-  { href: "/admin/system-settings", label: "Pengaturan Sistem", originalLabel: "Pengaturan Sistem", icon: ShieldCheck, roles: ["Admin"], isSystemSetting: true }, // School Admin system settings
+  { href: "/admin/system-settings", label: "Pengaturan Sekolah", originalLabel: "Pengaturan Sekolah", icon: ShieldCheck, roles: ["Admin"], isSystemSetting: true }, // School Admin system settings
   { href: "/admin/system-logs", label: "Log Sistem", originalLabel: "Log Sistem", icon: Activity, roles: ["Admin"], isSystemSetting: true, isHiddenFromSidebar: true }, // School Admin logs
 ];
 
@@ -180,10 +183,11 @@ export default function AppLayout({ children }: PropsWithChildren) {
   const dashboardItem = user.role === "SuperAdmin" ? superAdminDashboardItem : regularDashboardItem;
 
   const superAdminItems = filteredNavItems.filter(item => item.isSuperAdminOnly && item.href !== "/superadmin/dashboard");
-  const curriculumPlanningItems = filteredNavItems.filter(item => !item.isSystemSetting && !item.isMasterData && !item.isSuperAdminOnly && item.href !== "/dashboard" && item.href !== "/settings" && item.href !== "/school-settings" && !item.href.includes("/ai-") && item.href !== "/academic-calendar");
+  const curriculumPlanningItems = filteredNavItems.filter(item => !item.isSystemSetting && !item.isMasterData && !item.isSuperAdminOnly && item.href !== "/dashboard" && item.href !== "/settings" && item.href !== "/school-settings" && !item.href.includes("/ai-") && item.href !== "/academic-calendar" && item.href !== "/timetables");
   const aiToolsItems = filteredNavItems.filter(item => item.href.includes("/ai-") && !item.isSuperAdminOnly);
   const masterDataItems = filteredNavItems.filter(item => item.isMasterData && !item.isSuperAdminOnly);
   const generalSettingsItems = filteredNavItems.filter(item => !item.isSuperAdminOnly && (item.isSystemSetting || item.href === "/settings" || item.href === "/admin/user-management" || item.href === "/school-settings"));
+  const academicManagementItems = filteredNavItems.filter(item => (item.href === "/academic-calendar" || item.href === "/timetables") && !item.isSuperAdminOnly);
 
 
   return (
@@ -255,22 +259,24 @@ export default function AppLayout({ children }: PropsWithChildren) {
               </SidebarGroup>
             )}
 
-            {filteredNavItems.find(item => item.href === "/academic-calendar" && !item.isSuperAdminOnly) && (
+            {academicManagementItems.length > 0 && (
                  <SidebarGroup>
-                 <SidebarGroupLabel className="group-data-[state=expanded]:md:inline hidden">Akademik</SidebarGroupLabel>
+                 <SidebarGroupLabel className="group-data-[state=expanded]:md:inline hidden">Manajemen Akademik</SidebarGroupLabel>
                  <SidebarMenu>
-                    <SidebarMenuItem>
-                        <Link href="/academic-calendar" legacyBehavior passHref>
-                            <SidebarMenuButton
-                            className="w-full text-base font-medium"
-                            tooltip={{children: "Kalender Pendidikan", className: "ml-1 text-xs"}}
-                            isActive={pathname.startsWith("/academic-calendar")}
-                            >
-                            <CalendarCheck />
-                            <span>Kalender Pendidikan</span>
-                            </SidebarMenuButton>
-                        </Link>
-                    </SidebarMenuItem>
+                    {academicManagementItems.map((item) => (
+                        <SidebarMenuItem key={item.href}>
+                            <Link href={item.href} legacyBehavior passHref>
+                                <SidebarMenuButton
+                                className="w-full text-base font-medium"
+                                tooltip={{children: item.originalLabel || item.label, className: "ml-1 text-xs"}}
+                                isActive={pathname.startsWith(item.href)}
+                                >
+                                <item.icon />
+                                <span>{item.label}</span>
+                                </SidebarMenuButton>
+                            </Link>
+                        </SidebarMenuItem>
+                    ))}
                  </SidebarMenu>
                  </SidebarGroup>
             )}
@@ -364,3 +370,4 @@ export default function AppLayout({ children }: PropsWithChildren) {
       </SidebarProvider>
   );
 }
+

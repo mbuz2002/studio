@@ -1,9 +1,9 @@
 
 "use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Building, Settings, Users, BarChart3, Activity, GraduationCap, SlidersHorizontal } from "lucide-react";
+import { Building, Settings, Users, BarChart3, Activity, GraduationCap, SlidersHorizontal, CreditCard } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect } from "react";
@@ -21,43 +21,49 @@ const superAdminFeatureCards = [
     gradientTo: "to-sky-500/10",
   },
   {
-    title: "Pengaturan Aplikasi",
-    description: "Konfigurasi logo, nama aplikasi, dan pengaturan global lainnya.",
-    icon: SlidersHorizontal, // Changed from Settings
+    title: "Pengaturan Aplikasi Global",
+    description: "Konfigurasi nama aplikasi, logo, dan aspek global lainnya.",
+    icon: SlidersHorizontal, 
     href: "/superadmin/app-settings",
     iconColor: "text-amber-500",
     gradientFrom: "from-amber-500/20",
     gradientTo: "to-amber-500/10",
   },
   {
+    title: "Manajemen Langganan",
+    description: "Kelola status langganan untuk semua sekolah.",
+    icon: CreditCard,
+    href: "/superadmin/subscriptions",
+    iconColor: "text-lime-500",
+    gradientFrom: "from-lime-500/20",
+    gradientTo: "to-lime-500/10",
+  },
+  {
     title: "Manajemen Pengguna Global",
-    description: "Lihat semua pengguna di semua sekolah (fitur mendatang).",
+    description: "Lihat dan kelola semua pengguna di seluruh sekolah.",
     icon: Users,
-    href: "#", // Placeholder for future feature
+    href: "/superadmin/global-user-management",
     iconColor: "text-rose-500",
     gradientFrom: "from-rose-500/20",
     gradientTo: "to-rose-500/10",
-    disabled: true,
   },
   {
     title: "Analitik & Laporan",
-    description: "Dasbor analitik penggunaan aplikasi (fitur mendatang).",
+    description: "Dasbor analitik penggunaan aplikasi secara keseluruhan.",
     icon: BarChart3,
-    href: "#", // Placeholder
+    href: "/superadmin/analytics",
     iconColor: "text-teal-500",
     gradientFrom: "from-teal-500/20",
     gradientTo: "to-teal-500/10",
-    disabled: true,
   },
    {
     title: "Log Aktivitas Global",
-    description: "Tinjau semua log aktivitas penting di seluruh sistem (fitur mendatang).",
+    description: "Tinjau semua log aktivitas penting di seluruh sistem.",
     icon: Activity,
-    href: "#", // Placeholder
+    href: "/superadmin/global-activity-logs",
     iconColor: "text-indigo-500",
     gradientFrom: "from-indigo-500/20",
     gradientTo: "to-indigo-500/10",
-    disabled: true,
   },
 ];
 
@@ -115,27 +121,29 @@ export default function SuperAdminDashboardPage() {
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="flex-grow flex flex-col justify-between p-6 pt-3">
-              <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3 mb-5">{feature.description}</p>
+            <CardContent className="flex-grow p-6 pt-3">
+              <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">{feature.description}</p>
+            </CardContent>
+            <CardFooter className="p-4 pt-0">
               <Button
-                asChild={!feature.disabled}
+                asChild
                 variant="outline"
-                className={`w-full text-base ${feature.disabled ? "cursor-not-allowed" : "border-primary/60 text-primary hover:bg-primary hover:text-primary-foreground"} transition-colors duration-300 rounded-md shadow-sm hover:shadow-md py-2.5 mt-auto`}
+                className={`w-full text-base border-primary/60 text-primary hover:bg-primary hover:text-primary-foreground transition-colors duration-300 rounded-md shadow-sm hover:shadow-md py-2.5`}
                 disabled={feature.disabled}
-                onClick={feature.disabled ? (e) => e.preventDefault() : undefined}
               >
                 {feature.disabled ? (
-                  <span>Segera Hadir</span>
+                  <span className="opacity-50 cursor-not-allowed">Segera Hadir</span>
                 ) : (
                   <Link href={feature.href}>
                     Buka Fitur
                   </Link>
                 )}
               </Button>
-            </CardContent>
+            </CardFooter>
           </Card>
         ))}
       </div>
     </div>
   );
 }
+
