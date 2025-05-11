@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState, useCallback } from 'react';
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset, SidebarRail, SidebarGroup, SidebarGroupLabel } from '@/components/ui/sidebar';
 import { AppLogo } from '@/components/layout/AppLogo';
 import { UserProfile } from '@/components/layout/UserProfile';
-import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, ShieldCheck, Activity, Users, Info, BrainCircuit, FileText, LogOut, Package, UserCheck, ListChecks, Book, Home, ClipboardList, CalendarCheck } from 'lucide-react';
+import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, ShieldCheck, Activity, Users, Info, BrainCircuit, FileText, LogOut, Package, UserCheck, ListChecks, Book, Home, ClipboardList, CalendarCheck, Building, CreditCard, SlidersHorizontal } from 'lucide-react'; // Added Building, CreditCard
 import Link from 'next/link';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
@@ -26,31 +26,39 @@ interface NavItem {
   isHiddenFromSidebar?: boolean;
   isKurikulumMerdekaOnly?: boolean;
   isMasterData?: boolean;
+  isSuperAdminOnly?: boolean; // New flag for SuperAdmin specific menu
 }
 
 const allNavItems: NavItem[] = [
-  { href: "/dashboard", label: "Dasbor", originalLabel: "Dasbor", icon: LayoutDashboard, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
-  { href: "/lesson-plans", label: "RPP", originalLabel: "RPP / ATP", icon: BookOpenText, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
-  { href: "/annual-programs", label: "Program Tahunan", originalLabel: "Program Tahunan", icon: CalendarDays, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
-  { href: "/semester-programs", label: "Program Semester", originalLabel: "Program Semester", icon: CalendarClock, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
-  { href: "/modul-ajar", label: "Modul Ajar (KM)", originalLabel: "Modul Ajar (KM)", icon: BrainCircuit, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], isKurikulumMerdekaOnly: true },
-  { href: "/ai-assistant", label: "Asisten AI Materi", originalLabel: "Asisten AI Materi", icon: Sparkles, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "Guru"] },
-  { href: "/ai-kurikulum-merdeka-module", label: "Buat Modul Ajar AI", originalLabel: "Buat Modul Ajar AI", icon: BrainCircuit, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], isKurikulumMerdekaOnly: true, isHiddenFromSidebar: true },
-  
-  { href: "/academic-calendar", label: "Kalender Pendidikan", originalLabel: "Kalender Pendidikan", icon: CalendarCheck, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+  // SuperAdmin Specific Menu
+  { href: "/superadmin/dashboard", label: "SA Dasbor", originalLabel: "SA Dasbor", icon: LayoutDashboard, roles: ["SuperAdmin"], isSuperAdminOnly: true },
+  { href: "/superadmin/schools", label: "Manajemen Sekolah", originalLabel: "Manajemen Sekolah", icon: Building, roles: ["SuperAdmin"], isSuperAdminOnly: true },
+  { href: "/superadmin/app-settings", label: "Pengaturan App", originalLabel: "Pengaturan App", icon: SlidersHorizontal, roles: ["SuperAdmin"], isSuperAdminOnly: true },
+  // { href: "/superadmin/subscriptions", label: "Langganan", originalLabel:"Langganan", icon: CreditCard, roles: ["SuperAdmin"], isSuperAdminOnly: true },
 
-  // Master Data Section
-  { href: "/master-data/subjects", label: "Mata Pelajaran", originalLabel: "Mata Pelajaran", icon: Book, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum"], isMasterData: true },
-  { href: "/master-data/teachers", label: "Data Guru", originalLabel: "Data Guru", icon: UserCheck, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum"], isMasterData: true },
-  { href: "/master-data/classes", label: "Data Kelas", originalLabel: "Data Kelas", icon: ClipboardList, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha"], isMasterData: true },
+
+  // Regular App Menu
+  { href: "/dashboard", label: "Dasbor", originalLabel: "Dasbor", icon: LayoutDashboard, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+  { href: "/lesson-plans", label: "RPP", originalLabel: "RPP / ATP", icon: BookOpenText, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+  { href: "/annual-programs", label: "Program Tahunan", originalLabel: "Program Tahunan", icon: CalendarDays, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+  { href: "/semester-programs", label: "Program Semester", originalLabel: "Program Semester", icon: CalendarClock, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+  { href: "/modul-ajar", label: "Modul Ajar (KM)", originalLabel: "Modul Ajar (KM)", icon: BrainCircuit, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], isKurikulumMerdekaOnly: true },
+  { href: "/ai-assistant", label: "Asisten AI Materi", originalLabel: "Asisten AI Materi", icon: Sparkles, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"] },
+  { href: "/ai-kurikulum-merdeka-module", label: "Buat Modul Ajar AI", originalLabel: "Buat Modul Ajar AI", icon: BrainCircuit, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], isKurikulumMerdekaOnly: true, isHiddenFromSidebar: true },
   
-  { href: "/timetables", label: "Jadwal Pelajaran", originalLabel: "Jadwal Pelajaran", icon: ListChecks, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"] }, 
+  { href: "/academic-calendar", label: "Kalender Pendidikan", originalLabel: "Kalender Pendidikan", icon: CalendarCheck, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+
+  { href: "/master-data/subjects", label: "Mata Pelajaran", originalLabel: "Mata Pelajaran", icon: Book, roles: ["Admin", "KepalaSekolah", "WakaKurikulum"], isMasterData: true },
+  { href: "/master-data/teachers", label: "Data Guru", originalLabel: "Data Guru", icon: UserCheck, roles: ["Admin", "KepalaSekolah", "WakaKurikulum"], isMasterData: true },
+  { href: "/master-data/classes", label: "Data Kelas", originalLabel: "Data Kelas", icon: ClipboardList, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha"], isMasterData: true },
   
-  { href: "/school-settings", label: "Profil Sekolah", originalLabel: "Profil Sekolah", icon: Home, roles: ["SuperAdmin", "Admin", "TataUsaha", "KepalaSekolah"] },
-  { href: "/admin/user-management", label: "Manajemen Pengguna", originalLabel: "Manajemen Pengguna", icon: Users, roles: ["SuperAdmin", "Admin", "TataUsaha"], isSystemSetting: false },
+  { href: "/timetables", label: "Jadwal Pelajaran", originalLabel: "Jadwal Pelajaran", icon: ListChecks, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"] }, 
+  
+  { href: "/school-settings", label: "Profil Sekolah", originalLabel: "Profil Sekolah", icon: Home, roles: ["Admin", "TataUsaha", "KepalaSekolah"] },
+  { href: "/admin/user-management", label: "Manajemen Pengguna", originalLabel: "Manajemen Pengguna", icon: Users, roles: ["Admin", "TataUsaha"] }, // Now school Admin can access this
   { href: "/settings", label: "Pengaturan Akun", originalLabel: "Pengaturan Akun", icon: SettingsIcon, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
-  { href: "/admin/system-settings", label: "Pengaturan Sistem", originalLabel: "Pengaturan Sistem", icon: ShieldCheck, roles: ["SuperAdmin", "Admin"], isSystemSetting: true },
-  { href: "/admin/system-logs", label: "Log Sistem", originalLabel: "Log Sistem", icon: Activity, roles: ["SuperAdmin", "Admin"], isSystemSetting: true, isHiddenFromSidebar: true },
+  { href: "/admin/system-settings", label: "Pengaturan Sistem", originalLabel: "Pengaturan Sistem", icon: ShieldCheck, roles: ["Admin"], isSystemSetting: true }, // School Admin system settings
+  { href: "/admin/system-logs", label: "Log Sistem", originalLabel: "Log Sistem", icon: Activity, roles: ["Admin"], isSystemSetting: true, isHiddenFromSidebar: true }, // School Admin logs
 ];
 
 export default function AppLayout({ children }: PropsWithChildren) {
@@ -87,10 +95,15 @@ export default function AppLayout({ children }: PropsWithChildren) {
       .filter(item =>
         item.roles.includes(user.role) &&
         !item.isHiddenFromSidebar &&
-        (!item.isMasterData || ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha"].includes(user.role)) &&
-        (item.isSystemSetting === false || (item.isSystemSetting === true && ["SuperAdmin", "Admin"].includes(user.role)) || item.roles.includes(user.role) ) &&
-        (!item.isKurikulumMerdekaOnly || defaultCurriculum === "Kurikulum Merdeka")
+        (!item.isMasterData || ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha"].includes(user.role)) && // SuperAdmin can see master data if needed for global templates in future
+        (item.isSystemSetting === false || (item.isSystemSetting === true && ["Admin"].includes(user.role)) || (item.isSuperAdminOnly && user.role === "SuperAdmin")) && // System settings for school Admin or SuperAdmin app settings
+        (!item.isKurikulumMerdekaOnly || defaultCurriculum === "Kurikulum Merdeka") &&
+        (user.role === "SuperAdmin" ? item.isSuperAdminOnly === true : !item.isSuperAdminOnly) // Segregate menus
     ).sort((a,b) => {
+        // SuperAdmin items first
+        if (a.isSuperAdminOnly && !b.isSuperAdminOnly) return -1;
+        if (!a.isSuperAdminOnly && b.isSuperAdminOnly) return 1;
+
         if (a.isSystemSetting && !b.isSystemSetting) return 1;
         if (!a.isSystemSetting && b.isSystemSetting) return -1;
         if (a.isSystemSetting && b.isSystemSetting) return a.label.localeCompare(b.label);
@@ -114,12 +127,24 @@ export default function AppLayout({ children }: PropsWithChildren) {
 
    useEffect(() => {
     if (!loading && isAuthenticated && user) {
+      const currentPathRoot = "/" + pathname.split('/')[1]; // e.g. /admin, /superadmin, /dashboard
       const currentNavItem = allNavItems.find(item => pathname.startsWith(item.href) && item.href !== '/');
 
+      if (user.role === "SuperAdmin" && !pathname.startsWith('/superadmin') && pathname !== '/settings') {
+         // If SuperAdmin is not on their pages or general settings, redirect them.
+         router.push("/superadmin/dashboard");
+         return;
+      }
+      if (user.role !== "SuperAdmin" && pathname.startsWith('/superadmin')) {
+         // If non-SuperAdmin tries to access SuperAdmin pages, redirect.
+         router.push("/dashboard");
+         return;
+      }
+      
       if (currentNavItem) {
         if (!currentNavItem.roles.includes(user.role)) {
-          const dashboardAccess = allNavItems.find(item => item.href === "/dashboard" && item.roles.includes(user.role));
-          if (dashboardAccess) router.push("/dashboard"); else logout();
+          const dashboardAccess = allNavItems.find(item => item.href === (user.role === "SuperAdmin" ? "/superadmin/dashboard" : "/dashboard") && item.roles.includes(user.role));
+          if (dashboardAccess) router.push(dashboardAccess.href); else logout();
           return;
         }
         if (currentNavItem.isKurikulumMerdekaOnly && defaultCurriculum !== "Kurikulum Merdeka") {
@@ -128,18 +153,18 @@ export default function AppLayout({ children }: PropsWithChildren) {
                 description: `Menu '${currentNavItem.originalLabel || currentNavItem.label}' hanya untuk Kurikulum Merdeka. Kurikulum saat ini: ${defaultCurriculum}.`,
                 variant: "destructive",
             });
-            router.push("/dashboard");
+            router.push(user.role === "SuperAdmin" ? "/superadmin/dashboard" : "/dashboard");
             return;
         }
          if (currentNavItem.isMasterData && !["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha"].includes(user.role)) {
             toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengakses menu Master Data.", variant: "destructive"});
-            router.push("/dashboard");
+            router.push(user.role === "SuperAdmin" ? "/superadmin/dashboard" : "/dashboard");
             return;
         }
       } else if (pathname === "/settings" || pathname === "/school-settings") {
          const settingsBaseAccess = allNavItems.find(item => (item.href === "/settings" || item.href === "/school-settings") && item.roles.includes(user.role));
          if (!settingsBaseAccess) {
-            router.push("/dashboard");
+            router.push(user.role === "SuperAdmin" ? "/superadmin/dashboard" : "/dashboard");
          }
       }
     }
@@ -150,10 +175,15 @@ export default function AppLayout({ children }: PropsWithChildren) {
     return <LoadingSpinner message="Memuat Sesi Anda..." icon={<Sparkles className="h-16 w-16 animate-pulse text-primary mb-6" />} />;
   }
 
-  const curriculumPlanningItems = filteredNavItems.filter(item => !item.isSystemSetting && !item.isMasterData && item.href !== "/dashboard" && item.href !== "/settings" && item.href !== "/school-settings" && !item.href.includes("/ai-") && item.href !== "/academic-calendar");
-  const aiToolsItems = filteredNavItems.filter(item => item.href.includes("/ai-"));
-  const masterDataItems = filteredNavItems.filter(item => item.isMasterData);
-  const settingsItems = filteredNavItems.filter(item => item.isSystemSetting || item.href === "/settings" || item.href === "/admin/user-management" || item.href === "/school-settings");
+  const regularDashboardItem = filteredNavItems.find(item => item.href === "/dashboard");
+  const superAdminDashboardItem = filteredNavItems.find(item => item.href === "/superadmin/dashboard");
+  const dashboardItem = user.role === "SuperAdmin" ? superAdminDashboardItem : regularDashboardItem;
+
+  const superAdminItems = filteredNavItems.filter(item => item.isSuperAdminOnly && item.href !== "/superadmin/dashboard");
+  const curriculumPlanningItems = filteredNavItems.filter(item => !item.isSystemSetting && !item.isMasterData && !item.isSuperAdminOnly && item.href !== "/dashboard" && item.href !== "/settings" && item.href !== "/school-settings" && !item.href.includes("/ai-") && item.href !== "/academic-calendar");
+  const aiToolsItems = filteredNavItems.filter(item => item.href.includes("/ai-") && !item.isSuperAdminOnly);
+  const masterDataItems = filteredNavItems.filter(item => item.isMasterData && !item.isSuperAdminOnly);
+  const generalSettingsItems = filteredNavItems.filter(item => !item.isSuperAdminOnly && (item.isSystemSetting || item.href === "/settings" || item.href === "/admin/user-management" || item.href === "/school-settings"));
 
 
   return (
@@ -165,21 +195,43 @@ export default function AppLayout({ children }: PropsWithChildren) {
           <ScrollArea className="flex-1">
           <SidebarContent className="p-2">
             <SidebarMenu>
-              {filteredNavItems.find(item => item.href === "/dashboard") && (
+              {dashboardItem && (
                 <SidebarMenuItem>
-                  <Link href="/dashboard" legacyBehavior passHref>
+                  <Link href={dashboardItem.href} legacyBehavior passHref>
                     <SidebarMenuButton
                       className="w-full text-base font-medium"
-                      tooltip={{children: "Dasbor", className: "ml-1 text-xs"}}
-                      isActive={pathname === "/dashboard"}
+                      tooltip={{children: dashboardItem.label, className: "ml-1 text-xs"}}
+                      isActive={pathname === dashboardItem.href}
                     >
                       <LayoutDashboard />
-                      <span>Dasbor</span>
+                      <span>{dashboardItem.label}</span>
                     </SidebarMenuButton>
                   </Link>
                 </SidebarMenuItem>
               )}
             </SidebarMenu>
+
+            {superAdminItems.length > 0 && (
+              <SidebarGroup>
+                <SidebarGroupLabel className="group-data-[state=expanded]:md:inline hidden">Super Admin</SidebarGroupLabel>
+                <SidebarMenu>
+                  {superAdminItems.map((item) => (
+                    <SidebarMenuItem key={item.href}>
+                      <Link href={item.href} legacyBehavior passHref>
+                        <SidebarMenuButton
+                          className="w-full text-base font-medium"
+                          tooltip={{children: item.label, className: "ml-1 text-xs"}}
+                          isActive={pathname.startsWith(item.href)}
+                        >
+                          <item.icon />
+                          <span>{item.label}</span>
+                        </SidebarMenuButton>
+                      </Link>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroup>
+            )}
 
             {curriculumPlanningItems.length > 0 && (
               <SidebarGroup>
@@ -203,7 +255,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
               </SidebarGroup>
             )}
 
-            {filteredNavItems.find(item => item.href === "/academic-calendar") && (
+            {filteredNavItems.find(item => item.href === "/academic-calendar" && !item.isSuperAdminOnly) && (
                  <SidebarGroup>
                  <SidebarGroupLabel className="group-data-[state=expanded]:md:inline hidden">Akademik</SidebarGroupLabel>
                  <SidebarMenu>
@@ -268,11 +320,11 @@ export default function AppLayout({ children }: PropsWithChildren) {
                 </SidebarGroup>
             )}
 
-            {settingsItems.length > 0 && (
+            {generalSettingsItems.length > 0 && (
               <SidebarGroup>
                 <SidebarGroupLabel className="group-data-[state=expanded]:md:inline hidden">Pengaturan</SidebarGroupLabel>
                 <SidebarMenu>
-                  {settingsItems.map((item) => (
+                  {generalSettingsItems.map((item) => (
                     <SidebarMenuItem key={item.href}>
                       <Link href={item.href} legacyBehavior passHref>
                         <SidebarMenuButton
@@ -305,11 +357,10 @@ export default function AppLayout({ children }: PropsWithChildren) {
               </div>
            )}
             <footer className="mt-auto pt-8 text-center text-xs text-muted-foreground">
-              <p>&copy; {new Date().getFullYear()} GUMPLA AI. Created by RIFQY IZA FAHRIZAL.</p>
+              <p>&copy; {new Date().getFullYear()} {useAuth().currentSchool?.name || "GUMPLA AI"}. Created by RIFQY IZA FAHRIZAL.</p>
             </footer>
           </main>
         </SidebarInset>
       </SidebarProvider>
   );
 }
-

@@ -10,13 +10,13 @@ export interface User {
   name: string;
   role: UserRole;
   avatarUrl?: string;
-  schoolId?: string; 
+  schoolId?: string; // Added for multi-tenancy; SuperAdmin won't have this.
   updatedAt?: string; 
 }
 
-export interface SchoolProfile {
+export interface School {
   id: string;
-  namaSekolah: string;
+  name: string; // Renamed from namaSekolah
   jenjangPendidikan: EducationLevel;
   alamat: string;
   nomorTelepon: string;
@@ -25,8 +25,19 @@ export interface SchoolProfile {
   npsn?: string; 
   logoUrl?: string; 
   kotaSekolah?: string;
+  adminEmail?: string; // Email for the initial admin of this school
+  subscriptionStatus: 'active' | 'inactive' | 'trial';
+  paymentDetails?: string; // For manual payment notes
+  isActive: boolean;
+  createdAt: string;
   updatedAt: string;
 }
+
+export interface AppSettings {
+  appLogoUrl?: string;
+  appName?: string;
+}
+
 
 export interface CurriculumItem {
   id: string;
@@ -37,13 +48,14 @@ export interface CurriculumItem {
   updatedAt: string; 
   createdByUserId?: string; 
   curriculumType: CurriculumFramework; 
+  schoolId: string; // Added for multi-tenancy
 }
 
 export interface LessonPlan extends CurriculumItem {
   type: 'RPP'; 
   topic: string; 
   learningObjectives: string[]; 
-  alokasiWaktuJP?: string; // Format: "X JP", e.g., "2 JP" or "3 x 40 menit (2 JP)"
+  alokasiWaktuJP?: string;
   
   bidangKeahlian?: string; 
   programKeahlian?: string; 
@@ -71,7 +83,7 @@ export interface LessonPlan extends CurriculumItem {
 export interface AnnualProgramComponent {
   topic: string; 
   elemenCapaianPembelajaran?: string[]; 
-  alokasiWaktu: string; // Format: "X JP", e.g., "24 JP"
+  alokasiWaktu: string; 
 }
 
 export interface AnnualProgram extends CurriculumItem {
@@ -87,7 +99,7 @@ export interface WeeklyUnit {
   mingguKe: number;
   bulan?: string; 
   materiPokokAtauTujuanPembelajaran: string; 
-  alokasiWaktu: string; // Format: "X JP", e.g., "6 JP"
+  alokasiWaktu: string; 
   metodeStrategi?: string[]; 
   sumberBelajar?: string[]; 
   rencanaAsesmen?: string[]; 
@@ -99,21 +111,20 @@ export interface SemesterProgram extends CurriculumItem {
   semester: '1' | '2'; 
   year: string; 
   capaianPembelajaranUmum?: string; 
-  alokasiWaktuTotalSemester?: string; // Format: "X JP", e.g., "72 JP" or "18 Minggu x 4 JP/Minggu = 72 JP"
+  alokasiWaktuTotalSemester?: string; 
   komponenMingguan: WeeklyUnit[];
 }
 
-// For AI Kurikulum Merdeka Module Generation
 export interface ModulAjarIdentitas {
   namaPenyusun: string;
   institusi: string;
   tahunAjar: string;
-  jenjangSekolah: string; // e.g., SMA, SMK
-  fase: string; // e.g., Fase E, Fase F
-  kelasSemester: string; // e.g., X / Ganjil
-  alokasiWaktu: string; // Format: "X JP", e.g., "12 JP" or "3 Pertemuan @ 4JP = 12 JP"
+  jenjangSekolah: string; 
+  fase: string; 
+  kelasSemester: string; 
+  alokasiWaktu: string; 
   mataPelajaran: string;
-  elemenCapaianPembelajaran?: string[]; // (Optional) Specific CP elements targeted
+  elemenCapaianPembelajaran?: string[];
 }
 
 export interface ModulAjarKomponenInti {
@@ -121,12 +132,12 @@ export interface ModulAjarKomponenInti {
   pemahamanBermakna: string[];
   pertanyaanPemantik: string[];
   kegiatanPembelajaran: {
-    pendahuluan: string[]; // Detail steps
+    pendahuluan: string[]; 
     inti: {
-      langkah: string; // e.g., "Kegiatan 1: Eksplorasi Konsep"
+      langkah: string; 
       detailAktivitas: string[];
     }[];
-    penutup: string[]; // Detail steps
+    penutup: string[]; 
   };
   asesmen: {
     diagnostik?: string;
@@ -144,7 +155,7 @@ export interface ModulAjarKomponenInti {
 }
 
 export interface ModulAjarLampiran {
-  lembarKerjaPesertaDidik?: string; // Could be detailed or a general description
+  lembarKerjaPesertaDidik?: string; 
   bahanBacaanGuruSiswa?: string[];
   glosarium?: { istilah: string; penjelasan: string }[];
   daftarPustaka?: string[];
@@ -154,31 +165,30 @@ export interface GenerateKurikulumMerdekaModuleOutput {
   judulModul: string;
   identitasModul: ModulAjarIdentitas;
   kompetensiAwal?: string[];
-  profilPelajarPancasila: string[]; // Dimensi yang dikembangkan
+  profilPelajarPancasila: string[]; 
   saranaPrasarana: string[];
   targetPesertaDidik: string;
-  modelPembelajaran: string; // e.g., Tatap Muka, PJJ Daring, Blended Learning
+  modelPembelajaran: string; 
   komponenInti: ModulAjarKomponenInti;
   lampiran?: ModulAjarLampiran;
 }
 
-// Stored Modul Ajar Type
-export interface ModulAjar extends GenerateKurikulumMerdekaModuleOutput {
+export interface ModulAjar extends GenerateKurikulumMerdekaModuleOutput, Omit<CurriculumItem, 'title' | 'subject' | 'gradeLevel' | 'curriculumType'> {
   id: string;
-  type: 'ModulAjar'; // To distinguish in AnyCurriculumItem
-  title: string; // Alias for judulModul for CurriculumDataTable compatibility
-  subject: string; // Alias for identitasModul.mataPelajaran
-  gradeLevel: string; // Alias for identitasModul.fase or kelasSemester
+  type: 'ModulAjar';
+  title: string; 
+  subject: string; 
+  gradeLevel: string; 
   curriculumType: "Kurikulum Merdeka";
   createdAt: string;
   updatedAt: string;
   createdByUserId?: string;
+  schoolId: string; // Added for multi-tenancy
 }
 
 
 export type AnyCurriculumItem = LessonPlan | AnnualProgram | SemesterProgram | ModulAjar;
 
-// For AI flow outputs
 export type { GenerateLessonPlanInput, GenerateLessonPlanOutput } from '@/ai/flows/generate-lesson-plan-from-topic';
 export type { SuggestLessonPlanImprovementsOutput } from '@/ai/flows/suggest-lesson-plan-improvements';
 export type { GenerateTeachingMaterialInput, GenerateTeachingMaterialOutput, SuggestedSourceSchema as AISuggestedSource } from '@/ai/flows/generate-teaching-material';
@@ -257,7 +267,7 @@ export interface ExportedCurriculumData {
   annualPrograms: AnnualProgram[];
   semesterPrograms: SemesterProgram[];
   modulAjar?: ModulAjar[];
-  schoolProfile: SchoolProfile | null;
+  schools: School[]; // Changed from schoolProfile to schools array
   appUsers: User[];
   subjects?: Subject[];
   teachers?: Teacher[];
@@ -265,10 +275,10 @@ export interface ExportedCurriculumData {
   schoolClasses?: SchoolClass[]; 
   teachingPeriodSettings?: TeachingPeriodSettings;
   academicEvents?: AcademicEvent[]; 
+  appSettings?: AppSettings; // Added for SaaS app settings
 }
 
 
-// Print Options for Modul Ajar Kurikulum Merdeka
 export interface PrintOptionsModulAjar {
   showKopSurat: boolean;
   showMAIdentitas: boolean;
@@ -277,21 +287,19 @@ export interface PrintOptionsModulAjar {
   showMASaranaPrasarana: boolean;
   showMATargetPesertaDidik: boolean;
   showMAModelPembelajaran: boolean;
-  // Komponen Inti
   showMAKomponenInti_TujuanPembelajaran: boolean;
   showMAKomponenInti_PemahamanBermakna: boolean;
   showMAKomponenInti_PertanyaanPemantik: boolean;
-  showMAKomponenInti_KegiatanPembelajaran: boolean; // Sub-options for Pendahuluan, Inti, Penutup
+  showMAKomponenInti_KegiatanPembelajaran: boolean; 
   showMAKomponenInti_Kegiatan_Pendahuluan: boolean;
   showMAKomponenInti_Kegiatan_Inti: boolean;
   showMAKomponenInti_Kegiatan_Penutup: boolean;
-  showMAKomponenInti_Asesmen: boolean; // Sub-options for Diagnostik, Formatif, Sumatif
+  showMAKomponenInti_Asesmen: boolean; 
   showMAKomponenInti_Asesmen_Diagnostik: boolean;
   showMAKomponenInti_Asesmen_Formatif: boolean;
   showMAKomponenInti_Asesmen_Sumatif: boolean;
   showMAKomponenInti_PengayaanRemedial: boolean;
   showMAKomponenInti_Refleksi: boolean;
-  // Lampiran
   showMALampiran_LKPD: boolean;
   showMALampiran_BahanBacaan: boolean;
   showMALampiran_Glosarium: boolean;
@@ -325,62 +333,64 @@ export const defaultPrintOptionsModulAjar: PrintOptionsModulAjar = {
   showMALampiran_DaftarPustaka: true,
 };
 
-// New Types for Master Data and Timetable
 export interface Subject {
   id: string;
   name: string;
-  code?: string; // e.g., MTK-01
+  code?: string; 
   createdAt: string;
   updatedAt: string;
   createdByUserId?: string;
+  schoolId: string; // Added for multi-tenancy
 }
 
 export interface Teacher {
   id: string;
   name: string;
-  nip?: string; // Nomor Induk Pegawai
-  subjectIds: string[]; // Array of Subject IDs they teach
-  userId?: string; // Optional: link to a User account
+  nip?: string; 
+  subjectIds: string[]; 
+  userId?: string; 
   createdAt: string;
   updatedAt: string;
   createdByUserId?: string;
+  schoolId: string; // Added for multi-tenancy
 }
 
 export interface TimeSlot {
   id: string;
-  startTime: string; // e.g., "07:00"
-  endTime: string; // e.g., "07:45"
-  // jpDurationMinutes will determine the length implicitly
+  startTime: string; 
+  endTime: string; 
 }
 
 export interface TimetableEntry {
   id: string;
   dayOfWeek: 'Senin' | 'Selasa' | 'Rabu' | 'Kamis' | 'Jumat' | 'Sabtu' | 'Minggu';
-  timeSlotId?: string; // Reference to a TimeSlot or just store start/end times directly
-  startTime: string; // e.g., 07:00
-  endTime: string;   // e.g., 07:45
+  timeSlotId?: string; 
+  startTime: string; 
+  endTime: string;   
   subjectId: string;
   teacherId: string;
-  classOrGrade: string; // e.g., "Kelas X-A" or "Fase E Grup 1" // Can be SchoolClass.id
+  classOrGrade: string; 
   createdAt: string;
   updatedAt: string;
   createdByUserId?: string;
+  schoolId: string; // Added for multi-tenancy
 }
 
 export interface SchoolClass {
   id: string;
-  name: string; // e.g., "Kelas X IPA 1", "Fase A Kelompok A"
-  gradeLevel: string; // e.g., "X", "Fase A", "VII" (can be more specific than SchoolProfile.jenjangPendidikan)
-  homeroomTeacherId?: string; // Wali Kelas (Teacher ID)
+  name: string; 
+  gradeLevel: string; 
+  homeroomTeacherId?: string; 
   notes?: string;
   createdAt: string;
   updatedAt: string;
   createdByUserId?: string;
+  schoolId: string; // Added for multi-tenancy
 }
 
 
 export interface TeachingPeriodSettings {
-  jpDurationMinutes: number; // Duration of one teaching period (Jam Pelajaran) in minutes
+  jpDurationMinutes: number; 
 }
 
 export type AcademicEventType = 'Libur Nasional' | 'Libur Semester' | 'Ujian Sekolah' | 'Kegiatan Sekolah' | 'Tanggal Penting' | 'Periode Semester Aktif' | 'Lainnya';
@@ -388,14 +398,15 @@ export type AcademicEventType = 'Libur Nasional' | 'Libur Semester' | 'Ujian Sek
 export interface AcademicEvent {
   id: string;
   title: string;
-  date: string; // ISO string "YYYY-MM-DD"
-  endDate?: string; // Optional, for multi-day events
+  date: string; 
+  endDate?: string; 
   description?: string;
   type: AcademicEventType;
   isNationalHoliday?: boolean; 
   createdAt: string;
   updatedAt: string;
   createdByUserId?: string;
+  schoolId: string; // Added for multi-tenancy
 }
 
 
@@ -404,20 +415,15 @@ export const MODUL_AJAR_STORAGE_KEY = "appModulAjar";
 export const SUBJECTS_STORAGE_KEY = "appSubjects";
 export const TEACHERS_STORAGE_KEY = "appTeachers";
 export const TIMETABLES_STORAGE_KEY = "appTimetables";
-export const SCHOOL_CLASSES_STORAGE_KEY = "appSchoolClasses"; // New
+export const SCHOOL_CLASSES_STORAGE_KEY = "appSchoolClasses"; 
 export const TEACHING_PERIOD_SETTINGS_KEY = "appTeachingPeriodSettings";
 export const LESSON_PLANS_STORAGE_KEY = "appLessonPlans";
 export const ANNUAL_PROGRAMS_STORAGE_KEY = "appAnnualPrograms";
 export const SEMESTER_PROGRAMS_STORAGE_KEY = "appSemesterPrograms";
-export const SCHOOL_PROFILE_STORAGE_KEY = "schoolProfile"; // Same as SCHOOL_SETTINGS_STORAGE_KEY
-export const SCHOOL_SETTINGS_STORAGE_KEY = "schoolProfile"; // Alias for clarity
+export const SCHOOL_PROFILE_STORAGE_KEY = "schoolProfile"; // This will be for the *current school's profile being managed*
+export const SCHOOLS_STORAGE_KEY = "appSchools"; // For SuperAdmin to manage multiple schools
 export const APP_USERS_STORAGE_KEY = "appUsers";
 export const CURRICULUM_STORAGE_KEY = "app-default-curriculum";
 export const THEME_STORAGE_KEY = "app-theme";
-export const ACADEMIC_EVENTS_STORAGE_KEY = "appAcademicEvents"; // New
-
-
-
-
-
-
+export const ACADEMIC_EVENTS_STORAGE_KEY = "appAcademicEvents";
+export const SAAS_APP_SETTINGS_STORAGE_KEY = "appSaasSettings"; // For global app settings like logo

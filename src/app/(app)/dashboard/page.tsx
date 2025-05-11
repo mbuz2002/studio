@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +9,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import type { UserRole } from "@/types";
 import { useCurriculum } from "@/contexts/CurriculumContext"; 
 import LoadingSpinner from "@/components/ui/loading-spinner";
+import { useRouter } from "next/navigation"; // Import useRouter
+import { useEffect } from "react"; // Import useEffect
 
 const featureCardsConfig: {
   title: string;
@@ -27,7 +28,7 @@ const featureCardsConfig: {
     description: "Buat, edit, dan kelola RPP (K13/KTSP) atau Alur Tujuan Pembelajaran (ATP) untuk Kurikulum Merdeka.",
     icon: BookOpenText,
     href: "/lesson-plans",
-    roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"],
+    roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"], // Removed SuperAdmin
     iconColor: "text-sky-500",
     gradientFrom: "from-sky-500/20",
     gradientTo: "to-sky-500/10",
@@ -37,7 +38,7 @@ const featureCardsConfig: {
     description: "Rencanakan visi kurikulum Anda untuk keseluruhan tahun ajaran secara komprehensif.",
     icon: CalendarDays,
     href: "/annual-programs",
-    roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"],
+    roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"], // Removed SuperAdmin
     iconColor: "text-amber-500",
     gradientFrom: "from-amber-500/20",
     gradientTo: "to-amber-500/10",
@@ -47,7 +48,7 @@ const featureCardsConfig: {
     description: "Rincikan jadwal dan materi pengajaran Anda dengan detail untuk setiap semester akademik.",
     icon: CalendarClock,
     href: "/semester-programs",
-    roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"],
+    roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"], // Removed SuperAdmin
     iconColor: "text-rose-500",
     gradientFrom: "from-rose-500/20",
     gradientTo: "to-rose-500/10",
@@ -57,7 +58,7 @@ const featureCardsConfig: {
     description: "Rancang dan kelola Modul Ajar spesifik untuk Kurikulum Merdeka dengan fitur AI.",
     icon: BrainCircuit,
     href: "/modul-ajar",
-    roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "Guru"],
+    roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], // Removed SuperAdmin
     isKurikulumMerdekaOnly: true,
     iconColor: "text-teal-500",
     gradientFrom: "from-teal-500/20",
@@ -68,7 +69,7 @@ const featureCardsConfig: {
     description: "Manfaatkan AI untuk ide, saran, dan pembuatan draf materi pengajaran inovatif.",
     icon: Sparkles,
     href: "/ai-assistant",
-    roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "Guru"],
+    roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], // Removed SuperAdmin
     iconColor: "text-violet-500",
     gradientFrom: "from-violet-500/20",
     gradientTo: "to-violet-500/10",
@@ -76,12 +77,19 @@ const featureCardsConfig: {
 ];
 
 export default function DashboardPage() {
-  const { user, loading: authLoading } = useAuth(); 
+  const { user, currentSchool, loading: authLoading } = useAuth(); 
   const { defaultCurriculum } = useCurriculum(); 
+  const router = useRouter();
 
-  const canCreateNewPlan = user && (user.role === "SuperAdmin" || user.role === "Admin" || user.role === "WakaKurikulum" || user.role === "Guru");
+  useEffect(() => {
+    if (!authLoading && user?.role === "SuperAdmin") {
+      router.replace("/superadmin/dashboard");
+    }
+  }, [user, authLoading, router]);
 
-  const visibleFeatureCards = user 
+  const canCreateNewPlan = user && (user.role === "Admin" || user.role === "WakaKurikulum" || user.role === "Guru");
+
+  const visibleFeatureCards = user && user.role !== "SuperAdmin" // Ensure SuperAdmin doesn't see these
     ? featureCardsConfig.map(card => {
         if (card.href === "/lesson-plans") {
           return {
@@ -95,10 +103,12 @@ export default function DashboardPage() {
         (!card.isKurikulumMerdekaOnly || defaultCurriculum === "Kurikulum Merdeka")
       ) 
     : [];
-
-  if (authLoading || !user) { 
+  
+  // If redirecting SuperAdmin, show loading or null to prevent flashing regular dashboard
+  if (authLoading || !user || user.role === "SuperAdmin") { 
     return <LoadingSpinner message="Memuat dasbor Anda..." icon={<LayoutDashboard className="h-16 w-16 animate-pulse text-primary mb-6" />} />;
   }
+
 
   return (
     <div className="container mx-auto py-6 md:py-8">
@@ -107,7 +117,7 @@ export default function DashboardPage() {
            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-2">
             <LayoutDashboard className="h-10 w-10 md:h-12 md:w-12 text-background flex-shrink-0 mt-1 drop-shadow-lg" />
             <div>
-              <CardTitle className="text-3xl md:text-4xl font-bold tracking-tight">Selamat Datang di GUMPLA AI!</CardTitle>
+              <CardTitle className="text-3xl md:text-4xl font-bold tracking-tight">Selamat Datang di {currentSchool?.name || "Dasbor GUMPLA AI"}!</CardTitle>
               <CardDescription className="text-lg md:text-xl text-primary-foreground/90 mt-1.5">
                 Platform cerdas untuk perencanaan dan manajemen kurikulum yang efektif dan inovatif.
               </CardDescription>
@@ -115,6 +125,9 @@ export default function DashboardPage() {
           </div>
           <p className="text-base text-primary-foreground/80 mt-2">
             Peran Anda: <span className="font-semibold bg-black/25 px-2 py-1 rounded-md text-sm">{user?.role}</span>
+            {currentSchool && (
+                 <span className="ml-2 text-sm font-normal">di <span className="font-semibold">{currentSchool.name}</span></span>
+            )}
           </p>
         </CardHeader>
         <CardContent className="p-6 md:p-8 pt-6">

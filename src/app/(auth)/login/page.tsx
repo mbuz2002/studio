@@ -9,14 +9,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { GraduationCap, LogIn } from "lucide-react"; 
 import Link from "next/link";
 import type { FormEvent} from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from "@/contexts/AuthContext";
 import type { UserRole } from "@/types";
 import Image from "next/image";
+import { initialSuperAdminUser } from '@/lib/initial-data'; // Import initial SuperAdmin
 
 const roles: { value: UserRole; label: string }[] = [
   { value: "SuperAdmin", label: "Super Admin" },
-  { value: "Admin", label: "Admin" },
+  { value: "Admin", label: "Admin Sekolah" },
   { value: "KepalaSekolah", label: "Kepala Sekolah" },
   { value: "WakaKurikulum", label: "Waka Kurikulum" },
   { value: "TataUsaha", label: "Tata Usaha" },
@@ -25,9 +26,19 @@ const roles: { value: UserRole; label: string }[] = [
 
 export default function LoginPage() {
   const { login } = useAuth();
-  const [email, setEmail] = useState("pengguna@sekolah.id"); 
-  const [selectedRole, setSelectedRole] = useState<UserRole>("WakaKurikulum"); 
+  const [email, setEmail] = useState(""); 
+  const [selectedRole, setSelectedRole] = useState<UserRole>("Guru"); 
   const [isLoading, setIsLoading] = useState(false); 
+
+  useEffect(() => {
+    // Pre-fill email for SuperAdmin if that role is selected, for demo convenience
+    if (selectedRole === "SuperAdmin") {
+      setEmail(initialSuperAdminUser.email);
+    } else if (email === initialSuperAdminUser.email && selectedRole !== "SuperAdmin") {
+      setEmail("pengguna@sekolahdemo.sch.id"); // Reset if role changes from SA
+    }
+  }, [selectedRole, email]);
+
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -36,6 +47,7 @@ export default function LoginPage() {
       
       setTimeout(() => { 
         login(email, selectedRole);
+        // setIsLoading(false); // Login will redirect, so no need to set loading false here
       }, 300); 
     } else {
       alert("Harap isi email dan pilih peran.");
@@ -51,13 +63,13 @@ export default function LoginPage() {
           </div>
           <CardTitle className="text-3xl md:text-4xl font-bold text-foreground">GUMPLA AI</CardTitle>
           <CardDescription className="text-base md:text-lg text-muted-foreground pt-1.5">
-            Masuk untuk melanjutkan atau pilih peran untuk demo.
+            Masuk untuk melanjutkan.
           </CardDescription>
         </CardHeader>
         <CardContent className="px-6 md:px-8 pb-6 bg-card">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-sm font-medium text-foreground">Alamat Email (Contoh)</Label>
+              <Label htmlFor="email" className="text-sm font-medium text-foreground">Alamat Email</Label>
               <Input 
                 id="email" 
                 type="email" 
@@ -70,7 +82,7 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="role" className="text-sm font-medium text-foreground">Pilih Peran (Demo)</Label>
+              <Label htmlFor="role" className="text-sm font-medium text-foreground">Masuk Sebagai (Demo)</Label>
               <Select value={selectedRole} onValueChange={(value) => setSelectedRole(value as UserRole)} disabled={isLoading}>
                 <SelectTrigger id="role" className="text-base h-11 rounded-md focus:border-primary">
                   <SelectValue placeholder="Pilih peran Anda" />
@@ -100,14 +112,13 @@ export default function LoginPage() {
         </CardContent>
         <CardFooter className="flex flex-col items-center space-y-2 pb-8 pt-4 bg-muted/30 border-t">
           <p className="text-sm text-muted-foreground">
-            Belum punya akun?{" "}
-            <Link href="#" className="font-semibold text-primary hover:underline">
-              Daftar di sini
-            </Link>
+            Super Admin: {initialSuperAdminUser.email}
+          </p>
+           <p className="text-sm text-muted-foreground">
+            Admin Sekolah Demo: admin@sekolahdemo.sch.id
           </p>
         </CardFooter>
       </Card>
     </div>
   );
 }
-
