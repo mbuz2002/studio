@@ -31,12 +31,10 @@ const CardHeader = React.forwardRef<
 CardHeader.displayName = "CardHeader"
 
 const CardTitle = React.forwardRef<
-  HTMLDivElement, // Changed from HTMLParagraphElement to HTMLDivElement for semantic correctness as it wraps h-tags often.
-  React.HTMLAttributes<HTMLHeadingElement> // Changed from HTMLParagraphElement
+  HTMLDivElement, 
+  React.HTMLAttributes<HTMLHeadingElement> 
 >(({ className, ...props }, ref) => (
-  // Using h3 as a default, but it's usually overridden by a heading tag inside.
-  // The className is the important part.
-  <div // This can be an h2, h3 etc. based on usage. For styling purposes, div is fine.
+  <div 
     ref={ref}
     className={cn(
       "text-xl font-semibold leading-none tracking-tight md:text-2xl", // Adjusted font size
@@ -48,10 +46,10 @@ const CardTitle = React.forwardRef<
 CardTitle.displayName = "CardTitle"
 
 const CardDescription = React.forwardRef<
-  HTMLDivElement, // Changed from HTMLParagraphElement
+  HTMLDivElement, 
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, ...props }, ref) => (
-  <div // This can be a p tag.
+  <div 
     ref={ref}
     className={cn("text-sm text-muted-foreground", className)}
     {...props}

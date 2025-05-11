@@ -9,6 +9,7 @@ import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import type { UserRole } from "@/types";
 import { useCurriculum } from "@/contexts/CurriculumContext"; 
+import LoadingSpinner from "@/components/ui/loading-spinner";
 
 const featureCardsConfig: {
   title: string;
@@ -18,6 +19,8 @@ const featureCardsConfig: {
   roles: UserRole[];
   isKurikulumMerdekaOnly?: boolean;
   iconColor?: string; 
+  gradientFrom?: string;
+  gradientTo?: string;
 }[] = [
   {
     title: "RPP / ATP", 
@@ -26,6 +29,8 @@ const featureCardsConfig: {
     href: "/lesson-plans",
     roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"],
     iconColor: "text-sky-500",
+    gradientFrom: "from-sky-500/20",
+    gradientTo: "to-sky-500/10",
   },
   {
     title: "Program Tahunan (PROTA)",
@@ -34,6 +39,8 @@ const featureCardsConfig: {
     href: "/annual-programs",
     roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"],
     iconColor: "text-amber-500",
+    gradientFrom: "from-amber-500/20",
+    gradientTo: "to-amber-500/10",
   },
   {
     title: "Program Semester (Promes)",
@@ -42,6 +49,8 @@ const featureCardsConfig: {
     href: "/semester-programs",
     roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"],
     iconColor: "text-rose-500",
+    gradientFrom: "from-rose-500/20",
+    gradientTo: "to-rose-500/10",
   },
   {
     title: "Modul Ajar (KM)",
@@ -51,6 +60,8 @@ const featureCardsConfig: {
     roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"],
     isKurikulumMerdekaOnly: true,
     iconColor: "text-teal-500",
+    gradientFrom: "from-teal-500/20",
+    gradientTo: "to-teal-500/10",
   },
   {
     title: "Asisten AI Materi",
@@ -59,6 +70,8 @@ const featureCardsConfig: {
     href: "/ai-assistant",
     roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"],
     iconColor: "text-violet-500",
+    gradientFrom: "from-violet-500/20",
+    gradientTo: "to-violet-500/10",
   },
 ];
 
@@ -84,23 +97,15 @@ export default function DashboardPage() {
     : [];
 
   if (authLoading || !user) { 
-    return (
-      <div className="flex h-[calc(100vh-200px)] items-center justify-center"> 
-        <div className="flex flex-col items-center text-center">
-          <LayoutDashboard className="h-12 w-12 animate-pulse text-primary mb-4" />
-          <p className="text-xl font-medium text-muted-foreground">Memuat dasbor Anda...</p>
-          <p className="text-sm text-muted-foreground">Mohon tunggu sebentar.</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner message="Memuat dasbor Anda..." icon={<LayoutDashboard className="h-16 w-16 animate-pulse text-primary mb-6" />} />;
   }
 
   return (
     <div className="container mx-auto py-6 md:py-8">
-      <Card className="mb-8 shadow-xl rounded-lg overflow-hidden border-border/30">
+      <Card className="mb-8 shadow-xl rounded-lg overflow-hidden border-border/30 bg-card">
         <CardHeader className="p-6 md:p-8 bg-gradient-to-br from-primary via-primary/90 to-accent text-primary-foreground rounded-t-lg">
            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-2">
-            <LayoutDashboard className="h-10 w-10 md:h-12 md:w-12 text-primary-foreground flex-shrink-0 mt-1 drop-shadow-lg" />
+            <LayoutDashboard className="h-10 w-10 md:h-12 md:w-12 text-background flex-shrink-0 mt-1 drop-shadow-lg" />
             <div>
               <CardTitle className="text-3xl md:text-4xl font-bold tracking-tight">Selamat Datang di GUMPLA AI!</CardTitle>
               <CardDescription className="text-lg md:text-xl text-primary-foreground/90 mt-1.5">
@@ -108,16 +113,16 @@ export default function DashboardPage() {
               </CardDescription>
             </div>
           </div>
-          <p className="text-base text-primary-foreground/90 mt-2">
-            Peran Anda: <span className="font-semibold bg-black/20 px-2 py-0.5 rounded">{user?.role}</span>
+          <p className="text-base text-primary-foreground/80 mt-2">
+            Peran Anda: <span className="font-semibold bg-black/25 px-2 py-1 rounded-md text-sm">{user?.role}</span>
           </p>
         </CardHeader>
-        <CardContent className="p-6 md:p-8 pt-6 bg-card">
+        <CardContent className="p-6 md:p-8 pt-6">
           <p className="mb-6 text-base md:text-lg leading-relaxed text-card-foreground/90">
             Maksimalkan potensi pengajaran Anda dengan GUMPLA AI. Buat, atur, dan tingkatkan kualitas dokumen pembelajaran Anda dengan dukungan AI. Mulai jelajahi fitur-fitur unggulan di bawah ini atau langsung buat dokumen baru.
           </p>
           {canCreateNewPlan && (
-            <Button asChild size="lg" className="bg-gradient-to-r from-accent to-primary hover:from-accent/90 hover:to-primary/90 text-accent-foreground text-lg py-3 px-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 rounded-md">
+            <Button asChild size="lg" className="bg-gradient-to-r from-accent to-primary hover:from-accent/90 hover:to-primary/90 text-accent-foreground text-lg py-3 h-auto px-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 rounded-md">
               <Link href="/lesson-plans"> 
                 <PlusCircle className="mr-2.5 h-5 w-5" /> Buat Dokumen Baru
               </Link>
@@ -126,22 +131,29 @@ export default function DashboardPage() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
         {visibleFeatureCards.map((feature) => (
-          <Card key={feature.title} className="flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 rounded-lg border-border/50 group bg-card hover:border-primary/70 hover:scale-105 transform">
-            <CardHeader className="pb-4 pt-6 px-6">
+          <Card 
+            key={feature.title} 
+            className="flex flex-col overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 rounded-xl border-border/50 group bg-card hover:border-primary/70 hover:scale-[1.02] transform"
+          >
+            <CardHeader className={`pb-4 pt-6 px-6 bg-gradient-to-br ${feature.gradientFrom || 'from-primary/10'} ${feature.gradientTo || 'to-accent/5'} rounded-t-xl`}>
               <div className="flex items-start gap-4">
-                <div className={`p-3 rounded-lg bg-gradient-to-br ${feature.iconColor ? `from-${feature.iconColor.split('-')[1]}-500/20 to-${feature.iconColor.split('-')[1]}-500/10` : 'from-primary/20 to-primary/10'} flex-shrink-0`}>
+                <div className={`p-3.5 rounded-lg bg-background/80 shadow-inner flex-shrink-0`}>
                     <feature.icon className={`h-8 w-8 ${feature.iconColor || 'text-primary'} drop-shadow-sm`} /> 
                 </div>
                 <div className="flex-grow">
                     <CardTitle className="text-xl font-semibold text-card-foreground group-hover:text-primary transition-colors">{feature.title}</CardTitle>
-                    <CardDescription className="text-sm text-muted-foreground leading-relaxed mt-1 line-clamp-3">{feature.description}</CardDescription>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="flex-grow flex items-end mt-auto pt-2 pb-6 px-6"> 
-              <Button asChild variant="outline" className="w-full text-base border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground transition-colors duration-300 rounded-md shadow-sm hover:shadow-md">
+            <CardContent className="flex-grow flex flex-col justify-between p-6 pt-3"> 
+              <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3 mb-5">{feature.description}</p>
+              <Button 
+                asChild 
+                variant="outline" 
+                className="w-full text-base border-primary/60 text-primary hover:bg-primary hover:text-primary-foreground transition-colors duration-300 rounded-md shadow-sm hover:shadow-md py-2.5 mt-auto"
+              >
                 <Link href={feature.href}>
                   Buka Fitur
                 </Link>
