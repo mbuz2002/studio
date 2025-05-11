@@ -27,7 +27,7 @@ const featureCardsConfig: {
     description: "Buat, edit, dan kelola RPP (K13/KTSP) atau Alur Tujuan Pembelajaran (ATP) untuk Kurikulum Merdeka.",
     icon: BookOpenText,
     href: "/lesson-plans",
-    roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"],
+    roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"],
     iconColor: "text-sky-500",
     gradientFrom: "from-sky-500/20",
     gradientTo: "to-sky-500/10",
@@ -37,7 +37,7 @@ const featureCardsConfig: {
     description: "Rencanakan visi kurikulum Anda untuk keseluruhan tahun ajaran secara komprehensif.",
     icon: CalendarDays,
     href: "/annual-programs",
-    roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"],
+    roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"],
     iconColor: "text-amber-500",
     gradientFrom: "from-amber-500/20",
     gradientTo: "to-amber-500/10",
@@ -47,7 +47,7 @@ const featureCardsConfig: {
     description: "Rincikan jadwal dan materi pengajaran Anda dengan detail untuk setiap semester akademik.",
     icon: CalendarClock,
     href: "/semester-programs",
-    roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"],
+    roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"],
     iconColor: "text-rose-500",
     gradientFrom: "from-rose-500/20",
     gradientTo: "to-rose-500/10",
@@ -57,7 +57,7 @@ const featureCardsConfig: {
     description: "Rancang dan kelola Modul Ajar spesifik untuk Kurikulum Merdeka dengan fitur AI.",
     icon: BrainCircuit,
     href: "/modul-ajar",
-    roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"],
+    roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "Guru"],
     isKurikulumMerdekaOnly: true,
     iconColor: "text-teal-500",
     gradientFrom: "from-teal-500/20",
@@ -68,7 +68,7 @@ const featureCardsConfig: {
     description: "Manfaatkan AI untuk ide, saran, dan pembuatan draf materi pengajaran inovatif.",
     icon: Sparkles,
     href: "/ai-assistant",
-    roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"],
+    roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "Guru"],
     iconColor: "text-violet-500",
     gradientFrom: "from-violet-500/20",
     gradientTo: "to-violet-500/10",
@@ -79,7 +79,7 @@ export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth(); 
   const { defaultCurriculum } = useCurriculum(); 
 
-  const canCreateNewPlan = user && (user.role === "Admin" || user.role === "WakaKurikulum" || user.role === "Guru");
+  const canCreateNewPlan = user && (user.role === "SuperAdmin" || user.role === "Admin" || user.role === "WakaKurikulum" || user.role === "Guru");
 
   const visibleFeatureCards = user 
     ? featureCardsConfig.map(card => {

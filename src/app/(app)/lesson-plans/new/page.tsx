@@ -105,7 +105,7 @@ export default function NewLessonPlanPage() {
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
   useEffect(() => {
-    if (!user || !(user.role === "Admin" || user.role === "WakaKurikulum" || user.role === "Guru")) {
+    if (!user || !["SuperAdmin", "Admin", "WakaKurikulum", "Guru"].includes(user.role)) {
       toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk membuat item ini.", variant: "destructive" });
       router.push("/lesson-plans");
     }
@@ -133,8 +133,8 @@ export default function NewLessonPlanPage() {
 
   const handleSelectChange = (name: string, value: string) => {
     if (name === 'curriculumType') {
-      if (user?.role === 'Guru') {
-        toast({ title: "Informasi", description: "Jenis kurikulum ditentukan oleh pengaturan global dan tidak dapat diubah oleh Guru.", variant: "default" });
+      if (!["Admin", "SuperAdmin", "WakaKurikulum"].includes(user?.role || "")) {
+        toast({ title: "Informasi", description: "Jenis kurikulum ditentukan oleh pengaturan global dan tidak dapat diubah.", variant: "default" });
         return;
       }
       const newCurriculum = value as CurriculumFramework;
@@ -182,8 +182,8 @@ export default function NewLessonPlanPage() {
          addLog("WARN", `Gagal membuat draf ${selectedCurriculum === "Kurikulum Merdeka" ? "ATP/Modul Ajar" : "RPP"} dengan AI: Informasi kurang.`, source);
          return;
     }
-    const isPAUD = schoolEducationLevel === "PAUD" && selectedCurriculum === "Kurikulum Merdeka" && formData.gradeLevel?.toUpperCase().includes("PAUD");
-    if (selectedCurriculum === "Kurikulum Merdeka" && !isPAUD && (!formData.capaianPembelajaran || formData.capaianPembelajaran.length === 0)) {
+    const isPAUDSelected = schoolEducationLevel === "PAUD" && selectedCurriculum === "Kurikulum Merdeka" && formData.gradeLevel?.toUpperCase().includes("PAUD");
+    if (selectedCurriculum === "Kurikulum Merdeka" && !isPAUDSelected && (!formData.capaianPembelajaran || formData.capaianPembelajaran.length === 0)) {
         toast({
             title: "Informasi Kurang untuk Kurikulum Merdeka",
             description: "Harap isi Capaian Pembelajaran untuk hasil AI yang lebih optimal.",
@@ -353,4 +353,3 @@ export default function NewLessonPlanPage() {
     </div>
   );
 }
-

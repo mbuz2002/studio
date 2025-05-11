@@ -1,20 +1,22 @@
 
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react"; 
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { CurriculumDataTable } from "@/components/curriculum/CurriculumDataTable";
 import type { LessonPlan, AnyCurriculumItem, CurriculumFramework } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { FileUp, Filter, Search, BookOpenText, PlusCircle, X } from "lucide-react";
+import { FileUp, Filter, Search, BookOpenText, PlusCircle, X, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { useCurriculum } from "@/contexts/CurriculumContext"; 
+import { useCurriculum } from "@/contexts/CurriculumContext";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import LoadingSpinner from "@/components/ui/loading-spinner";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 
 const initialLessonPlansData: LessonPlan[] = [
@@ -25,12 +27,12 @@ const initialLessonPlansData: LessonPlan[] = [
     title: "ATP Dasar-Dasar Animasi Fase F",
     subject: "Animasi",
     gradeLevel: "Fase F (Kelas 11-12 SMA/MA/SMK/MAK)",
-    topic: "Dasar-Dasar Keahlian Animasi", 
+    topic: "Dasar-Dasar Keahlian Animasi",
     bidangKeahlian: "Seni dan Ekonomi Kreatif",
     programKeahlian: "Animasi",
     capaianPembelajaran: ["Pada akhir fase F, peserta didik mampu memahami prinsip dasar animasi.", "Peserta didik mampu membuat animasi sederhana menggunakan perangkat lunak."],
     learningObjectives: [
-        "Memahami 12 prinsip dasar animasi.", 
+        "Memahami 12 prinsip dasar animasi.",
         "Mengidentifikasi jenis-jenis software animasi.",
         "Mempraktikkan pembuatan storyboard untuk animasi pendek.",
         "Membuat animasi objek bergerak sederhana (bola memantul)."
@@ -49,7 +51,7 @@ const initialLessonPlansData: LessonPlan[] = [
     alokasiWaktuJP: "72 JP (Untuk keseluruhan ATP)",
     createdAt: new Date("2023-09-01T10:00:00Z").toISOString(),
     updatedAt: new Date("2023-09-05T14:30:00Z").toISOString(),
-    createdByUserId: "user-4" 
+    createdByUserId: "user-4"
   },
   {
     id: "rpp2",
@@ -74,14 +76,14 @@ const initialLessonPlansData: LessonPlan[] = [
     alokasiWaktuJP: "3 JP",
     createdAt: new Date("2023-10-10T09:00:00Z").toISOString(),
     updatedAt: new Date("2023-10-12T11:00:00Z").toISOString(),
-    createdByUserId: "user-4" 
+    createdByUserId: "user-4"
   },
 ];
 
 const LESSON_PLANS_STORAGE_KEY = "appLessonPlans";
 
 export default function LessonPlansPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
   const { availableCurriculums, defaultCurriculum } = useCurriculum();
@@ -95,6 +97,8 @@ export default function LessonPlansPage() {
 
   useEffect(() => {
     setIsClient(true);
+    if (authLoading) return;
+
     if (typeof window !== 'undefined') {
       try {
         const storedLessonPlans = localStorage.getItem(LESSON_PLANS_STORAGE_KEY);
@@ -103,17 +107,17 @@ export default function LessonPlansPage() {
         } else {
           const dataToStore = initialLessonPlansData.map(lp => ({
             ...lp,
-            createdByUserId: lp.createdByUserId || (user ? user.id : 'user-demo-fallback') 
+            createdByUserId: lp.createdByUserId || (user ? user.id : 'user-demo-fallback')
           }));
           setLessonPlans(dataToStore);
           localStorage.setItem(LESSON_PLANS_STORAGE_KEY, JSON.stringify(dataToStore));
         }
       } catch (error) {
         console.error("Failed to access or parse localStorage for lesson plans:", error);
-        setLessonPlans(initialLessonPlansData.map(lp => ({ // Ensure createdByUserId fallback here too
+        setLessonPlans(initialLessonPlansData.map(lp => ({
             ...lp,
             createdByUserId: lp.createdByUserId || (user ? user.id : 'user-demo-fallback')
-          }))); 
+          })));
         toast({
           title: "Gagal Memuat Data Lokal",
           description: "Menggunakan data standar. Perubahan mungkin tidak tersimpan dengan benar.",
@@ -121,7 +125,7 @@ export default function LessonPlansPage() {
         });
       }
     }
-  }, [toast, user]);
+  }, [toast, user, authLoading]);
 
   const uniqueGradeLevels = useMemo(() => {
     if (!isClient) return [];
@@ -130,13 +134,13 @@ export default function LessonPlansPage() {
   }, [lessonPlans, isClient]);
 
 
-  const canCreate = user && (user.role === "Admin" || user.role === "WakaKurikulum" || user.role === "Guru");
-  
+  const canCreate = user && (user.role === "SuperAdmin" || user.role === "Admin" || user.role === "WakaKurikulum" || user.role === "Guru");
+
   const canEditItem = useCallback((item: AnyCurriculumItem): boolean => {
     if (!user) return false;
     const lessonPlanItem = item as LessonPlan;
-    if (user.role === "Admin" || user.role === "WakaKurikulum") return true;
-    if (user.role === "Guru" && lessonPlanItem.createdByUserId === user.id) return true; 
+    if (user.role === "SuperAdmin" || user.role === "Admin" || user.role === "WakaKurikulum") return true;
+    if (user.role === "Guru" && lessonPlanItem.createdByUserId === user.id) return true;
     if (user.role === "Guru" && initialLessonPlansData.some(lp => lp.id === lessonPlanItem.id && (!lessonPlanItem.createdByUserId || lessonPlanItem.createdByUserId === 'user-demo-fallback'))) return true;
     return false;
   }, [user]);
@@ -144,16 +148,16 @@ export default function LessonPlansPage() {
   const canDeleteItem = useCallback((item: AnyCurriculumItem): boolean => {
      if (!user) return false;
      const lessonPlanItem = item as LessonPlan;
-    if (user.role === "Admin" || user.role === "WakaKurikulum") return true;
+    if (user.role === "SuperAdmin" || user.role === "Admin" || user.role === "WakaKurikulum") return true;
     if (user.role === "Guru" && lessonPlanItem.createdByUserId === user.id) return true;
     if (user.role === "Guru" && initialLessonPlansData.some(lp => lp.id === lessonPlanItem.id && (!lessonPlanItem.createdByUserId || lessonPlanItem.createdByUserId === 'user-demo-fallback'))) return true;
     return false;
   }, [user]);
 
-  const canImport = user && (user.role === "Admin" || user.role === "WakaKurikulum");
+  const canImport = user && (user.role === "SuperAdmin" || user.role === "Admin" || user.role === "WakaKurikulum");
 
   const handleEdit = useCallback((item: AnyCurriculumItem) => {
-    if (!canEditItem(item as LessonPlan)) { 
+    if (!canEditItem(item as LessonPlan)) {
         toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengedit dokumen ini.", variant: "destructive" });
         return;
     }
@@ -161,7 +165,7 @@ export default function LessonPlansPage() {
   }, [canEditItem, router, toast]);
 
   const handleDelete = useCallback((itemToDelete: AnyCurriculumItem) => {
-    if (!canDeleteItem(itemToDelete as LessonPlan)) { 
+    if (!canDeleteItem(itemToDelete as LessonPlan)) {
         toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk menghapus dokumen ini.", variant: "destructive" });
         return;
     }
@@ -173,13 +177,17 @@ export default function LessonPlansPage() {
       toast({ title: `${docType} Dihapus`, description: `"${itemToDelete.title}" telah berhasil dihapus.`});
     }
   }, [canDeleteItem, lessonPlans, toast, setLessonPlans]);
-  
+
   const handleView = useCallback((item: AnyCurriculumItem) => {
     const prettyPrintJson = JSON.stringify(item, null, 2);
     const newWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
-    newWindow?.document.write(`<pre>${prettyPrintJson}</pre>`);
-    newWindow?.document.close();
-  }, []);
+    if (newWindow) {
+        newWindow.document.write(`<pre>${prettyPrintJson}</pre>`);
+        newWindow.document.close();
+    } else {
+        toast({title: "Gagal Membuka Jendela Baru", description: "Mohon izinkan pop-up untuk situs ini.", variant: "destructive"});
+    }
+  }, [toast]);
 
   const filteredLessonPlans = useMemo(() => {
     return isClient ? lessonPlans.filter(lp =>
@@ -191,7 +199,7 @@ export default function LessonPlansPage() {
       ) &&
       (curriculumFilter === "ALL" || lp.curriculumType === curriculumFilter) &&
       (gradeFilter === "ALL" || lp.gradeLevel === gradeFilter) &&
-      (user?.role !== "Guru" || lp.createdByUserId === user?.id || initialLessonPlansData.some(initialLp => initialLp.id === lp.id && (!lp.createdByUserId || lp.createdByUserId === 'user-demo-fallback'))) 
+      (user?.role !== "Guru" || lp.createdByUserId === user?.id || initialLessonPlansData.some(initialLp => initialLp.id === lp.id && (!lp.createdByUserId || lp.createdByUserId === 'user-demo-fallback')))
     ) : [];
   }, [isClient, lessonPlans, searchTerm, curriculumFilter, gradeFilter, user]);
 
@@ -205,18 +213,15 @@ export default function LessonPlansPage() {
   const activeFilterCount = [searchTerm, curriculumFilter, gradeFilter].filter(f => f !== "" && f !== "ALL").length;
 
 
-  if (!isClient || !user) {
+  if (!isClient || authLoading || !user) {
     return (
-      <div className="flex h-[calc(100vh-200px)] items-center justify-center">
-        <div className="flex flex-col items-center text-center">
-          <BookOpenText className="h-12 w-12 animate-pulse text-primary mb-4" />
-          <p className="text-xl font-medium text-muted-foreground">Memuat Dokumen Pembelajaran...</p>
-          <p className="text-sm text-muted-foreground">Mohon tunggu sebentar.</p>
-        </div>
-      </div>
+      <LoadingSpinner
+        icon={<BookOpenText className="h-12 w-12 animate-pulse text-primary mb-4" />}
+        message="Memuat Dokumen Pembelajaran..."
+      />
     );
   }
-  
+
   const pageTitle = defaultCurriculum === "Kurikulum Merdeka" ? "ATP (Alur Tujuan Pembelajaran)" : "RPP (Rencana Pelaksanaan Pembelajaran)";
   const documentTypeForTable = defaultCurriculum === "Kurikulum Merdeka" ? "ATP" : "RPP";
 
@@ -231,7 +236,7 @@ export default function LessonPlansPage() {
                 <CardTitle className="text-2xl md:text-3xl font-bold">{pageTitle}</CardTitle>
                 <CardDescription className="text-base md:text-lg text-primary-foreground/90 mt-1">
                     Kelola {pageTitle} Anda.
-                    {user.role === "KepalaSekolah" || user.role === "WakaKurikulum" || user.role === "TataUsaha" ? " Anda dapat melihat semua dokumen yang dibuat." : ""}
+                    {user.role === "KepalaSekolah" || user.role === "WakaKurikulum" || user.role === "TataUsaha" || user.role === "SuperAdmin" ? " Anda dapat melihat semua dokumen yang dibuat." : ""}
                     {user.role === "Guru" ? " Buat baru, edit, atau lihat rincian dokumen Anda." : ""}
                 </CardDescription>
             </div>
@@ -303,15 +308,33 @@ export default function LessonPlansPage() {
               </div>
             </div>
           </div>
+          {filteredLessonPlans.length === 0 && searchTerm && (
+            <Alert variant="default" className="mb-4 border-primary/30 shadow-sm">
+                <Search className="h-5 w-5 text-primary"/>
+                <AlertTitle>Pencarian Tidak Ditemukan</AlertTitle>
+                <AlertDescription>
+                    Tidak ada dokumen yang cocok dengan kata kunci "{searchTerm}". Coba kata kunci lain atau sesuaikan filter.
+                </AlertDescription>
+            </Alert>
+          )}
+          {filteredLessonPlans.length === 0 && !searchTerm && activeFilterCount > 0 && (
+             <Alert variant="default" className="mb-4 border-primary/30 shadow-sm">
+                <Filter className="h-5 w-5 text-primary"/>
+                <AlertTitle>Filter Tidak Menemukan Hasil</AlertTitle>
+                <AlertDescription>
+                    Tidak ada dokumen yang cocok dengan kombinasi filter yang Anda pilih. Coba sesuaikan atau reset filter.
+                </AlertDescription>
+            </Alert>
+          )}
           <div className="overflow-x-auto">
             <CurriculumDataTable
                 items={filteredLessonPlans}
                 onView={handleView}
-                onEdit={handleEdit} 
-                onDelete={handleDelete} 
-                canEdit={canEditItem} 
-                canDelete={canDeleteItem} 
-                itemTypeForExport="RPP" 
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                canEdit={canEditItem}
+                canDelete={canDeleteItem}
+                itemTypeForExport="RPP"
             />
           </div>
         </CardContent>

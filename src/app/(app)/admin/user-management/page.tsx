@@ -24,7 +24,7 @@ export default function UserManagementPage() {
 
   useEffect(() => {
     if (!authLoading && isClient) {
-      if (!user || (user.role !== "Admin" && user.role !== "TataUsaha")) {
+      if (!user || !["Admin", "SuperAdmin", "TataUsaha"].includes(user.role)) {
         toast({
           title: "Akses Ditolak",
           description: "Anda tidak memiliki izin untuk mengakses halaman ini.",
@@ -53,7 +53,7 @@ export default function UserManagementPage() {
     );
   }
 
-  if (!user || (user.role !== "Admin" && user.role !== "TataUsaha")) {
+  if (!user || !["Admin", "SuperAdmin", "TataUsaha"].includes(user.role)) {
     return (
       <div className="flex h-screen items-center justify-center">
         <p className="text-lg">Akses ditolak.</p>
@@ -82,3 +82,4 @@ export default function UserManagementPage() {
     </div>
   );
 }
+

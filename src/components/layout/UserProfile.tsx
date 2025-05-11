@@ -9,6 +9,7 @@ import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 
 const roleDisplayNames: Record<string, string> = {
+  SuperAdmin: "Super Administrator",
   Admin: "Administrator",
   KepalaSekolah: "Kepala Sekolah",
   WakaKurikulum: "Waka Kurikulum",
@@ -52,7 +53,7 @@ export function UserProfile() {
           <DropdownMenuLabel className="font-medium truncate text-base">{user.name}</DropdownMenuLabel>
           <DropdownMenuLabel className="text-xs font-normal text-muted-foreground -mt-1.5 truncate">{user.email}</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          {user.role === 'Admin' && (
+          {(user.role === 'Admin' || user.role === 'SuperAdmin') && (
              <DropdownMenuItem asChild>
               <Link href="/admin/system-settings">
                 <Shield className="mr-2 h-4 w-4" />
@@ -76,3 +77,4 @@ export function UserProfile() {
     </div>
   );
 }
+

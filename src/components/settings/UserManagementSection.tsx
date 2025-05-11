@@ -16,9 +16,10 @@ import { useAuth } from "@/contexts/AuthContext"; // Import useAuth for current 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const initialUsers: User[] = [
+  { id: "user-0", name: "Super Admin User", email: "superadmin@sekolah.id", role: "SuperAdmin", avatarUrl: "https://picsum.photos/seed/superadmin/100/100" },
   { id: "user-1", name: "Admin User", email: "admin@sekolah.id", role: "Admin", avatarUrl: "https://picsum.photos/seed/admin/100/100" },
   { id: "user-2", name: "Kepala Sekolah", email: "kepsek@sekolah.id", role: "KepalaSekolah", avatarUrl: "https://picsum.photos/seed/kepsek/100/100" },
-  { id: "user-3", name: "Waka Kurikulum", email: "waka@sekolah.id", role: "WakaKurikulum", avatarUrl: "https://picsum.photos/seed/waka/100/100" },
+  { id: "user-3", name: "WakaKurikulum", email: "waka@sekolah.id", role: "WakaKurikulum", avatarUrl: "https://picsum.photos/seed/waka/100/100" },
   { id: "user-4", name: "Guru Matematika", email: "guru.mat@sekolah.id", role: "Guru", avatarUrl: "https://picsum.photos/seed/gurumat/100/100" },
   { id: "user-5", name: "Staff Tata Usaha", email: "tu@sekolah.id", role: "TataUsaha", avatarUrl: "https://picsum.photos/seed/tu/100/100" },
 ];
@@ -65,9 +66,15 @@ export function UserManagementSection() {
     }
     if (userToDelete.id === adminUser?.id) {
         toast({ title: "Aksi Ditolak", description: "Anda tidak dapat menghapus akun Anda sendiri.", variant: "destructive"});
-        addLog("WARN", `Gagal menghapus pengguna ${userToDelete.email}: Admin mencoba menghapus akun sendiri. Oleh: ${adminUser?.email}.`, logSource);
+        addLog("WARN", `Gagal menghapus pengguna ${userToDelete.email}: Admin/SuperAdmin mencoba menghapus akun sendiri. Oleh: ${adminUser?.email}.`, logSource);
         return;
     }
+    if (userToDelete.role === "SuperAdmin" && users.filter(u => u.role === "SuperAdmin").length <= 1) {
+        toast({ title: "Aksi Ditolak", description: "Tidak dapat menghapus Super Admin terakhir.", variant: "destructive"});
+        addLog("WARN", `Gagal menghapus pengguna ${userToDelete.email}: Super Admin terakhir tidak dapat dihapus. Oleh: ${adminUser?.email}.`, logSource);
+        return;
+    }
+
 
     if (window.confirm(`Apakah Anda yakin ingin menghapus pengguna "${userToDelete.name}" (${userToDelete.email})? Aksi ini tidak dapat diurungkan.`)) {
       const updatedUsers = users.filter(user => user.id !== userId);
@@ -146,28 +153,30 @@ export function UserManagementSection() {
                   </TableCell>
                   <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top text-sm hidden md:table-cell">{user.email}</TableCell>
                   <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top">
-                    <Badge variant={user.role === 'Admin' ? 'destructive' : 'secondary'} className="text-xs">{user.role}</Badge>
+                    <Badge variant={user.role === 'Admin' || user.role === 'SuperAdmin' ? 'destructive' : 'secondary'} className="text-xs">{user.role}</Badge>
                   </TableCell>
                   <TableCell className="text-right px-3 sm:px-4 py-2 sm:py-3 align-top">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleEditUser(user.id)} className="text-sm">
-                          <Edit2 className="mr-2 h-4 w-4" /> Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                            onClick={() => handleDeleteUser(user.id)} 
-                            className="text-destructive focus:bg-destructive/10 focus:text-destructive text-sm" 
-                            disabled={users.length <=1 || user.id === adminUser?.id}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" /> Hapus
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    {canManage && (
+                        <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleEditUser(user.id)} className="text-sm">
+                            <Edit2 className="mr-2 h-4 w-4" /> Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                                onClick={() => handleDeleteUser(user.id)} 
+                                className="text-destructive focus:bg-destructive/10 focus:text-destructive text-sm" 
+                                disabled={users.length <=1 || user.id === adminUser?.id || (user.role === "SuperAdmin" && users.filter(u => u.role === "SuperAdmin").length <= 1) }
+                            >
+                            <Trash2 className="mr-2 h-4 w-4" /> Hapus
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                        </DropdownMenu>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
@@ -178,3 +187,4 @@ export function UserManagementSection() {
     </Card>
   );
 }
+

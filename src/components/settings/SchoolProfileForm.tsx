@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, type FormEvent, useRef } from "react";
@@ -136,6 +137,8 @@ export function SchoolProfileForm() {
     });
     addLog("INFO", `Profil sekolah berhasil diperbarui oleh ${user?.email}.`, source);
   };
+  
+  const canEdit = user && (user.role === "SuperAdmin" || user.role === "Admin" || user.role === "TataUsaha" || user.role === "KepalaSekolah");
 
   return (
     <Card className="rounded-lg shadow-xl">
@@ -162,7 +165,7 @@ export function SchoolProfileForm() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-1.5">
                   <Label htmlFor="namaSekolah">Nama Sekolah</Label>
-                  <Input id="namaSekolah" name="namaSekolah" value={profile.namaSekolah || ""} onChange={handleChange} required />
+                  <Input id="namaSekolah" name="namaSekolah" value={profile.namaSekolah || ""} onChange={handleChange} required disabled={!canEdit} />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="jenjangPendidikan">Jenjang Pendidikan</Label>
@@ -170,6 +173,7 @@ export function SchoolProfileForm() {
                     name="jenjangPendidikan" 
                     value={profile.jenjangPendidikan || ""} 
                     onValueChange={(value) => handleSelectChange('jenjangPendidikan', value)}
+                    disabled={!canEdit}
                   >
                     <SelectTrigger id="jenjangPendidikan">
                       <SelectValue placeholder="Pilih Jenjang Pendidikan" />
@@ -184,31 +188,31 @@ export function SchoolProfileForm() {
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="alamat">Alamat Sekolah</Label>
-                <Textarea id="alamat" name="alamat" value={profile.alamat || ""} onChange={handleChange} required rows={3} />
+                <Textarea id="alamat" name="alamat" value={profile.alamat || ""} onChange={handleChange} required rows={3} disabled={!canEdit} />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-1.5">
                   <Label htmlFor="npsn">NPSN</Label>
-                  <Input id="npsn" name="npsn" value={profile.npsn || ""} onChange={handleChange} />
+                  <Input id="npsn" name="npsn" value={profile.npsn || ""} onChange={handleChange} disabled={!canEdit} />
                 </div>
                  <div className="space-y-1.5">
                   <Label htmlFor="kotaSekolah">Kota/Kabupaten Sekolah (untuk Kop Surat)</Label>
-                  <Input id="kotaSekolah" name="kotaSekolah" value={profile.kotaSekolah || ""} onChange={handleChange} placeholder="cth., Kota Surabaya"/>
+                  <Input id="kotaSekolah" name="kotaSekolah" value={profile.kotaSekolah || ""} onChange={handleChange} placeholder="cth., Kota Surabaya" disabled={!canEdit}/>
                 </div>
               </div>
                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-1.5">
                   <Label htmlFor="nomorTelepon">Nomor Telepon</Label>
-                  <Input id="nomorTelepon" name="nomorTelepon" type="tel" value={profile.nomorTelepon || ""} onChange={handleChange} />
+                  <Input id="nomorTelepon" name="nomorTelepon" type="tel" value={profile.nomorTelepon || ""} onChange={handleChange} disabled={!canEdit} />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="emailSekolah">Email Sekolah</Label>
-                  <Input id="emailSekolah" name="emailSekolah" type="email" value={profile.emailSekolah || ""} onChange={handleChange} />
+                  <Input id="emailSekolah" name="emailSekolah" type="email" value={profile.emailSekolah || ""} onChange={handleChange} disabled={!canEdit} />
                 </div>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="namaKepalaSekolah">Nama Kepala Sekolah (untuk TTD)</Label>
-                <Input id="namaKepalaSekolah" name="namaKepalaSekolah" value={profile.namaKepalaSekolah || ""} onChange={handleChange} />
+                <Input id="namaKepalaSekolah" name="namaKepalaSekolah" value={profile.namaKepalaSekolah || ""} onChange={handleChange} disabled={!canEdit} />
               </div>
               <Alert variant="default" className="border-primary/30 shadow-sm">
                 <Info className="h-5 w-5 text-primary" />
@@ -224,8 +228,8 @@ export function SchoolProfileForm() {
                 <Label>Logo Sekolah (Untuk Kop Surat)</Label>
                 <Tabs value={logoInputMethod} onValueChange={(value) => setLogoInputMethod(value as 'url' | 'upload')} className="w-full">
                   <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2">
-                    <TabsTrigger value="url"><Link2 className="mr-2 h-4 w-4" /> Masukkan URL</TabsTrigger>
-                    <TabsTrigger value="upload"><UploadCloud className="mr-2 h-4 w-4" /> Unggah File</TabsTrigger>
+                    <TabsTrigger value="url" disabled={!canEdit}><Link2 className="mr-2 h-4 w-4" /> Masukkan URL</TabsTrigger>
+                    <TabsTrigger value="upload" disabled={!canEdit}><UploadCloud className="mr-2 h-4 w-4" /> Unggah File</TabsTrigger>
                   </TabsList>
                   <TabsContent value="url" className="pt-2">
                     <div className="space-y-1">
@@ -237,6 +241,7 @@ export function SchoolProfileForm() {
                         value={logoInputMethod === 'url' ? (profile.logoUrl || '') : ''} 
                         onChange={handleChange} 
                         placeholder="https://contoh.com/logo.png" 
+                        disabled={!canEdit || logoInputMethod !== 'url'}
                       />
                     </div>
                   </TabsContent>
@@ -250,6 +255,7 @@ export function SchoolProfileForm() {
                         accept="image/png, image/jpeg, image/svg+xml, image/gif" 
                         ref={fileInputRef} 
                         onChange={handleFileChange} 
+                        disabled={!canEdit || logoInputMethod !== 'upload'}
                       />
                       <p className="text-xs text-muted-foreground">Format yang didukung: PNG, JPG, SVG, GIF. Maksimal 2MB.</p>
                     </div>
@@ -293,16 +299,13 @@ export function SchoolProfileForm() {
               </Alert>
             </TabsContent>
             
-            <div className="pt-6 border-t">
-              <Button type="submit" disabled={isLoading} className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-shadow">
-                <Save className="mr-2 h-4 w-4" />
-                {isLoading ? "Menyimpan..." : "Simpan Profil & Pengaturan Kop"}
-              </Button>
-            </div>
+            {canEdit && (
+              <div className="pt-6 border-t">
+                <Button type="submit" disabled={isLoading} className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-shadow">
+                  <Save className="mr-2 h-4 w-4" />
+                  {isLoading ? "Menyimpan..." : "Simpan Profil & Pengaturan Kop"}
+                </Button>
+              </div>
+            )}
           </form>
-        </Tabs>
-      </CardContent>
-    </Card>
-  );
-}
-
+        </

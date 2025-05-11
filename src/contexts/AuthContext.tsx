@@ -19,6 +19,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const mockUsers: Record<UserRole, Omit<User, 'id' | 'email' | 'role'>> = {
+  SuperAdmin: { name: "Super Admin User", avatarUrl: "https://picsum.photos/seed/superadmin/100/100" },
   Admin: { name: "Admin User", avatarUrl: "https://picsum.photos/seed/admin/100/100" },
   KepalaSekolah: { name: "Kepala Sekolah", avatarUrl: "https://picsum.photos/seed/kepsek/100/100" },
   WakaKurikulum: { name: "Waka Kurikulum", avatarUrl: "https://picsum.photos/seed/waka/100/100" },
@@ -133,4 +134,5 @@ export const useAuth = () => {
   }
   return context;
 };
+
 

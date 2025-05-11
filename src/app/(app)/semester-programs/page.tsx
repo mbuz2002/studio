@@ -1,20 +1,22 @@
 
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react"; // Added useCallback
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { CurriculumDataTable } from "@/components/curriculum/CurriculumDataTable";
 import type { SemesterProgram, AnyCurriculumItem, CurriculumFramework } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { FileUp, Filter, Search, CalendarClock, PlusCircle, X } from "lucide-react";
+import { FileUp, Filter, Search, CalendarClock, PlusCircle, X, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { useCurriculum } from "@/contexts/CurriculumContext"; 
+import { useCurriculum } from "@/contexts/CurriculumContext";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import LoadingSpinner from "@/components/ui/loading-spinner";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const initialSemesterProgramsData: SemesterProgram[] = [
   {
@@ -45,7 +47,7 @@ const initialSemesterProgramsData: SemesterProgram[] = [
     gradeLevel: "Kelas VIII SMP",
     semester: "2",
     year: "2024/2025",
-    capaianPembelajaranUmum: "SK 5: Memahami peranan usaha, gaya, dan energi dalam kehidupan sehari-hari.", // Example SK
+    capaianPembelajaranUmum: "SK 5: Memahami peranan usaha, gaya, dan energi dalam kehidupan sehari-hari.",
     alokasiWaktuTotalSemester: "16 Minggu Efektif x 5 JP/Minggu = 80 JP",
     komponenMingguan: [
       { mingguKe: 1, bulan: "Januari", materiPokokAtauTujuanPembelajaran: "Materi Pokok: Gaya dan Penerapannya (KD 5.1 Mengidentifikasi jenis-jenis gaya...)", alokasiWaktu: "5 JP", metodeStrategi: ["Eksperimen sederhana", "Pengamatan"], sumberBelajar: ["Modul IPA KTSP"], rencanaAsesmen: ["Laporan praktikum", "Kuis"], catatanIntegrasiP5: "Sikap ilmiah saat eksperimen."},
@@ -60,7 +62,7 @@ const initialSemesterProgramsData: SemesterProgram[] = [
 const SEMESTER_PROGRAMS_STORAGE_KEY = "appSemesterPrograms";
 
 export default function SemesterProgramsPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
   const { availableCurriculums } = useCurriculum();
@@ -75,6 +77,8 @@ export default function SemesterProgramsPage() {
 
   useEffect(() => {
     setIsClient(true);
+    if (authLoading) return;
+
     if (typeof window !== 'undefined') {
       try {
         const storedSemesterPrograms = localStorage.getItem(SEMESTER_PROGRAMS_STORAGE_KEY);
@@ -90,10 +94,10 @@ export default function SemesterProgramsPage() {
         }
       } catch (error) {
         console.error("Failed to access or parse localStorage for semester programs:", error);
-        setSemesterPrograms(initialSemesterProgramsData.map(sp => ({ // Ensure createdByUserId fallback here too
+        setSemesterPrograms(initialSemesterProgramsData.map(sp => ({
             ...sp,
             createdByUserId: sp.createdByUserId || (user ? user.id : 'user-demo-fallback')
-          }))); 
+          })));
         toast({
           title: "Gagal Memuat Data Lokal",
           description: "Menggunakan data Promes standar. Perubahan mungkin tidak tersimpan dengan benar.",
@@ -101,14 +105,14 @@ export default function SemesterProgramsPage() {
         });
       }
     }
-  }, [toast, user]);
+  }, [toast, user, authLoading]);
 
   const uniqueGradeLevels = useMemo(() => {
     if (!isClient) return [];
     const grades = new Set(semesterPrograms.map(sp => sp.gradeLevel));
     return Array.from(grades).sort();
   }, [semesterPrograms, isClient]);
-  
+
   const uniqueYears = useMemo(() => {
     if (!isClient) return [];
     const years = new Set(semesterPrograms.map(sp => sp.year));
@@ -116,12 +120,12 @@ export default function SemesterProgramsPage() {
   }, [semesterPrograms, isClient]);
 
 
-  const canCreate = user && (user.role === "Admin" || user.role === "WakaKurikulum" || user.role === "Guru");
-  
+  const canCreate = user && (user.role === "SuperAdmin" || user.role === "Admin" || user.role === "WakaKurikulum" || user.role === "Guru");
+
   const canEdit = useCallback((item: AnyCurriculumItem): boolean => {
     if (!user) return false;
     const semesterProgramItem = item as SemesterProgram;
-    if (user.role === "Admin" || user.role === "WakaKurikulum") return true;
+    if (user.role === "SuperAdmin" || user.role === "Admin" || user.role === "WakaKurikulum") return true;
     if (user.role === "Guru" && semesterProgramItem.createdByUserId === user.id) return true;
     if (user.role === "Guru" && initialSemesterProgramsData.some(sp => sp.id === semesterProgramItem.id && (!semesterProgramItem.createdByUserId || semesterProgramItem.createdByUserId === 'user-demo-fallback'))) return true;
     return false;
@@ -130,16 +134,16 @@ export default function SemesterProgramsPage() {
   const canDelete = useCallback((item: AnyCurriculumItem): boolean => {
     if (!user) return false;
     const semesterProgramItem = item as SemesterProgram;
-    if (user.role === "Admin" || user.role === "WakaKurikulum") return true;
+    if (user.role === "SuperAdmin" || user.role === "Admin" || user.role === "WakaKurikulum") return true;
     if (user.role === "Guru" && semesterProgramItem.createdByUserId === user.id) return true;
     if (user.role === "Guru" && initialSemesterProgramsData.some(sp => sp.id === semesterProgramItem.id && (!semesterProgramItem.createdByUserId || semesterProgramItem.createdByUserId === 'user-demo-fallback'))) return true;
     return false;
   }, [user]);
 
-  const canImport = user && (user.role === "Admin" || user.role === "WakaKurikulum");
+  const canImport = user && (user.role === "SuperAdmin" || user.role === "Admin" || user.role === "WakaKurikulum");
 
   const handleEdit = useCallback((item: AnyCurriculumItem) => {
-    if (!canEdit(item as SemesterProgram)) { 
+    if (!canEdit(item as SemesterProgram)) {
         toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengedit Promes ini.", variant: "destructive" });
         return;
     }
@@ -147,7 +151,7 @@ export default function SemesterProgramsPage() {
   }, [canEdit, router, toast]);
 
   const handleDelete = useCallback((itemToDelete: AnyCurriculumItem) => {
-     if (!canDelete(itemToDelete as SemesterProgram)) { 
+     if (!canDelete(itemToDelete as SemesterProgram)) {
         toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk menghapus Promes ini.", variant: "destructive" });
         return;
     }
@@ -162,9 +166,13 @@ export default function SemesterProgramsPage() {
   const handleView = useCallback((item: AnyCurriculumItem) => {
     const prettyPrintJson = JSON.stringify(item, null, 2);
     const newWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
-    newWindow?.document.write(`<pre>${prettyPrintJson}</pre>`);
-    newWindow?.document.close();
-  }, []);
+    if (newWindow) {
+        newWindow.document.write(`<pre>${prettyPrintJson}</pre>`);
+        newWindow.document.close();
+    } else {
+        toast({title: "Gagal Membuka Jendela Baru", description: "Mohon izinkan pop-up untuk situs ini.", variant: "destructive"});
+    }
+  }, [toast]);
 
   const filteredSemesterPrograms = useMemo(() => {
     return isClient ? semesterPrograms.filter(sp =>
@@ -192,15 +200,12 @@ export default function SemesterProgramsPage() {
   const activeFilterCount = [searchTerm, curriculumFilter, gradeFilter, yearFilter, semesterFilter].filter(f => f !== "" && f !== "ALL").length;
 
 
-  if (!isClient || !user) {
+  if (!isClient || authLoading || !user) {
     return (
-      <div className="flex h-[calc(100vh-200px)] items-center justify-center">
-        <div className="flex flex-col items-center text-center">
-          <CalendarClock className="h-12 w-12 animate-pulse text-primary mb-4" />
-          <p className="text-xl font-medium text-muted-foreground">Memuat Program Semester...</p>
-          <p className="text-sm text-muted-foreground">Mohon tunggu sebentar.</p>
-        </div>
-      </div>
+      <LoadingSpinner
+        icon={<CalendarClock className="h-12 w-12 animate-pulse text-primary mb-4" />}
+        message="Memuat Program Semester..."
+      />
     );
   }
 
@@ -213,10 +218,10 @@ export default function SemesterProgramsPage() {
             <div>
                 <CardTitle className="text-2xl md:text-3xl font-bold">Program Semester (Promes)</CardTitle>
                 <CardDescription className="text-base md:text-lg text-primary-foreground/90 mt-1">
-                    Rincikan rencana pengajaran Anda untuk setiap semester. 
-                    {user.role === "KepalaSekolah" || user.role === "WakaKurikulum" || user.role === "TataUsaha" ? " Anda dapat melihat semua Promes." : ""}
+                    Rincikan rencana pengajaran Anda untuk setiap semester.
+                    {user.role === "KepalaSekolah" || user.role === "WakaKurikulum" || user.role === "TataUsaha" || user.role === "SuperAdmin" ? " Anda dapat melihat semua Promes." : ""}
                     {user.role === "Guru" ? " Lihat Promes yang telah disusun." : ""}
-                    {(user.role === "Admin" || user.role === "WakaKurikulum" || user.role === "Guru") && " Anda dapat membuat, mengedit, dan menghapus Promes."}
+                    {(user.role === "Admin" || user.role === "SuperAdmin" || user.role === "WakaKurikulum" || user.role === "Guru") && " Anda dapat membuat, mengedit, dan menghapus Promes."}
                 </CardDescription>
             </div>
           </div>
@@ -314,14 +319,32 @@ export default function SemesterProgramsPage() {
               </div>
             </div>
           </div>
+          {filteredSemesterPrograms.length === 0 && searchTerm && (
+            <Alert variant="default" className="mb-4 border-primary/30 shadow-sm">
+                <Search className="h-5 w-5 text-primary"/>
+                <AlertTitle>Pencarian Tidak Ditemukan</AlertTitle>
+                <AlertDescription>
+                    Tidak ada Promes yang cocok dengan kata kunci "{searchTerm}". Coba kata kunci lain atau sesuaikan filter.
+                </AlertDescription>
+            </Alert>
+          )}
+          {filteredSemesterPrograms.length === 0 && !searchTerm && activeFilterCount > 0 && (
+             <Alert variant="default" className="mb-4 border-primary/30 shadow-sm">
+                <Filter className="h-5 w-5 text-primary"/>
+                <AlertTitle>Filter Tidak Menemukan Hasil</AlertTitle>
+                <AlertDescription>
+                    Tidak ada Promes yang cocok dengan kombinasi filter yang Anda pilih. Coba sesuaikan atau reset filter.
+                </AlertDescription>
+            </Alert>
+          )}
           <div className="overflow-x-auto">
             <CurriculumDataTable
                 items={filteredSemesterPrograms}
                 onView={handleView}
-                onEdit={handleEdit} 
-                onDelete={handleDelete} 
-                canEdit={canEdit} 
-                canDelete={canDelete} 
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                canEdit={canEdit}
+                canDelete={canDelete}
                 itemTypeForExport="Promes"
             />
           </div>

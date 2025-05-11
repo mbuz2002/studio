@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -16,6 +15,7 @@ import type { UserRole } from "@/types";
 import Image from "next/image";
 
 const roles: { value: UserRole; label: string }[] = [
+  { value: "SuperAdmin", label: "Super Admin" },
   { value: "Admin", label: "Admin" },
   { value: "KepalaSekolah", label: "Kepala Sekolah" },
   { value: "WakaKurikulum", label: "Waka Kurikulum" },

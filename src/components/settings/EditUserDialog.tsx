@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { User } from "@/types";
+import type { User, UserRole } from "@/types";
 import { Save, UserCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -26,14 +26,23 @@ import { useAuth } from "@/contexts/AuthContext";
 interface EditUserDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  user: User; 
+  user: User;
   onUserUpdated: (updatedUserData: Partial<User>) => void;
 }
+
+const roleDisplayNames: Record<UserRole, string> = {
+  SuperAdmin: "Super Administrator",
+  Admin: "Administrator",
+  KepalaSekolah: "Kepala Sekolah",
+  WakaKurikulum: "Waka Kurikulum",
+  TataUsaha: "Tata Usaha",
+  Guru: "Guru",
+};
 
 export function EditUserDialog({ isOpen, onOpenChange, user: userToEdit, onUserUpdated }: EditUserDialogProps) {
   const [name, setName] = useState(userToEdit.name);
   const [email, setEmail] = useState(userToEdit.email);
-  
+
   const [avatarPreview, setAvatarPreview] = useState<string | null>(userToEdit.avatarUrl || null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -52,9 +61,9 @@ export function EditUserDialog({ isOpen, onOpenChange, user: userToEdit, onUserU
       setName(userToEdit.name);
       setEmail(userToEdit.email);
       setAvatarPreview(userToEdit.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(userToEdit.name || userToEdit.email)}&background=random&color=fff&font-size=0.45`);
-      setAvatarFile(null); 
-      if(fileInputRef.current) fileInputRef.current.value = ""; 
-      
+      setAvatarFile(null);
+      if(fileInputRef.current) fileInputRef.current.value = "";
+
       setCurrentPassword("");
       setNewPassword("");
       setConfirmNewPassword("");
@@ -69,14 +78,14 @@ export function EditUserDialog({ isOpen, onOpenChange, user: userToEdit, onUserU
   const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      if (file.size > 2 * 1024 * 1024) { 
+      if (file.size > 2 * 1024 * 1024) {
         toast({
           title: "Ukuran File Terlalu Besar",
           description: "Ukuran file avatar maksimal 2MB.",
           variant: "destructive",
         });
         addLog("WARN", `Gagal unggah avatar untuk ${userToEdit.email}: File terlalu besar (${(file.size / (1024*1024)).toFixed(2)}MB). Oleh: ${adminUser?.email || 'sistem'}.`, "EditUserDialog-Avatar");
-        if(fileInputRef.current) fileInputRef.current.value = ""; 
+        if(fileInputRef.current) fileInputRef.current.value = "";
         return;
       }
       if (!['image/png', 'image/jpeg', 'image/gif', 'image/webp'].includes(file.type)) {
@@ -86,7 +95,7 @@ export function EditUserDialog({ isOpen, onOpenChange, user: userToEdit, onUserU
           variant: "destructive",
         });
         addLog("WARN", `Gagal unggah avatar untuk ${userToEdit.email}: Format file tidak didukung (${file.type}). Oleh: ${adminUser?.email || 'sistem'}.`, "EditUserDialog-Avatar");
-        if(fileInputRef.current) fileInputRef.current.value = ""; 
+        if(fileInputRef.current) fileInputRef.current.value = "";
         return;
       }
       setAvatarFile(file);
@@ -110,34 +119,34 @@ export function EditUserDialog({ isOpen, onOpenChange, user: userToEdit, onUserU
       setIsLoading(false);
       return;
     }
-    
+
     const updatedUserData: Partial<User> = {};
     let profileChanged = false;
     if (name !== userToEdit.name) { updatedUserData.name = name; profileChanged = true; }
     if (email !== userToEdit.email) { updatedUserData.email = email; profileChanged = true; }
-    
-    if (avatarFile && avatarPreview) { 
-      updatedUserData.avatarUrl = avatarPreview; 
+
+    if (avatarFile && avatarPreview) {
+      updatedUserData.avatarUrl = avatarPreview;
       profileChanged = true;
-    } else if (!avatarFile && userToEdit.avatarUrl !== avatarPreview && avatarPreview === null) { 
+    } else if (!avatarFile && userToEdit.avatarUrl !== avatarPreview && avatarPreview === null) {
       updatedUserData.avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name || email)}&background=random&color=fff&font-size=0.45`;
       profileChanged = true;
     }
 
 
     if (profileChanged) {
-      onUserUpdated(updatedUserData); 
+      onUserUpdated(updatedUserData);
       addLog("INFO", `Profil pengguna ${userToEdit.email} diperbarui oleh ${adminUser?.email || 'sistem'}. Perubahan: ${JSON.stringify(Object.keys(updatedUserData))}`, logSource);
     }
 
-    if (newPassword || confirmNewPassword || currentPassword) { 
+    if (newPassword || confirmNewPassword || currentPassword) {
       if (newPassword !== confirmNewPassword) {
         toast({ title: "Gagal Mengganti Kata Sandi", description: "Kata sandi baru dan konfirmasi kata sandi tidak cocok.", variant: "destructive" });
         addLog("WARN", `Gagal mengganti kata sandi untuk ${userToEdit.email}: Kata sandi baru tidak cocok. Diedit oleh: ${adminUser?.email || 'sistem'}.`, logSource);
         setIsLoading(false);
         return;
       }
-      if (newPassword.length < 6 && newPassword.length > 0) { 
+      if (newPassword.length < 6 && newPassword.length > 0) {
         toast({ title: "Gagal Mengganti Kata Sandi", description: "Kata sandi baru minimal 6 karakter.", variant: "destructive" });
         addLog("WARN", `Gagal mengganti kata sandi untuk ${userToEdit.email}: Kata sandi baru kurang dari 6 karakter. Diedit oleh: ${adminUser?.email || 'sistem'}.`, logSource);
         setIsLoading(false);
@@ -157,10 +166,10 @@ export function EditUserDialog({ isOpen, onOpenChange, user: userToEdit, onUserU
          addLog("WARN", `Percobaan mengubah kata sandi untuk ${userToEdit.email} gagal: Kata sandi baru kosong. Diedit oleh: ${adminUser?.email || 'sistem'}.`, logSource);
       }
     }
-    
+
     setIsLoading(false);
     if (profileChanged || (newPassword.length >=6 && newPassword === confirmNewPassword)) {
-        onOpenChange(false); 
+        onOpenChange(false);
     }
   };
 
@@ -177,14 +186,14 @@ export function EditUserDialog({ isOpen, onOpenChange, user: userToEdit, onUserU
           <DialogDescription>Perbarui informasi profil pengguna. Perubahan akan diterapkan setelah disimpan.</DialogDescription>
         </DialogHeader>
         <ScrollArea className="flex-grow overflow-y-auto px-6">
-          <form onSubmit={handleSubmit} className="grid gap-4 py-4">
+          <form onSubmit={handleSubmit} id="edit-user-form" className="grid gap-4 py-4"> {/* Added id to form */}
             <div className="flex flex-col items-center space-y-4">
                 <Avatar className="h-24 w-24">
-                    <AvatarImage 
-                        src={avatarPreview || defaultAvatar} 
-                        alt={name} 
+                    <AvatarImage
+                        src={avatarPreview || defaultAvatar}
+                        alt={name}
                         data-ai-hint="user avatar"
-                        key={avatarPreview || defaultAvatar} // Force re-render if src changes
+                        key={avatarPreview || defaultAvatar} 
                     />
                     <AvatarFallback className="text-3xl bg-secondary text-secondary-foreground">
                         {name ? getInitials(name) : <UserCircle2 size={48} />}
@@ -192,12 +201,12 @@ export function EditUserDialog({ isOpen, onOpenChange, user: userToEdit, onUserU
                 </Avatar>
                 <div className="space-y-1 w-full">
                     <Label htmlFor="avatarFile-edit">Unggah Avatar Baru (Opsional)</Label>
-                    <Input 
-                        id="avatarFile-edit" 
-                        type="file" 
-                        accept="image/png, image/jpeg, image/gif, image/webp" 
+                    <Input
+                        id="avatarFile-edit"
+                        type="file"
+                        accept="image/png, image/jpeg, image/gif, image/webp"
                         ref={fileInputRef}
-                        onChange={handleAvatarChange} 
+                        onChange={handleAvatarChange}
                         className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
                     />
                      <p className="text-xs text-muted-foreground">Format: PNG, JPG, GIF, WebP. Maks: 2MB.</p>
@@ -213,12 +222,12 @@ export function EditUserDialog({ isOpen, onOpenChange, user: userToEdit, onUserU
             </div>
             <div className="space-y-1">
               <Label htmlFor="role-edit">Peran</Label>
-              <Input id="role-edit" value={userToEdit.role} disabled className="bg-muted/50 cursor-not-allowed" />
+              <Input id="role-edit" value={roleDisplayNames[userToEdit.role] || userToEdit.role} disabled className="bg-muted/50 cursor-not-allowed" />
               <p className="text-xs text-muted-foreground">Peran tidak dapat diubah melalui halaman ini.</p>
             </div>
 
             <Separator className="my-4" />
-            
+
             <div className="space-y-1">
                 <Label htmlFor="currentPassword">Kata Sandi Saat Ini (Kosongkan jika tidak ingin mengubah)</Label>
                 <Input id="currentPassword" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="********" />
@@ -232,17 +241,19 @@ export function EditUserDialog({ isOpen, onOpenChange, user: userToEdit, onUserU
                 <Label htmlFor="confirmNewPassword">Konfirmasi Kata Sandi Baru</Label>
                 <Input id="confirmNewPassword" type="password" value={confirmNewPassword} onChange={(e) => setConfirmNewPassword(e.target.value)} placeholder="Ulangi kata sandi baru" />
             </div>
+            {/* Moved DialogFooter inside the form */}
+            <DialogFooter className="mt-auto pt-4 border-t sm:justify-end">
+              <DialogClose asChild>
+                  <Button type="button" variant="outline" className="w-full sm:w-auto">Batal</Button>
+              </DialogClose>
+              <Button type="submit" form="edit-user-form" disabled={isLoading} className="w-full sm:w-auto"> {/* Button is now type="submit" and uses form attribute */}
+                <Save className="mr-2 h-4 w-4" />
+                {isLoading ? "Menyimpan..." : "Simpan Perubahan"}
+              </Button>
+            </DialogFooter>
           </form>
         </ScrollArea>
-        <DialogFooter className="mt-auto px-6 pb-6 pt-4 border-t sm:justify-end">
-          <DialogClose asChild>
-              <Button type="button" variant="outline" className="w-full sm:w-auto">Batal</Button>
-          </DialogClose>
-          <Button type="submit" disabled={isLoading} onClick={handleSubmit} className="w-full sm:w-auto">
-            <Save className="mr-2 h-4 w-4" />
-            {isLoading ? "Menyimpan..." : "Simpan Perubahan"}
-          </Button>
-        </DialogFooter>
+        {/* Removed DialogFooter from outside ScrollArea/form */}
       </DialogContent>
     </Dialog>
   );

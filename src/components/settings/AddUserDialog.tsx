@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, type FormEvent } from "react";
@@ -28,6 +29,7 @@ interface AddUserDialogProps {
 }
 
 const roles: { value: UserRole; label: string }[] = [
+  { value: "SuperAdmin", label: "Super Admin" },
   { value: "Admin", label: "Admin" },
   { value: "KepalaSekolah", label: "Kepala Sekolah" },
   { value: "WakaKurikulum", label: "Waka Kurikulum" },
@@ -128,11 +130,3 @@ export function AddUserDialog({ onUserAdded }: AddUserDialogProps) {
               <Save className="mr-2 h-4 w-4" />
               {isLoading ? "Menyimpan..." : "Simpan Pengguna"}
             </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-    

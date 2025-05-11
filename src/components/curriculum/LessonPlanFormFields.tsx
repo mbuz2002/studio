@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
@@ -165,7 +166,7 @@ export function LessonPlanFormFields({
         <div className="space-y-1">
           <Label htmlFor="curriculumType">Jenis Kurikulum</Label>
           <Select name="curriculumType" value={selectedCurriculum} onValueChange={(value) => handleSelectChange('curriculumType', value)}>
-            <SelectTrigger id="curriculumType" disabled={userRole === 'Guru'}>
+            <SelectTrigger id="curriculumType" disabled={!["Admin", "SuperAdmin", "WakaKurikulum"].includes(userRole)}>
               <SelectValue placeholder="Pilih Jenis Kurikulum" />
             </SelectTrigger>
             <SelectContent>
@@ -174,7 +175,7 @@ export function LessonPlanFormFields({
               ))}
             </SelectContent>
           </Select>
-          {userRole === 'Guru' && (
+          {!["Admin", "SuperAdmin", "WakaKurikulum"].includes(userRole) && (
             <p className="text-xs text-muted-foreground mt-1">Jenis kurikulum ditentukan oleh pengaturan global.</p>
           )}
         </div>

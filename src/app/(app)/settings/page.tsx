@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -61,15 +60,15 @@ export default function SettingsPage() {
   }
 
 
-  const canSeeProfileSettings = ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"].includes(user.role);
-  const canSeeAppSettings = ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"].includes(user.role);
-  const canManageCurriculumSettings = ["Admin", "WakaKurikulum"].includes(user.role);
+  const canSeeProfileSettings = ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"].includes(user.role);
+  const canSeeAppSettings = ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"].includes(user.role);
+  const canManageCurriculumSettings = ["SuperAdmin", "Admin", "WakaKurikulum"].includes(user.role);
   
-  const canAccessSchoolSettingsPage = ["Admin", "TataUsaha"].includes(user.role); 
-  const canManageUsers = ["Admin", "TataUsaha"].includes(user.role); 
+  const canAccessSchoolSettingsPage = ["SuperAdmin", "Admin", "TataUsaha", "KepalaSekolah"].includes(user.role); 
+  const canManageUsers = ["SuperAdmin", "Admin", "TataUsaha"].includes(user.role); 
   
-  const canManageData = ["Admin", "WakaKurikulum"].includes(user.role);
-  const canSeeSystemSettings = user.role === "Admin";
+  const canManageData = ["SuperAdmin", "Admin", "WakaKurikulum"].includes(user.role);
+  const canSeeSystemSettings = ["SuperAdmin", "Admin"].includes(user.role);
 
   const handleUserUpdate = (updatedUserData: Partial<User>) => {
     updateUser(updatedUserData); 
@@ -377,7 +376,7 @@ export default function SettingsPage() {
                         <ShieldCheck className="h-7 w-7 text-primary" />
                         <CardTitle className="text-xl font-semibold">Pengaturan Sistem</CardTitle>
                     </div>
-                    <CardDescription className="text-base text-muted-foreground">Konfigurasi tingkat lanjut (Khusus Admin).</CardDescription>
+                    <CardDescription className="text-base text-muted-foreground">Konfigurasi tingkat lanjut (Khusus Admin/SuperAdmin).</CardDescription>
                 </CardHeader>
                 <CardContent className="p-5 pt-0">
                     <p className="text-base text-muted-foreground mb-3">Akses panel pengaturan sistem untuk konfigurasi inti aplikasi.</p>

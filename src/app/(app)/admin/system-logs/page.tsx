@@ -34,7 +34,7 @@ export default function SystemLogsPage() {
 
   useEffect(() => {
     if (!authLoading && isClient) {
-      if (!user || user.role !== "Admin") {
+      if (!user || !["Admin", "SuperAdmin"].includes(user.role)) {
         toast({
           title: "Akses Ditolak",
           description: "Anda tidak memiliki izin untuk mengakses halaman ini.",
@@ -108,7 +108,7 @@ export default function SystemLogsPage() {
     );
   }
   
-  if (!user || user.role !== "Admin") {
+  if (!user || !["Admin", "SuperAdmin"].includes(user.role)) {
      return (
       <div className="flex h-screen items-center justify-center">
         <p className="ml-3 text-lg">Akses ditolak.</p>
@@ -226,3 +226,4 @@ export default function SystemLogsPage() {
     </div>
   );
 }
+

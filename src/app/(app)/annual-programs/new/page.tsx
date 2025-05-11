@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -70,7 +71,7 @@ export default function NewAnnualProgramPage() {
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
   useEffect(() => {
-    if (!user || !(user.role === "Admin" || user.role === "WakaKurikulum" || user.role === "Guru")) {
+    if (!user || !["SuperAdmin", "Admin", "WakaKurikulum", "Guru"].includes(user.role)) {
       toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk membuat PROTA baru.", variant: "destructive" });
       router.push("/annual-programs");
     }
@@ -95,8 +96,8 @@ export default function NewAnnualProgramPage() {
 
   const handleSelectChange = (name: string, value: string) => {
     if (name === 'curriculumType') {
-      if (user?.role === 'Guru') {
-        toast({ title: "Informasi", description: "Jenis kurikulum ditentukan oleh pengaturan global dan tidak dapat diubah oleh Guru.", variant: "default" });
+      if (!["Admin", "SuperAdmin", "WakaKurikulum"].includes(user?.role || "")) {
+        toast({ title: "Informasi", description: "Jenis kurikulum ditentukan oleh pengaturan global dan tidak dapat diubah.", variant: "default" });
         return;
       }
       const newCurriculum = value as CurriculumFramework;
@@ -177,7 +178,7 @@ export default function NewAnnualProgramPage() {
         description: "Tidak dapat menghasilkan konten. Silakan coba lagi.",
         variant: "destructive",
       });
-      addLog("ERROR", `Gagal menyimpan PROTA baru "${newAnnualProgram.title}". Kesalahan: ${error instanceof Error ? error.message : String(error)}`, "NewAnnualProgramPage");
+      addLog("ERROR", `Gagal menyimpan PROTA baru "${formData.title || "Tanpa Judul"}". Kesalahan: ${error instanceof Error ? error.message : String(error)}`, "NewAnnualProgramPage");
     } finally {
       setIsGeneratingAI(false);
     }
@@ -266,9 +267,4 @@ export default function NewAnnualProgramPage() {
               </Button>
             </div>
           </form>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
+        

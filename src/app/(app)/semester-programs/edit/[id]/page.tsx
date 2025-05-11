@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -84,7 +85,7 @@ export default function EditSemesterProgramPage() {
         const programs: SemesterProgram[] = JSON.parse(storedPrograms);
         const programToEdit = programs.find(p => p.id === promesId);
         if (programToEdit) {
-           const canEdit = user.role === "Admin" || user.role === "WakaKurikulum" || (user.role === "Guru" && programToEdit.createdByUserId === user.id);
+           const canEdit = user.role === "SuperAdmin" || user.role === "Admin" || user.role === "WakaKurikulum" || (user.role === "Guru" && programToEdit.createdByUserId === user.id);
            if (!canEdit) {
             toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengedit Promes ini.", variant: "destructive" });
             router.push("/semester-programs");
@@ -123,8 +124,8 @@ export default function EditSemesterProgramPage() {
 
   const handleSelectChange = (name: string, value: string) => {
     if (name === 'curriculumType') {
-      if (user?.role === 'Guru') {
-        toast({ title: "Informasi", description: "Jenis kurikulum tidak dapat diubah oleh Guru.", variant: "default" });
+      if (!["Admin", "SuperAdmin", "WakaKurikulum"].includes(user?.role || "")) {
+        toast({ title: "Informasi", description: "Jenis kurikulum tidak dapat diubah.", variant: "default" });
         return;
       }
       const newCurriculum = value as CurriculumFramework;
@@ -304,6 +305,4 @@ export default function EditSemesterProgramPage() {
         </CardContent>
       </Card>
     </div>
-  );
-}
-
+  

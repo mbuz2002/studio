@@ -1,12 +1,11 @@
 
-
 "use client";
 import type { PropsWithChildren } from 'react';
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset, SidebarRail, SidebarGroup, SidebarGroupLabel } from '@/components/ui/sidebar';
 import { AppLogo } from '@/components/layout/AppLogo';
 import { UserProfile } from '@/components/layout/UserProfile';
-import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, ShieldCheck, Activity, Users, Info, BrainCircuit, FileText, LogOut, Package, UserCheck, ListChecks, Book, CaseSensitive, Home, ClipboardList, CalendarCheck } from 'lucide-react';
+import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, ShieldCheck, Activity, Users, Info, BrainCircuit, FileText, LogOut, Package, UserCheck, ListChecks, Book, Home, ClipboardList, CalendarCheck } from 'lucide-react';
 import Link from 'next/link';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
@@ -30,28 +29,28 @@ interface NavItem {
 }
 
 const allNavItems: NavItem[] = [
-  { href: "/dashboard", label: "Dasbor", originalLabel: "Dasbor", icon: LayoutDashboard, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
-  { href: "/lesson-plans", label: "RPP", originalLabel: "RPP / ATP", icon: BookOpenText, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
-  { href: "/annual-programs", label: "Program Tahunan", originalLabel: "Program Tahunan", icon: CalendarDays, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
-  { href: "/semester-programs", label: "Program Semester", originalLabel: "Program Semester", icon: CalendarClock, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
-  { href: "/modul-ajar", label: "Modul Ajar (KM)", originalLabel: "Modul Ajar (KM)", icon: BrainCircuit, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], isKurikulumMerdekaOnly: true },
-  { href: "/ai-assistant", label: "Asisten AI Materi", originalLabel: "Asisten AI Materi", icon: Sparkles, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"] },
-  { href: "/ai-kurikulum-merdeka-module", label: "Buat Modul Ajar AI", originalLabel: "Buat Modul Ajar AI", icon: BrainCircuit, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], isKurikulumMerdekaOnly: true, isHiddenFromSidebar: true },
+  { href: "/dashboard", label: "Dasbor", originalLabel: "Dasbor", icon: LayoutDashboard, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+  { href: "/lesson-plans", label: "RPP", originalLabel: "RPP / ATP", icon: BookOpenText, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+  { href: "/annual-programs", label: "Program Tahunan", originalLabel: "Program Tahunan", icon: CalendarDays, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+  { href: "/semester-programs", label: "Program Semester", originalLabel: "Program Semester", icon: CalendarClock, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+  { href: "/modul-ajar", label: "Modul Ajar (KM)", originalLabel: "Modul Ajar (KM)", icon: BrainCircuit, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], isKurikulumMerdekaOnly: true },
+  { href: "/ai-assistant", label: "Asisten AI Materi", originalLabel: "Asisten AI Materi", icon: Sparkles, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "Guru"] },
+  { href: "/ai-kurikulum-merdeka-module", label: "Buat Modul Ajar AI", originalLabel: "Buat Modul Ajar AI", icon: BrainCircuit, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], isKurikulumMerdekaOnly: true, isHiddenFromSidebar: true },
   
-  { href: "/academic-calendar", label: "Kalender Pendidikan", originalLabel: "Kalender Pendidikan", icon: CalendarCheck, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+  { href: "/academic-calendar", label: "Kalender Pendidikan", originalLabel: "Kalender Pendidikan", icon: CalendarCheck, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
 
   // Master Data Section
-  { href: "/master-data/subjects", label: "Mata Pelajaran", originalLabel: "Mata Pelajaran", icon: Book, roles: ["Admin", "KepalaSekolah", "WakaKurikulum"], isMasterData: true },
-  { href: "/master-data/teachers", label: "Data Guru", originalLabel: "Data Guru", icon: UserCheck, roles: ["Admin", "KepalaSekolah", "WakaKurikulum"], isMasterData: true },
-  { href: "/master-data/classes", label: "Data Kelas", originalLabel: "Data Kelas", icon: ClipboardList, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha"], isMasterData: true },
+  { href: "/master-data/subjects", label: "Mata Pelajaran", originalLabel: "Mata Pelajaran", icon: Book, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum"], isMasterData: true },
+  { href: "/master-data/teachers", label: "Data Guru", originalLabel: "Data Guru", icon: UserCheck, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum"], isMasterData: true },
+  { href: "/master-data/classes", label: "Data Kelas", originalLabel: "Data Kelas", icon: ClipboardList, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha"], isMasterData: true },
   
-  { href: "/timetables", label: "Jadwal Pelajaran", originalLabel: "Jadwal Pelajaran", icon: ListChecks, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"] }, 
+  { href: "/timetables", label: "Jadwal Pelajaran", originalLabel: "Jadwal Pelajaran", icon: ListChecks, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"] }, 
   
-  { href: "/school-settings", label: "Profil Sekolah", originalLabel: "Profil Sekolah", icon: Home, roles: ["Admin", "TataUsaha", "KepalaSekolah"] }, // Added KepalaSekolah
-  { href: "/admin/user-management", label: "Manajemen Pengguna", originalLabel: "Manajemen Pengguna", icon: Users, roles: ["Admin", "TataUsaha"], isSystemSetting: false },
-  { href: "/settings", label: "Pengaturan Akun", originalLabel: "Pengaturan Akun", icon: SettingsIcon, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
-  { href: "/admin/system-settings", label: "Pengaturan Sistem", originalLabel: "Pengaturan Sistem", icon: ShieldCheck, roles: ["Admin"], isSystemSetting: true },
-  { href: "/admin/system-logs", label: "Log Sistem", originalLabel: "Log Sistem", icon: Activity, roles: ["Admin"], isSystemSetting: true, isHiddenFromSidebar: true },
+  { href: "/school-settings", label: "Profil Sekolah", originalLabel: "Profil Sekolah", icon: Home, roles: ["SuperAdmin", "Admin", "TataUsaha", "KepalaSekolah"] },
+  { href: "/admin/user-management", label: "Manajemen Pengguna", originalLabel: "Manajemen Pengguna", icon: Users, roles: ["SuperAdmin", "Admin", "TataUsaha"], isSystemSetting: false },
+  { href: "/settings", label: "Pengaturan Akun", originalLabel: "Pengaturan Akun", icon: SettingsIcon, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+  { href: "/admin/system-settings", label: "Pengaturan Sistem", originalLabel: "Pengaturan Sistem", icon: ShieldCheck, roles: ["SuperAdmin", "Admin"], isSystemSetting: true },
+  { href: "/admin/system-logs", label: "Log Sistem", originalLabel: "Log Sistem", icon: Activity, roles: ["SuperAdmin", "Admin"], isSystemSetting: true, isHiddenFromSidebar: true },
 ];
 
 export default function AppLayout({ children }: PropsWithChildren) {
@@ -88,8 +87,8 @@ export default function AppLayout({ children }: PropsWithChildren) {
       .filter(item =>
         item.roles.includes(user.role) &&
         !item.isHiddenFromSidebar &&
-        (!item.isMasterData || ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha"].includes(user.role)) &&
-        (item.isSystemSetting === false || (item.isSystemSetting === true && user.role === 'Admin') || item.roles.includes(user.role) ) &&
+        (!item.isMasterData || ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha"].includes(user.role)) &&
+        (item.isSystemSetting === false || (item.isSystemSetting === true && ["SuperAdmin", "Admin"].includes(user.role)) || item.roles.includes(user.role) ) &&
         (!item.isKurikulumMerdekaOnly || defaultCurriculum === "Kurikulum Merdeka")
     ).sort((a,b) => {
         if (a.isSystemSetting && !b.isSystemSetting) return 1;
@@ -132,7 +131,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
             router.push("/dashboard");
             return;
         }
-         if (currentNavItem.isMasterData && !["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha"].includes(user.role)) {
+         if (currentNavItem.isMasterData && !["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha"].includes(user.role)) {
             toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengakses menu Master Data.", variant: "destructive"});
             router.push("/dashboard");
             return;
@@ -184,7 +183,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
 
             {curriculumPlanningItems.length > 0 && (
               <SidebarGroup>
-                <SidebarGroupLabel>Perencanaan</SidebarGroupLabel>
+                <SidebarGroupLabel className="group-data-[state=expanded]:md:inline hidden">Perencanaan</SidebarGroupLabel>
                 <SidebarMenu>
                   {curriculumPlanningItems.map((item) => (
                     <SidebarMenuItem key={item.href}>
@@ -206,7 +205,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
 
             {filteredNavItems.find(item => item.href === "/academic-calendar") && (
                  <SidebarGroup>
-                 <SidebarGroupLabel>Akademik</SidebarGroupLabel>
+                 <SidebarGroupLabel className="group-data-[state=expanded]:md:inline hidden">Akademik</SidebarGroupLabel>
                  <SidebarMenu>
                     <SidebarMenuItem>
                         <Link href="/academic-calendar" legacyBehavior passHref>
@@ -227,7 +226,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
 
             {aiToolsItems.length > 0 && (
               <SidebarGroup>
-                <SidebarGroupLabel>Alat AI</SidebarGroupLabel>
+                <SidebarGroupLabel className="group-data-[state=expanded]:md:inline hidden">Alat AI</SidebarGroupLabel>
                 <SidebarMenu>
                   {aiToolsItems.map((item) => (
                     <SidebarMenuItem key={item.href}>
@@ -249,7 +248,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
             
             {masterDataItems.length > 0 && (
                 <SidebarGroup>
-                    <SidebarGroupLabel>Master Data</SidebarGroupLabel>
+                    <SidebarGroupLabel className="group-data-[state=expanded]:md:inline hidden">Master Data</SidebarGroupLabel>
                     <SidebarMenu>
                     {masterDataItems.map((item) => (
                         <SidebarMenuItem key={item.href}>
@@ -271,7 +270,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
 
             {settingsItems.length > 0 && (
               <SidebarGroup>
-                <SidebarGroupLabel>Pengaturan</SidebarGroupLabel>
+                <SidebarGroupLabel className="group-data-[state=expanded]:md:inline hidden">Pengaturan</SidebarGroupLabel>
                 <SidebarMenu>
                   {settingsItems.map((item) => (
                     <SidebarMenuItem key={item.href}>
@@ -313,3 +312,4 @@ export default function AppLayout({ children }: PropsWithChildren) {
       </SidebarProvider>
   );
 }
+

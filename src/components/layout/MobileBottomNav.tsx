@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import Link from 'next/link';
@@ -24,23 +22,23 @@ interface MobileNavItemData {
 }
 
 const mobileNavItemsData: MobileNavItemData[] = [
-  { href: "/dashboard", label: "Dasbor", icon: LayoutDashboard, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
-  { href: "/lesson-plans", label: "RPP/ATP", icon: BookOpenText, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
-  { href: "/academic-calendar", label: "Kalender", icon: CalendarCheck, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
-  { href: "/annual-programs", label: "PROTA", icon: CalendarDays, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
-  { href: "/semester-programs", label: "Promes", icon: CalendarClock, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
-  { href: "/modul-ajar", label: "Modul KM", icon: BrainCircuit, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], isKurikulumMerdekaOnly: true },
-  { href: "/ai-assistant", label: "AI Materi", icon: Sparkles, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru"] },
+  { href: "/dashboard", label: "Dasbor", icon: LayoutDashboard, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+  { href: "/lesson-plans", label: "RPP/ATP", icon: BookOpenText, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+  { href: "/academic-calendar", label: "Kalender", icon: CalendarCheck, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+  { href: "/annual-programs", label: "PROTA", icon: CalendarDays, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+  { href: "/semester-programs", label: "Promes", icon: CalendarClock, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+  { href: "/modul-ajar", label: "Modul KM", icon: BrainCircuit, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "Guru"], isKurikulumMerdekaOnly: true },
+  { href: "/ai-assistant", label: "AI Materi", icon: Sparkles, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "Guru"] },
   
-  { href: "/master-data/subjects", label: "Mapel", icon: Book, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha"], isMasterData: true },
-  { href: "/master-data/teachers", label: "Guru", icon: UserCheck, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha"], isMasterData: true },
-  { href: "/master-data/classes", label: "Kelas", icon: ClipboardList, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha"], isMasterData: true },
-  { href: "/timetables", label: "Jadwal", icon: ListChecks, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"]},
+  { href: "/master-data/subjects", label: "Mapel", icon: Book, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha"], isMasterData: true },
+  { href: "/master-data/teachers", label: "Guru", icon: UserCheck, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha"], isMasterData: true },
+  { href: "/master-data/classes", label: "Kelas", icon: ClipboardList, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha"], isMasterData: true },
+  { href: "/timetables", label: "Jadwal", icon: ListChecks, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "Guru", "TataUsaha"]},
 
-  { href: "/school-settings", label: "Profil SKLH", icon: Home, roles: ["Admin", "TataUsaha", "KepalaSekolah"] }, // Added KepalaSekolah
-  { href: "/admin/user-management", label: "Pengguna", icon: Users, roles: ["Admin", "TataUsaha"] },
-  { href: "/settings", label: "Atur Akun", icon: SettingsIcon, roles: ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
-  { href: "/admin/system-settings", label: "Sys Cfg", icon: ShieldCheck, roles: ["Admin"] },
+  { href: "/school-settings", label: "Profil SKLH", icon: Home, roles: ["SuperAdmin", "Admin", "TataUsaha", "KepalaSekolah"] }, 
+  { href: "/admin/user-management", label: "Pengguna", icon: Users, roles: ["SuperAdmin", "Admin", "TataUsaha"] },
+  { href: "/settings", label: "Atur Akun", icon: SettingsIcon, roles: ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha", "Guru"] },
+  { href: "/admin/system-settings", label: "Sys Cfg", icon: ShieldCheck, roles: ["SuperAdmin", "Admin"] },
 ];
 
 
@@ -61,7 +59,7 @@ export function MobileBottomNav() {
         .filter(item =>
             (!item.roles || item.roles.includes(user.role)) &&
             (!item.isKurikulumMerdekaOnly || defaultCurriculum === "Kurikulum Merdeka") &&
-            (!item.isMasterData || ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha"].includes(user.role))
+            (!item.isMasterData || ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha"].includes(user.role))
         )
     : [];
 
@@ -154,5 +152,3 @@ export function MobileBottomNav() {
     </>
   );
 }
-
-

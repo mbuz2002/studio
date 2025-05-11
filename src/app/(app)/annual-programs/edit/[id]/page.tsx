@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -54,7 +55,7 @@ export default function EditAnnualProgramPage() {
         const programs: AnnualProgram[] = JSON.parse(storedPrograms);
         const programToEdit = programs.find(p => p.id === protaId);
         if (programToEdit) {
-           const canEdit = user.role === "Admin" || user.role === "WakaKurikulum" || (user.role === "Guru" && programToEdit.createdByUserId === user.id);
+           const canEdit = user.role === "SuperAdmin" || user.role === "Admin" || user.role === "WakaKurikulum" || (user.role === "Guru" && programToEdit.createdByUserId === user.id);
            if (!canEdit) {
             toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengedit PROTA ini.", variant: "destructive" });
             router.push("/annual-programs");
@@ -99,8 +100,8 @@ export default function EditAnnualProgramPage() {
 
   const handleSelectChange = (name: string, value: string) => {
     if (name === 'curriculumType') {
-      if (user?.role === 'Guru') {
-        toast({ title: "Informasi", description: "Jenis kurikulum tidak dapat diubah oleh Guru.", variant: "default" });
+      if (!["Admin", "SuperAdmin", "WakaKurikulum"].includes(user?.role || "")) {
+        toast({ title: "Informasi", description: "Jenis kurikulum tidak dapat diubah.", variant: "default" });
         return;
       }
       const newCurriculum = value as CurriculumFramework;
@@ -317,8 +318,4 @@ export default function EditAnnualProgramPage() {
             </div>
           </form>
         </CardContent>
-      </Card>
-    </div>
-  );
-}
-
+      </Card

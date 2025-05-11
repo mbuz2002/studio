@@ -48,7 +48,7 @@ export default function AdminSystemSettingsPage() {
 
   useEffect(() => {
     if (!authLoading && isClient) { 
-      if (!user || user.role !== "Admin") {
+      if (!user || !["Admin", "SuperAdmin"].includes(user.role)) {
         toast({
           title: "Akses Ditolak",
           description: "Anda tidak memiliki izin untuk mengakses halaman ini.",
@@ -64,7 +64,7 @@ export default function AdminSystemSettingsPage() {
     }
   }, [user, authLoading, isClient, router, toast, addLog]); 
 
-  if (!isClient || authLoading || !user || user.role !== "Admin") { 
+  if (!isClient || authLoading || !user || !["Admin", "SuperAdmin"].includes(user.role)) { 
     return (
       <div className="flex h-[calc(100vh-200px)] items-center justify-center">
         <div className="flex flex-col items-center text-center">
@@ -152,7 +152,7 @@ export default function AdminSystemSettingsPage() {
             <div>
                 <CardTitle className="text-3xl md:text-4xl font-bold">Pengaturan Sistem</CardTitle>
                 <CardDescription className="text-lg md:text-xl text-primary-foreground/90 mt-1">
-                    Kelola konfigurasi inti dan pengaturan operasional aplikasi (Khusus Admin).
+                    Kelola konfigurasi inti dan pengaturan operasional aplikasi (Khusus Admin/SuperAdmin).
                 </CardDescription>
             </div>
           </div>
@@ -289,3 +289,4 @@ export default function AdminSystemSettingsPage() {
     </div>
   );
 }
+

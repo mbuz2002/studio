@@ -1,20 +1,22 @@
 
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react"; // Added useCallback
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { CurriculumDataTable } from "@/components/curriculum/CurriculumDataTable";
 import type { AnnualProgram, AnyCurriculumItem, CurriculumFramework } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { FileUp, Filter, Search, CalendarDays, PlusCircle, X } from "lucide-react";
+import { FileUp, Filter, Search, CalendarDays, PlusCircle, X, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { useCurriculum } from "@/contexts/CurriculumContext"; 
+import { useCurriculum } from "@/contexts/CurriculumContext";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import LoadingSpinner from "@/components/ui/loading-spinner";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const initialAnnualProgramsData: AnnualProgram[] = [
   {
@@ -36,7 +38,7 @@ const initialAnnualProgramsData: AnnualProgram[] = [
     profilPelajarPancasilaFocus: ["Bernalar Kritis", "Kreatif"],
     createdAt: new Date("2024-07-01T00:00:00Z").toISOString(),
     updatedAt: new Date("2024-07-05T00:00:00Z").toISOString(),
-    createdByUserId: "user-3" 
+    createdByUserId: "user-3"
   },
   {
     id: "prota2",
@@ -56,14 +58,14 @@ const initialAnnualProgramsData: AnnualProgram[] = [
     ],
     createdAt: new Date("2024-07-02T00:00:00Z").toISOString(),
     updatedAt: new Date("2024-07-06T00:00:00Z").toISOString(),
-    createdByUserId: "user-1" 
+    createdByUserId: "user-1"
   },
 ];
 
 const ANNUAL_PROGRAMS_STORAGE_KEY = "appAnnualPrograms";
 
 export default function AnnualProgramsPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
   const { availableCurriculums } = useCurriculum();
@@ -77,6 +79,8 @@ export default function AnnualProgramsPage() {
 
   useEffect(() => {
     setIsClient(true);
+    if (authLoading) return;
+
     if (typeof window !== 'undefined') {
       try {
         const storedAnnualPrograms = localStorage.getItem(ANNUAL_PROGRAMS_STORAGE_KEY);
@@ -92,10 +96,10 @@ export default function AnnualProgramsPage() {
         }
       } catch (error) {
         console.error("Failed to access or parse localStorage for annual programs:", error);
-        setAnnualPrograms(initialAnnualProgramsData.map(ap => ({ // Ensure createdByUserId fallback here too
+        setAnnualPrograms(initialAnnualProgramsData.map(ap => ({
             ...ap,
             createdByUserId: ap.createdByUserId || (user ? user.id : 'user-demo-fallback')
-          }))); 
+          })));
         toast({
           title: "Gagal Memuat Data Lokal",
           description: "Menggunakan data PROTA standar. Perubahan mungkin tidak tersimpan dengan benar.",
@@ -103,7 +107,7 @@ export default function AnnualProgramsPage() {
         });
       }
     }
-  }, [toast, user]);
+  }, [toast, user, authLoading]);
 
   const uniqueGradeLevels = useMemo(() => {
     if (!isClient) return [];
@@ -114,16 +118,16 @@ export default function AnnualProgramsPage() {
   const uniqueYears = useMemo(() => {
     if (!isClient) return [];
     const years = new Set(annualPrograms.map(ap => ap.year));
-    return Array.from(years).sort((a, b) => b.localeCompare(a)); // Sort descending for years
+    return Array.from(years).sort((a, b) => b.localeCompare(a));
   }, [annualPrograms, isClient]);
 
 
-  const canCreate = user && (user.role === "Admin" || user.role === "WakaKurikulum" || user.role === "Guru");
-  
+  const canCreate = user && (user.role === "SuperAdmin" || user.role === "Admin" || user.role === "WakaKurikulum" || user.role === "Guru");
+
   const canEdit = useCallback((item: AnyCurriculumItem): boolean => {
     if (!user) return false;
     const annualProgramItem = item as AnnualProgram;
-    if (user.role === "Admin" || user.role === "WakaKurikulum") return true;
+    if (user.role === "SuperAdmin" || user.role === "Admin" || user.role === "WakaKurikulum") return true;
     if (user.role === "Guru" && annualProgramItem.createdByUserId === user.id) return true;
     if (user.role === "Guru" && initialAnnualProgramsData.some(ap => ap.id === annualProgramItem.id && (!annualProgramItem.createdByUserId || annualProgramItem.createdByUserId === 'user-demo-fallback'))) return true;
     return false;
@@ -132,17 +136,17 @@ export default function AnnualProgramsPage() {
   const canDelete = useCallback((item: AnyCurriculumItem): boolean => {
     if (!user) return false;
     const annualProgramItem = item as AnnualProgram;
-    if (user.role === "Admin" || user.role === "WakaKurikulum") return true;
+    if (user.role === "SuperAdmin" || user.role === "Admin" || user.role === "WakaKurikulum") return true;
     if (user.role === "Guru" && annualProgramItem.createdByUserId === user.id) return true;
     if (user.role === "Guru" && initialAnnualProgramsData.some(ap => ap.id === annualProgramItem.id && (!annualProgramItem.createdByUserId || annualProgramItem.createdByUserId === 'user-demo-fallback'))) return true;
     return false;
   }, [user]);
 
-  const canImport = user && (user.role === "Admin" || user.role === "WakaKurikulum");
+  const canImport = user && (user.role === "SuperAdmin" || user.role === "Admin" || user.role === "WakaKurikulum");
 
 
   const handleEdit = useCallback((item: AnyCurriculumItem) => {
-    if (!canEdit(item as AnnualProgram)) { 
+    if (!canEdit(item as AnnualProgram)) {
         toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengedit PROTA ini.", variant: "destructive" });
         return;
     }
@@ -150,7 +154,7 @@ export default function AnnualProgramsPage() {
   }, [canEdit, router, toast]);
 
   const handleDelete = useCallback((itemToDelete: AnyCurriculumItem) => {
-    if (!canDelete(itemToDelete as AnnualProgram)) { 
+    if (!canDelete(itemToDelete as AnnualProgram)) {
         toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk menghapus PROTA ini.", variant: "destructive" });
         return;
     }
@@ -165,9 +169,13 @@ export default function AnnualProgramsPage() {
   const handleView = useCallback((item: AnyCurriculumItem) => {
     const prettyPrintJson = JSON.stringify(item, null, 2);
     const newWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
-    newWindow?.document.write(`<pre>${prettyPrintJson}</pre>`);
-    newWindow?.document.close();
-  }, []);
+    if (newWindow) {
+        newWindow.document.write(`<pre>${prettyPrintJson}</pre>`);
+        newWindow.document.close();
+    } else {
+        toast({title: "Gagal Membuka Jendela Baru", description: "Mohon izinkan pop-up untuk situs ini.", variant: "destructive"});
+    }
+  }, [toast]);
 
   const filteredAnnualPrograms = useMemo(() => {
     return isClient ? annualPrograms.filter(ap =>
@@ -192,15 +200,12 @@ export default function AnnualProgramsPage() {
 
   const activeFilterCount = [searchTerm, curriculumFilter, gradeFilter, yearFilter].filter(f => f !== "" && f !== "ALL").length;
 
-  if (!isClient || !user) {
+  if (!isClient || authLoading || !user) {
     return (
-      <div className="flex h-[calc(100vh-200px)] items-center justify-center">
-        <div className="flex flex-col items-center text-center">
-          <CalendarDays className="h-12 w-12 animate-pulse text-primary mb-4" />
-          <p className="text-xl font-medium text-muted-foreground">Memuat Program Tahunan...</p>
-          <p className="text-sm text-muted-foreground">Mohon tunggu sebentar.</p>
-        </div>
-      </div>
+      <LoadingSpinner
+        icon={<CalendarDays className="h-12 w-12 animate-pulse text-primary mb-4" />}
+        message="Memuat Program Tahunan..."
+      />
     );
   }
 
@@ -213,10 +218,10 @@ export default function AnnualProgramsPage() {
             <div>
                 <CardTitle className="text-2xl md:text-3xl font-bold">Program Tahunan (PROTA)</CardTitle>
                 <CardDescription className="text-base md:text-lg text-primary-foreground/90 mt-1">
-                    Kelola program tahun ajaran Anda. 
-                    {user.role === "KepalaSekolah" || user.role === "WakaKurikulum" || user.role === "TataUsaha" ? " Anda dapat melihat semua PROTA." : ""}
+                    Kelola program tahun ajaran Anda.
+                    {user.role === "KepalaSekolah" || user.role === "WakaKurikulum" || user.role === "TataUsaha" || user.role === "SuperAdmin" ? " Anda dapat melihat semua PROTA." : ""}
                     {user.role === "Guru" ? " Lihat PROTA yang telah disusun." : ""}
-                    {(user.role === "Admin" || user.role === "WakaKurikulum" || user.role === "Guru") && " Anda dapat membuat, mengedit, dan menghapus PROTA."}
+                    {(user.role === "Admin" || user.role === "SuperAdmin" || user.role === "WakaKurikulum" || user.role === "Guru") && " Anda dapat membuat, mengedit, dan menghapus PROTA."}
                 </CardDescription>
             </div>
           </div>
@@ -301,14 +306,32 @@ export default function AnnualProgramsPage() {
               </div>
             </div>
           </div>
+          {filteredAnnualPrograms.length === 0 && searchTerm && (
+            <Alert variant="default" className="mb-4 border-primary/30 shadow-sm">
+                <Search className="h-5 w-5 text-primary"/>
+                <AlertTitle>Pencarian Tidak Ditemukan</AlertTitle>
+                <AlertDescription>
+                    Tidak ada PROTA yang cocok dengan kata kunci "{searchTerm}". Coba kata kunci lain atau sesuaikan filter.
+                </AlertDescription>
+            </Alert>
+          )}
+          {filteredAnnualPrograms.length === 0 && !searchTerm && activeFilterCount > 0 && (
+             <Alert variant="default" className="mb-4 border-primary/30 shadow-sm">
+                <Filter className="h-5 w-5 text-primary"/>
+                <AlertTitle>Filter Tidak Menemukan Hasil</AlertTitle>
+                <AlertDescription>
+                    Tidak ada PROTA yang cocok dengan kombinasi filter yang Anda pilih. Coba sesuaikan atau reset filter.
+                </AlertDescription>
+            </Alert>
+          )}
           <div className="overflow-x-auto">
             <CurriculumDataTable
                 items={filteredAnnualPrograms}
                 onView={handleView}
-                onEdit={handleEdit} 
-                onDelete={handleDelete} 
-                canEdit={canEdit} 
-                canDelete={canDelete} 
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                canEdit={canEdit}
+                canDelete={canDelete}
                 itemTypeForExport="PROTA"
             />
           </div>

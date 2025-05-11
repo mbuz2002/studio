@@ -45,7 +45,7 @@ export default function EditLessonPlanPage() {
         const plans: LessonPlan[] = JSON.parse(storedPlans);
         const planToEdit = plans.find(p => p.id === lessonPlanId);
         if (planToEdit) {
-          const canEdit = user.role === "Admin" || user.role === "WakaKurikulum" || (user.role === "Guru" && planToEdit.createdByUserId === user.id) || (user.role === "Guru" && initialLessonPlansData.some(lp => lp.id === planToEdit.id && (!planToEdit.createdByUserId || planToEdit.createdByUserId === 'user-demo-fallback')));
+          const canEdit = user.role === "SuperAdmin" || user.role === "Admin" || user.role === "WakaKurikulum" || (user.role === "Guru" && planToEdit.createdByUserId === user.id) || (user.role === "Guru" && initialLessonPlansData.some(lp => lp.id === planToEdit.id && (!planToEdit.createdByUserId || planToEdit.createdByUserId === 'user-demo-fallback')));
           if (!canEdit) {
             toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengedit item ini.", variant: "destructive" });
             router.push("/lesson-plans");
@@ -80,8 +80,8 @@ export default function EditLessonPlanPage() {
 
   const handleSelectChange = (name: string, value: string) => {
     if (name === 'curriculumType') {
-       if (user?.role === 'Guru') {
-        toast({ title: "Informasi", description: "Jenis kurikulum tidak dapat diubah oleh Guru.", variant: "default" });
+       if (!["Admin", "SuperAdmin", "WakaKurikulum"].includes(user?.role || "")) {
+        toast({ title: "Informasi", description: "Jenis kurikulum tidak dapat diubah.", variant: "default" });
         return;
       }
       const newCurriculum = value as CurriculumFramework;
@@ -347,4 +347,3 @@ export default function EditLessonPlanPage() {
     </div>
   );
 }
-
