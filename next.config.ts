@@ -34,9 +34,16 @@ const nextConfig: NextConfig = {
         hostname: 'upload.wikimedia.org', // For Tut Wuri Handayani Logo
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https', // Added for pravatar
+        hostname: 'i.pravatar.cc',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
 };
 
 export default nextConfig;
+
