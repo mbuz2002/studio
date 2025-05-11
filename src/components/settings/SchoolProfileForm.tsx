@@ -1,16 +1,16 @@
 
 "use client";
 
-import { useState, useEffect, type FormEvent, useRef } from "react";
+import { useState, useEffect, type FormEvent, useRef, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import type { SchoolProfile, EducationLevel } from "@/types";
-import { SCHOOL_PROFILE_STORAGE_KEY } from "@/types";
+import type { SchoolProfile, EducationLevel, School, CustomDomainStatus } from "@/types";
+import { SCHOOL_PROFILE_STORAGE_KEY, SCHOOLS_STORAGE_KEY } from "@/types";
 import { useToast } from "@/hooks/use-toast";
-import { Building, Save, UploadCloud, Link2, Info, Image as ImageIcon } from "lucide-react"; // Added ImageIcon
+import { Building, Save, UploadCloud, Link2, Info, Image as ImageIcon, Globe } from "lucide-react"; // ImageIcon
 import { useLog } from "@/contexts/LogContext";
 import { useAuth } from "@/contexts/AuthContext";
 import Image from "next/image";
@@ -28,8 +28,29 @@ const educationLevels: { value: EducationLevel; label: string }[] = [
   { value: "PKBM/Kesetaraan", label: "Pusat Kegiatan Belajar Masyarakat (PKBM) / Pendidikan Kesetaraan" },
 ];
 
+const customDomainStatusOptions: { value: CustomDomainStatus; label: string }[] = [
+  { value: "unconfigured", label: "Belum Dikonfigurasi (Gunakan Subdomain)" },
+  { value: "pending_verification", label: "Menunggu Verifikasi DNS" },
+  { value: "active", label: "Aktif & Terverifikasi" },
+  { value: "configuration_error", label: "Kesalahan Konfigurasi DNS" },
+  { value: "ssl_error", label: "Kesalahan SSL" },
+];
+
+function slugify(text: string = ""): string {
+  if (!text) return "sekolah-anda";
+  return text
+    .toLowerCase()
+    .replace(/\s+/g, '-') 
+    .replace(/[^\w-]+/g, '') 
+    .replace(/--+/g, '-') 
+    .replace(/^-+/, '') 
+    .replace(/-+$/, '') 
+    .substring(0, 50); 
+}
+
+
 const initialProfile: SchoolProfile = {
-  id: "school-profile-main", // Ensure a unique ID
+  id: "school-profile-main", 
   namaSekolah: "Nama Sekolah Anda",
   jenjangPendidikan: "SMA/MA", 
   alamat: "Jl. Contoh No. 123",
@@ -37,9 +58,11 @@ const initialProfile: SchoolProfile = {
   emailSekolah: "kontak@sekolahanda.sch.id",
   namaKepalaSekolah: "Nama Kepala Sekolah",
   npsn: "10000000",
-  logoUrl: "", // Default to no logo
+  logoUrl: "", 
   kotaSekolah: "Kota Anda",
   updatedAt: new Date().toISOString(),
+  customDomain: "",
+  customDomainStatus: "unconfigured",
 };
 
 export function SchoolProfileForm() {
@@ -47,7 +70,7 @@ export function SchoolProfileForm() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { addLog } = useLog();
-  const { user } = useAuth();
+  const { user, currentSchool } = useAuth(); // Get currentSchool from AuthContext
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoInputMethod, setLogoInputMethod] = useState<'url' | 'upload'>('url');
@@ -55,33 +78,53 @@ export function SchoolProfileForm() {
 
   useEffect(() => {
     const source = "SchoolProfileForm-Init";
-    const fetchedProfile = localStorage.getItem(SCHOOL_PROFILE_STORAGE_KEY);
-    if (fetchedProfile) {
-      try {
-        const parsedProfile = JSON.parse(fetchedProfile) as SchoolProfile;
-        // Ensure all fields are present, falling back to initialProfile defaults
-        const completeProfile = { ...initialProfile, ...parsedProfile };
-        setProfile(completeProfile);
-        setLogoPreview(completeProfile.logoUrl || null);
-        if (completeProfile.logoUrl && completeProfile.logoUrl.startsWith("data:image")) {
-            setLogoInputMethod("upload");
-        } else if (completeProfile.logoUrl) {
-            setLogoInputMethod("url");
-        }
-        addLog("INFO", "Profil sekolah dimuat dari penyimpanan lokal.", source);
-      } catch (error) {
-        console.error("Failed to parse school profile from localStorage", error);
-        addLog("ERROR", `Gagal memuat profil sekolah dari penyimpanan lokal: ${error instanceof Error ? error.message : String(error)}`, source);
-        localStorage.removeItem(SCHOOL_PROFILE_STORAGE_KEY);
-        setProfile(initialProfile); 
-        setLogoPreview(initialProfile.logoUrl || null);
-      }
+    let profileToLoad: SchoolProfile = { ...initialProfile };
+
+    if (currentSchool && user && ["Admin", "KepalaSekolah", "TataUsaha"].includes(user.role)) {
+      // If admin is logged in and currentSchool is available, prioritize that
+      profileToLoad = {
+        ...initialProfile, // Start with defaults to ensure all fields
+        id: currentSchool.id, // Use currentSchool's ID
+        namaSekolah: currentSchool.name,
+        jenjangPendidikan: currentSchool.jenjangPendidikan,
+        alamat: currentSchool.alamat,
+        nomorTelepon: currentSchool.nomorTelepon,
+        emailSekolah: currentSchool.emailSekolah,
+        namaKepalaSekolah: currentSchool.namaKepalaSekolah,
+        npsn: currentSchool.npsn,
+        logoUrl: currentSchool.logoUrl,
+        kotaSekolah: currentSchool.kotaSekolah,
+        customDomain: currentSchool.customDomain,
+        customDomainStatus: currentSchool.customDomainStatus || "unconfigured",
+        updatedAt: currentSchool.updatedAt || new Date().toISOString(),
+      };
+      addLog("INFO", `Profil sekolah "${currentSchool.name}" dimuat dari AuthContext (currentSchool).`, source);
     } else {
-      setProfile(initialProfile); 
-      setLogoPreview(initialProfile.logoUrl || null);
-      addLog("INFO", "Tidak ada profil sekolah di penyimpanan lokal, menggunakan data awal.", source);
+      const fetchedProfile = localStorage.getItem(SCHOOL_PROFILE_STORAGE_KEY);
+      if (fetchedProfile) {
+        try {
+          const parsedProfile = JSON.parse(fetchedProfile) as SchoolProfile;
+          profileToLoad = { ...initialProfile, ...parsedProfile };
+          addLog("INFO", "Profil sekolah dimuat dari penyimpanan lokal (SCHOOL_PROFILE_STORAGE_KEY).", source);
+        } catch (error) {
+          console.error("Failed to parse school profile from localStorage", error);
+          addLog("ERROR", `Gagal memuat profil sekolah dari penyimpanan lokal: ${error instanceof Error ? error.message : String(error)}`, source);
+          localStorage.removeItem(SCHOOL_PROFILE_STORAGE_KEY);
+        }
+      } else {
+        addLog("INFO", "Tidak ada profil sekolah di penyimpanan lokal, menggunakan data awal.", source);
+      }
     }
-  }, [addLog]);
+    
+    setProfile(profileToLoad);
+    setLogoPreview(profileToLoad.logoUrl || null);
+    if (profileToLoad.logoUrl && profileToLoad.logoUrl.startsWith("data:image")) {
+        setLogoInputMethod("upload");
+    } else if (profileToLoad.logoUrl) {
+        setLogoInputMethod("url");
+    }
+
+  }, [addLog, currentSchool, user]);
 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -93,7 +136,11 @@ export function SchoolProfileForm() {
   };
 
   const handleSelectChange = (name: string, value: string) => {
-    setProfile(prev => ({ ...prev, [name]: value as EducationLevel }));
+     if (name === "jenjangPendidikan" || name === "customDomainStatus") {
+        setProfile(prev => ({ ...prev, [name]: value as EducationLevel | CustomDomainStatus }));
+    } else {
+       setProfile(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -126,10 +173,51 @@ export function SchoolProfileForm() {
     const source = "SchoolProfileForm-Submit";
     addLog("INFO", `Pengguna ${user?.email} memulai pembaruan profil sekolah.`, source);
     
-    const finalProfileData = { ...profile, logoUrl: logoPreview, updatedAt: new Date().toISOString() };
+    const finalProfileData: SchoolProfile = { 
+      ...profile, 
+      logoUrl: logoPreview, 
+      updatedAt: new Date().toISOString(),
+      customDomain: profile.customDomain || "", // Ensure it's empty string if undefined
+      customDomainStatus: profile.customDomain ? (profile.customDomainStatus || "unconfigured") : "unconfigured",
+    };
     
+    // Save to SCHOOL_PROFILE_STORAGE_KEY (current school's active profile)
     localStorage.setItem(SCHOOL_PROFILE_STORAGE_KEY, JSON.stringify(finalProfileData));
-    setProfile(finalProfileData); // Update state with potentially cleaned logoUrl from preview
+
+    // If an admin is editing, also update the school's data in SCHOOLS_STORAGE_KEY
+    if (currentSchool && user && ["Admin", "KepalaSekolah", "TataUsaha"].includes(user.role)) {
+      try {
+        const allSchoolsData = localStorage.getItem(SCHOOLS_STORAGE_KEY);
+        if (allSchoolsData) {
+          let allSchools: School[] = JSON.parse(allSchoolsData);
+          const schoolIndex = allSchools.findIndex(s => s.id === currentSchool.id);
+          if (schoolIndex > -1) {
+            allSchools[schoolIndex] = {
+              ...allSchools[schoolIndex], // Keep existing fields from School type
+              name: finalProfileData.namaSekolah,
+              jenjangPendidikan: finalProfileData.jenjangPendidikan,
+              alamat: finalProfileData.alamat,
+              nomorTelepon: finalProfileData.nomorTelepon,
+              emailSekolah: finalProfileData.emailSekolah,
+              namaKepalaSekolah: finalProfileData.namaKepalaSekolah,
+              npsn: finalProfileData.npsn,
+              logoUrl: finalProfileData.logoUrl,
+              kotaSekolah: finalProfileData.kotaSekolah,
+              customDomain: finalProfileData.customDomain,
+              customDomainStatus: finalProfileData.customDomainStatus,
+              updatedAt: finalProfileData.updatedAt,
+              // Keep other School specific fields like adminEmail, subscriptionStatus, etc.
+            };
+            localStorage.setItem(SCHOOLS_STORAGE_KEY, JSON.stringify(allSchools));
+            addLog("INFO", `Data sekolah "${currentSchool.name}" (ID: ${currentSchool.id}) di SCHOOLS_STORAGE_KEY juga diperbarui.`, source);
+          }
+        }
+      } catch (error) {
+         addLog("ERROR", `Gagal memperbarui data sekolah di SCHOOLS_STORAGE_KEY: ${error instanceof Error ? error.message : String(error)}`, source);
+      }
+    }
+
+    setProfile(finalProfileData);
     setIsLoading(false);
     toast({
       title: "Profil Sekolah Diperbarui",
@@ -138,7 +226,8 @@ export function SchoolProfileForm() {
     addLog("INFO", `Profil sekolah berhasil diperbarui oleh ${user?.email}.`, source);
   };
   
-  const canEdit = user && (user.role === "SuperAdmin" || user.role === "Admin" || user.role === "TataUsaha" || user.role === "KepalaSekolah");
+  const canEdit = user && (user.role === "Admin" || user.role === "TataUsaha" || user.role === "KepalaSekolah");
+  const generatedSubdomain = profile.namaSekolah ? `${slugify(profile.namaSekolah)}.gumpla.ai` : "subdomain-anda.gumpla.ai";
 
   return (
     <Card className="rounded-lg shadow-xl">
@@ -146,18 +235,19 @@ export function SchoolProfileForm() {
         <div className="flex items-center gap-3">
           <Building className="h-8 w-8 text-primary-foreground drop-shadow" />
           <div>
-            <CardTitle className="text-2xl md:text-3xl">Profil & Kop Surat Sekolah</CardTitle>
+            <CardTitle className="text-2xl md:text-3xl">Profil & Pengaturan Sekolah</CardTitle>
             <CardDescription className="text-primary-foreground/90 mt-1">
-              Kelola informasi umum sekolah dan pengaturan kop surat.
+              Kelola informasi umum, kop surat, dan domain sekolah Anda.
             </CardDescription>
           </div>
         </div>
       </CardHeader>
       <CardContent className="pt-6 p-4 md:p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 mb-6">
-            <TabsTrigger value="infoUmum">Informasi Umum Sekolah</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 mb-6">
+            <TabsTrigger value="infoUmum">Informasi Umum</TabsTrigger>
             <TabsTrigger value="kopSurat">Pengaturan Kop Surat</TabsTrigger>
+            <TabsTrigger value="domain">Pengaturan Domain</TabsTrigger>
           </TabsList>
           
           <form onSubmit={handleSubmit}>
@@ -275,7 +365,7 @@ export function SchoolProfileForm() {
                                 className="rounded"
                                 onErrorCapture={(e) => {
                                   console.warn("Image preview error for:", logoPreview, e);
-                                  setLogoPreview(null); // Clear preview on error
+                                  setLogoPreview(null); 
                                 }}
                                 data-ai-hint="school logo"
                             />
@@ -300,12 +390,53 @@ export function SchoolProfileForm() {
                 </AlertDescription>
               </Alert>
             </TabsContent>
+
+            <TabsContent value="domain" className="space-y-6">
+              <div className="space-y-1.5">
+                <Label htmlFor="customDomain">Domain Kustom (Opsional)</Label>
+                <Input id="customDomain" name="customDomain" value={profile.customDomain || ""} onChange={handleChange} placeholder="cth., kurikulum.sekolahanda.sch.id" disabled={!canEdit} />
+                {!profile.customDomain && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Alamat situs sekolah Anda akan menjadi: <strong>{generatedSubdomain}</strong>
+                  </p>
+                )}
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="customDomainStatus">Status Domain Kustom</Label>
+                <Select 
+                  name="customDomainStatus" 
+                  value={!profile.customDomain ? "unconfigured" : (profile.customDomainStatus || "unconfigured")} 
+                  onValueChange={(value) => handleSelectChange('customDomainStatus', value)}
+                  disabled={!canEdit || !profile.customDomain}
+                >
+                  <SelectTrigger id="customDomainStatus">
+                    <SelectValue placeholder={!profile.customDomain ? "Otomatis (Subdomain)" : "Pilih Status"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {customDomainStatusOptions.map(opt => (
+                      <SelectItem key={opt.value} value={opt.value} disabled={!profile.customDomain && opt.value !== "unconfigured"}>{opt.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {!profile.customDomain && <p className="text-xs text-muted-foreground mt-1">Status akan aktif jika domain kustom diisi.</p>}
+              </div>
+              <Alert variant="default" className="border-amber-500/50 shadow-sm">
+                <Globe className="h-5 w-5 text-amber-500" />
+                <AlertTitle className="font-semibold">Informasi Pengaturan Domain</AlertTitle>
+                <AlertDescription className="text-sm">
+                  Jika Anda ingin menggunakan domain kustom (misal, `kurikulum.sekolahanda.sch.id`), masukkan di atas. 
+                  Anda kemudian perlu mengkonfigurasi CNAME record domain kustom Anda untuk diarahkan ke `app.gumpla.ai` (atau target yang disediakan oleh Super Admin).
+                  Status domain ini mungkin perlu diverifikasi oleh Super Admin atau sistem.
+                  Jika kolom domain kustom dikosongkan, sekolah akan otomatis dapat diakses melalui subdomain yang dibuat berdasarkan nama sekolah.
+                </AlertDescription>
+              </Alert>
+            </TabsContent>
             
             {canEdit && (
               <div className="pt-6 border-t">
                 <Button type="submit" disabled={isLoading} className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-shadow">
                   <Save className="mr-2 h-4 w-4" />
-                  {isLoading ? "Menyimpan..." : "Simpan Profil & Pengaturan Kop"}
+                  {isLoading ? "Menyimpan..." : "Simpan Profil & Pengaturan Sekolah"}
                 </Button>
               </div>
             )}

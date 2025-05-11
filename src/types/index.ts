@@ -1,4 +1,5 @@
 
+
 export type UserRole = "Admin" | "KepalaSekolah" | "WakaKurikulum" | "TataUsaha" | "Guru" | "SuperAdmin";
 export type CurriculumFramework = "Kurikulum Merdeka" | "K-13" | "KTSP 2006";
 export type EducationLevel = "PAUD" | "SD/MI" | "SMP/MTs" | "SMA/MA" | "SMK/MAK" | "SLB" | "PKBM/Kesetaraan";
@@ -429,6 +430,22 @@ export interface AcademicEvent {
   schoolId?: string; 
 }
 
+export interface SchoolProfile {
+  id: string;
+  namaSekolah: string;
+  jenjangPendidikan: EducationLevel;
+  alamat?: string;
+  nomorTelepon?: string;
+  emailSekolah?: string;
+  namaKepalaSekolah?: string;
+  npsn?: string;
+  logoUrl?: string;
+  kotaSekolah?: string;
+  updatedAt: string;
+  customDomain?: string;
+  customDomainStatus?: CustomDomainStatus;
+}
+
 
 // Storage Keys
 export const MODUL_AJAR_STORAGE_KEY = "appModulAjar";
@@ -447,4 +464,6 @@ export const CURRICULUM_STORAGE_KEY = "app-default-curriculum";
 export const THEME_STORAGE_KEY = "app-theme";
 export const ACADEMIC_EVENTS_STORAGE_KEY = "appAcademicEvents";
 export const SAAS_APP_SETTINGS_STORAGE_KEY = "appSaasSettings"; 
+
+
 
