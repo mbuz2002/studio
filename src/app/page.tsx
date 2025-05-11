@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -63,12 +62,7 @@ const features = [
     description: "Pilih dari berbagai tema tampilan (termasuk tema gelap dan terang profesional) untuk kenyamanan visual Anda.",
     color: "pink",
   },
-  {
-    icon: <ShieldCheck className="h-10 w-10 text-red-400" />,
-    title: "Siap untuk Multi-Sekolah (SAAS)",
-    description: "Kelola banyak sekolah, langganan, dan pengaturan global aplikasi dengan fitur Super Admin yang powerful.",
-    color: "red",
-  },
+  // Removed SAAS feature
 ];
 
 const testimonials = [
