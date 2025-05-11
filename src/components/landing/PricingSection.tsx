@@ -1,6 +1,7 @@
+
 "use client";
 
-import { BadgePercent, CheckCircle, XCircle, ShieldQuestion, MessageCircle, ArrowRight } from 'lucide-react';
+import { BadgePercent, CheckCircle, XCircle, ShieldQuestion, MessageCircle, ArrowRight, Sparkles } from 'lucide-react'; // Added Sparkles
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
