@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -11,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext'; // To get appName
 import { useEffect, useState } from 'react';
 import type { AppSettings } from '@/types';
 import { SAAS_APP_SETTINGS_STORAGE_KEY } from '@/types';
+import { Card } from '@/components/ui/card'; // Added import for Card
 
 const features = [
   {
@@ -227,3 +229,4 @@ export default function LandingPage() {
     </div>
   );
 }
+
