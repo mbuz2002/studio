@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -10,13 +9,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCurriculum } from '@/contexts/CurriculumContext';
 import { useState, useMemo } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from "@/components/ui/sheet";
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 
 interface MobileNavItemData {
   href: string;
-  label: string; // Short label for the bottom bar
-  originalLabel?: string; // Full label for the "More" sheet
+  label: string; 
+  originalLabel?: string; 
   icon: React.ElementType;
   roles?: UserRole[];
   isKurikulumMerdekaOnly?: boolean;
@@ -26,9 +25,6 @@ interface MobileNavItemData {
   featureFlag?: keyof SchoolFeatureSettings;
 }
 
-// Define all possible navigation items here
-// 'label' should be the short version for the bottom bar
-// 'originalLabel' is the full version for the "More" menu
 const allMobileNavItemsData: MobileNavItemData[] = [
   // SuperAdmin Specific Menu
   { href: "/superadmin/dashboard", label: "Dasbor SA", originalLabel: "Dasbor Super Admin", icon: LayoutDashboard, roles: ["SuperAdmin"], isSuperAdminOnly: true },
@@ -72,38 +68,31 @@ export function MobileBottomNav() {
 
     return allMobileNavItemsData
       .map(item => {
-        // Use the short label for the bottom bar, originalLabel for the sheet
         let displayLabel = item.label; 
         if (item.href === "/lesson-plans") {
           displayLabel = defaultCurriculum === "Kurikulum Merdeka" ? "ATP" : "RPP";
         }
-        return { ...item, label: displayLabel }; // Ensure 'label' is the short one
+        return { ...item, label: displayLabel };
       })
       .filter(item => {
         if (!item.roles?.includes(user.role)) return false;
         if (item.isKurikulumMerdekaOnly && defaultCurriculum !== "Kurikulum Merdeka") return false;
         
-        // Master data filtering (could be stricter, e.g., only Admin)
         if (item.isMasterData && !["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha"].includes(user.role)) return false;
         
-        // System settings specific to Admin roles
         if (item.isSystemSetting && user.role !== "Admin" && user.role !== "SuperAdmin") return false;
         
-        // SuperAdmin sees only SA items, others don't see SA items
         if (user.role === "SuperAdmin") return item.isSuperAdminOnly === true;
         if (item.isSuperAdminOnly) return false;
 
-        // Feature flag check for non-SuperAdmin users
         if (item.featureFlag && !(currentSchool?.featureSettings?.[item.featureFlag] ?? true)) {
             return false;
         }
         return true;
       })
       .sort((a,b) => { 
-        // Prioritize dashboard items
         if (a.href.includes("dashboard")) return -1;
         if (b.href.includes("dashboard")) return 1;
-        // De-prioritize settings items among the main bar candidates
         if (a.href.includes("setting") || a.href.includes("akun")) return 1;
         if (b.href.includes("setting") || b.href.includes("akun")) return -1;
         return 0;
@@ -117,19 +106,38 @@ export function MobileBottomNav() {
   if (filteredNavItems.length <= MAX_ITEMS_IN_BAR) {
     displayNavItems = filteredNavItems;
   } else {
-    // Ensure "Dasbor" and "Akun Saya" are prioritized if they exist and roles match
     const dashboardItem = filteredNavItems.find(item => item.href.includes("dashboard"));
-    const settingsItem = filteredNavItems.find(item => item.href === "/settings"); // specific settings for user account
+    const settingsItem = filteredNavItems.find(item => item.href === "/settings");
 
-    const priorityItems = [dashboardItem, settingsItem].filter(Boolean) as MobileNavItemData[];
-    const remainingItems = filteredNavItems.filter(item => !priorityItems.includes(item));
+    let priorityItems = [dashboardItem, settingsItem].filter(Boolean) as MobileNavItemData[];
     
-    const barSlotsLeft = MAX_ITEMS_IN_BAR - priorityItems.length -1; // -1 for the "More" button
-    
-    displayNavItems = [...priorityItems, ...remainingItems.slice(0, Math.max(0, barSlotsLeft))];
-    overflowNavItems = remainingItems.slice(Math.max(0, barSlotsLeft));
+    // Ensure settingsItem is always at the end of priorityItems if it exists
+    if (settingsItem && dashboardItem && priorityItems.length === 2 && priorityItems[0] === settingsItem) {
+      priorityItems = [dashboardItem, settingsItem];
+    } else if (settingsItem && !dashboardItem && priorityItems.length === 1) {
+      priorityItems = [settingsItem]; // If only settings exists
+    }
 
-    if (overflowNavItems.length > 0 || (priorityItems.length + remainingItems.slice(0, Math.max(0, barSlotsLeft)).length < filteredNavItems.length)) {
+
+    const remainingItems = filteredNavItems.filter(item => !priorityItems.find(p => p.href === item.href));
+    
+    const barSlotsForRegularItems = MAX_ITEMS_IN_BAR - 1; // -1 for the "More" button
+    let itemsToDisplayDirectlyCount = barSlotsForRegularItems;
+
+    // Adjust how many priority items are shown based on available slots
+    let displayedPriorityItems: MobileNavItemData[] = [];
+    if (priorityItems.length > 0 && dashboardItem && itemsToDisplayDirectlyCount > 0) {
+        displayedPriorityItems.push(dashboardItem);
+        itemsToDisplayDirectlyCount--;
+    }
+
+    displayNavItems = [...displayedPriorityItems, ...remainingItems.slice(0, itemsToDisplayDirectlyCount)];
+    
+    // All items not in displayNavItems (excluding "More" placeholder) go to overflow
+    overflowNavItems = filteredNavItems.filter(item => !displayNavItems.find(d => d.href === item.href));
+    
+    // If there are items in overflow, add the "More" button
+    if (overflowNavItems.length > 0) {
       displayNavItems.push({
         href: "#more-menu",
         label: "Lainnya",
@@ -188,7 +196,7 @@ export function MobileBottomNav() {
           <SheetHeader className="p-4 border-b">
             <SheetTitle>Menu Lainnya</SheetTitle>
           </SheetHeader>
-          <ScrollArea className="max-h-[calc(70vh-70px)]"> {/* Adjust height considering header */}
+          <ScrollArea className="max-h-[calc(70vh-70px)]">
             <div className="grid grid-cols-1 gap-0 p-2">
               {overflowNavItems.map((overflowItem) => (
                 <SheetClose asChild key={overflowItem.href}>
