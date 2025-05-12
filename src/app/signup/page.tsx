@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, type FormEvent } from "react";
@@ -76,7 +75,7 @@ export default function SignupPage() {
 
     const newSchoolId = `school-${Date.now()}`;
     const newAdminId = `user-${Date.now()}`;
-    const trialEndDate = addDays(new Date(), 7); // Updated trial period to 7 days
+    const trialEndDate = addDays(new Date(), 7); 
 
     const newSchool: School = {
       id: newSchoolId,
@@ -103,8 +102,8 @@ export default function SignupPage() {
       id: newAdminId,
       name: adminName,
       email: adminEmail,
-      role: "Admin",
-      schoolId: newSchoolId,
+      role: "Admin", // Default role for new school signup
+      schoolId: newSchoolId, // Associate admin with the new school
       avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(adminName || adminEmail)}&background=random&color=fff`,
       updatedAt: new Date().toISOString(),
     };
@@ -114,6 +113,8 @@ export default function SignupPage() {
     addLog("INFO", `Sekolah baru "${schoolName}" (ID: ${newSchoolId}) berhasil didaftarkan dengan status trial 7 hari.`, "SignupPage");
 
     existingUsers.push(newAdmin);
+    // For demo purposes, the actual password isn't stored with the User object in localStorage for security.
+    // The login function handles the demo "password" for regular users.
     localStorage.setItem(APP_USERS_STORAGE_KEY, JSON.stringify(existingUsers));
     addLog("INFO", `Admin "${adminName}" (Email: ${adminEmail}) untuk sekolah "${schoolName}" berhasil dibuat.`, "SignupPage");
     
@@ -122,7 +123,8 @@ export default function SignupPage() {
       description: `Sekolah "${schoolName}" dan akun admin Anda telah dibuat. Anda akan diarahkan ke dasbor.`,
     });
     
-    login(adminEmail, password, "Admin", newSchoolId);
+    // For auto-login in the demo, use the hardcoded demo password for "Admin" role
+    login(adminEmail, "password", "Admin", newSchoolId);
   };
 
 
@@ -171,6 +173,7 @@ export default function SignupPage() {
               <Label htmlFor="confirmPassword">Konfirmasi Kata Sandi</Label>
               <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Ulangi kata sandi" required disabled={isLoading} />
             </div>
+            <p className="text-xs text-muted-foreground pt-1">Dengan mendaftar, Anda menyetujui <Link href="/terms-of-service" className="text-primary hover:underline">Syarat &amp; Ketentuan</Link> kami.</p>
             <Button type="submit" className="w-full bg-gradient-to-r from-accent to-primary hover:from-accent/90 hover:to-primary/90 text-accent-foreground text-base py-3 h-12 rounded-md shadow-lg" disabled={isLoading}>
               {isLoading ? <GraduationCap className="mr-2.5 h-5 w-5 animate-pulse" /> : <UserPlus className="mr-2.5 h-5 w-5" />}
               {isLoading ? "Memproses Pendaftaran..." : "Daftar Sekarang (Uji Coba 7 Hari)"}
@@ -180,7 +183,7 @@ export default function SignupPage() {
         <CardFooter className="flex flex-col items-center space-y-2 pb-8 pt-4 bg-muted/30 border-t">
           <p className="text-sm text-muted-foreground">
             Sudah punya akun sekolah?{" "}
-            <Link href="/login" className="text-accent hover:underline font-medium">
+            <Link href="/login-by-school" className="text-accent hover:underline font-medium">
               Masuk di sini.
             </Link>
           </p>
