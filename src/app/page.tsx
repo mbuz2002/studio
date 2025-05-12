@@ -4,7 +4,7 @@
 import * as React from "react"; 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { GraduationCap, Sparkles, LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, BrainCircuit, Database, Users, Settings, BarChart3, MessageCircle, ShieldCheck, CheckCircle, ArrowRight, Zap, Star, Palette, Target, TrendingUp, Lightbulb, Info, HelpCircle, FileTextIcon, FileBadgeIcon, BadgePercent, Server, ShieldQuestion } from 'lucide-react';
+import { GraduationCap, Sparkles, LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, BrainCircuit, Database, Users, Settings, BarChart3, MessageCircle, ShieldCheck, CheckCircle, ArrowRight, Zap, Star, Palette, Target, TrendingUp, Lightbulb, Info, HelpCircle, FileTextIcon, FileBadgeIcon, BadgePercent } from 'lucide-react';
 import Image from 'next/image';
 import { LandingHeader } from '@/components/landing/LandingHeader';
 import { LandingFooter } from '@/components/landing/LandingFooter';
@@ -19,6 +19,7 @@ import { FAQSection } from '@/components/landing/FAQSection';
 import { DocumentationSection } from '@/components/landing/DocumentationSection';
 import { TermsOfServiceSection } from '@/components/landing/TermsOfServiceSection';
 import { PricingSection } from '@/components/landing/PricingSection';
+import { useAuth } from '@/contexts/AuthContext'; // Import useAuth
 
 
 const features = [
@@ -120,6 +121,7 @@ export default function LandingPage() {
   const [isClient, setIsClient] = useState(false);
   const [appName, setAppName] = useState("GUMPLA AI");
   const [appLogoUrl, setAppLogoUrl] = useState<string | null>(null);
+  const { user, loading: authLoading } = useAuth(); // Get user and loading state
 
   useEffect(() => {
     setIsClient(true);
@@ -134,6 +136,31 @@ export default function LandingPage() {
       }
     }
   }, []);
+
+  const getCtaButton = () => {
+    if (authLoading) {
+      return (
+        <Button size="lg" className="text-xl px-12 py-8 bg-amber-500 text-slate-900 font-bold shadow-xl rounded-xl animate-pulse">
+          <div className="h-6 w-40 bg-amber-700 rounded"></div>
+        </Button>
+      );
+    }
+    if (user) {
+      const dashboardHref = user.role === "SuperAdmin" ? "/superadmin/dashboard" : "/dashboard";
+      return (
+        <Button asChild size="lg" className="text-xl px-12 py-8 bg-teal-500 hover:bg-teal-600 text-white font-bold shadow-xl hover:shadow-teal-500/60 transition-all duration-300 transform hover:scale-105 rounded-xl animate-fade-in-up [animation-delay:0.2s]">
+          <Link href={dashboardHref}>
+            Masuk ke Dasbor <ArrowRight className="ml-2.5 h-6 w-6" />
+          </Link>
+        </Button>
+      );
+    }
+    return (
+      <Button asChild size="lg" className="text-xl px-12 py-8 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold shadow-xl hover:shadow-amber-500/60 transition-all duration-300 transform hover:scale-105 rounded-xl animate-fade-in-up [animation-delay:0.2s]">
+        <Link href="/signup">Mulai Uji Coba Gratis <ArrowRight className="ml-2.5 h-6 w-6" /></Link>
+      </Button>
+    );
+  };
 
 
   return (
@@ -163,9 +190,21 @@ export default function LandingPage() {
               Solusi Cerdas untuk Transformasi Digital Perencanaan Kurikulum. Lebih Efisien, Inovatif, dan Sesuai Standar Pendidikan Terkini.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up [animation-delay:0.4s]">
-              <Button asChild size="lg" className="text-lg px-10 py-6 bg-sky-500 hover:bg-sky-600 text-white shadow-xl hover:shadow-sky-500/60 transition-all duration-300 transform hover:scale-105 rounded-lg font-semibold">
-                <Link href="/signup">Daftar Gratis Sekarang!</Link>
-              </Button>
+              {isClient && !authLoading && !user && (
+                 <Button asChild size="lg" className="text-lg px-10 py-6 bg-sky-500 hover:bg-sky-600 text-white shadow-xl hover:shadow-sky-500/60 transition-all duration-300 transform hover:scale-105 rounded-lg font-semibold">
+                    <Link href="/signup">Daftar Gratis Sekarang!</Link>
+                 </Button>
+              )}
+               {(isClient && authLoading) && ( // Placeholder for loading state
+                 <Button size="lg" className="text-lg px-10 py-6 bg-sky-500 text-white shadow-xl rounded-lg font-semibold animate-pulse">
+                    <div className="h-6 w-48 bg-sky-700 rounded"></div>
+                 </Button>
+              )}
+              {isClient && user && (
+                 <Button asChild size="lg" className="text-lg px-10 py-6 bg-teal-500 hover:bg-teal-600 text-white shadow-xl hover:shadow-teal-500/60 transition-all duration-300 transform hover:scale-105 rounded-lg font-semibold">
+                    <Link href={user.role === "SuperAdmin" ? "/superadmin/dashboard" : "/dashboard"}>Buka Dasbor</Link>
+                 </Button>
+              )}
               <Button asChild variant="outline" size="lg" className="text-lg px-10 py-6 border-slate-600 hover:bg-slate-700/50 hover:border-slate-500 text-slate-200 shadow-lg hover:shadow-slate-500/40 transition-all duration-300 transform hover:scale-105 rounded-lg font-semibold">
                 <Link href="#features">Jelajahi Fitur Unggulan</Link>
               </Button>
@@ -283,9 +322,7 @@ export default function LandingPage() {
             <p className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto mb-12 leading-relaxed font-light animate-fade-in-up [animation-delay:0.1s]">
               Bergabunglah dengan ribuan pendidik inovatif lainnya dan rasakan kemudahan serta kekuatan perencanaan kurikulum berbasis AI dengan {isClient ? appName : "GUMPLA AI"}. <br/>Daftar sekarang dan dapatkan masa uji coba gratis 7 hari!
             </p>
-            <Button asChild size="lg" className="text-xl px-12 py-8 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold shadow-xl hover:shadow-amber-500/60 transition-all duration-300 transform hover:scale-105 rounded-xl animate-fade-in-up [animation-delay:0.2s]">
-              <Link href="/signup">Mulai Uji Coba Gratis <ArrowRight className="ml-2.5 h-6 w-6" /></Link>
-            </Button>
+            {isClient && getCtaButton()}
             <p className="mt-8 text-sm text-slate-400 animate-fade-in-up [animation-delay:0.3s]">
               Punya pertanyaan lebih lanjut? <Link href="https://wa.me/6282131100121?text=Halo%2C%20saya%20tertarik%20dengan%20GUMPLA%20AI%20dan%20ingin%20bertanya." target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:text-sky-300 underline font-medium">Hubungi Tim Kami via WhatsApp</Link>.
             </p>
@@ -297,3 +334,4 @@ export default function LandingPage() {
     </div>
   );
 }
+
