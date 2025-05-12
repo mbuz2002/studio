@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -10,15 +9,16 @@ import Link from "next/link";
 import type { FormEvent} from 'react';
 import { useState, useEffect } from 'react';
 import { useAuth } from "@/contexts/AuthContext";
-import { initialSuperAdminUser } from '@/lib/initial-data'; 
+// Removed: import { initialSuperAdminUser } from '@/lib/initial-data'; // Not needed for credentials check here
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation"; 
+import LoadingSpinner from "@/components/ui/loading-spinner";
 
 export default function SuperAdminAccessPage() {
   const { login, user, loading: authIsLoading } = useAuth(); 
   const { toast } = useToast();
   const router = useRouter(); 
-  const [username, setUsername] = useState("admin"); 
+  const [username, setUsername] = useState("admin"); // Default to "admin" as per instructions
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false); 
 
@@ -32,23 +32,28 @@ export default function SuperAdminAccessPage() {
     event.preventDefault();
     setIsLoading(true);
     
-    login(username, password, "SuperAdmin");
+    // Explicitly pass "admin" as username for SuperAdmin login attempt
+    // The input field for username is kept for UX consistency but its value is overridden here for SA.
+    login("admin", password, "SuperAdmin");
 
+    // The AuthContext's login function now handles reload on failure,
+    // so the timeout here is less critical but can remain as a fallback.
     const timer = setTimeout(() => {
       if (isLoading) { 
-         setIsLoading(false);
+         setIsLoading(false); 
       }
     }, 3000); 
     return () => clearTimeout(timer);
   };
 
-  if (authIsLoading || (user?.role === "SuperAdmin" && typeof window !== "undefined" && window.location.pathname === '/superadmin-access' )) {
-    return (
-       <div className="w-full min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-slate-100">
-        <Settings className="mr-2.5 h-10 w-10 animate-spin text-sky-400" />
-        <p className="text-xl">Memuat...</p>
-      </div>
-    );
+  // This loading state is primarily for the page itself, not the auth context loading.
+  if (authIsLoading) {
+    return <LoadingSpinner message="Memverifikasi sesi..." icon={<Settings className="mr-2.5 h-10 w-10 animate-spin text-sky-400" />} />;
+  }
+  // If user is already SuperAdmin and on this page, they should be redirected by the useEffect above.
+  // If we reach here and they are SA, it means redirect is pending. Show loading to avoid flash.
+  if (user?.role === "SuperAdmin") {
+      return <LoadingSpinner message="Mengarahkan ke dasbor Super Admin..." icon={<Settings className="mr-2.5 h-10 w-10 animate-spin text-sky-400" />} />;
   }
 
 
@@ -72,8 +77,8 @@ export default function SuperAdminAccessPage() {
                 id="username-sa" 
                 type="text" 
                 placeholder="admin" 
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                value={username} // Input field still reflects state for UX
+                onChange={(e) => setUsername(e.target.value)} // Allow changing for UX, but login uses "admin"
                 required 
                 className="text-base h-11 rounded-md bg-slate-700 border-slate-600 text-slate-50 placeholder-slate-500 focus:border-sky-500 focus:ring-sky-500"
                 disabled={isLoading}
@@ -101,12 +106,12 @@ export default function SuperAdminAccessPage() {
         </CardContent>
         <CardFooter className="flex flex-col items-center space-y-2 pb-8 pt-4 border-t border-slate-700">
            <p className="text-sm text-slate-400">
-            Username Super Admin Demo: admin
+            Username Super Admin Demo: <strong>admin</strong>
           </p>
            <p className="text-sm text-slate-400">
-            Password Super Admin Demo: Payaman123
+            Password Super Admin Demo: <strong>Payaman123</strong>
           </p>
-          <Link href="/login-by-school" className="text-sm text-sky-400 hover:underline font-medium mt-2">
+          <Link href="/(auth)/login-by-school" className="text-sm text-sky-400 hover:underline font-medium mt-2">
             Bukan Super Admin? Masuk di sini.
           </Link>
         </CardFooter>

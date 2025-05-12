@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { PropsWithChildren} from 'react';
@@ -39,24 +38,38 @@ const initializeDefaultData = () => {
   const usersExist = localStorage.getItem(APP_USERS_STORAGE_KEY);
   if (!usersExist) {
     localStorage.setItem(APP_USERS_STORAGE_KEY, JSON.stringify([initialSuperAdminUser]));
+    // console.log("AUTH_PROVIDER: Initialized APP_USERS with SuperAdmin.");
   } else {
     try {
-        const users: User[] = JSON.parse(usersExist);
-        if (!users.find(u => u.id === initialSuperAdminUser.id && u.role === "SuperAdmin")) {
-        // Check if a user with the same email but different role exists, if so, don't add.
-        // Or, decide if SuperAdmin email must be unique across all roles. For now, assume ID is key.
-        const existingSA = users.find(u => u.id === initialSuperAdminUser.id);
-        if (!existingSA) {
-            users.push(initialSuperAdminUser);
+        let users: User[] = JSON.parse(usersExist);
+        const superAdminRecord = users.find(u => u.id === initialSuperAdminUser.id);
+        
+        if (!superAdminRecord) {
+            // SuperAdmin with this ID doesn't exist, add it.
+            // Check if an SA with the *email* exists to avoid duplicate SAs if ID changed.
+            const saByEmail = users.find(u => u.email === initialSuperAdminUser.email && u.role === "SuperAdmin");
+            if (!saByEmail) {
+                users.push(initialSuperAdminUser);
+                localStorage.setItem(APP_USERS_STORAGE_KEY, JSON.stringify(users));
+                // console.log("AUTH_PROVIDER: Added missing SuperAdmin (by ID) to existing users.");
+            } else if (saByEmail.id !== initialSuperAdminUser.id) {
+                // SA with correct email exists but different ID. This is unusual. Prioritize the one from initial-data.
+                users = users.filter(u => u.email !== initialSuperAdminUser.email || u.role !== "SuperAdmin");
+                users.push(initialSuperAdminUser);
+                localStorage.setItem(APP_USERS_STORAGE_KEY, JSON.stringify(users));
+                // console.warn("AUTH_PROVIDER: Corrected SuperAdmin record (ID mismatch, email matched).");
+            }
+        } else if (superAdminRecord.role !== "SuperAdmin" || superAdminRecord.email !== initialSuperAdminUser.email) {
+            // SA ID exists, but role or email is incorrect. Force update with correct details.
+            users = users.filter(u => u.id !== initialSuperAdminUser.id); // Remove old/incorrect record by ID
+            users.push(initialSuperAdminUser); // Add correct SA record
             localStorage.setItem(APP_USERS_STORAGE_KEY, JSON.stringify(users));
-        } else if (existingSA.role !== "SuperAdmin") {
-            // Handle conflict or update logic if necessary
-            console.warn("User ID for SuperAdmin exists with a different role. SuperAdmin not added to prevent conflict.");
-        }
+            // console.warn("AUTH_PROVIDER: Corrected SuperAdmin record (role/email mismatch for existing ID).");
+        } else {
+            // console.log("AUTH_PROVIDER: SuperAdmin record verified in localStorage.");
         }
     } catch (e) {
-        console.error("Error initializing SuperAdmin user:", e);
-        // Fallback: ensure SuperAdmin is there if parsing fails or array is malformed
+        console.error("AUTH_PROVIDER: Error processing existing users, re-initializing with SuperAdmin:", e);
         localStorage.setItem(APP_USERS_STORAGE_KEY, JSON.stringify([initialSuperAdminUser]));
     }
   }
@@ -79,7 +92,7 @@ const initializeDefaultData = () => {
     }
   });
   if (!localStorage.getItem(SCHOOLS_STORAGE_KEY)) {
-      localStorage.setItem(SCHOOLS_STORAGE_KEY, JSON.stringify([])); 
+      localStorage.setItem(SCHOOLS_STORAGE_KEY, JSON.stringify([]));
   }
 };
 
@@ -89,7 +102,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   const [currentSchool, setCurrentSchool] = useState<School | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const pathname = usePathname(); 
+  const pathname = usePathname();
   const { addLog } = useLog();
   const { toast } = useToast();
 
@@ -136,12 +149,14 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   // Effect for redirecting unauthenticated users
   useEffect(() => {
     if (!loading && !user) {
-      const isAuthPage = pathname === '/login' || pathname === '/signup' || pathname === '/superadmin-access' || pathname === '/login-by-school' || pathname.startsWith('/forgot-password');
-      if (!isAuthPage && pathname !== '/' && !pathname.startsWith('/legal') && !pathname.startsWith('/about') && !pathname.startsWith('/documentation') && !pathname.startsWith('/faq') && !pathname.startsWith('/terms-of-service')) { 
+      const isAuthPage = pathname.startsWith('/(auth)'); // Check if it's an auth group page
+      const isPublicPage = pathname === '/' || pathname.startsWith('/legal') || pathname.startsWith('/about') || pathname.startsWith('/documentation') || pathname.startsWith('/faq') || pathname.startsWith('/terms-of-service');
+      
+      if (!isAuthPage && !isPublicPage) {
         if (pathname.startsWith('/superadmin')) {
-          router.push('/superadmin-access');
+          router.push('/(auth)/superadmin-access');
         } else {
-          router.push('/login-by-school');
+          router.push('/(auth)/login-by-school');
         }
       }
     }
@@ -156,17 +171,23 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     const logSource = "AuthContext-Login";
 
     if (roleToAttempt === "SuperAdmin") {
+      // For SuperAdmin, email should be 'admin' and password 'Payaman123'
       foundUser = users.find(u => u.email === emailOrUsername && u.role === "SuperAdmin");
-       if (foundUser && passwordAttempt === "Payaman123") { // SuperAdmin password
+       if (foundUser && passwordAttempt === "Payaman123") {
         setUser(foundUser);
         setCurrentSchool(null);
         localStorage.setItem('currentUser', JSON.stringify(foundUser));
         addLog("INFO", `SuperAdmin ${emailOrUsername} berhasil masuk.`, logSource);
         router.push('/superadmin/dashboard');
         return;
+      } else {
+        if (!foundUser) {
+          addLog("ERROR", `SuperAdmin login GAGAL: Pengguna SuperAdmin dengan email "${emailOrUsername}" tidak ditemukan.`, logSource);
+        } else { 
+          addLog("ERROR", `SuperAdmin login GAGAL: Kata sandi salah untuk SuperAdmin "${emailOrUsername}".`, logSource);
+        }
       }
-    } else { 
-      // Regular user login
+    } else {
       if (!schoolIdToLogin) {
           toast({ title: "Login Gagal", description: "Informasi sekolah tidak disediakan. Harap pilih sekolah Anda.", variant: "destructive" });
           addLog("WARN", `Login gagal untuk ${emailOrUsername}: ID Sekolah tidak disediakan.`, logSource);
@@ -191,7 +212,6 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         return;
       }
       
-      // For demo, all regular users use "password"
       if (passwordAttempt === "password") {
         foundUser = users.find(u => u.email === emailOrUsername && u.role === roleToAttempt && u.schoolId === schoolIdToLogin);
         if (foundUser) {
@@ -205,9 +225,8 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       }
     }
     
-    // General failure for both SuperAdmin (if password incorrect) and regular users (if not found or password incorrect)
     toast({ title: "Login Gagal", description: "Email, peran, atau kata sandi salah, atau akun tidak sesuai dengan sekolah yang dipilih.", variant: "destructive" });
-    addLog("WARN", `Login gagal: Pengguna dengan email/username ${emailOrUsername}, peran ${roleToAttempt} untuk sekolah ID ${schoolIdToLogin || 'N/A'} tidak ditemukan atau kredensial salah.`, logSource);
+    addLog("WARN", `Login gagal (jalur umum): Pengguna dengan email/username ${emailOrUsername}, peran ${roleToAttempt} untuk sekolah ID ${schoolIdToLogin || 'N/A'} tidak ditemukan atau kredensial salah.`, logSource);
     window.location.reload();
   }, [addLog, router, toast]);
 
@@ -221,9 +240,9 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     setCurrentSchool(null);
     localStorage.removeItem('currentUser');
     if (userRole === "SuperAdmin") {
-      router.push('/superadmin-access');
+      router.push('/(auth)/superadmin-access');
     } else {
-      router.push('/login-by-school'); 
+      router.push('/(auth)/login-by-school');
     }
   }, [user, addLog, router]);
 

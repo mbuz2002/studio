@@ -1,19 +1,16 @@
-
 import type { LessonPlan, AnnualProgram, SemesterProgram, ModulAjar, Subject, Teacher, SchoolClass, User, School, AcademicEvent } from '@/types';
-import { DEFAULT_FEATURE_SETTINGS } from '@/types'; // Import default feature settings
+import { DEFAULT_FEATURE_SETTINGS } from '@/types'; 
 
-// Note: These IDs should be unique if you plan to merge them later.
-
-export const DEFAULT_SCHOOL_ID = "default-school-001"; // Used by signup if no other school exists initially or as a fallback
+export const DEFAULT_SCHOOL_ID = "default-school-001"; 
 export const SUPERADMIN_ID = "superadmin-001";
 
 
 export const initialSuperAdminUser: User = {
   id: SUPERADMIN_ID,
   name: "Super Admin Utama",
-  email: "admin", // Changed email to "admin"
+  email: "admin", 
   role: "SuperAdmin",
-  avatarUrl: `https://ui-avatars.com/api/?name=Super+Admin&background=0D8ABC&color=fff`,
+  avatarUrl: `https://ui-avatars.com/api/?name=Super+Admin&background=0D8ABC&color=fff&font-size=0.45`,
   updatedAt: new Date().toISOString(),
   // No schoolId
 };
@@ -21,18 +18,16 @@ export const initialSuperAdminUser: User = {
 const today = new Date();
 const oneYearFromToday = new Date(today.getFullYear() + 1, today.getMonth(), today.getDate());
 
-// This school is a placeholder. The signup flow creates a new school.
-// SuperAdmin can also create schools.
 export const initialDefaultSchool: School = {
-  id: DEFAULT_SCHOOL_ID, // This ID is more of a template or an example.
+  id: DEFAULT_SCHOOL_ID, 
   name: "Sekolah GUMPLA AI (Contoh)",
   jenjangPendidikan: "SMA/MA",
   alamat: "Jl. Demo Digital No. 1",
   nomorTelepon: "021-123-4567",
   emailSekolah: "info@sekolahgumpla.ai",
   namaKepalaSekolah: "Bpk. Demo Kasek",
-  npsn: "00000000", // Placeholder
-  logoUrl: "", 
+  npsn: "00000000", 
+  logoUrl: "",
   kotaSekolah: "Kota Digital",
   subscriptionStatus: 'trial',
   subscriptionStartDate: today.toISOString(),
@@ -40,12 +35,11 @@ export const initialDefaultSchool: School = {
   isActive: true,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
-  adminEmail: 'admin@sekolahgumpla.ai', // Placeholder admin email for this example school
+  adminEmail: 'admin@sekolahgumpla.ai', 
   featureSettings: { ...DEFAULT_FEATURE_SETTINGS },
 };
 
 
-// Demo data removed, these will be empty arrays initially
 export const initialLessonPlansData: Omit<LessonPlan, 'id' | 'createdAt' | 'updatedAt' | 'createdByUserId' | 'schoolId'>[] = [];
 export const initialAnnualProgramsData: Omit<AnnualProgram, 'id' | 'createdAt' | 'updatedAt' | 'createdByUserId' | 'schoolId'>[] = [];
 export const initialSemesterProgramsData: Omit<SemesterProgram, 'id' | 'createdAt' | 'updatedAt' | 'createdByUserId' | 'schoolId'>[] = [];
@@ -54,6 +48,3 @@ export const initialSubjectsData: Omit<Subject, 'id' | 'createdAt' | 'updatedAt'
 export const initialTeachersData: Omit<Teacher, 'id' | 'createdAt' | 'updatedAt' | 'createdByUserId' | 'schoolId'>[] = [];
 export const initialClassesData: Omit<SchoolClass, 'id' | 'createdAt' | 'updatedAt' | 'createdByUserId' | 'schoolId'>[] = [];
 export const initialAcademicEventsData: Omit<AcademicEvent, 'id' | 'createdAt' | 'updatedAt' | 'createdByUserId' | 'schoolId'>[] = [];
-
-// Removed initialSchoolAdminUser and initialGuruUser, they will be created via signup or by SuperAdmin/Admin.
-
