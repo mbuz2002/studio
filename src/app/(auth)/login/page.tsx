@@ -5,15 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { GraduationCap, LogIn } from "lucide-react"; 
 import Link from "next/link";
 import type { FormEvent} from 'react';
 import { useState, useEffect } from 'react';
 import { useAuth } from "@/contexts/AuthContext";
 import type { UserRole } from "@/types";
-import Image from "next/image";
-import { initialSchoolAdminUser, initialGuruUser } from '@/lib/initial-data'; 
+import { APP_USERS_STORAGE_KEY } from "@/types"; // Import APP_USERS_STORAGE_KEY
+import { useToast } from "@/hooks/use-toast";
 
 const roles: { value: UserRole; label: string }[] = [
   { value: "Admin", label: "Admin Sekolah" },
@@ -25,31 +24,37 @@ const roles: { value: UserRole; label: string }[] = [
 
 export default function LoginPage() {
   const { login } = useAuth();
+  const { toast } = useToast();
   const [email, setEmail] = useState(""); 
+  const [password, setPassword] = useState(""); // Added password state
   const [selectedRole, setSelectedRole] = useState<UserRole>("Guru"); 
   const [isLoading, setIsLoading] = useState(false); 
 
-  useEffect(() => {
-    if (selectedRole === "Admin") {
-      setEmail(initialSchoolAdminUser.email);
-    } else if (selectedRole === "Guru") {
-      setEmail(initialGuruUser.email);
-    } else if (email === initialSchoolAdminUser.email && selectedRole !== "Admin" || email === initialGuruUser.email && selectedRole !== "Guru") {
-        setEmail("pengguna.lain@sekolahdemo.sch.id"); 
-    }
-  }, [selectedRole, email]);
-
-
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (email && selectedRole) {
+    if (email && selectedRole && password) { // Check password as well
       setIsLoading(true); 
       
-      setTimeout(() => { 
+      // In a real app, you'd send email, password, and selectedRole to a backend for verification.
+      // For this demo, the AuthContext's login function handles finding the user by email
+      // and then uses the selectedRole for demo flexibility (if user exists but role differs).
+      // Password "password" is a placeholder for this demo.
+      if (password === "password") { // Simplified password check for demo
         login(email, selectedRole);
-      }, 300); 
+      } else {
+        toast({
+          title: "Login Gagal",
+          description: "Email atau kata sandi salah.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+      }
     } else {
-      alert("Harap isi email dan pilih peran.");
+      toast({
+        title: "Data Tidak Lengkap",
+        description: "Harap isi email, kata sandi, dan pilih peran.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -72,7 +77,7 @@ export default function LoginPage() {
               <Input 
                 id="email" 
                 type="email" 
-                placeholder="anda@sekolahdemo.sch.id" 
+                placeholder="anda@sekolahanda.sch.id" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required 
@@ -81,7 +86,7 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="role" className="text-sm font-medium text-foreground">Masuk Sebagai (Demo)</Label>
+              <Label htmlFor="role" className="text-sm font-medium text-foreground">Masuk Sebagai</Label>
               <Select value={selectedRole} onValueChange={(value) => setSelectedRole(value as UserRole)} disabled={isLoading}>
                 <SelectTrigger id="role" className="text-base h-11 rounded-md focus:border-primary">
                   <SelectValue placeholder="Pilih peran Anda" />
@@ -100,8 +105,17 @@ export default function LoginPage() {
                   Lupa kata sandi?
                 </Link>
               </div>
-              <Input id="password" type="password" placeholder="••••••••" defaultValue="password" className="text-base h-11 rounded-md focus:border-primary" disabled={isLoading} />
-               <p className="text-xs text-muted-foreground pt-1">Kata sandi diabaikan untuk mode demo ini.</p>
+              <Input 
+                id="password" 
+                type="password" 
+                placeholder="••••••••" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="text-base h-11 rounded-md focus:border-primary" 
+                disabled={isLoading} 
+              />
+               <p className="text-xs text-muted-foreground pt-1">Untuk demo, gunakan kata sandi: <strong>password</strong></p>
             </div>
             <Button type="submit" className="w-full bg-gradient-to-r from-accent to-primary hover:from-accent/90 hover:to-primary/90 text-accent-foreground text-base py-3 h-12 rounded-md shadow-lg hover:shadow-xl transition-shadow duration-300" disabled={isLoading}>
               {isLoading ? <GraduationCap className="mr-2.5 h-5 w-5 animate-pulse" /> : <LogIn className="mr-2.5 h-5 w-5" />}
@@ -110,12 +124,6 @@ export default function LoginPage() {
           </form>
         </CardContent>
         <CardFooter className="flex flex-col items-center space-y-3 pb-8 pt-4 bg-muted/30 border-t">
-          <p className="text-sm text-muted-foreground">
-            Email Admin Demo: {initialSchoolAdminUser.email}
-          </p>
-           <p className="text-sm text-muted-foreground">
-            Email Guru Demo: {initialGuruUser.email}
-          </p>
           <Link href="/signup" className="text-sm text-accent hover:underline font-medium">
               Belum punya akun sekolah? Daftar di sini.
           </Link>

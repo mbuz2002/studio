@@ -10,31 +10,31 @@ import Link from "next/link";
 import type { FormEvent} from 'react';
 import { useState, useEffect } from 'react';
 import { useAuth } from "@/contexts/AuthContext";
-import { initialSuperAdminUser } from '@/lib/initial-data'; // Import initial SuperAdmin
+import { initialSuperAdminUser } from '@/lib/initial-data'; 
+import { useToast } from "@/hooks/use-toast";
 
 export default function SuperAdminLoginPage() {
   const { login } = useAuth();
-  const [email, setEmail] = useState(""); 
+  const { toast } = useToast();
+  const [username, setUsername] = useState("admin"); // Changed from email to username, prefilled
+  const [password, setPassword] = useState(""); // Password state
   const [isLoading, setIsLoading] = useState(false); 
-
-  useEffect(() => {
-    // Pre-fill email for SuperAdmin for demo convenience
-    setEmail(initialSuperAdminUser.email);
-  }, []);
-
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (email) {
-      setIsLoading(true); 
-      
-      setTimeout(() => { 
-        // Attempt login with SuperAdmin role explicitly
-        login(email, "SuperAdmin"); 
-        // setIsLoading(false); // Login will redirect
-      }, 300); 
+    setIsLoading(true); 
+    
+    // Specific check for SuperAdmin credentials
+    if (username === "admin" && password === "Payaman123") {
+      // For AuthContext, SuperAdmin's email is "admin"
+      login("admin", "SuperAdmin"); 
     } else {
-      alert("Harap isi alamat email Super Admin.");
+      toast({
+        title: "Login Gagal",
+        description: "Nama pengguna atau kata sandi Super Admin salah.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
     }
   };
 
@@ -53,13 +53,13 @@ export default function SuperAdminLoginPage() {
         <CardContent className="px-6 md:px-8 pb-6">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-1.5">
-              <Label htmlFor="email-sa" className="text-sm font-medium text-slate-300">Email Super Admin</Label>
+              <Label htmlFor="username-sa" className="text-sm font-medium text-slate-300">Nama Pengguna Super Admin</Label>
               <Input 
-                id="email-sa" 
-                type="email" 
-                placeholder="superadmin@app.com" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="username-sa" 
+                type="text" 
+                placeholder="admin" 
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required 
                 className="text-base h-11 rounded-md bg-slate-700 border-slate-600 text-slate-50 placeholder-slate-500 focus:border-sky-500 focus:ring-sky-500"
                 disabled={isLoading}
@@ -72,11 +72,12 @@ export default function SuperAdminLoginPage() {
                 id="password-sa" 
                 type="password" 
                 placeholder="••••••••" 
-                defaultValue="superadminpassword" // Default for demo
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
                 className="text-base h-11 rounded-md bg-slate-700 border-slate-600 text-slate-50 placeholder-slate-500 focus:border-sky-500 focus:ring-sky-500" 
                 disabled={isLoading} 
               />
-               <p className="text-xs text-slate-500 pt-1">Kata sandi diabaikan untuk mode demo ini.</p>
             </div>
             <Button type="submit" className="w-full bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 text-white text-base py-3 h-12 rounded-md shadow-lg hover:shadow-xl transition-shadow duration-300" disabled={isLoading}>
               {isLoading ? <Settings className="mr-2.5 h-5 w-5 animate-spin" /> : <LogIn className="mr-2.5 h-5 w-5" />}
@@ -85,8 +86,8 @@ export default function SuperAdminLoginPage() {
           </form>
         </CardContent>
         <CardFooter className="flex flex-col items-center space-y-2 pb-8 pt-4 border-t border-slate-700">
-          <p className="text-sm text-slate-400">
-            Email Super Admin Demo: {initialSuperAdminUser.email}
+           <p className="text-sm text-slate-400">
+            Username Super Admin Demo: admin
           </p>
           <Link href="/login" className="text-sm text-sky-400 hover:underline font-medium mt-2">
             Bukan Super Admin? Masuk di sini.

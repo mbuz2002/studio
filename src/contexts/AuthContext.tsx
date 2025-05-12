@@ -7,17 +7,7 @@ import type { User, UserRole, School } from '@/types';
 import { useRouter } from 'next/navigation';
 import { useLog } from './LogContext'; 
 import { APP_USERS_STORAGE_KEY, SCHOOLS_STORAGE_KEY, DEFAULT_FEATURE_SETTINGS } from '@/types'; 
-import { initialSuperAdminUser, initialDefaultSchool, initialSchoolAdminUser, initialGuruUser, DEFAULT_SCHOOL_ID } from '@/lib/initial-data'; 
-import { 
-  initialLessonPlansData, 
-  initialAnnualProgramsData, 
-  initialSemesterProgramsData,
-  initialSubjectsData,
-  initialTeachersData,
-  initialClassesData,
-  initialAcademicEventsData,
-  initialModulAjarData
-} from '@/lib/initial-data';
+import { initialSuperAdminUser } from '@/lib/initial-data'; 
 import { 
   LESSON_PLANS_STORAGE_KEY, 
   ANNUAL_PROGRAMS_STORAGE_KEY, 
@@ -26,14 +16,16 @@ import {
   TEACHERS_STORAGE_KEY,
   SCHOOL_CLASSES_STORAGE_KEY,
   ACADEMIC_EVENTS_STORAGE_KEY,
-  MODUL_AJAR_STORAGE_KEY
+  MODUL_AJAR_STORAGE_KEY,
+  SCHOOL_PROFILE_STORAGE_KEY, // For clearing if needed
+  TEACHING_PERIOD_SETTINGS_KEY // For clearing if needed
 } from '@/types';
 
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  login: (email: string, role: UserRole) => void; 
+  login: (emailOrUsername: string, roleToAttempt: UserRole) => void; 
   logout: () => void;
   updateUser: (updatedUserData: Partial<User>) => void;
   loading: boolean;
@@ -48,73 +40,45 @@ const initializeDefaultData = () => {
   const usersExist = localStorage.getItem(APP_USERS_STORAGE_KEY);
   const schoolsExist = localStorage.getItem(SCHOOLS_STORAGE_KEY);
 
-  if (usersExist && schoolsExist) return; 
-
-  // Initialize Schools
-  if (!schoolsExist) {
-    localStorage.setItem(SCHOOLS_STORAGE_KEY, JSON.stringify([{...initialDefaultSchool, featureSettings: { ...DEFAULT_FEATURE_SETTINGS } }]));
-  }
-
-  // Initialize Users
+  // Initialize SuperAdmin User if not exists
   if (!usersExist) {
-    const usersToStore = [initialSuperAdminUser, initialSchoolAdminUser, initialGuruUser];
-    localStorage.setItem(APP_USERS_STORAGE_KEY, JSON.stringify(usersToStore));
+    localStorage.setItem(APP_USERS_STORAGE_KEY, JSON.stringify([initialSuperAdminUser]));
+  } else {
+    // Ensure SuperAdmin is always present
+    const users: User[] = JSON.parse(usersExist);
+    if (!users.find(u => u.id === initialSuperAdminUser.id)) {
+      users.push(initialSuperAdminUser);
+      localStorage.setItem(APP_USERS_STORAGE_KEY, JSON.stringify(users));
+    }
   }
 
-  // Initialize curriculum data scoped to the default school
-  const defaultSchoolId = initialDefaultSchool.id;
-  const defaultAdminId = initialSchoolAdminUser.id;
-  const defaultGuruId = initialGuruUser.id;
+  // Initialize other storage keys to empty arrays if they don't exist
+  // This effectively removes demo data on first run after this change
+  const keysToInitializeAsEmpty = [
+    SCHOOLS_STORAGE_KEY, // Schools will be created by SuperAdmin or signup
+    LESSON_PLANS_STORAGE_KEY, 
+    ANNUAL_PROGRAMS_STORAGE_KEY, 
+    SEMESTER_PROGRAMS_STORAGE_KEY,
+    MODUL_AJAR_STORAGE_KEY,
+    SUBJECTS_STORAGE_KEY,
+    TEACHERS_STORAGE_KEY,
+    SCHOOL_CLASSES_STORAGE_KEY,
+    ACADEMIC_EVENTS_STORAGE_KEY,
+  ];
 
-  if (!localStorage.getItem(LESSON_PLANS_STORAGE_KEY)) {
-    const lessonPlans = initialLessonPlansData.map(lp => ({ ...lp, id: `lp-demo-${Math.random().toString(16).slice(2)}`, schoolId: defaultSchoolId, createdByUserId: defaultGuruId, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }));
-    localStorage.setItem(LESSON_PLANS_STORAGE_KEY, JSON.stringify(lessonPlans));
-  }
-  if (!localStorage.getItem(ANNUAL_PROGRAMS_STORAGE_KEY)) {
-    const annualPrograms = initialAnnualProgramsData.map(ap => ({ ...ap, id: `ap-demo-${Math.random().toString(16).slice(2)}`, schoolId: defaultSchoolId, createdByUserId: defaultGuruId, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }));
-    localStorage.setItem(ANNUAL_PROGRAMS_STORAGE_KEY, JSON.stringify(annualPrograms));
-  }
-  if (!localStorage.getItem(SEMESTER_PROGRAMS_STORAGE_KEY)) {
-    const semesterPrograms = initialSemesterProgramsData.map(sp => ({ ...sp, id: `sp-demo-${Math.random().toString(16).slice(2)}`, schoolId: defaultSchoolId, createdByUserId: defaultGuruId, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }));
-    localStorage.setItem(SEMESTER_PROGRAMS_STORAGE_KEY, JSON.stringify(semesterPrograms));
-  }
-   if (!localStorage.getItem(MODUL_AJAR_STORAGE_KEY)) {
-    const modulAjar = initialModulAjarData.map(ma => ({ ...ma, id: `ma-demo-${Math.random().toString(16).slice(2)}`, schoolId: defaultSchoolId, createdByUserId: defaultGuruId, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), curriculumType: "Kurikulum Merdeka" as const, type: "ModulAjar" as const }));
-    localStorage.setItem(MODUL_AJAR_STORAGE_KEY, JSON.stringify(modulAjar));
-  }
+  keysToInitializeAsEmpty.forEach(key => {
+    if (!localStorage.getItem(key)) {
+      localStorage.setItem(key, JSON.stringify([]));
+    }
+  });
+  
+  // School profile and teaching period settings are specific to a school,
+  // so they don't need global initialization here if schools are created dynamically.
+  // However, if there's a single 'schoolProfile' key, it might need to be handled
+  // based on currentSchool or cleared if no school is active.
+  // For now, we'll let them be created/managed when a school context is active.
 
-
-  // Initialize Master Data scoped to the default school
-   if (!localStorage.getItem(SUBJECTS_STORAGE_KEY)) {
-    const subjects = initialSubjectsData.map(s => ({ ...s, id: `subj-demo-${Math.random().toString(16).slice(2)}`, schoolId: defaultSchoolId, createdByUserId: defaultAdminId, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }));
-    localStorage.setItem(SUBJECTS_STORAGE_KEY, JSON.stringify(subjects));
-  }
-  if (!localStorage.getItem(TEACHERS_STORAGE_KEY)) {
-    const teachers = initialTeachersData.map(t => ({ ...t, id: `teach-demo-${Math.random().toString(16).slice(2)}`, schoolId: defaultSchoolId, createdByUserId: defaultAdminId, userId: (t.name === "Guru Inovatif" ? defaultGuruId : undefined), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }));
-     // Ensure the initialGuruUser is also a teacher record
-    const guruTeacherRecord = {
-        id: `teach-guru-${Date.now()}`,
-        name: initialGuruUser.name,
-        nip: "123456789012345678", // Example NIP for demo guru
-        subjectIds: [], // Assign subjects if needed
-        userId: initialGuruUser.id,
-        schoolId: defaultSchoolId,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        createdByUserId: defaultAdminId,
-    };
-    localStorage.setItem(TEACHERS_STORAGE_KEY, JSON.stringify([...teachers, guruTeacherRecord]));
-  }
-   if (!localStorage.getItem(SCHOOL_CLASSES_STORAGE_KEY)) {
-    const classes = initialClassesData.map(c => ({ ...c, id: `class-demo-${Math.random().toString(16).slice(2)}`, schoolId: defaultSchoolId, createdByUserId: defaultAdminId, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }));
-    localStorage.setItem(SCHOOL_CLASSES_STORAGE_KEY, JSON.stringify(classes));
-  }
-  if (!localStorage.getItem(ACADEMIC_EVENTS_STORAGE_KEY)) {
-    const academicEvents = initialAcademicEventsData.map(ae => ({ ...ae, id: `event-demo-${Math.random().toString(16).slice(2)}`, schoolId: defaultSchoolId, createdByUserId: defaultAdminId, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }));
-    localStorage.setItem(ACADEMIC_EVENTS_STORAGE_KEY, JSON.stringify(academicEvents));
-  }
-
-  console.log("Default SaaS data initialized for demo school and superadmin.");
+  console.log("Initial data check complete. SuperAdmin ensured, other data initialized as empty if not present.");
 };
 
 
@@ -141,7 +105,6 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
               const schools: School[] = JSON.parse(schoolsData);
               const school = schools.find(s => s.id === parsedUser.schoolId);
               if (school) {
-                // Ensure featureSettings is always an object
                 setCurrentSchool({ ...school, featureSettings: school.featureSettings || { ...DEFAULT_FEATURE_SETTINGS } });
               }
             }
@@ -167,44 +130,26 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     };
   }, [addLog]);
 
-  const login = useCallback((email: string, roleToAttempt: UserRole) => {
+  const login = useCallback((emailOrUsername: string, roleToAttempt: UserRole) => {
     const storedUsers = localStorage.getItem(APP_USERS_STORAGE_KEY);
     const users: User[] = storedUsers ? JSON.parse(storedUsers) : [];
-    let foundUser = users.find(u => u.email === email);
+    let foundUser: User | undefined;
+
+    if (roleToAttempt === "SuperAdmin") {
+      // SuperAdmin uses "admin" as email/username for login
+      foundUser = users.find(u => u.email === emailOrUsername && u.role === "SuperAdmin");
+    } else {
+      foundUser = users.find(u => u.email === emailOrUsername && u.role === roleToAttempt);
+    }
 
     if (foundUser) {
-      // If SuperAdmin attempts login, their role must be SuperAdmin
-      if (roleToAttempt === "SuperAdmin" && foundUser.role !== "SuperAdmin") {
-         addLog("WARN", `Login gagal: Email ${email} terdaftar sebagai ${foundUser.role}, bukan SuperAdmin.`, "AuthContext-Login");
-         // Optionally show a toast to the user
-         return;
-      }
-      
-      // If a non-SuperAdmin role is attempted but the found user is SuperAdmin, this is an invalid attempt from non-SA login page
-      if (roleToAttempt !== "SuperAdmin" && foundUser.role === "SuperAdmin") {
-        addLog("WARN", `Login gagal: SuperAdmin ${email} harus login melalui halaman Super Admin.`, "AuthContext-Login");
-        // Optionally show a toast to the user
-        return;
-      }
-      
-      // For demo, if the found user's role doesn't match the attempted role (and it's not SA case),
-      // update the user's role for demo flexibility if they are not SA.
-      // In a real app, the role from the database/stored user data is authoritative.
-      if (foundUser.role !== "SuperAdmin" && foundUser.role !== roleToAttempt) {
-        foundUser = { ...foundUser, role: roleToAttempt };
-        // Update the user in localStorage if role is changed for demo
-        const updatedUsers = users.map(u => u.id === foundUser!.id ? foundUser : u);
-        localStorage.setItem(APP_USERS_STORAGE_KEY, JSON.stringify(updatedUsers));
-      }
-
-
       if (foundUser.role === "SuperAdmin") {
         setUser(foundUser);
-        setCurrentSchool(null);
+        setCurrentSchool(null); // SuperAdmin is not tied to a specific school context globally
         localStorage.setItem('currentUser', JSON.stringify(foundUser));
-        addLog("INFO", `SuperAdmin ${email} berhasil masuk.`, "AuthContext-Login");
+        addLog("INFO", `SuperAdmin ${emailOrUsername} berhasil masuk.`, "AuthContext-Login");
         router.push('/superadmin/dashboard'); 
-      } else {
+      } else { // Regular user roles
         if (foundUser.schoolId) {
           const schoolsData = localStorage.getItem(SCHOOLS_STORAGE_KEY);
           const schools: School[] = schoolsData ? JSON.parse(schoolsData) : [];
@@ -213,38 +158,20 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
             setUser(foundUser);
             setCurrentSchool({ ...school, featureSettings: school.featureSettings || { ...DEFAULT_FEATURE_SETTINGS } });
             localStorage.setItem('currentUser', JSON.stringify(foundUser));
-            addLog("INFO", `Pengguna ${email} (Peran: ${foundUser.role}, Sekolah: ${school.name}) berhasil masuk.`, "AuthContext-Login");
+            addLog("INFO", `Pengguna ${emailOrUsername} (Peran: ${foundUser.role}, Sekolah: ${school.name}) berhasil masuk.`, "AuthContext-Login");
             router.push('/dashboard');
           } else {
-            addLog("WARN", `Login gagal untuk ${email}: Sekolah tidak aktif atau tidak ditemukan (ID: ${foundUser.schoolId}).`, "AuthContext-Login");
+            addLog("WARN", `Login gagal untuk ${emailOrUsername}: Sekolah tidak aktif atau tidak ditemukan (ID: ${foundUser.schoolId}).`, "AuthContext-Login");
+             // Optionally: toast({ title: "Login Gagal", description: "Sekolah Anda tidak aktif atau tidak ditemukan.", variant: "destructive" });
           }
         } else {
-          addLog("WARN", `Login gagal untuk ${email}: Pengguna tidak memiliki schoolId.`, "AuthContext-Login");
+          addLog("WARN", `Login gagal untuk ${emailOrUsername}: Pengguna tidak memiliki ID Sekolah yang terkait.`, "AuthContext-Login");
+          // Optionally: toast({ title: "Login Gagal", description: "Akun Anda tidak terkait dengan sekolah manapun.", variant: "destructive" });
         }
       }
     } else {
-      if (roleToAttempt === "SuperAdmin" && email === initialSuperAdminUser.email) {
-        setUser(initialSuperAdminUser);
-        setCurrentSchool(null);
-        localStorage.setItem('currentUser', JSON.stringify(initialSuperAdminUser));
-        addLog("INFO", `SuperAdmin ${email} (akun default) berhasil masuk.`, "AuthContext-Login");
-        router.push('/superadmin/dashboard');
-      } else if (roleToAttempt !== "SuperAdmin" && email === initialSchoolAdminUser.email && roleToAttempt === "Admin") {
-        setUser(initialSchoolAdminUser);
-        setCurrentSchool({ ...initialDefaultSchool, featureSettings: initialDefaultSchool.featureSettings || { ...DEFAULT_FEATURE_SETTINGS } });
-        localStorage.setItem('currentUser', JSON.stringify(initialSchoolAdminUser));
-        addLog("INFO", `Admin Sekolah Demo ${email} (akun default) berhasil masuk.`, "AuthContext-Login");
-        router.push('/dashboard');
-      } else if (roleToAttempt !== "SuperAdmin" && email === initialGuruUser.email && roleToAttempt === "Guru") {
-        setUser(initialGuruUser);
-        setCurrentSchool({ ...initialDefaultSchool, featureSettings: initialDefaultSchool.featureSettings || { ...DEFAULT_FEATURE_SETTINGS } });
-        localStorage.setItem('currentUser', JSON.stringify(initialGuruUser));
-        addLog("INFO", `Guru Demo ${email} (akun default) berhasil masuk.`, "AuthContext-Login");
-        router.push('/dashboard');
-      }
-      else {
-        addLog("WARN", `Login gagal: Pengguna dengan email ${email} dan peran ${roleToAttempt} tidak ditemukan.`, "AuthContext-Login");
-      }
+      addLog("WARN", `Login gagal: Pengguna dengan email/username ${emailOrUsername} dan peran ${roleToAttempt} tidak ditemukan.`, "AuthContext-Login");
+      // Optionally: toast({ title: "Login Gagal", description: "Email/username atau peran tidak valid.", variant: "destructive" });
     }
   }, [addLog, router]);
 
@@ -257,7 +184,6 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     setUser(null);
     setCurrentSchool(null);
     localStorage.removeItem('currentUser');
-    // Redirect to appropriate login page based on previous role
     if (userRole === "SuperAdmin") {
       router.push('/superadmin/login');
     } else {
@@ -271,6 +197,13 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         const newUser = { ...currentUser, ...updatedUserData, updatedAt: new Date().toISOString() };
         localStorage.setItem('currentUser', JSON.stringify(newUser));
         
+        // Also update in the main appUsers list
+        const storedUsers = localStorage.getItem(APP_USERS_STORAGE_KEY);
+        if (storedUsers) {
+            let usersList: User[] = JSON.parse(storedUsers);
+            usersList = usersList.map(u => u.id === newUser.id ? newUser : u);
+            localStorage.setItem(APP_USERS_STORAGE_KEY, JSON.stringify(usersList));
+        }
         addLog("INFO", `Profil pengguna ${currentUser.email} diperbarui. Data baru: ${JSON.stringify(Object.keys(updatedUserData))}`, "AuthContext-UpdateUser");
         
         return newUser;
@@ -303,4 +236,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
