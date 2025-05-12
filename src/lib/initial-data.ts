@@ -39,6 +39,57 @@ export const initialDefaultSchool: School = {
   featureSettings: { ...DEFAULT_FEATURE_SETTINGS },
 };
 
+// Demo Users for the Default School
+export const initialDemoAdminUser: User = {
+  id: `user-admin-${DEFAULT_SCHOOL_ID}`,
+  name: "Admin Sekolah Demo",
+  email: "admin@sekolahgumpla.ai",
+  role: "Admin",
+  schoolId: DEFAULT_SCHOOL_ID,
+  avatarUrl: `https://ui-avatars.com/api/?name=Admin+Sekolah&background=random&color=fff`,
+  updatedAt: new Date().toISOString(),
+};
+
+export const initialDemoKepsekUser: User = {
+  id: `user-kepsek-${DEFAULT_SCHOOL_ID}`,
+  name: "Kepala Sekolah Demo",
+  email: "kepsek@sekolahgumpla.ai",
+  role: "KepalaSekolah",
+  schoolId: DEFAULT_SCHOOL_ID,
+  avatarUrl: `https://ui-avatars.com/api/?name=Kepala+Sekolah&background=random&color=fff`,
+  updatedAt: new Date().toISOString(),
+};
+
+export const initialDemoWakaUser: User = {
+  id: `user-waka-${DEFAULT_SCHOOL_ID}`,
+  name: "Waka Kurikulum Demo",
+  email: "waka@sekolahgumpla.ai",
+  role: "WakaKurikulum",
+  schoolId: DEFAULT_SCHOOL_ID,
+  avatarUrl: `https://ui-avatars.com/api/?name=Waka+Kurikulum&background=random&color=fff`,
+  updatedAt: new Date().toISOString(),
+};
+
+export const initialDemoGuruUser: User = {
+  id: `user-guru-${DEFAULT_SCHOOL_ID}`,
+  name: "Guru Demo",
+  email: "guru@sekolahgumpla.ai",
+  role: "Guru",
+  schoolId: DEFAULT_SCHOOL_ID,
+  avatarUrl: `https://ui-avatars.com/api/?name=Guru+Demo&background=random&color=fff`,
+  updatedAt: new Date().toISOString(),
+};
+
+export const initialDemoTUUser: User = {
+  id: `user-tu-${DEFAULT_SCHOOL_ID}`,
+  name: "Tata Usaha Demo",
+  email: "tu@sekolahgumpla.ai",
+  role: "TataUsaha",
+  schoolId: DEFAULT_SCHOOL_ID,
+  avatarUrl: `https://ui-avatars.com/api/?name=Tata+Usaha&background=random&color=fff`,
+  updatedAt: new Date().toISOString(),
+};
+
 
 export const initialLessonPlansData: Omit<LessonPlan, 'id' | 'createdAt' | 'updatedAt' | 'createdByUserId' | 'schoolId'>[] = [];
 export const initialAnnualProgramsData: Omit<AnnualProgram, 'id' | 'createdAt' | 'updatedAt' | 'createdByUserId' | 'schoolId'>[] = [];

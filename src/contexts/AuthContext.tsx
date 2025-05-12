@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { PropsWithChildren} from 'react';
@@ -7,7 +6,16 @@ import type { User, UserRole, School } from '@/types';
 import { useRouter, usePathname } from 'next/navigation';
 import { useLog } from './LogContext';
 import { APP_USERS_STORAGE_KEY, SCHOOLS_STORAGE_KEY, DEFAULT_FEATURE_SETTINGS } from '@/types';
-import { initialSuperAdminUser } from '@/lib/initial-data';
+import { 
+  initialSuperAdminUser, 
+  initialDefaultSchool, 
+  initialDemoAdminUser,
+  initialDemoKepsekUser,
+  initialDemoWakaUser,
+  initialDemoGuruUser,
+  initialDemoTUUser,
+  DEFAULT_SCHOOL_ID 
+} from '@/lib/initial-data';
 import {
   LESSON_PLANS_STORAGE_KEY,
   ANNUAL_PROGRAMS_STORAGE_KEY,
@@ -35,43 +43,77 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const initializeDefaultData = () => {
   if (typeof window === 'undefined') return;
+  const logSource = "AuthContext-InitData";
 
+  // Initialize Users
   const usersExist = localStorage.getItem(APP_USERS_STORAGE_KEY);
-  if (!usersExist) {
-    localStorage.setItem(APP_USERS_STORAGE_KEY, JSON.stringify([initialSuperAdminUser]));
-    // console.log("AUTH_PROVIDER: Initialized APP_USERS with SuperAdmin.");
+  let currentUsers: User[] = [];
+  if (usersExist) {
+    try {
+      currentUsers = JSON.parse(usersExist);
+    } catch (e) {
+      console.error(`${logSource}: Error parsing existing users, re-initializing.`, e);
+      currentUsers = []; // Reset if parsing fails
+    }
+  }
+
+  const demoUsersToAdd: User[] = [
+    initialSuperAdminUser,
+    initialDemoAdminUser,
+    initialDemoKepsekUser,
+    initialDemoWakaUser,
+    initialDemoGuruUser,
+    initialDemoTUUser,
+  ];
+
+  let usersModified = false;
+  demoUsersToAdd.forEach(demoUser => {
+    if (!currentUsers.some(u => u.id === demoUser.id)) {
+      // User with this ID doesn't exist, add it.
+      // Also check if user with same email and role (but different ID) exists to avoid duplicates.
+      const existingUserByEmailAndRole = currentUsers.find(u => u.email === demoUser.email && u.role === demoUser.role);
+      if (existingUserByEmailAndRole) {
+        // If such a user exists, update their ID to the demoUser's ID and merge other properties
+        // This is a bit complex for a simple init, might be better to just ensure the demoUser ID wins.
+        // For now, we'll just overwrite if the ID is different but email/role match the demo.
+        currentUsers = currentUsers.filter(u => u.email !== demoUser.email || u.role !== demoUser.role);
+      }
+      currentUsers.push(demoUser);
+      usersModified = true;
+      console.log(`${logSource}: Added demo user: ${demoUser.email} (Role: ${demoUser.role})`);
+    } else {
+      // User with this ID exists, ensure its details are correct (e.g., role for SuperAdmin)
+      const userIndex = currentUsers.findIndex(u => u.id === demoUser.id);
+      if (userIndex !== -1 && (currentUsers[userIndex].role !== demoUser.role || currentUsers[userIndex].email !== demoUser.email)) {
+        currentUsers[userIndex] = { ...currentUsers[userIndex], ...demoUser }; // Prioritize demoUser details
+        usersModified = true;
+        console.warn(`${logSource}: Corrected demo user record for ID: ${demoUser.id}`);
+      }
+    }
+  });
+
+  if (usersModified || !usersExist) {
+    localStorage.setItem(APP_USERS_STORAGE_KEY, JSON.stringify(currentUsers));
+    if(!usersExist) console.log(`${logSource}: Initialized APP_USERS with SuperAdmin and demo users.`);
+  }
+
+
+  // Initialize Schools
+  const schoolsExist = localStorage.getItem(SCHOOLS_STORAGE_KEY);
+  if (!schoolsExist) {
+    localStorage.setItem(SCHOOLS_STORAGE_KEY, JSON.stringify([initialDefaultSchool]));
+    console.log(`${logSource}: Initialized SCHOOLS with default demo school.`);
   } else {
     try {
-        let users: User[] = JSON.parse(usersExist);
-        const superAdminRecord = users.find(u => u.id === initialSuperAdminUser.id);
-        
-        if (!superAdminRecord) {
-            // SuperAdmin with this ID doesn't exist, add it.
-            // Check if an SA with the *email* exists to avoid duplicate SAs if ID changed.
-            const saByEmail = users.find(u => u.email === initialSuperAdminUser.email && u.role === "SuperAdmin");
-            if (!saByEmail) {
-                users.push(initialSuperAdminUser);
-                localStorage.setItem(APP_USERS_STORAGE_KEY, JSON.stringify(users));
-                // console.log("AUTH_PROVIDER: Added missing SuperAdmin (by ID) to existing users.");
-            } else if (saByEmail.id !== initialSuperAdminUser.id) {
-                // SA with correct email exists but different ID. This is unusual. Prioritize the one from initial-data.
-                users = users.filter(u => u.email !== initialSuperAdminUser.email || u.role !== "SuperAdmin");
-                users.push(initialSuperAdminUser);
-                localStorage.setItem(APP_USERS_STORAGE_KEY, JSON.stringify(users));
-                // console.warn("AUTH_PROVIDER: Corrected SuperAdmin record (ID mismatch, email matched).");
-            }
-        } else if (superAdminRecord.role !== "SuperAdmin" || superAdminRecord.email !== initialSuperAdminUser.email) {
-            // SA ID exists, but role or email is incorrect. Force update with correct details.
-            users = users.filter(u => u.id !== initialSuperAdminUser.id); // Remove old/incorrect record by ID
-            users.push(initialSuperAdminUser); // Add correct SA record
-            localStorage.setItem(APP_USERS_STORAGE_KEY, JSON.stringify(users));
-            // console.warn("AUTH_PROVIDER: Corrected SuperAdmin record (role/email mismatch for existing ID).");
-        } else {
-            // console.log("AUTH_PROVIDER: SuperAdmin record verified in localStorage.");
-        }
+      const schools: School[] = JSON.parse(schoolsExist);
+      if (!schools.some(s => s.id === DEFAULT_SCHOOL_ID)) {
+        schools.push(initialDefaultSchool);
+        localStorage.setItem(SCHOOLS_STORAGE_KEY, JSON.stringify(schools));
+        console.log(`${logSource}: Added missing default demo school to existing schools.`);
+      }
     } catch (e) {
-        console.error("AUTH_PROVIDER: Error processing existing users, re-initializing with SuperAdmin:", e);
-        localStorage.setItem(APP_USERS_STORAGE_KEY, JSON.stringify([initialSuperAdminUser]));
+      console.error(`${logSource}: Error processing existing schools, re-initializing with default.`, e);
+      localStorage.setItem(SCHOOLS_STORAGE_KEY, JSON.stringify([initialDefaultSchool]));
     }
   }
 
@@ -92,9 +134,6 @@ const initializeDefaultData = () => {
       localStorage.setItem(key, JSON.stringify([]));
     }
   });
-  if (!localStorage.getItem(SCHOOLS_STORAGE_KEY)) {
-      localStorage.setItem(SCHOOLS_STORAGE_KEY, JSON.stringify([]));
-  }
 };
 
 
@@ -128,6 +167,11 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
                  addLog("WARN", `Sekolah dengan ID ${parsedUser.schoolId} tidak ditemukan saat memulihkan sesi untuk pengguna ${parsedUser.email}.`, "AuthContext-Restore");
               }
             }
+          } else if (parsedUser.role !== "SuperAdmin") {
+            // Non-SA users must have a schoolId
+            addLog("ERROR", `Pengguna ${parsedUser.email} (Peran: ${parsedUser.role}) tidak memiliki schoolId. Sesi tidak dipulihkan.`, "AuthContext-Restore");
+            localStorage.removeItem('currentUser');
+            setUser(null); // Clear invalid user
           }
         }
       } catch (error) {
@@ -172,11 +216,10 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     const logSource = "AuthContext-Login";
 
     if (roleToAttempt === "SuperAdmin") {
-      // For SuperAdmin, email should be 'admin' and password 'Payaman123'
       foundUser = users.find(u => u.email === emailOrUsername && u.role === "SuperAdmin");
-       if (foundUser && passwordAttempt === "Payaman123") {
+       if (foundUser && passwordAttempt === "Payaman123") { // Hardcoded SuperAdmin password
         setUser(foundUser);
-        setCurrentSchool(null);
+        setCurrentSchool(null); // SuperAdmin is not tied to a specific school context here
         localStorage.setItem('currentUser', JSON.stringify(foundUser));
         addLog("INFO", `SuperAdmin ${emailOrUsername} berhasil masuk.`, logSource);
         router.push('/superadmin/dashboard');
@@ -189,10 +232,11 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         }
       }
     } else {
+      // Regular user login (Admin, Guru, etc.)
       if (!schoolIdToLogin) {
           toast({ title: "Login Gagal", description: "Informasi sekolah tidak disediakan. Harap pilih sekolah Anda.", variant: "destructive" });
           addLog("WARN", `Login gagal untuk ${emailOrUsername}: ID Sekolah tidak disediakan.`, logSource);
-          window.location.reload();
+          window.location.reload(); // Force reload to reset state and retry
           return;
       }
       
@@ -202,7 +246,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
       if (!school) {
         toast({ title: "Login Gagal", description: "Sekolah tidak ditemukan atau tidak aktif.", variant: "destructive" });
-        addLog("WARN", `Login gagal untuk ${emailOrUsername}: Sekolah dengan ID ${schoolIdToLogin} tidak ditemukan/aktif.`, logSource);
+        addLog("WARN", `Login gagal untuk ${emailOrUsername}: Sekolah dengan ID ${schoolIdToLogin} tidak ditemukan.`, logSource);
         window.location.reload();
         return;
       }
@@ -213,8 +257,13 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         return;
       }
       
+      // For demo purposes, all non-SuperAdmin roles use "password"
       if (passwordAttempt === "password") {
-        foundUser = users.find(u => u.email === emailOrUsername && u.role === roleToAttempt && u.schoolId === schoolIdToLogin);
+        foundUser = users.find(u => 
+          u.email === emailOrUsername && 
+          u.role === roleToAttempt && 
+          u.schoolId === schoolIdToLogin
+        );
         if (foundUser) {
           setUser(foundUser);
           setCurrentSchool({ ...school, featureSettings: school.featureSettings || { ...DEFAULT_FEATURE_SETTINGS } });
@@ -226,9 +275,10 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       }
     }
     
+    // If no successful login path was hit
     toast({ title: "Login Gagal", description: "Email, peran, atau kata sandi salah, atau akun tidak sesuai dengan sekolah yang dipilih.", variant: "destructive" });
     addLog("WARN", `Login gagal (jalur umum): Pengguna dengan email/username ${emailOrUsername}, peran ${roleToAttempt} untuk sekolah ID ${schoolIdToLogin || 'N/A'} tidak ditemukan atau kredensial salah.`, logSource);
-    window.location.reload();
+    window.location.reload(); // Force reload to allow re-attempt
   }, [addLog, router, toast]);
 
   const logout = useCallback(() => {
@@ -239,7 +289,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     setUser(null);
     setCurrentSchool(null);
     localStorage.removeItem('currentUser');
-    router.push('/'); // Redirect to landing page on logout
+    router.push('/'); 
   }, [user, addLog, router]);
 
   const updateUser = useCallback((updatedUserData: Partial<User>) => {
@@ -285,4 +335,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
