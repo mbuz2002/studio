@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, type FormEvent, useRef, useMemo } from "react";
@@ -35,7 +36,7 @@ const customDomainStatusDisplayMap: Record<CustomDomainStatus, string> = {
   ssl_error: "Kesalahan SSL",
 };
 
-const CNAME_TARGET_DOMAIN = "app.gumpla.ai"; // The actual target domain for CNAME records
+const CNAME_TARGET_DOMAIN = "app.gumpla.id"; // The actual target domain for CNAME records
 
 
 function slugify(text: string = ""): string {
@@ -250,7 +251,7 @@ export function SchoolProfileForm() {
   };
   
   const canEdit = user && (user.role === "Admin" || user.role === "TataUsaha" || user.role === "KepalaSekolah");
-  const generatedSubdomain = profile.namaSekolah ? `${slugify(profile.namaSekolah)}.gumpla.ai` : "subdomain-anda.gumpla.ai";
+  const generatedSubdomain = profile.namaSekolah ? `${slugify(profile.namaSekolah)}.gumpla.id` : "subdomain-anda.gumpla.id";
 
   return (
     <Card className="rounded-lg shadow-xl">
@@ -472,3 +473,4 @@ export function SchoolProfileForm() {
     </Card>
   );
 }
+

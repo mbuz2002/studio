@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useRef, useState, useEffect } from "react";
@@ -51,7 +52,7 @@ const customDomainStatusOptions: { value: CustomDomainStatus; label: string }[] 
   { value: "ssl_error", label: "Kesalahan SSL" },
 ];
 
-const CNAME_TARGET_DOMAIN = "app.gumpla.ai"; // The actual target domain for CNAME records
+const CNAME_TARGET_DOMAIN = "app.gumpla.id"; // The actual target domain for CNAME records
 
 const slugify = (text: string = ""): string => {
   if (!text) return "";
@@ -153,7 +154,7 @@ export function SchoolFormFields({
 
   const isBefore = (date1: Date, date2: Date) => date1 < date2;
   
-  const generatedSubdomain = formData.name ? `${slugify(formData.name)}.gumpla.ai` : "subdomain.gumpla.ai";
+  const generatedSubdomain = formData.name ? `${slugify(formData.name)}.gumpla.id` : "subdomain.gumpla.id";
   const isCustomDomainEmpty = !formData.customDomain || formData.customDomain.trim() === "";
 
 
