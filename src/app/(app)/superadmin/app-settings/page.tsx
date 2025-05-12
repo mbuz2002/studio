@@ -82,7 +82,7 @@ export default function AppSettingsPage() {
     const { name, value } = e.target;
     setSettings((prev) => ({ ...prev, [name]: value }));
     if (name === "appLogoUrl" && logoInputMethod === 'url') {
-      setLogoPreview(value);
+      setLogoPreview(value.trim() === "" ? null : value);
     }
   };
 
