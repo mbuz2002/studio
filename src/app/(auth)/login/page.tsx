@@ -70,10 +70,8 @@ export default function LoginPage() {
         setSchoolForLogin(null); 
       }
     } else {
-      // If no school identifier, redirect to a school selection page or a generic login.
-      // For now, let's redirect to a new page for school selection.
       router.replace('/login-by-school');
-      return; // Stop further execution for this page if redirecting
+      return; 
     }
     setPageLoading(false);
   }, [searchParams, router]);
@@ -81,7 +79,7 @@ export default function LoginPage() {
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (email && selectedRole && password) {
-      setIsLoading(true);
+      setIsLoading(true); 
       
       if (!schoolForLogin && selectedRole !== "SuperAdmin") {
           toast({
@@ -90,18 +88,34 @@ export default function LoginPage() {
             variant: "destructive",
           });
           setIsLoading(false);
+          // AuthContext's login will now handle reload if this path is reached by it
           return;
       }
 
       const schoolIdToLogin = schoolForLogin ? schoolForLogin.id : undefined;
       login(email, password, selectedRole, schoolIdToLogin); 
       
+      // If login fails, AuthContext now reloads the page.
+      // The setIsLoading(false) in a timeout is no longer strictly necessary for UI reset on failure,
+      // but can be kept as a very minor fallback if login logic in AuthContext had a path without reload (which it shouldn't now).
+      // For cleaner logic, relying on AuthContext's reload is better.
+      const timer = setTimeout(() => {
+        if (isLoading) { // Check if component's isLoading is still true (meaning no navigation/reload happened)
+            setIsLoading(false);
+        }
+      }, 3000); // Increased timeout slightly just in case, though reload should be faster.
+      return () => clearTimeout(timer);
+
+
     } else {
       toast({
         title: "Data Tidak Lengkap",
         description: "Harap isi email, kata sandi, dan pilih peran.",
         variant: "destructive"
       });
+      // If this path is hit, login was not called, so AuthContext won't reload.
+      // We might want a reload here too if that's the desired UX for *any* form error.
+      // For now, only AuthContext.login failures reload.
     }
   };
   
@@ -153,7 +167,6 @@ export default function LoginPage() {
                     <Building size={36} className="text-primary/70" />
                </div>
             ) : (
-              // This case should ideally not be reached if redirected to /login-by-school
               <GraduationCap size={56} strokeWidth={1.5} className="text-primary drop-shadow-md" />
             )}
           </div>

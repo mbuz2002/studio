@@ -40,12 +40,27 @@ const initializeDefaultData = () => {
   if (!usersExist) {
     localStorage.setItem(APP_USERS_STORAGE_KEY, JSON.stringify([initialSuperAdminUser]));
   } else {
-    const users: User[] = JSON.parse(usersExist);
-    if (!users.find(u => u.id === initialSuperAdminUser.id)) {
-      users.push(initialSuperAdminUser);
-      localStorage.setItem(APP_USERS_STORAGE_KEY, JSON.stringify(users));
+    try {
+        const users: User[] = JSON.parse(usersExist);
+        if (!users.find(u => u.id === initialSuperAdminUser.id && u.role === "SuperAdmin")) {
+        // Check if a user with the same email but different role exists, if so, don't add.
+        // Or, decide if SuperAdmin email must be unique across all roles. For now, assume ID is key.
+        const existingSA = users.find(u => u.id === initialSuperAdminUser.id);
+        if (!existingSA) {
+            users.push(initialSuperAdminUser);
+            localStorage.setItem(APP_USERS_STORAGE_KEY, JSON.stringify(users));
+        } else if (existingSA.role !== "SuperAdmin") {
+            // Handle conflict or update logic if necessary
+            console.warn("User ID for SuperAdmin exists with a different role. SuperAdmin not added to prevent conflict.");
+        }
+        }
+    } catch (e) {
+        console.error("Error initializing SuperAdmin user:", e);
+        // Fallback: ensure SuperAdmin is there if parsing fails or array is malformed
+        localStorage.setItem(APP_USERS_STORAGE_KEY, JSON.stringify([initialSuperAdminUser]));
     }
   }
+
 
   const keysToInitializeAsEmpty = [
     LESSON_PLANS_STORAGE_KEY,
@@ -121,8 +136,8 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   // Effect for redirecting unauthenticated users
   useEffect(() => {
     if (!loading && !user) {
-      const isAuthPage = pathname === '/login' || pathname === '/signup' || pathname === '/superadmin-access' || pathname === '/login-by-school';
-      if (!isAuthPage && pathname !== '/') { // Also allow landing page
+      const isAuthPage = pathname === '/login' || pathname === '/signup' || pathname === '/superadmin-access' || pathname === '/login-by-school' || pathname.startsWith('/forgot-password');
+      if (!isAuthPage && pathname !== '/' && !pathname.startsWith('/legal') && !pathname.startsWith('/about') && !pathname.startsWith('/documentation') && !pathname.startsWith('/faq') && !pathname.startsWith('/terms-of-service')) { 
         if (pathname.startsWith('/superadmin')) {
           router.push('/superadmin-access');
         } else {
@@ -138,21 +153,24 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     const users: User[] = storedUsers ? JSON.parse(storedUsers) : [];
     let foundUser: User | undefined;
     
+    const logSource = "AuthContext-Login";
+
     if (roleToAttempt === "SuperAdmin") {
       foundUser = users.find(u => u.email === emailOrUsername && u.role === "SuperAdmin");
-       if (foundUser && passwordAttempt === "Payaman123") {
+       if (foundUser && passwordAttempt === "Payaman123") { // SuperAdmin password
         setUser(foundUser);
         setCurrentSchool(null);
         localStorage.setItem('currentUser', JSON.stringify(foundUser));
-        addLog("INFO", `SuperAdmin ${emailOrUsername} berhasil masuk.`, "AuthContext-Login");
+        addLog("INFO", `SuperAdmin ${emailOrUsername} berhasil masuk.`, logSource);
         router.push('/superadmin/dashboard');
         return;
       }
     } else { 
+      // Regular user login
       if (!schoolIdToLogin) {
           toast({ title: "Login Gagal", description: "Informasi sekolah tidak disediakan. Harap pilih sekolah Anda.", variant: "destructive" });
-          addLog("WARN", `Login gagal untuk ${emailOrUsername}: ID Sekolah tidak disediakan.`, "AuthContext-Login");
-          router.push('/login-by-school'); 
+          addLog("WARN", `Login gagal untuk ${emailOrUsername}: ID Sekolah tidak disediakan.`, logSource);
+          window.location.reload();
           return;
       }
       
@@ -161,29 +179,36 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       const school = schools.find(s => s.id === schoolIdToLogin);
 
       if (!school) {
-        toast({ title: "Login Gagal", description: "Sekolah tidak ditemukan.", variant: "destructive" });
-        addLog("WARN", `Login gagal untuk ${emailOrUsername}: Sekolah dengan ID ${schoolIdToLogin} tidak ditemukan.`, "AuthContext-Login");
+        toast({ title: "Login Gagal", description: "Sekolah tidak ditemukan atau tidak aktif.", variant: "destructive" });
+        addLog("WARN", `Login gagal untuk ${emailOrUsername}: Sekolah dengan ID ${schoolIdToLogin} tidak ditemukan/aktif.`, logSource);
+        window.location.reload();
         return;
       }
       if (!school.isActive) {
         toast({ title: "Login Gagal", description: "Sekolah ini tidak aktif. Hubungi administrator.", variant: "destructive" });
-        addLog("WARN", `Login gagal untuk ${emailOrUsername}: Sekolah "${school.name}" (ID: ${schoolIdToLogin}) tidak aktif.`, "AuthContext-Login");
+        addLog("WARN", `Login gagal untuk ${emailOrUsername}: Sekolah "${school.name}" (ID: ${schoolIdToLogin}) tidak aktif.`, logSource);
+        window.location.reload();
         return;
       }
       
-      foundUser = users.find(u => u.email === emailOrUsername && u.role === roleToAttempt && u.schoolId === schoolIdToLogin);
-       if (foundUser && passwordAttempt === "password") { 
-        setUser(foundUser);
-        setCurrentSchool({ ...school, featureSettings: school.featureSettings || { ...DEFAULT_FEATURE_SETTINGS } });
-        localStorage.setItem('currentUser', JSON.stringify(foundUser));
-        addLog("INFO", `Pengguna ${emailOrUsername} (Peran: ${foundUser.role}, Sekolah: ${school.name}) berhasil masuk.`, "AuthContext-Login");
-        router.push('/dashboard');
-        return;
+      // For demo, all regular users use "password"
+      if (passwordAttempt === "password") {
+        foundUser = users.find(u => u.email === emailOrUsername && u.role === roleToAttempt && u.schoolId === schoolIdToLogin);
+        if (foundUser) {
+          setUser(foundUser);
+          setCurrentSchool({ ...school, featureSettings: school.featureSettings || { ...DEFAULT_FEATURE_SETTINGS } });
+          localStorage.setItem('currentUser', JSON.stringify(foundUser));
+          addLog("INFO", `Pengguna ${emailOrUsername} (Peran: ${foundUser.role}, Sekolah: ${school.name}) berhasil masuk.`, logSource);
+          router.push('/dashboard');
+          return;
+        }
       }
     }
     
-    toast({ title: "Login Gagal", description: "Email, peran, atau kata sandi salah, atau akun tidak terkait dengan sekolah yang dipilih.", variant: "destructive" });
-    addLog("WARN", `Login gagal: Pengguna dengan email/username ${emailOrUsername}, peran ${roleToAttempt} untuk sekolah ID ${schoolIdToLogin || 'N/A'} tidak ditemukan atau kredensial salah.`, "AuthContext-Login");
+    // General failure for both SuperAdmin (if password incorrect) and regular users (if not found or password incorrect)
+    toast({ title: "Login Gagal", description: "Email, peran, atau kata sandi salah, atau akun tidak sesuai dengan sekolah yang dipilih.", variant: "destructive" });
+    addLog("WARN", `Login gagal: Pengguna dengan email/username ${emailOrUsername}, peran ${roleToAttempt} untuk sekolah ID ${schoolIdToLogin || 'N/A'} tidak ditemukan atau kredensial salah.`, logSource);
+    window.location.reload();
   }, [addLog, router, toast]);
 
   const logout = useCallback(() => {

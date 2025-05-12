@@ -12,18 +12,17 @@ import { useState, useEffect } from 'react';
 import { useAuth } from "@/contexts/AuthContext";
 import { initialSuperAdminUser } from '@/lib/initial-data'; 
 import { useToast } from "@/hooks/use-toast";
-import { useRouter } from "next/navigation"; // Import useRouter
+import { useRouter } from "next/navigation"; 
 
 export default function SuperAdminAccessPage() {
-  const { login, user, loading: authIsLoading } = useAuth(); // Get user and authIsLoading
+  const { login, user, loading: authIsLoading } = useAuth(); 
   const { toast } = useToast();
-  const router = useRouter(); // Initialize router
+  const router = useRouter(); 
   const [username, setUsername] = useState("admin"); 
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false); 
 
   useEffect(() => {
-    // Redirect if already logged in as SuperAdmin
     if (!authIsLoading && user?.role === "SuperAdmin") {
       router.push('/superadmin/dashboard');
     }
@@ -33,28 +32,17 @@ export default function SuperAdminAccessPage() {
     event.preventDefault();
     setIsLoading(true);
     
-    // Call the login function from AuthContext.
-    // AuthContext handles credential checking, success (redirect), and failure (toast).
     login(username, password, "SuperAdmin");
 
-    // If login fails, AuthContext shows a toast. The SuperAdminLoginPage's
-    // isLoading state needs to be reset because the page is still active.
-    // We use a timeout. If login was successful, navigation would have occurred,
-    // and this component would unmount, effectively clearing the timeout's effect.
     const timer = setTimeout(() => {
-      // Check if still loading. This implies login failed and no navigation occurred.
-      // This is a heuristic; a more robust solution would involve login returning a status.
-      if (isLoading) { // Check if isLoading is still true from the component's perspective
+      if (isLoading) { 
          setIsLoading(false);
       }
-    }, 2000); // Adjust timeout if necessary
-
-    // No explicit clearTimeout needed here if successful login unmounts the component.
-    // For a more robust solution, login should return a Promise.
+    }, 3000); 
+    return () => clearTimeout(timer);
   };
 
-  // Prevent rendering form if already logged in and redirecting
-  if (authIsLoading || (user?.role === "SuperAdmin" && typeof window !== "undefined" && window.location.pathname !== '/superadmin-access' )) {
+  if (authIsLoading || (user?.role === "SuperAdmin" && typeof window !== "undefined" && window.location.pathname === '/superadmin-access' )) {
     return (
        <div className="w-full min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-slate-100">
         <Settings className="mr-2.5 h-10 w-10 animate-spin text-sky-400" />
@@ -114,6 +102,9 @@ export default function SuperAdminAccessPage() {
         <CardFooter className="flex flex-col items-center space-y-2 pb-8 pt-4 border-t border-slate-700">
            <p className="text-sm text-slate-400">
             Username Super Admin Demo: admin
+          </p>
+           <p className="text-sm text-slate-400">
+            Password Super Admin Demo: Payaman123
           </p>
           <Link href="/login-by-school" className="text-sm text-sky-400 hover:underline font-medium mt-2">
             Bukan Super Admin? Masuk di sini.
