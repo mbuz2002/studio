@@ -22,7 +22,7 @@ interface LogContextType {
 
 const LogContext = createContext<LogContextType | undefined>(undefined);
 
-export const MAX_LOGS = 200; 
+export const MAX_LOGS = 250; // Increased max logs for SuperAdmin to see more potentially
 
 export const LogProvider = ({ children }: PropsWithChildren) => {
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -34,6 +34,8 @@ export const LogProvider = ({ children }: PropsWithChildren) => {
 
   const addLog = useCallback((level: LogLevel, message: string, source?: string) => {
     if (!isMounted) { 
+      // Queue log if not mounted? Or just console.warn?
+      // For now, just warn and skip if not mounted, as it usually indicates a setup issue.
       console.warn("LogProvider: addLog called before component is mounted. Log was not added:", {level, message, source});
       return;
     }
@@ -44,6 +46,8 @@ export const LogProvider = ({ children }: PropsWithChildren) => {
       message,
       source,
     };
+    // Using a functional update for setLogs is safer if addLog might be called rapidly
+    // or if its dependencies change in a way that could cause stale closures (though less likely here with isMounted).
     setLogs(prevLogs => {
       const updatedLogs = [newLogEntry, ...prevLogs];
       if (updatedLogs.length > MAX_LOGS) {
@@ -51,7 +55,7 @@ export const LogProvider = ({ children }: PropsWithChildren) => {
       }
       return updatedLogs;
     });
-  }, [isMounted]);
+  }, [isMounted]); // isMounted is the key dependency here
 
   const clearLogs = useCallback(() => {
     if (!isMounted) return;
@@ -78,4 +82,3 @@ export const useLog = () => {
   }
   return context;
 };
-
