@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState, useCallback } from 'react';
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset, SidebarRail, SidebarGroup, SidebarGroupLabel } from '@/components/ui/sidebar';
 import { AppLogo } from '@/components/layout/AppLogo';
 import { UserProfile } from '@/components/layout/UserProfile';
-import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, ShieldCheck, Activity, Users, Info, BrainCircuit, FileText, LogOut, Package, UserCheck, ListChecks, Book, Home, ClipboardList, CalendarCheck, CreditCard, SlidersHorizontal, BarChart3 } from 'lucide-react'; 
+import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, ShieldCheck, Activity, Users, Info, BrainCircuit, FileText, LogOut, Package, UserCheck, ListChecks, Book, Home, ClipboardList, CalendarCheck, CreditCard, SlidersHorizontal, BarChart3, Building } from 'lucide-react'; 
 import Link from 'next/link';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
@@ -215,7 +215,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
                   <Link href={dashboardItem.href} legacyBehavior passHref>
                     <SidebarMenuButton
                       className="w-full text-base font-medium"
-                      tooltip={{children: dashboardItem.label, className: "ml-1 text-xs"}}
+                      tooltip={{children: dashboardItem.originalLabel || dashboardItem.label, className: "ml-1 text-xs"}}
                       isActive={pathname === dashboardItem.href}
                     >
                       <LayoutDashboard />
@@ -272,3 +272,4 @@ export default function AppLayout({ children }: PropsWithChildren) {
   );
 }
 
+    
