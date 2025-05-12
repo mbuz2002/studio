@@ -123,7 +123,8 @@ export default function SignupPage() {
     });
     
     // Automatically log in the new admin user
-    login(adminEmail, "Admin");
+    // For the demo, using the provided password directly. In a real app, this would involve secure password handling.
+    login(adminEmail, password, "Admin", newSchoolId);
     // No need to setIsLoading(false) or router.push here, login will handle redirection.
   };
 
@@ -182,7 +183,7 @@ export default function SignupPage() {
         <CardFooter className="flex flex-col items-center space-y-2 pb-8 pt-4 bg-muted/30 border-t">
           <p className="text-sm text-muted-foreground">
             Sudah punya akun sekolah?{" "}
-            <Link href="/login" className="text-accent hover:underline font-medium">
+            <Link href="/login-by-school" className="text-accent hover:underline font-medium">
               Masuk di sini.
             </Link>
           </p>
@@ -191,4 +192,3 @@ export default function SignupPage() {
     </div>
   );
 }
-
