@@ -29,6 +29,7 @@ const educationLevels: { value: EducationLevel; label: string }[] = [
 
 export default function SignupPage() {
   const router = useRouter();
+  const { login } = useAuth(); // Get login function from useAuth
   const { toast } = useToast();
   const { addLog } = useLog();
 
@@ -89,10 +90,9 @@ export default function SignupPage() {
       featureSettings: { ...DEFAULT_FEATURE_SETTINGS },
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      // Fill other fields with defaults or leave empty for admin to fill later
       alamat: "",
       nomorTelepon: "",
-      emailSekolah: "", // Can be same as adminEmail or different
+      emailSekolah: "",
       namaKepalaSekolah: "",
       npsn: "",
       logoUrl: "",
@@ -109,9 +109,6 @@ export default function SignupPage() {
       updatedAt: new Date().toISOString(),
     };
     
-    // For demo, password is not stored with User object in localStorage for security simulation.
-    // In a real app, this password would be hashed and stored securely.
-
     existingSchools.push(newSchool);
     localStorage.setItem(SCHOOLS_STORAGE_KEY, JSON.stringify(existingSchools));
     addLog("INFO", `Sekolah baru "${schoolName}" (ID: ${newSchoolId}) berhasil didaftarkan dengan status trial.`, "SignupPage");
@@ -122,10 +119,12 @@ export default function SignupPage() {
     
     toast({
       title: "Pendaftaran Berhasil!",
-      description: `Sekolah "${schoolName}" dan akun admin Anda telah dibuat. Silakan login.`,
+      description: `Sekolah "${schoolName}" dan akun admin Anda telah dibuat. Anda akan diarahkan ke dasbor.`,
     });
-    setIsLoading(false);
-    router.push("/login");
+    
+    // Automatically log in the new admin user
+    login(adminEmail, "Admin");
+    // No need to setIsLoading(false) or router.push here, login will handle redirection.
   };
 
 
