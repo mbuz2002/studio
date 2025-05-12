@@ -28,7 +28,7 @@ const documentationSections = [
     title: "Memulai dengan GUMPLA AI",
     icon: Settings,
     content: [
-      "**1. Pendaftaran & Login:** Buat akun sekolah Anda atau masuk jika sudah terdaftar. Super Admin akan mendaftarkan sekolah dan admin awal. Admin sekolah kemudian dapat menambahkan pengguna lain (Kepala Sekolah, Waka Kurikulum, Guru, Tata Usaha).",
+      "**1. Pendaftaran & Login:** Buat akun sekolah Anda atau masuk jika sudah terdaftar. Admin sekolah dapat menambahkan pengguna lain (Kepala Sekolah, Waka Kurikulum, Guru, Tata Usaha).",
       "**2. Profil Sekolah:** Lengkapi profil sekolah Anda di menu Pengaturan > Profil Sekolah. Informasi ini penting untuk kop surat dan data umum.",
       "**3. Pengaturan Kurikulum Default:** Admin atau Waka Kurikulum dapat mengatur kurikulum default (Kurikulum Merdeka, K-13, atau KTSP 2006) melalui Pengaturan Akun. Ini akan mempengaruhi template awal saat membuat dokumen baru.",
       "**4. Master Data:** Isi Master Data Mata Pelajaran, Guru, dan Kelas untuk digunakan dalam perencanaan.",
@@ -72,27 +72,13 @@ const documentationSections = [
   },
   {
     id: "pengaturan-pengguna",
-    title: "Pengaturan Pengguna & Aplikasi",
+    title: "Pengaturan Pengguna & Aplikasi Sekolah",
     icon: Users,
     content: [
       "**Pengaturan Akun (Semua Pengguna):** Ubah profil pribadi, kata sandi (simulasi), dan preferensi tema tampilan aplikasi.",
       "**Manajemen Pengguna (Admin & TU):** Tambah, edit, dan hapus akun pengguna di sekolah Anda. Atur peran untuk setiap pengguna.",
       "**Pengaturan Sistem Sekolah (Admin):** Kelola mode perawatan (simulasi), bersihkan cache (simulasi), lihat log sistem, dan atur durasi JP default.",
-      "**Profil Sekolah (Admin, Kepsek, TU):** Atur informasi detail sekolah yang akan digunakan pada kop surat dan data umum.",
-    ],
-  },
-  {
-    id: "superadmin",
-    title: "Fitur Super Admin (SAAS)",
-    icon: ShieldCheck,
-    content: [
-      "Super Admin memiliki akses tertinggi untuk mengelola seluruh platform SaaS GUMPLA AI:",
-      "**Manajemen Sekolah:** Mendaftarkan sekolah baru, mengedit detail sekolah, mengaktifkan/menonaktifkan sekolah.",
-      "**Pengaturan Aplikasi Global:** Mengatur nama aplikasi dan logo global yang akan tampil jika sekolah belum mengatur logo sendiri.",
-      "**Manajemen Langganan:** Mengelola status langganan setiap sekolah (aktif, trial, nonaktif), periode langganan, catatan pembayaran, dan fitur yang diaktifkan untuk tiap sekolah.",
-      "**Manajemen Pengguna Global:** Melihat semua pengguna terdaftar di semua sekolah (tanpa bisa mengedit langsung data pengguna sekolah).",
-      "**Analitik & Laporan Global:** (Fitur Mendatang) Melihat statistik penggunaan aplikasi secara keseluruhan.",
-      "**Log Aktivitas Global:** (Fitur Mendatang) Memantau aktivitas penting di seluruh sistem.",
+      "**Profil Sekolah (Admin, Kepsek, TU):** Atur informasi detail sekolah yang akan digunakan pada kop surat dan data umum, termasuk pengaturan domain.",
     ],
   },
 ];
