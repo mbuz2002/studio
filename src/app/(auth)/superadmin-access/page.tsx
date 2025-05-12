@@ -12,31 +12,57 @@ import { useState, useEffect } from 'react';
 import { useAuth } from "@/contexts/AuthContext";
 import { initialSuperAdminUser } from '@/lib/initial-data'; 
 import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation"; // Import useRouter
 
-export default function SuperAdminLoginPage() {
-  const { login } = useAuth();
+export default function SuperAdminAccessPage() {
+  const { login, user, loading: authIsLoading } = useAuth(); // Get user and authIsLoading
   const { toast } = useToast();
-  const [username, setUsername] = useState("admin"); // Changed from email to username, prefilled
-  const [password, setPassword] = useState(""); // Password state
+  const router = useRouter(); // Initialize router
+  const [username, setUsername] = useState("admin"); 
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false); 
+
+  useEffect(() => {
+    // Redirect if already logged in as SuperAdmin
+    if (!authIsLoading && user?.role === "SuperAdmin") {
+      router.push('/superadmin/dashboard');
+    }
+  }, [user, authIsLoading, router]);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setIsLoading(true); 
+    setIsLoading(true);
     
-    // Specific check for SuperAdmin credentials
-    if (username === "admin" && password === "Payaman123") {
-      // For AuthContext, SuperAdmin's email is "admin"
-      login("admin", "SuperAdmin"); 
-    } else {
-      toast({
-        title: "Login Gagal",
-        description: "Nama pengguna atau kata sandi Super Admin salah.",
-        variant: "destructive",
-      });
-      setIsLoading(false);
-    }
+    // Call the login function from AuthContext.
+    // AuthContext handles credential checking, success (redirect), and failure (toast).
+    login(username, password, "SuperAdmin");
+
+    // If login fails, AuthContext shows a toast. The SuperAdminLoginPage's
+    // isLoading state needs to be reset because the page is still active.
+    // We use a timeout. If login was successful, navigation would have occurred,
+    // and this component would unmount, effectively clearing the timeout's effect.
+    const timer = setTimeout(() => {
+      // Check if still loading. This implies login failed and no navigation occurred.
+      // This is a heuristic; a more robust solution would involve login returning a status.
+      if (isLoading) { // Check if isLoading is still true from the component's perspective
+         setIsLoading(false);
+      }
+    }, 2000); // Adjust timeout if necessary
+
+    // No explicit clearTimeout needed here if successful login unmounts the component.
+    // For a more robust solution, login should return a Promise.
   };
+
+  // Prevent rendering form if already logged in and redirecting
+  if (authIsLoading || (user?.role === "SuperAdmin" && typeof window !== "undefined" && window.location.pathname !== '/superadmin-access' )) {
+    return (
+       <div className="w-full min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-slate-100">
+        <Settings className="mr-2.5 h-10 w-10 animate-spin text-sky-400" />
+        <p className="text-xl">Memuat...</p>
+      </div>
+    );
+  }
+
 
   return (
     <div className="w-full min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-slate-100">
@@ -89,7 +115,7 @@ export default function SuperAdminLoginPage() {
            <p className="text-sm text-slate-400">
             Username Super Admin Demo: admin
           </p>
-          <Link href="/login" className="text-sm text-sky-400 hover:underline font-medium mt-2">
+          <Link href="/login-by-school" className="text-sm text-sky-400 hover:underline font-medium mt-2">
             Bukan Super Admin? Masuk di sini.
           </Link>
         </CardFooter>

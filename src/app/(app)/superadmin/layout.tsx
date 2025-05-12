@@ -14,7 +14,7 @@ export default function SuperAdminLayout({ children }: PropsWithChildren) {
   useEffect(() => {
     if (!loading) {
       if (!isAuthenticated || user?.role !== 'SuperAdmin') {
-        router.replace('/superadmin/login'); // Redirect to SuperAdmin login
+        router.replace('/superadmin-access'); // Redirect to SuperAdmin login
       }
     }
   }, [user, loading, isAuthenticated, router]);
