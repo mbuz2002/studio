@@ -53,7 +53,7 @@ const initializeDefaultData = () => {
       currentUsers = JSON.parse(usersExist);
     } catch (e) {
       console.error(`${logSource}: Error parsing existing users, re-initializing.`, e);
-      currentUsers = []; // Reset if parsing fails
+      currentUsers = []; 
     }
   }
 
@@ -69,32 +69,26 @@ const initializeDefaultData = () => {
   let usersModified = false;
   demoUsersToAdd.forEach(demoUser => {
     if (!currentUsers.some(u => u.id === demoUser.id)) {
-      // User with this ID doesn't exist, add it.
-      // Also check if user with same email and role (but different ID) exists to avoid duplicates.
-      const existingUserByEmailAndRole = currentUsers.find(u => u.email === demoUser.email && u.role === demoUser.role);
+      const existingUserByEmailAndRole = currentUsers.find(u => u.email.toLowerCase() === demoUser.email.toLowerCase() && u.role === demoUser.role);
       if (existingUserByEmailAndRole) {
-        // If such a user exists, update their ID to the demoUser's ID and merge other properties
-        // This is a bit complex for a simple init, might be better to just ensure the demoUser ID wins.
-        // For now, we'll just overwrite if the ID is different but email/role match the demo.
-        currentUsers = currentUsers.filter(u => u.email !== demoUser.email || u.role !== demoUser.role);
+        currentUsers = currentUsers.filter(u => !(u.email.toLowerCase() === demoUser.email.toLowerCase() && u.role === demoUser.role));
       }
       currentUsers.push(demoUser);
       usersModified = true;
-      console.log(`${logSource}: Added demo user: ${demoUser.email} (Role: ${demoUser.role})`);
+      // console.log(`${logSource}: Added demo user: ${demoUser.email} (Role: ${demoUser.role})`);
     } else {
-      // User with this ID exists, ensure its details are correct (e.g., role for SuperAdmin)
       const userIndex = currentUsers.findIndex(u => u.id === demoUser.id);
-      if (userIndex !== -1 && (currentUsers[userIndex].role !== demoUser.role || currentUsers[userIndex].email !== demoUser.email)) {
-        currentUsers[userIndex] = { ...currentUsers[userIndex], ...demoUser }; // Prioritize demoUser details
+      if (userIndex !== -1 && (currentUsers[userIndex].role !== demoUser.role || currentUsers[userIndex].email.toLowerCase() !== demoUser.email.toLowerCase())) {
+        currentUsers[userIndex] = { ...currentUsers[userIndex], ...demoUser, email: demoUser.email }; // Ensure email matches demo
         usersModified = true;
-        console.warn(`${logSource}: Corrected demo user record for ID: ${demoUser.id}`);
+        // console.warn(`${logSource}: Corrected demo user record for ID: ${demoUser.id}`);
       }
     }
   });
 
   if (usersModified || !usersExist) {
     localStorage.setItem(APP_USERS_STORAGE_KEY, JSON.stringify(currentUsers));
-    if(!usersExist) console.log(`${logSource}: Initialized APP_USERS with SuperAdmin and demo users.`);
+    // if(!usersExist) console.log(`${logSource}: Initialized APP_USERS with SuperAdmin and demo users.`);
   }
 
 
@@ -102,14 +96,14 @@ const initializeDefaultData = () => {
   const schoolsExist = localStorage.getItem(SCHOOLS_STORAGE_KEY);
   if (!schoolsExist) {
     localStorage.setItem(SCHOOLS_STORAGE_KEY, JSON.stringify([initialDefaultSchool]));
-    console.log(`${logSource}: Initialized SCHOOLS with default demo school.`);
+    // console.log(`${logSource}: Initialized SCHOOLS with default demo school.`);
   } else {
     try {
       const schools: School[] = JSON.parse(schoolsExist);
       if (!schools.some(s => s.id === DEFAULT_SCHOOL_ID)) {
         schools.push(initialDefaultSchool);
         localStorage.setItem(SCHOOLS_STORAGE_KEY, JSON.stringify(schools));
-        console.log(`${logSource}: Added missing default demo school to existing schools.`);
+        // console.log(`${logSource}: Added missing default demo school to existing schools.`);
       }
     } catch (e) {
       console.error(`${logSource}: Error processing existing schools, re-initializing with default.`, e);
@@ -117,8 +111,7 @@ const initializeDefaultData = () => {
     }
   }
 
-
-  const keysToInitializeAsEmpty = [
+  const keysToInitializeAsEmptyArray = [
     LESSON_PLANS_STORAGE_KEY,
     ANNUAL_PROGRAMS_STORAGE_KEY,
     SEMESTER_PROGRAMS_STORAGE_KEY,
@@ -129,7 +122,7 @@ const initializeDefaultData = () => {
     ACADEMIC_EVENTS_STORAGE_KEY,
   ];
 
-  keysToInitializeAsEmpty.forEach(key => {
+  keysToInitializeAsEmptyArray.forEach(key => {
     if (!localStorage.getItem(key)) {
       localStorage.setItem(key, JSON.stringify([]));
     }
@@ -168,10 +161,9 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
               }
             }
           } else if (parsedUser.role !== "SuperAdmin") {
-            // Non-SA users must have a schoolId
             addLog("ERROR", `Pengguna ${parsedUser.email} (Peran: ${parsedUser.role}) tidak memiliki schoolId. Sesi tidak dipulihkan.`, "AuthContext-Restore");
             localStorage.removeItem('currentUser');
-            setUser(null); // Clear invalid user
+            setUser(null); 
           }
         }
       } catch (error) {
@@ -189,13 +181,12 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
     attemptUserRestore();
     return () => { didCancel = true; };
-  }, [addLog]);
+  }, [addLog]); // addLog is stable due to its own useCallback and isMounted check
 
-  // Effect for redirecting unauthenticated users
   useEffect(() => {
     if (!loading && !user) {
-      const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/login-by-school') || pathname.startsWith('/signup') || pathname.startsWith('/superadmin-access');
-      const isPublicPage = pathname === '/' || pathname.startsWith('/legal') || pathname.startsWith('/about') || pathname.startsWith('/documentation') || pathname.startsWith('/faq') || pathname.startsWith('/terms-of-service');
+      const isAuthPage = pathname === '/login' || pathname === '/login-by-school' || pathname === '/signup' || pathname === '/superadmin-access';
+      const isPublicPage = pathname === '/' || pathname === '/about' || pathname === '/documentation' || pathname === '/faq' || pathname === '/terms-of-service' || pathname === '/pricing';
       
       if (!isAuthPage && !isPublicPage) {
         if (pathname.startsWith('/superadmin')) {
@@ -212,14 +203,13 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     const storedUsers = localStorage.getItem(APP_USERS_STORAGE_KEY);
     const users: User[] = storedUsers ? JSON.parse(storedUsers) : [];
     let foundUser: User | undefined;
-    
     const logSource = "AuthContext-Login";
 
     if (roleToAttempt === "SuperAdmin") {
-      foundUser = users.find(u => u.email === emailOrUsername && u.role === "SuperAdmin");
-       if (foundUser && passwordAttempt === "Payaman123") { // Hardcoded SuperAdmin password
+      foundUser = users.find(u => u.email.toLowerCase() === emailOrUsername.toLowerCase() && u.role === "SuperAdmin");
+       if (foundUser && passwordAttempt === "Payaman123") { 
         setUser(foundUser);
-        setCurrentSchool(null); // SuperAdmin is not tied to a specific school context here
+        setCurrentSchool(null); 
         localStorage.setItem('currentUser', JSON.stringify(foundUser));
         addLog("INFO", `SuperAdmin ${emailOrUsername} berhasil masuk.`, logSource);
         router.push('/superadmin/dashboard');
@@ -232,11 +222,9 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         }
       }
     } else {
-      // Regular user login (Admin, Guru, etc.)
       if (!schoolIdToLogin) {
           toast({ title: "Login Gagal", description: "Informasi sekolah tidak disediakan. Harap pilih sekolah Anda.", variant: "destructive" });
           addLog("WARN", `Login gagal untuk ${emailOrUsername}: ID Sekolah tidak disediakan.`, logSource);
-          window.location.reload(); // Force reload to reset state and retry
           return;
       }
       
@@ -245,22 +233,19 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       const school = schools.find(s => s.id === schoolIdToLogin);
 
       if (!school) {
-        toast({ title: "Login Gagal", description: "Sekolah tidak ditemukan atau tidak aktif.", variant: "destructive" });
+        toast({ title: "Login Gagal", description: "Sekolah tidak ditemukan.", variant: "destructive" });
         addLog("WARN", `Login gagal untuk ${emailOrUsername}: Sekolah dengan ID ${schoolIdToLogin} tidak ditemukan.`, logSource);
-        window.location.reload();
         return;
       }
       if (!school.isActive) {
         toast({ title: "Login Gagal", description: "Sekolah ini tidak aktif. Hubungi administrator.", variant: "destructive" });
         addLog("WARN", `Login gagal untuk ${emailOrUsername}: Sekolah "${school.name}" (ID: ${schoolIdToLogin}) tidak aktif.`, logSource);
-        window.location.reload();
         return;
       }
       
-      // For demo purposes, all non-SuperAdmin roles use "password"
       if (passwordAttempt === "password") {
         foundUser = users.find(u => 
-          u.email === emailOrUsername && 
+          u.email.toLowerCase() === emailOrUsername.toLowerCase() && 
           u.role === roleToAttempt && 
           u.schoolId === schoolIdToLogin
         );
@@ -275,10 +260,8 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       }
     }
     
-    // If no successful login path was hit
     toast({ title: "Login Gagal", description: "Email, peran, atau kata sandi salah, atau akun tidak sesuai dengan sekolah yang dipilih.", variant: "destructive" });
     addLog("WARN", `Login gagal (jalur umum): Pengguna dengan email/username ${emailOrUsername}, peran ${roleToAttempt} untuk sekolah ID ${schoolIdToLogin || 'N/A'} tidak ditemukan atau kredensial salah.`, logSource);
-    window.location.reload(); // Force reload to allow re-attempt
   }, [addLog, router, toast]);
 
   const logout = useCallback(() => {

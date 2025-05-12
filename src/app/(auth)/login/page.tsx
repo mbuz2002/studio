@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -26,7 +25,6 @@ const roles: { value: UserRole; label: string }[] = [
   { value: "Guru", label: "Guru" },
 ];
 
-// Helper to slugify school names for potential subdomain/path use later
 const slugify = (text: string = ""): string => {
   if (!text) return "";
   return text
@@ -40,7 +38,7 @@ const slugify = (text: string = ""): string => {
 
 
 export default function LoginPage() {
-  const { login, loading: authLoadingState } = useAuth();
+  const { login, loading: authLoadingState, user: authenticatedUser } = useAuth();
   const { toast } = useToast();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -49,7 +47,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [selectedRole, setSelectedRole] = useState<UserRole>("Guru");
   const [isLoading, setIsLoading] = useState(false);
-  const [schoolForLogin, setSchoolForLogin] = useState<School | null | undefined>(undefined); // undefined initially, null if not found/no param
+  const [schoolForLogin, setSchoolForLogin] = useState<School | null | undefined>(undefined); 
   const [pageLoading, setPageLoading] = useState(true);
 
   useEffect(() => {
@@ -60,9 +58,8 @@ export default function LoginPage() {
       if (schoolsData) {
         const schools: School[] = JSON.parse(schoolsData);
         
-        let foundSchool = schools.find(s => s.id === schoolIdentifier && s.isActive); // Only active schools
+        let foundSchool = schools.find(s => s.id === schoolIdentifier && s.isActive); 
         if (!foundSchool) {
-          // Fallback to slug if ID match fails or school is inactive
           foundSchool = schools.find(s => slugify(s.name) === schoolIdentifier && s.isActive);
         }
         setSchoolForLogin(foundSchool || null);
@@ -76,6 +73,14 @@ export default function LoginPage() {
     setPageLoading(false);
   }, [searchParams, router]);
 
+  useEffect(() => {
+    // If login was successful (user context updated), and we were in a loading state, reset it.
+    // This handles the case where AuthContext navigates before the local timeout.
+    if (authenticatedUser && isLoading) {
+      setIsLoading(false);
+    }
+  }, [authenticatedUser, isLoading]);
+
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (email && selectedRole && password) {
@@ -88,24 +93,22 @@ export default function LoginPage() {
             variant: "destructive",
           });
           setIsLoading(false);
-          // AuthContext's login will now handle reload if this path is reached by it
           return;
       }
 
       const schoolIdToLogin = schoolForLogin ? schoolForLogin.id : undefined;
       login(email, password, selectedRole, schoolIdToLogin); 
       
-      // If login fails, AuthContext now reloads the page.
-      // The setIsLoading(false) in a timeout is no longer strictly necessary for UI reset on failure,
-      // but can be kept as a very minor fallback if login logic in AuthContext had a path without reload (which it shouldn't now).
-      // For cleaner logic, relying on AuthContext's reload is better.
+      // Set a timeout to reset isLoading state *if* login does not cause navigation
+      // This is a fallback for login failures where AuthContext toasts and returns.
       const timer = setTimeout(() => {
-        if (isLoading) { // Check if component's isLoading is still true (meaning no navigation/reload happened)
+        // Check if still loading (i.e., not navigated away by successful login)
+        // and also check if there's no authenticated user (meaning login actually failed)
+        if (isLoading && !authenticatedUser) { 
             setIsLoading(false);
         }
-      }, 3000); // Increased timeout slightly just in case, though reload should be faster.
+      }, 1500); // Reduced timeout for better UX on failure
       return () => clearTimeout(timer);
-
 
     } else {
       toast({
@@ -113,9 +116,6 @@ export default function LoginPage() {
         description: "Harap isi email, kata sandi, dan pilih peran.",
         variant: "destructive"
       });
-      // If this path is hit, login was not called, so AuthContext won't reload.
-      // We might want a reload here too if that's the desired UX for *any* form error.
-      // For now, only AuthContext.login failures reload.
     }
   };
   

@@ -9,16 +9,15 @@ import Link from "next/link";
 import type { FormEvent} from 'react';
 import { useState, useEffect } from 'react';
 import { useAuth } from "@/contexts/AuthContext";
-// Removed: import { initialSuperAdminUser } from '@/lib/initial-data'; // Not needed for credentials check here
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation"; 
 import LoadingSpinner from "@/components/ui/loading-spinner";
 
 export default function SuperAdminAccessPage() {
   const { login, user, loading: authIsLoading } = useAuth(); 
-  const { toast } = useToast();
+  const { toast } = useToast(); // Kept for consistency, though login errors are handled in AuthContext
   const router = useRouter(); 
-  const [username, setUsername] = useState("admin"); // Default to "admin" as per instructions
+  const [username, setUsername] = useState("admin"); 
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false); 
 
@@ -28,30 +27,32 @@ export default function SuperAdminAccessPage() {
     }
   }, [user, authIsLoading, router]);
 
+  useEffect(() => {
+    // If login was successful (user context updated), and we were in a loading state, reset it.
+    if (user?.role === "SuperAdmin" && isLoading) {
+      setIsLoading(false);
+    }
+  }, [user, isLoading]);
+
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsLoading(true);
     
-    // Explicitly pass "admin" as username for SuperAdmin login attempt
-    // The input field for username is kept for UX consistency but its value is overridden here for SA.
     login("admin", password, "SuperAdmin");
 
-    // The AuthContext's login function now handles reload on failure,
-    // so the timeout here is less critical but can remain as a fallback.
     const timer = setTimeout(() => {
-      if (isLoading) { 
+      // Check if still loading (i.e., not navigated away by successful login)
+      // and also check if the current user is not SuperAdmin (meaning login actually failed)
+      if (isLoading && user?.role !== "SuperAdmin") { 
          setIsLoading(false); 
       }
-    }, 3000); 
+    }, 1500); // Reduced timeout
     return () => clearTimeout(timer);
   };
 
-  // This loading state is primarily for the page itself, not the auth context loading.
   if (authIsLoading) {
     return <LoadingSpinner message="Memverifikasi sesi..." icon={<Settings className="mr-2.5 h-10 w-10 animate-spin text-sky-400" />} />;
   }
-  // If user is already SuperAdmin and on this page, they should be redirected by the useEffect above.
-  // If we reach here and they are SA, it means redirect is pending. Show loading to avoid flash.
   if (user?.role === "SuperAdmin") {
       return <LoadingSpinner message="Mengarahkan ke dasbor Super Admin..." icon={<Settings className="mr-2.5 h-10 w-10 animate-spin text-sky-400" />} />;
   }
@@ -77,8 +78,8 @@ export default function SuperAdminAccessPage() {
                 id="username-sa" 
                 type="text" 
                 placeholder="admin" 
-                value={username} // Input field still reflects state for UX
-                onChange={(e) => setUsername(e.target.value)} // Allow changing for UX, but login uses "admin"
+                value={username} 
+                onChange={(e) => setUsername(e.target.value)} 
                 required 
                 className="text-base h-11 rounded-md bg-slate-700 border-slate-600 text-slate-50 placeholder-slate-500 focus:border-sky-500 focus:ring-sky-500"
                 disabled={isLoading}
@@ -111,7 +112,7 @@ export default function SuperAdminAccessPage() {
            <p className="text-sm text-slate-400">
             Password Super Admin Demo: <strong>Payaman123</strong>
           </p>
-          <Link href="/(auth)/login-by-school" className="text-sm text-sky-400 hover:underline font-medium mt-2">
+          <Link href="/login-by-school" className="text-sm text-sky-400 hover:underline font-medium mt-2">
             Bukan Super Admin? Masuk di sini.
           </Link>
         </CardFooter>
