@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState, useCallback } from 'react';
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset, SidebarRail, SidebarGroup, SidebarGroupLabel } from '@/components/ui/sidebar';
 import { AppLogo } from '@/components/layout/AppLogo';
 import { UserProfile } from '@/components/layout/UserProfile';
-import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, ShieldCheck, Activity, Users, Info, BrainCircuit, FileText, LogOut, Package, UserCheck, ListChecks, Book, Home, ClipboardList, CalendarCheck, Building, CreditCard, SlidersHorizontal, BarChart3 } from 'lucide-react'; 
+import { LayoutDashboard, BookOpenText, CalendarDays, CalendarClock, Sparkles, Settings as SettingsIcon, ShieldCheck, Activity, Users, Info, BrainCircuit, FileText, LogOut, Package, UserCheck, ListChecks, Book, Home, ClipboardList, CalendarCheck, CreditCard, SlidersHorizontal, BarChart3 } from 'lucide-react'; 
 import Link from 'next/link';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
@@ -27,7 +27,7 @@ interface NavItem {
   isKurikulumMerdekaOnly?: boolean;
   isMasterData?: boolean;
   isSuperAdminOnly?: boolean; 
-  featureFlag?: keyof SchoolFeatureSettings; 
+  featureFlag?: keyof SchoolFeatureSettings;
 }
 
 const allNavItems: NavItem[] = [
@@ -66,6 +66,11 @@ const allNavItems: NavItem[] = [
   { href: "/admin/system-logs", label: "Log Sistem", originalLabel: "Log Sistem", icon: Activity, roles: ["Admin"], isSystemSetting: true, isHiddenFromSidebar: true }, 
 ];
 
+interface SidebarNavGroup {
+  label: string;
+  items: NavItem[];
+}
+
 export default function AppLayout({ children }: PropsWithChildren) {
   const { user, isAuthenticated, loading, logout, currentSchool } = useAuth(); 
   const { defaultCurriculum } = useCurriculum();
@@ -76,25 +81,24 @@ export default function AppLayout({ children }: PropsWithChildren) {
 
   useEffect(() => {
     setIsPageLoading(true);
-    const timer = setTimeout(() => setIsPageLoading(false), 300);
+    const timer = setTimeout(() => setIsPageLoading(false), 300); 
     return () => clearTimeout(timer);
   }, [pathname]);
 
-
   useEffect(() => {
     if (!loading && !isAuthenticated) {
-      // If user is not authenticated, redirect appropriately
       if (pathname.startsWith('/superadmin')) {
-        router.push('/superadmin-access'); // SuperAdmin specific login
+        router.push('/superadmin-access'); 
       } else if (pathname !== '/' && !pathname.startsWith('/login') && !pathname.startsWith('/signup') && !pathname.startsWith('/login-by-school')) {
-        router.push('/login-by-school'); // Default to school selection for other app pages
+        router.push('/login-by-school');
       }
     }
   }, [loading, isAuthenticated, router, pathname]);
 
-  const filteredNavItems = useMemo(() => {
-    if (!user) return [];
-    return allNavItems
+  const navStructure = useMemo(() => {
+    if (!user) return { dashboardItem: null, groups: [] };
+
+    const processedNavItems = allNavItems
       .map(item => {
         let currentLabel = item.originalLabel || item.label;
         if (item.href === "/lesson-plans") {
@@ -105,18 +109,48 @@ export default function AppLayout({ children }: PropsWithChildren) {
       .filter(item =>
         item.roles.includes(user.role) &&
         !item.isHiddenFromSidebar &&
-        (!item.isMasterData || ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha"].includes(user.role)) && 
-        (item.isSystemSetting === undefined || item.isSystemSetting === false || (item.isSystemSetting === true && ["Admin"].includes(user.role)) || (item.isSuperAdminOnly && user.role === "SuperAdmin")) && 
+        (!item.isMasterData || ["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha"].includes(user.role)) &&
+        (item.isSystemSetting === undefined || item.isSystemSetting === false || (item.isSystemSetting === true && ["Admin"].includes(user.role)) || (item.isSuperAdminOnly && user.role === "SuperAdmin")) &&
         (!item.isKurikulumMerdekaOnly || defaultCurriculum === "Kurikulum Merdeka") &&
         (user.role === "SuperAdmin" ? item.isSuperAdminOnly === true : !item.isSuperAdminOnly) &&
-        // For non-SuperAdmin users, check feature flag against currentSchool. SuperAdmin bypasses this school-specific check.
         (user.role === "SuperAdmin" || !item.featureFlag || (currentSchool && (currentSchool.featureSettings?.[item.featureFlag] ?? true)))
+      );
+
+    const dashboardItem = processedNavItems.find(item => item.href.includes("dashboard"));
+    
+    const groups: SidebarNavGroup[] = [];
+
+    if (user.role === "SuperAdmin") {
+      const saItems = processedNavItems.filter(item => item.isSuperAdminOnly && !item.href.includes("dashboard"));
+      if (saItems.length > 0) groups.push({ label: "Super Admin", items: saItems });
+    } else {
+      const planningItems = processedNavItems.filter(item => ["/lesson-plans", "/annual-programs", "/semester-programs", "/modul-ajar"].includes(item.href));
+      if (planningItems.length > 0) groups.push({ label: "Perencanaan", items: planningItems });
+
+      const academicItems = processedNavItems.filter(item => ["/academic-calendar", "/timetables"].includes(item.href));
+      if (academicItems.length > 0) groups.push({ label: "Manajemen Akademik", items: academicItems });
+      
+      const aiItems = processedNavItems.filter(item => item.href === "/ai-assistant");
+      if (aiItems.length > 0) groups.push({ label: "Alat AI", items: aiItems });
+
+      const masterDataItemsFiltered = processedNavItems.filter(item => item.isMasterData);
+      if (masterDataItemsFiltered.length > 0) groups.push({ label: "Master Data", items: masterDataItemsFiltered });
+    }
+    
+    const settingsItems = processedNavItems.filter(item =>
+      item.href === "/settings" ||
+      item.href === "/school-settings" ||
+      item.href === "/admin/user-management" ||
+      item.isSystemSetting
     );
+    if (settingsItems.length > 0) groups.push({ label: "Pengaturan", items: settingsItems });
+    
+    return { dashboardItem, groups };
+
   }, [user, defaultCurriculum, currentSchool]);
 
-   useEffect(() => {
+  useEffect(() => {
     if (!loading && isAuthenticated && user) {
-      const currentPathRoot = "/" + pathname.split('/')[1]; 
       const currentNavItem = allNavItems.find(item => pathname.startsWith(item.href) && item.href !== '/');
 
       if (user.role === "SuperAdmin" && !pathname.startsWith('/superadmin') && pathname !== '/settings') {
@@ -130,8 +164,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
       
       if (currentNavItem) {
         if (!currentNavItem.roles.includes(user.role)) {
-          const dashboardAccess = allNavItems.find(item => item.href === (user.role === "SuperAdmin" ? "/superadmin/dashboard" : "/dashboard") && item.roles.includes(user.role));
-          if (dashboardAccess) router.push(dashboardAccess.href); else logout();
+          router.push(user.role === "SuperAdmin" ? "/superadmin/dashboard" : "/dashboard");
           return;
         }
         if (currentNavItem.isKurikulumMerdekaOnly && defaultCurriculum !== "Kurikulum Merdeka") {
@@ -143,7 +176,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
             router.push(user.role === "SuperAdmin" ? "/superadmin/dashboard" : "/dashboard");
             return;
         }
-         if (currentNavItem.isMasterData && !["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha"].includes(user.role)) {
+        if (currentNavItem.isMasterData && !["SuperAdmin", "Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha"].includes(user.role)) {
             toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk mengakses menu Master Data.", variant: "destructive"});
             router.push(user.role === "SuperAdmin" ? "/superadmin/dashboard" : "/dashboard");
             return;
@@ -153,7 +186,6 @@ export default function AppLayout({ children }: PropsWithChildren) {
             router.push("/dashboard");
             return;
         }
-
       } else if (pathname === "/settings" || pathname === "/school-settings" || pathname === "/admin/subscription-status") {
          const settingsBaseAccess = allNavItems.find(item => (item.href === "/settings" || item.href === "/school-settings" || item.href === "/admin/subscription-status") && item.roles.includes(user.role));
          if (!settingsBaseAccess) {
@@ -163,51 +195,11 @@ export default function AppLayout({ children }: PropsWithChildren) {
     }
   }, [loading, isAuthenticated, user, pathname, router, logout, defaultCurriculum, toast, currentSchool]);
 
-
   if (loading || !isAuthenticated || !user) {
     return <LoadingSpinner message="Memuat Sesi Anda..." icon={<Sparkles className="h-16 w-16 animate-pulse text-primary mb-6" />} />;
   }
 
-  const regularDashboardItem = filteredNavItems.find(item => item.href === "/dashboard");
-  const superAdminDashboardItem = filteredNavItems.find(item => item.href === "/superadmin/dashboard");
-  const dashboardItem = user.role === "SuperAdmin" ? superAdminDashboardItem : regularDashboardItem;
-
-  const superAdminItems = filteredNavItems.filter(item => item.isSuperAdminOnly && item.href !== "/superadmin/dashboard");
-  
-  const curriculumPlanningItems = filteredNavItems.filter(item =>
-    ["/lesson-plans", "/annual-programs", "/semester-programs", "/modul-ajar"].includes(item.href) && !item.isSuperAdminOnly
-  );
-
-  const academicManagementItems = filteredNavItems.filter(item =>
-    ["/academic-calendar", "/timetables"].includes(item.href) &&
-    !item.isSuperAdminOnly &&
-    // For non-SA, check feature flag against currentSchool.
-    // This implicitly means SA doesn't need currentSchool for this check.
-    (user.role === "SuperAdmin" || (currentSchool && (currentSchool.featureSettings?.[item.featureFlag] ?? true)))
-  );
-
-  const aiToolsItems = filteredNavItems.filter(item =>
-    item.href === "/ai-assistant" &&
-    !item.isSuperAdminOnly &&
-    (user.role === "SuperAdmin" || (currentSchool && (currentSchool.featureSettings?.[item.featureFlag] ?? true)))
-  );
-
-  const masterDataItems = filteredNavItems.filter(item =>
-    item.isMasterData &&
-    !item.isSuperAdminOnly &&
-    (user.role === "SuperAdmin" || (currentSchool && (currentSchool.featureSettings?.[item.featureFlag] ?? true)))
-  );
-  
-  const generalSettingsItems = filteredNavItems.filter(item =>
-    !item.isSuperAdminOnly &&
-    (
-      item.href === "/settings" ||
-      item.href === "/school-settings" ||
-      item.href === "/admin/user-management" ||
-      item.isSystemSetting 
-    )
-  );
-
+  const { dashboardItem, groups: navGroups } = navStructure;
 
   return (
       <SidebarProvider>
@@ -234,139 +226,29 @@ export default function AppLayout({ children }: PropsWithChildren) {
               )}
             </SidebarMenu>
 
-            {superAdminItems.length > 0 && (
-              <SidebarGroup>
-                <SidebarGroupLabel className="group-data-[state=expanded]:md:inline hidden">Super Admin</SidebarGroupLabel>
-                <SidebarMenu>
-                  {superAdminItems.map((item) => (
-                    <SidebarMenuItem key={item.href}>
-                      <Link href={item.href} legacyBehavior passHref>
-                        <SidebarMenuButton
-                          className="w-full text-base font-medium"
-                          tooltip={{children: item.label, className: "ml-1 text-xs"}}
-                          isActive={pathname.startsWith(item.href)}
-                        >
-                          <item.icon />
-                          <span>{item.label}</span>
-                        </SidebarMenuButton>
-                      </Link>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroup>
-            )}
-
-            {curriculumPlanningItems.length > 0 && (
-              <SidebarGroup>
-                <SidebarGroupLabel className="group-data-[state=expanded]:md:inline hidden">Perencanaan</SidebarGroupLabel>
-                <SidebarMenu>
-                  {curriculumPlanningItems.map((item) => (
-                    <SidebarMenuItem key={item.href}>
-                      <Link href={item.href} legacyBehavior passHref>
-                        <SidebarMenuButton
-                          className="w-full text-base font-medium"
-                          tooltip={{children: item.label, className: "ml-1 text-xs"}}
-                          isActive={pathname.startsWith(item.href)}
-                        >
-                          <item.icon />
-                          <span>{item.label}</span>
-                        </SidebarMenuButton>
-                      </Link>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroup>
-            )}
-
-            {academicManagementItems.length > 0 && (
-                 <SidebarGroup>
-                 <SidebarGroupLabel className="group-data-[state=expanded]:md:inline hidden">Manajemen Akademik</SidebarGroupLabel>
-                 <SidebarMenu>
-                    {academicManagementItems.map((item) => (
-                        <SidebarMenuItem key={item.href}>
-                            <Link href={item.href} legacyBehavior passHref>
-                                <SidebarMenuButton
-                                className="w-full text-base font-medium"
-                                tooltip={{children: item.originalLabel || item.label, className: "ml-1 text-xs"}}
-                                isActive={pathname.startsWith(item.href)}
-                                >
-                                <item.icon />
-                                <span>{item.label}</span>
-                                </SidebarMenuButton>
-                            </Link>
-                        </SidebarMenuItem>
-                    ))}
-                 </SidebarMenu>
-                 </SidebarGroup>
-            )}
-
-
-            {aiToolsItems.length > 0 && (
-              <SidebarGroup>
-                <SidebarGroupLabel className="group-data-[state=expanded]:md:inline hidden">Alat AI</SidebarGroupLabel>
-                <SidebarMenu>
-                  {aiToolsItems.map((item) => (
-                    <SidebarMenuItem key={item.href}>
-                      <Link href={item.href} legacyBehavior passHref>
-                        <SidebarMenuButton
-                          className="w-full text-base font-medium"
-                          tooltip={{children: item.label, className: "ml-1 text-xs"}}
-                          isActive={pathname.startsWith(item.href)}
-                        >
-                          <item.icon />
-                          <span>{item.label}</span>
-                        </SidebarMenuButton>
-                      </Link>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroup>
-            )}
-            
-            {masterDataItems.length > 0 && (
-                <SidebarGroup>
-                    <SidebarGroupLabel className="group-data-[state=expanded]:md:inline hidden">Master Data</SidebarGroupLabel>
-                    <SidebarMenu>
-                    {masterDataItems.map((item) => (
-                        <SidebarMenuItem key={item.href}>
+            {navGroups.map(group => (
+              group.items.length > 0 && (
+                <SidebarGroup key={group.label}>
+                  <SidebarGroupLabel className="group-data-[state=expanded]:md:inline hidden">{group.label}</SidebarGroupLabel>
+                  <SidebarMenu>
+                    {group.items.map((item) => (
+                      <SidebarMenuItem key={item.href}>
                         <Link href={item.href} legacyBehavior passHref>
-                            <SidebarMenuButton
+                          <SidebarMenuButton
                             className="w-full text-base font-medium"
-                            tooltip={{children: item.label, className: "ml-1 text-xs"}}
+                            tooltip={{children: item.originalLabel || item.label, className: "ml-1 text-xs"}}
                             isActive={pathname.startsWith(item.href)}
-                            >
+                          >
                             <item.icon />
                             <span>{item.label}</span>
-                            </SidebarMenuButton>
+                          </SidebarMenuButton>
                         </Link>
-                        </SidebarMenuItem>
+                      </SidebarMenuItem>
                     ))}
-                    </SidebarMenu>
+                  </SidebarMenu>
                 </SidebarGroup>
-            )}
-
-            {generalSettingsItems.length > 0 && (
-              <SidebarGroup>
-                <SidebarGroupLabel className="group-data-[state=expanded]:md:inline hidden">Pengaturan</SidebarGroupLabel>
-                <SidebarMenu>
-                  {generalSettingsItems.map((item) => (
-                    <SidebarMenuItem key={item.href}>
-                      <Link href={item.href} legacyBehavior passHref>
-                        <SidebarMenuButton
-                          className="w-full text-base font-medium"
-                          tooltip={{children: item.label, className: "ml-1 text-xs"}}
-                          isActive={pathname.startsWith(item.href)}
-                        >
-                          <item.icon />
-                          <span>{item.label}</span>
-                        </SidebarMenuButton>
-                      </Link>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroup>
-            )}
-
+              )
+            ))}
           </SidebarContent>
           </ScrollArea>
           <SidebarFooter className="border-t border-sidebar-border p-2 mt-auto shadow-inner">
@@ -389,3 +271,4 @@ export default function AppLayout({ children }: PropsWithChildren) {
       </SidebarProvider>
   );
 }
+

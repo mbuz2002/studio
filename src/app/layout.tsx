@@ -28,18 +28,18 @@ export default function RootLayout({
   return (
     <html lang="id" suppressHydrationWarning>
       <body className={`${roboto.variable} antialiased font-sans`}> {/* Apply font-sans and Roboto variable */}
-        <ThemeProvider>
-          <QueryClientProvider>
-            <LogProvider> 
+        <LogProvider> 
+          <ThemeProvider>
+            <QueryClientProvider>
               <AuthProvider>
                 <CurriculumProvider> 
                   {children}
                   <Toaster />
                 </CurriculumProvider>
               </AuthProvider>
-            </LogProvider>
-          </QueryClientProvider>
-        </ThemeProvider>
+            </QueryClientProvider>
+          </ThemeProvider>
+        </LogProvider>
       </body>
     </html>
   );

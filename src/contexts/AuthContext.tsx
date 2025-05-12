@@ -1,9 +1,10 @@
+
 "use client";
 
 import type { PropsWithChildren} from 'react';
 import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import type { User, UserRole, School } from '@/types';
-import { useRouter, usePathname } from 'next/navigation'; // Added usePathname
+import { useRouter, usePathname } from 'next/navigation';
 import { useLog } from './LogContext';
 import { APP_USERS_STORAGE_KEY, SCHOOLS_STORAGE_KEY, DEFAULT_FEATURE_SETTINGS } from '@/types';
 import { initialSuperAdminUser } from '@/lib/initial-data';
@@ -47,7 +48,6 @@ const initializeDefaultData = () => {
   }
 
   const keysToInitializeAsEmpty = [
-    // SCHOOLS_STORAGE_KEY, // Keep schools data if exists from signup/SA
     LESSON_PLANS_STORAGE_KEY,
     ANNUAL_PROGRAMS_STORAGE_KEY,
     SEMESTER_PROGRAMS_STORAGE_KEY,
@@ -64,9 +64,8 @@ const initializeDefaultData = () => {
     }
   });
   if (!localStorage.getItem(SCHOOLS_STORAGE_KEY)) {
-      localStorage.setItem(SCHOOLS_STORAGE_KEY, JSON.stringify([])); // Initialize schools if not present
+      localStorage.setItem(SCHOOLS_STORAGE_KEY, JSON.stringify([])); 
   }
-  // console.log("Initial data check complete in AuthContext.");
 };
 
 
@@ -75,7 +74,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   const [currentSchool, setCurrentSchool] = useState<School | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const pathname = usePathname(); // Get current pathname
+  const pathname = usePathname(); 
   const { addLog } = useLog();
   const { toast } = useToast();
 
@@ -140,7 +139,6 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     let foundUser: User | undefined;
     
     if (roleToAttempt === "SuperAdmin") {
-      // SuperAdmin uses "admin" as username and specific password
       foundUser = users.find(u => u.email === emailOrUsername && u.role === "SuperAdmin");
        if (foundUser && passwordAttempt === "Payaman123") {
         setUser(foundUser);
@@ -150,12 +148,12 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         router.push('/superadmin/dashboard');
         return;
       }
-    } else { // Regular user roles
+    } else { 
       if (!schoolIdToLogin) {
-        toast({ title: "Login Gagal", description: "Informasi sekolah tidak disediakan. Harap pilih sekolah Anda.", variant: "destructive" });
-        addLog("WARN", `Login gagal untuk ${emailOrUsername}: ID Sekolah tidak disediakan.`, "AuthContext-Login");
-        router.push('/login-by-school'); // Redirect to school selection
-        return;
+          toast({ title: "Login Gagal", description: "Informasi sekolah tidak disediakan. Harap pilih sekolah Anda.", variant: "destructive" });
+          addLog("WARN", `Login gagal untuk ${emailOrUsername}: ID Sekolah tidak disediakan.`, "AuthContext-Login");
+          router.push('/login-by-school'); 
+          return;
       }
       
       const schoolsData = localStorage.getItem(SCHOOLS_STORAGE_KEY);
@@ -174,7 +172,6 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       }
       
       foundUser = users.find(u => u.email === emailOrUsername && u.role === roleToAttempt && u.schoolId === schoolIdToLogin);
-      // Simplified password check for demo for regular users
        if (foundUser && passwordAttempt === "password") { 
         setUser(foundUser);
         setCurrentSchool({ ...school, featureSettings: school.featureSettings || { ...DEFAULT_FEATURE_SETTINGS } });
@@ -201,7 +198,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     if (userRole === "SuperAdmin") {
       router.push('/superadmin-access');
     } else {
-      router.push('/login-by-school'); // Regular users redirect to school selection
+      router.push('/login-by-school'); 
     }
   }, [user, addLog, router]);
 

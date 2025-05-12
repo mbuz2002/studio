@@ -144,7 +144,7 @@ export default function TimetablesPage() {
         }
       }
     });
-    return Math.round(totalJP * 10) / 10; // Round to 1 decimal place
+    return Math.round(totalJP * 10) / 10; 
   }, [timetableEntries, teachingPeriodSettings]);
 
   const selectedTeacherTotalJP = useMemo(() => {
@@ -157,37 +157,10 @@ export default function TimetablesPage() {
 
   const handlePrint = () => {
     addLog("INFO", `Pengguna ${user?.email} mencetak jadwal pelajaran. Filter: Kelas=${selectedClassId}, Guru=${selectedTeacherId}, Hari=${selectedDay}.`, "TimetablesPage-Print");
-    let printContent = `
-      <html>
-        <head>
-          <title>Jadwal Pelajaran</title>
-          <style>
-            body { font-family: 'Times New Roman', Times, serif; margin: 0.5in; font-size: 10pt; }
-            .kop-surat { display: flex; align-items: center; margin-bottom: 15px; border-bottom: 4px double black; padding-bottom: 10px; min-height: 70px; }
-            .logo-sekolah { max-height: 65px; max-width: 65px; margin-right: 15px; object-fit: contain; }
-            .logo-placeholder { width: 65px; height: 65px; border: 1px dashed #999; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 8pt; color: #666; margin-right: 15px;}
-            .kop-text { text-align: center; flex-grow: 1; }
-            .kop-text h1 { font-size: 14pt; margin: 0 0 2px 0; font-weight: bold; text-transform: uppercase; }
-            .kop-text p { font-size: 9pt; margin: 1px 0; }
-            h2 { text-align: center; font-size: 14pt; margin-bottom: 10px; text-transform: uppercase; }
-            .filter-info { text-align: center; font-size: 10pt; margin-bottom: 15px; }
-            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-            th, td { border: 1px solid black; padding: 5px; text-align: left; vertical-align: top; }
-            th { background-color: #f2f2f2; font-weight: bold; text-align: center;}
-            .day-header { font-size: 12pt; font-weight: bold; margin-top: 20px; margin-bottom: 8px; background-color: #e0e0e0; padding: 5px; text-align: center; }
-            .no-schedule { text-align: center; font-style: italic; color: #555; padding: 10px; }
-            .print-button-container { display: none; } /* Hide button in print */
-            @media print {
-                .print-button-container { display: none; }
-                 h1, h2, h3, h4, h5, table, ul, ol, p, div { page-break-inside: avoid; }
-            }
-          </style>
-        </head>
-        <body>
-    `;
-
+    
+    let headerHtml = '';
     if (schoolProfile) {
-        printContent += `
+        headerHtml = `
             <div class="kop-surat">
               ${schoolProfile.logoUrl ? `<img src="${schoolProfile.logoUrl}" alt="Logo Sekolah" class="logo-sekolah" data-ai-hint="school logo">` : '<div class="logo-placeholder">Logo Sekolah</div>'}
               <div class="kop-text">
@@ -202,22 +175,22 @@ export default function TimetablesPage() {
             </div>
         `;
     }
-    
-    printContent += `<h2>Jadwal Pelajaran</h2>`;
-    printContent += `<div class="filter-info">`;
-    if (selectedClassId !== "ALL") printContent += `Kelas/Rombel: ${schoolClasses.find(sc => sc.id === selectedClassId)?.name || selectedClassId}<br>`;
-    if (selectedTeacherId !== "ALL") printContent += `Guru: ${teachers.find(t => t.id === selectedTeacherId)?.name || selectedTeacherId}<br>`;
-    if (selectedDay !== "ALL") printContent += `Hari: ${selectedDay}<br>`;
-    if (searchTerm) printContent += `Pencarian: "${searchTerm}"<br>`;
-    printContent += `</div>`;
 
+    let filterInfoHtml = `<div class="filter-info">`;
+    if (selectedClassId !== "ALL") filterInfoHtml += `Kelas/Rombel: ${schoolClasses.find(sc => sc.id === selectedClassId)?.name || selectedClassId}<br>`;
+    if (selectedTeacherId !== "ALL") filterInfoHtml += `Guru: ${teachers.find(t => t.id === selectedTeacherId)?.name || selectedTeacherId}<br>`;
+    if (selectedDay !== "ALL") filterInfoHtml += `Hari: ${selectedDay}<br>`;
+    if (searchTerm) filterInfoHtml += `Pencarian: "${searchTerm}"<br>`;
+    filterInfoHtml += `</div>`;
+
+    let tableHtml = '';
     daysOfWeekOrder.forEach(day => {
         if (selectedDay !== "ALL" && day !== selectedDay) return;
 
         const entriesForDay = groupedTimetable[day];
         if (entriesForDay && entriesForDay.length > 0) {
-            printContent += `<div class="day-header">${day}</div>`;
-            printContent += `
+            tableHtml += `<div class="day-header">${day}</div>`;
+            tableHtml += `
                 <table>
                     <thead>
                         <tr>
@@ -240,7 +213,7 @@ export default function TimetablesPage() {
                         jpDisplay = (durationMinutes / teachingPeriodSettings.jpDurationMinutes).toFixed(1);
                     }
                 }
-                printContent += `
+                tableHtml += `
                     <tr>
                         <td>${entry.startTime} - ${entry.endTime}</td>
                         <td>${entry.classOrGrade}</td>
@@ -250,13 +223,46 @@ export default function TimetablesPage() {
                     </tr>
                 `;
             });
-            printContent += `</tbody></table>`;
+            tableHtml += `</tbody></table>`;
         } else if (selectedDay === "ALL" || selectedDay === day) {
-             printContent += `<div class="day-header">${day}</div><p class="no-schedule">Tidak ada jadwal untuk hari ini.</p>`;
+             tableHtml += `<div class="day-header">${day}</div><p class="no-schedule">Tidak ada jadwal untuk hari ini.</p>`;
         }
     });
 
-    printContent += `
+    const printContent = `
+      <html>
+        <head>
+          <title>Jadwal Pelajaran</title>
+          <style>
+            body { font-family: 'Times New Roman', Times, serif; margin: 0.5in; font-size: 10pt; }
+            .kop-surat { display: flex; align-items: center; margin-bottom: 15px; border-bottom: 3px solid black; padding-bottom: 8px; min-height: 70px; }
+            .kop-surat::after { content: ''; display: block; border-bottom: 1px solid black; margin-top: 3px; }
+            .logo-sekolah { max-height: 80px; max-width: 80px; margin-right: 20px; object-fit: contain; }
+            .logo-placeholder { width: 80px; height: 80px; border: 1px dashed #999; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 9pt; color: #666; margin-right: 20px;}
+            .kop-text { text-align: center; flex-grow: 1; }
+            .kop-text h1 { font-size: 18pt; margin: 0 0 3px 0; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+            .kop-text p { font-size: 10pt; margin: 2px 0; }
+            h2 { text-align: center; font-size: 14pt; margin-bottom: 10px; text-transform: uppercase; font-weight: bold;}
+            .filter-info { text-align: center; font-size: 10pt; margin-bottom: 15px; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+            th, td { border: 1px solid black; padding: 5px; text-align: left; vertical-align: top; }
+            th { background-color: #e9e9e9; font-weight: bold; text-align: center;}
+            .day-header { font-size: 12pt; font-weight: bold; margin-top: 20px; margin-bottom: 8px; background-color: #e0e0e0; padding: 5px; text-align: center; }
+            .no-schedule { text-align: center; font-style: italic; color: #555; padding: 10px; }
+            .print-button-container { display: none; }
+            @media print {
+                .print-button-container { display: none; }
+                 h1, h2, h3, h4, h5, table, ul, ol, p, div { page-break-inside: avoid; }
+                 .kop-surat { border-bottom: 3px solid black !important; } 
+                 .kop-surat::after { border-bottom: 1px solid black !important; } 
+            }
+          </style>
+        </head>
+        <body>
+          ${headerHtml}
+          <h2>Jadwal Pelajaran</h2>
+          ${filterInfoHtml}
+          ${tableHtml}
           <div class="print-button-container" style="text-align:center; margin-top:20px;">
             <button onclick="window.print()">Cetak Jadwal</button>
           </div>
@@ -493,3 +499,4 @@ export default function TimetablesPage() {
     </div>
   );
 }
+

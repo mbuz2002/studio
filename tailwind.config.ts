@@ -100,8 +100,8 @@ export default {
           from: { opacity: '0', transform: 'translateY(25px)' },
           to: { opacity: '1', transform: 'translateY(0)' },
         },
-        'pulse-slow': { // For SVG grid or other subtle background elements
-          '0%, 100%': { opacity: '0.4' }, // Adjusted opacity for SVG grid
+        'pulse-slow': { 
+          '0%, 100%': { opacity: '0.4' }, 
           '50%': { opacity: '0.7' },
         },
   		},
@@ -117,3 +117,4 @@ export default {
   },
   plugins: [require("tailwindcss-animate")],
 } satisfies Config;
+

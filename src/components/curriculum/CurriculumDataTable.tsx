@@ -6,7 +6,7 @@ import { defaultPrintOptions, defaultPrintOptionsModulAjar } from "@/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Download, Eye, FilePenLine, MoreHorizontal, Trash2, Loader2, Printer, Settings2, User as UserIcon, BookCopy, BrainCircuit } from "lucide-react";
+import { Download, Eye, FilePenLine, MoreHorizontal, Trash2, Loader2, Printer, BookCopy, BrainCircuit, User as UserIcon } from "lucide-react"; // Removed Settings2
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { id as indonesianLocale } from "date-fns/locale"; 
@@ -43,7 +43,6 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
   const [itemToPrint, setItemToPrint] = useState<AnyCurriculumItem | null>(null);
   const [currentPrintOptions, setCurrentPrintOptions] = useState<PrintOptions>(defaultPrintOptions);
   const [currentModulAjarPrintOptions, setCurrentModulAjarPrintOptions] = useState<PrintOptionsModulAjar>(defaultPrintOptionsModulAjar);
-
 
   useEffect(() => {
     setIsClient(true);
@@ -280,7 +279,7 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
         }
         if (rppOptions.showRPPMaterials && atp.materials) contentHtml += `<h3>${nextLetter()}. MEDIA/SUMBER BELAJAR</h3><div>${atp.materials.replace(/\n/g, '<br>')}</div>`;
     }
-    else if (item.type === 'RPP') { // K13 or KTSP RPP
+    else if (item.type === 'RPP') { 
         const rpp = item as LessonPlan;
         const rppOptions = options as PrintOptions;
         contentHtml += `<div class="doc-info">
@@ -454,7 +453,6 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
         }
     }
 
-    // Common Signature Section
     contentHtml += `
       <div class="signature-section">
         <div class="signature-block">
@@ -491,19 +489,8 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
               font-size: 11pt; 
               color: #333;
             }
-            .kop-surat { 
-              display: flex; 
-              align-items: center; 
-              border-bottom: 3px solid black; 
-              padding-bottom: 8px; 
-              margin-bottom: 5px; 
-            }
-            .kop-surat::after { 
-              content: '';
-              display: block;
-              border-bottom: 1px solid black;
-              margin-top: 3px; 
-            }
+            .kop-surat { display: flex; align-items: center; border-bottom: 3px solid black; padding-bottom: 8px; margin-bottom: 5px; }
+            .kop-surat::after { content: ''; display: block; border-bottom: 1px solid black; margin-top: 3px; }
             .logo-sekolah { max-height: 80px; max-width: 80px; margin-right: 20px; object-fit: contain; }
             .logo-placeholder { width: 80px; height: 80px; border: 1px dashed #999; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 9pt; color: #666; margin-right: 20px;}
             .kop-text { text-align: center; flex-grow: 1; }
@@ -512,54 +499,44 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
             .kop-text p.kop-address { font-size: 10pt; margin: 2px 0; }
             .kop-text p.kop-contact { font-size: 9pt; margin: 2px 0; }
             .kop-contact span { margin: 0 5px; }
-
             .doc-info { margin-top: 15px; margin-bottom: 10px; text-align: center; }
             .rpp-main-title, .atp-main-title, .modul-main-title { font-size: 14pt; margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
             .atp-main-title, .modul-main-title { margin-bottom: 15px; } 
             .doc-info .doc-subtitle { font-size: 12pt; margin-bottom: 15px; font-weight: bold; text-transform: uppercase; }
-            
             .info-table { width: auto; margin: 0 auto 15px auto; font-size: 11pt; border-collapse: collapse;}
             .info-table td { padding: 3px 8px; vertical-align: top;}
             .info-table td:first-child { font-weight: normal; width: 180px; text-align: left; }
             .info-table td:nth-child(2) { font-weight: normal; text-align: left; }
-
             .atp-header { text-align: center; margin-bottom: 15px; }
             .atp-info-table td { padding: 4px 8px; vertical-align: top;}
             .atp-info-table td:first-child { font-weight: bold; width: 30%; }
-            
             .content-hr { border: 0; border-top: 1.5px solid #888; margin: 20px 0; }
-            
             h3 { font-size: 12pt; margin-top: 18px; margin-bottom: 8px; font-weight: bold; text-transform: uppercase; }
             h4 { font-size: 11pt; margin-top: 12px; margin-bottom: 6px; font-weight: bold; }
             h5 { font-size: 11pt; margin-top: 8px; margin-bottom: 4px; font-weight: bold; }
-            
             ul, ol { padding-left: 25px; margin-top: 5px; margin-bottom: 12px; }
             ol.tp-list, ol.kegiatan-inti-list { list-style-type: decimal; }
             ol.kegiatan-inti-list { padding-left: 20px; }
             ol.kegiatan-inti-list > li > ul { padding-left: 20px; list-style-type: disc; }
             li { margin-bottom: 5px; text-align: justify; }
-            
             p { margin-bottom: 10px; text-align: justify; }
             div > p { margin-bottom: 0; } 
             div > ul > li, div > ol > li { margin-bottom: 3px; } 
-            
             .component-table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 15px; font-size: 10pt;}
             .component-table th, .component-table td { border: 1px solid #555; padding: 5px 8px; text-align: left; vertical-align: top; }
             .component-table th { background-color: #e9e9e9; font-weight: bold; text-align: center; }
             .component-table td:first-child { text-align: center; width: 30px; } 
-            
             .weekly-table td, .weekly-table th { font-size: 9.5pt; } 
             .signature-section { margin-top: 40px; display: flex; justify-content: space-between; page-break-inside: avoid; }
             .signature-block { width: 45%; text-align: center; }
             .signature-name { font-weight: bold; text-decoration: underline; }
             .signature-nip { font-size: 10pt; }
             .print-button-container { text-align: center; margin-top: 30px; }
-            
             @media print {
               body { margin: 0.75in; font-size: 11pt; } 
               .print-button-container { display: none; }
-              .kop-surat { border-bottom: 3px solid black !important; } /* Ensure this is applied */
-              .kop-surat::after { border-bottom: 1px solid black !important; } /* Ensure this is applied */
+              .kop-surat { border-bottom: 3px solid black !important; } 
+              .kop-surat::after { border-bottom: 1px solid black !important; } 
               h1, h2, h3, h4, h5, table, ul, ol, p, div { page-break-inside: avoid; }
               h3, h4, h5 { page-break-after: avoid; }
             }
@@ -629,19 +606,17 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
         documentContent = result.documentContent;
         addLog("INFO", `Konten teks berhasil dibuat oleh Genkit untuk ${docTypeDisplay} "${item.title}".`, logSource);
       } else if (item.type === 'ModulAjar' && itemTypeForExport === 'ModulAjar') {
-        // Manual export for ModulAjar if needed, or use a specific flow
         const ma = item as ModulAjar;
         let maText = `**MODUL AJAR**\n\n`;
         maText += `**Judul Modul:** ${ma.judulModul}\n\n`;
         maText += `**A. INFORMASI UMUM**\n`;
         maText += `   Nama Penyusun: ${ma.identitasModul.namaPenyusun}\n`;
         maText += `   Institusi: ${ma.identitasModul.institusi}\n`;
-        // ... (add all fields from ModulAjar) ...
+        // Simplified for brevity, expand as needed
         maText += `\n\n*Dokumen ini terakhir diperbarui pada: ${isClient ? format(new Date(ma.updatedAt), "PPpp", { locale: indonesianLocale }) : ma.updatedAt}*`;
         documentContent = maText;
         addLog("INFO", `Konten teks berhasil dibuat secara manual untuk Modul Ajar "${item.title}".`, logSource);
       }
-      // ... (PROTA and Promes export logic remains the same)
       else if (item.type === 'PROTA' && itemTypeForExport === 'PROTA') {
         const prota = item as AnnualProgram;
         let protaText = `**PROGRAM TAHUNAN (PROTA)**\n\n`;
@@ -863,7 +838,7 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
                       <DropdownMenuItem onClick={() => handlePreparePrint(item)} disabled={!isClient} className="text-sm">
                         <Printer className="mr-2 h-4 w-4" /> Cetak / PDF
                       </DropdownMenuItem>
-                      {(item.type === 'RPP' || item.type === 'PROTA' || item.type === 'Promes' || item.type === 'ModulAjar') && ( // Only allow export for supported types
+                      {(item.type === 'RPP' || item.type === 'PROTA' || item.type === 'Promes' || item.type === 'ModulAjar') && ( 
                         <DropdownMenuItem onClick={() => handleExportToText(item)} disabled={isExporting[item.id] || !isClient} className="text-sm">
                             {isExporting[item.id] ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />} 
                             Ekspor ke Teks
@@ -905,6 +880,4 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
     </>
   );
 });
-
-
 

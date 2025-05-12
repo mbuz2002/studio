@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -23,7 +24,7 @@ interface GlobalAnalyticsData {
   totalSemesterPrograms: number;
   totalModulAjar: number;
   mostActiveSchool?: { name: string; activityScore: number };
-  featureUsageRate?: { feature: string; usage: number }[]; // e.g., { feature: "AI Tools", usage: 75 for 75% }
+  featureUsageRate?: { feature: string; usage: number }[];
 }
 
 export default function SuperAdminAnalyticsPage() {
@@ -44,43 +45,47 @@ export default function SuperAdminAnalyticsPage() {
         router.push("/dashboard");
       } else {
         addLog("INFO", `SuperAdmin ${user.email} mengakses halaman Analitik & Laporan Global.`, "SuperAdminAnalyticsPage");
-        // Simulate fetching global analytics data
+        
         const fetchGlobalData = () => {
-          const schools: School[] = JSON.parse(localStorage.getItem(SCHOOLS_STORAGE_KEY) || "[]");
-          const users: User[] = JSON.parse(localStorage.getItem(APP_USERS_STORAGE_KEY) || "[]");
-          const lessonPlans: AnyCurriculumItem[] = JSON.parse(localStorage.getItem(LESSON_PLANS_STORAGE_KEY) || "[]");
-          const annualPrograms: AnyCurriculumItem[] = JSON.parse(localStorage.getItem(ANNUAL_PROGRAMS_STORAGE_KEY) || "[]");
-          const semesterPrograms: AnyCurriculumItem[] = JSON.parse(localStorage.getItem(SEMESTER_PROGRAMS_STORAGE_KEY) || "[]");
-          const modulAjar: AnyCurriculumItem[] = JSON.parse(localStorage.getItem(MODUL_AJAR_STORAGE_KEY) || "[]");
+          try {
+            const schools: School[] = JSON.parse(localStorage.getItem(SCHOOLS_STORAGE_KEY) || "[]");
+            const users: User[] = JSON.parse(localStorage.getItem(APP_USERS_STORAGE_KEY) || "[]");
+            const lessonPlans: AnyCurriculumItem[] = JSON.parse(localStorage.getItem(LESSON_PLANS_STORAGE_KEY) || "[]");
+            const annualPrograms: AnyCurriculumItem[] = JSON.parse(localStorage.getItem(ANNUAL_PROGRAMS_STORAGE_KEY) || "[]");
+            const semesterPrograms: AnyCurriculumItem[] = JSON.parse(localStorage.getItem(SEMESTER_PROGRAMS_STORAGE_KEY) || "[]");
+            const modulAjar: AnyCurriculumItem[] = JSON.parse(localStorage.getItem(MODUL_AJAR_STORAGE_KEY) || "[]");
 
-          const usersByRole = users.reduce((acc, u) => {
-            const roleIndex = acc.findIndex(item => item.role === u.role);
-            if (roleIndex > -1) {
-              acc[roleIndex].count++;
-            } else {
-              acc.push({ role: u.role, count: 1 });
-            }
-            return acc;
-          }, [] as { role: User['role']; count: number }[]);
+            const usersByRole = users.reduce((acc, u) => {
+              const roleIndex = acc.findIndex(item => item.role === u.role);
+              if (roleIndex > -1) {
+                acc[roleIndex].count++;
+              } else {
+                acc.push({ role: u.role, count: 1 });
+              }
+              return acc;
+            }, [] as { role: User['role']; count: number }[]);
 
-          setAnalyticsData({
-            totalSchools: schools.length,
-            activeSchools: schools.filter(s => s.subscriptionStatus === 'active').length,
-            trialSchools: schools.filter(s => s.subscriptionStatus === 'trial').length,
-            inactiveSchools: schools.filter(s => s.subscriptionStatus === 'inactive').length,
-            totalUsers: users.length,
-            usersByRole,
-            totalLessonPlans: lessonPlans.length,
-            totalAnnualPrograms: annualPrograms.length,
-            totalSemesterPrograms: semesterPrograms.length,
-            totalModulAjar: modulAjar.length,
-            // Mock data for more complex analytics
-            mostActiveSchool: schools.length > 0 ? { name: schools[0].name, activityScore: Math.floor(Math.random() * 1000) } : undefined,
-            featureUsageRate: [
-              { feature: "Alat AI", usage: Math.floor(Math.random() * 100) },
-              { feature: "Kalender", usage: Math.floor(Math.random() * 100) },
-            ]
-          });
+            setAnalyticsData({
+              totalSchools: schools.length,
+              activeSchools: schools.filter(s => s.subscriptionStatus === 'active').length,
+              trialSchools: schools.filter(s => s.subscriptionStatus === 'trial').length,
+              inactiveSchools: schools.filter(s => s.subscriptionStatus === 'inactive').length,
+              totalUsers: users.length,
+              usersByRole,
+              totalLessonPlans: lessonPlans.length,
+              totalAnnualPrograms: annualPrograms.length,
+              totalSemesterPrograms: semesterPrograms.length,
+              totalModulAjar: modulAjar.length,
+              mostActiveSchool: schools.length > 0 ? { name: schools[0].name, activityScore: Math.floor(Math.random() * 1000) } : undefined,
+              featureUsageRate: [
+                { feature: "Alat AI", usage: Math.floor(Math.random() * 100) },
+                { feature: "Kalender", usage: Math.floor(Math.random() * 100) },
+              ]
+            });
+          } catch (error) {
+            console.error("Error fetching global analytics data:", error);
+            addLog("ERROR", `Gagal memuat data analitik global: ${error}`, "SuperAdminAnalyticsPage");
+          }
         };
         fetchGlobalData();
       }
@@ -96,11 +101,11 @@ export default function SuperAdminAnalyticsPage() {
       return <p className="text-sm text-muted-foreground">Tidak ada data pengguna.</p>;
     }
     return (
-      <ul className="space-y-1 text-sm">
+      <ul className="space-y-1.5 text-sm">
         {analyticsData.usersByRole.map(roleInfo => (
-          <li key={roleInfo.role} className="flex justify-between">
-            <span>{roleInfo.role}:</span>
-            <span className="font-semibold">{roleInfo.count}</span>
+          <li key={roleInfo.role} className="flex justify-between items-center py-1 border-b border-border/50 last:border-b-0">
+            <span className="text-foreground/90">{roleInfo.role}:</span>
+            <Badge variant="secondary" className="font-semibold">{roleInfo.count}</Badge>
           </li>
         ))}
       </ul>
@@ -130,95 +135,95 @@ export default function SuperAdminAnalyticsPage() {
             </AlertDescription>
           </Alert>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-            <Card className="bg-muted/30 shadow-sm rounded-lg">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg text-foreground/90 flex items-center gap-2"><Building size={20} />Total Sekolah</CardTitle>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <Card className="bg-card shadow-lg rounded-lg border-border/50 hover:shadow-xl transition-shadow">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg text-foreground flex items-center gap-2"><Building size={20} className="text-primary"/>Total Sekolah Terdaftar</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-4xl font-bold text-primary">{analyticsData?.totalSchools ?? '--'}</p>
+                <p className="text-5xl font-bold text-primary drop-shadow-sm">{analyticsData?.totalSchools ?? '--'}</p>
               </CardContent>
             </Card>
-            <Card className="bg-muted/30 shadow-sm rounded-lg">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg text-foreground/90 flex items-center gap-2"><Users size={20} />Total Pengguna</CardTitle>
+            <Card className="bg-card shadow-lg rounded-lg border-border/50 hover:shadow-xl transition-shadow">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg text-foreground flex items-center gap-2"><Users size={20} className="text-primary"/>Total Pengguna Aktif</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-4xl font-bold text-primary">{analyticsData?.totalUsers ?? '--'}</p>
+                <p className="text-5xl font-bold text-primary drop-shadow-sm">{analyticsData?.totalUsers ?? '--'}</p>
               </CardContent>
             </Card>
-            <Card className="bg-muted/30 shadow-sm rounded-lg">
-              <CardHeader className="pb-2">
-                 <CardTitle className="text-lg text-foreground/90 flex items-center gap-2"><FileText size={20}/>Total Dokumen Kurikulum</CardTitle>
+            <Card className="bg-card shadow-lg rounded-lg border-border/50 hover:shadow-xl transition-shadow">
+              <CardHeader className="pb-3">
+                 <CardTitle className="text-lg text-foreground flex items-center gap-2"><FileText size={20} className="text-primary"/>Total Dokumen Kurikulum</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-4xl font-bold text-primary">
+                <p className="text-5xl font-bold text-primary drop-shadow-sm">
                   {(analyticsData?.totalLessonPlans ?? 0) +
                    (analyticsData?.totalAnnualPrograms ?? 0) +
                    (analyticsData?.totalSemesterPrograms ?? 0) +
                    (analyticsData?.totalModulAjar ?? 0)
                   }
                 </p>
-                <p className="text-xs text-muted-foreground">RPP/ATP, PROTA, Promes, Modul Ajar</p>
+                <p className="text-xs text-muted-foreground mt-1">RPP/ATP, PROTA, Promes, Modul Ajar</p>
               </CardContent>
             </Card>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="shadow-md rounded-lg">
+            <Card className="shadow-md rounded-lg border-border/50">
               <CardHeader>
-                <CardTitle className="text-xl flex items-center gap-2"><TrendingUp size={22}/>Status Langganan Sekolah</CardTitle>
+                <CardTitle className="text-xl flex items-center gap-2"><TrendingUp size={22} className="text-accent"/>Status Langganan Sekolah</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="flex items-center justify-between p-2 rounded-md bg-green-500/10">
+                <div className="flex items-center justify-between p-3 rounded-md bg-green-500/10 border border-green-500/30">
                   <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
                     <CheckCircle size={18} />
                     <span className="font-medium text-sm">Aktif</span>
                   </div>
-                  <span className="font-bold text-lg text-green-600 dark:text-green-500">{analyticsData?.activeSchools ?? '--'}</span>
+                  <span className="font-bold text-xl text-green-600 dark:text-green-500">{analyticsData?.activeSchools ?? '--'}</span>
                 </div>
-                <div className="flex items-center justify-between p-2 rounded-md bg-blue-500/10">
+                <div className="flex items-center justify-between p-3 rounded-md bg-blue-500/10 border border-blue-500/30">
                   <div className="flex items-center gap-2 text-blue-700 dark:text-blue-400">
                     <Hourglass size={18} />
                     <span className="font-medium text-sm">Uji Coba (Trial)</span>
                   </div>
-                  <span className="font-bold text-lg text-blue-600 dark:text-blue-500">{analyticsData?.trialSchools ?? '--'}</span>
+                  <span className="font-bold text-xl text-blue-600 dark:text-blue-500">{analyticsData?.trialSchools ?? '--'}</span>
                 </div>
-                <div className="flex items-center justify-between p-2 rounded-md bg-red-500/10">
+                <div className="flex items-center justify-between p-3 rounded-md bg-red-500/10 border border-red-500/30">
                   <div className="flex items-center gap-2 text-red-700 dark:text-red-400">
                     <XCircle size={18} />
                     <span className="font-medium text-sm">Tidak Aktif</span>
                   </div>
-                  <span className="font-bold text-lg text-red-600 dark:text-red-500">{analyticsData?.inactiveSchools ?? '--'}</span>
+                  <span className="font-bold text-xl text-red-600 dark:text-red-500">{analyticsData?.inactiveSchools ?? '--'}</span>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="shadow-md rounded-lg">
+            <Card className="shadow-md rounded-lg border-border/50">
               <CardHeader>
-                <CardTitle className="text-xl flex items-center gap-2"><Users size={22}/>Distribusi Pengguna per Peran</CardTitle>
+                <CardTitle className="text-xl flex items-center gap-2"><Users size={22} className="text-accent"/>Distribusi Pengguna per Peran</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-1">
                 {renderUsersByRole()}
               </CardContent>
             </Card>
           </div>
           
-           <Card className="shadow-md rounded-lg mt-6">
+           <Card className="shadow-md rounded-lg mt-6 border-border/50">
               <CardHeader>
-                <CardTitle className="text-xl flex items-center gap-2"><ActivityIcon size={22}/>Aktivitas & Penggunaan Fitur (Contoh)</CardTitle>
+                <CardTitle className="text-xl flex items-center gap-2"><ActivityIcon size={22} className="text-accent"/>Aktivitas & Penggunaan Fitur (Contoh)</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2 text-sm">
+              <CardContent className="space-y-2.5 text-sm">
                  {analyticsData?.mostActiveSchool && (
-                    <p>Sekolah Teraktif (Demo): <span className="font-semibold">{analyticsData.mostActiveSchool.name}</span> (Skor: {analyticsData.mostActiveSchool.activityScore})</p>
+                    <p className="py-1">Sekolah Teraktif (Demo): <Badge variant="outline" className="font-semibold text-base">{analyticsData.mostActiveSchool.name}</Badge> (Skor Aktivitas: {analyticsData.mostActiveSchool.activityScore})</p>
                  )}
                  {analyticsData?.featureUsageRate?.map(feature => (
-                    <p key={feature.feature}>Penggunaan {feature.feature}: <span className="font-semibold">{feature.usage}%</span> (Demo)</p>
+                    <p key={feature.feature} className="py-1">Penggunaan Fitur {feature.feature}: <Badge className="font-semibold text-base">{feature.usage}%</Badge> (Demo)</p>
                  ))}
-                 <p className="text-xs text-muted-foreground italic">Metrik penggunaan fitur lebih detail akan tersedia di masa mendatang.</p>
+                 <p className="text-xs text-muted-foreground italic pt-2">Metrik penggunaan fitur lebih detail akan tersedia di masa mendatang dan akan divisualisasikan dengan grafik.</p>
               </CardContent>
-               <CardFooter>
-                   <p className="text-xs text-muted-foreground">Data ini bersifat ilustratif untuk menunjukkan potensi laporan.</p>
+               <CardFooter className="text-xs text-muted-foreground">
+                   Data ini bersifat ilustratif untuk menunjukkan potensi laporan.
                </CardFooter>
             </Card>
 
@@ -227,3 +232,4 @@ export default function SuperAdminAnalyticsPage() {
     </div>
   );
 }
+

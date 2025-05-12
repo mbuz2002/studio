@@ -88,23 +88,28 @@ export default function AdminSubscriptionStatusPage() {
     }
   };
 
-
   const getSubscriptionPeriodText = (school: School | null): string => {
     if (!school || !school.subscriptionStartDate || !school.subscriptionEndDate) {
       return "Periode tidak diatur";
     }
-    const start = format(parseISO(school.subscriptionStartDate), "dd MMMM yyyy", { locale: indonesianLocale });
-    const end = format(parseISO(school.subscriptionEndDate), "dd MMMM yyyy", { locale: indonesianLocale });
-    const daysRemaining = differenceInDays(parseISO(school.subscriptionEndDate), new Date());
-    let statusText = "";
-    if (isAfter(new Date(), parseISO(school.subscriptionEndDate))) {
-      statusText = `(Berakhir ${Math.abs(daysRemaining)} hari lalu)`;
-    } else if (daysRemaining <= 30 && daysRemaining >= 0) { 
-      statusText = `(Berakhir dalam ${daysRemaining} hari)`;
-    } else if (daysRemaining < 0){
-       statusText = `(Telah Berakhir)`;
+    try {
+      const start = format(parseISO(school.subscriptionStartDate), "dd MMMM yyyy", { locale: indonesianLocale });
+      const end = format(parseISO(school.subscriptionEndDate), "dd MMMM yyyy", { locale: indonesianLocale });
+      const daysRemaining = differenceInDays(parseISO(school.subscriptionEndDate), new Date());
+      let statusText = "";
+      if (isAfter(new Date(), parseISO(school.subscriptionEndDate))) {
+        statusText = `(Berakhir ${Math.abs(daysRemaining)} hari lalu)`;
+      } else if (daysRemaining <= 30 && daysRemaining >= 0) { 
+        statusText = `(Berakhir dalam ${daysRemaining} hari)`;
+      } else if (daysRemaining < 0){
+         statusText = `(Telah Berakhir)`;
+      }
+      return `${start} - ${end} ${statusText}`;
+    } catch (error) {
+      console.error("Error formatting subscription dates:", error);
+      addLog("ERROR", `Error memformat tanggal langganan untuk sekolah ${school.name}: ${error}`, "AdminSubscriptionStatusPage");
+      return "Format tanggal tidak valid";
     }
-    return `${start} - ${end} ${statusText}`;
   };
 
   const featureDisplayList: FeatureDisplayItem[] = schoolData?.featureSettings ? [
@@ -198,7 +203,12 @@ export default function AdminSubscriptionStatusPage() {
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
                 <div><strong>Nama Sekolah:</strong> {schoolData.name}</div>
-                <div className="flex items-center gap-1.5"><strong>Status Langganan:</strong> <Badge variant={getSubscriptionBadgeVariant(schoolData.subscriptionStatus)} className="capitalize">{schoolData.subscriptionStatus || "Tidak Diketahui"}</Badge></div>
+                <div className="flex items-center gap-1.5">
+                  <strong>Status Langganan:</strong> 
+                  <Badge variant={getSubscriptionBadgeVariant(schoolData.subscriptionStatus)} className="capitalize">
+                    {schoolData.subscriptionStatus || "Tidak Diketahui"}
+                  </Badge>
+                </div>
                 <div className="flex items-center gap-1.5">
                     <CalendarDays size={16} className="text-muted-foreground"/>
                     <strong>Periode Aktif:</strong> {getSubscriptionPeriodText(schoolData)}
@@ -219,6 +229,7 @@ export default function AdminSubscriptionStatusPage() {
                   featureDisplayList.map(feature => (
                     <div key={feature.key} className={`flex items-center gap-2 p-2 rounded-md ${feature.enabled ? 'bg-green-500/10 text-green-700 dark:text-green-400' : 'bg-red-500/10 text-red-700 dark:text-red-400 line-through'}`}>
                       {feature.enabled ? <CheckCircle2 size={18} /> : <XCircle size={18} />}
+                      <feature.icon className={`mr-1 h-4 w-4 ${feature.enabled ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'}`}/>
                       <span className="font-medium text-sm">{feature.label}</span>
                     </div>
                   ))
@@ -267,4 +278,3 @@ export default function AdminSubscriptionStatusPage() {
     </div>
   );
 }
-

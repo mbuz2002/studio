@@ -18,7 +18,7 @@ export default function LoadingSpinner({
   iconClassName, 
   textClassName,
 }: LoadingSpinnerProps) {
-  const defaultIconClasses = "h-16 w-16 animate-pulse text-primary mb-6"; // Increased size and margin
+  const defaultIconClasses = "h-16 w-16 animate-pulse text-primary mb-6"; 
   
   const displayIcon = icon 
     ? React.cloneElement(icon, { 

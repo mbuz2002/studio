@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
@@ -37,7 +38,6 @@ const getEventTypeColor = (type: AcademicEventType): string => {
   return eventTypes.find(et => et.value === type)?.color || "bg-gray-500";
 };
 
-// Example of initial national holidays for the current year (adjust as needed for demo)
 const currentYear = new Date().getFullYear();
 const initialAcademicEvents: AcademicEvent[] = [
   {
@@ -65,7 +65,7 @@ const initialAcademicEvents: AcademicEvent[] = [
   {
     id: "holiday-3",
     title: "Tahun Baru Masehi",
-    date: `${currentYear}-01-01`, // Could be next year's if current is late Dec
+    date: `${currentYear}-01-01`, 
     type: "Libur Nasional",
     isNationalHoliday: true,
     description: "Pergantian Tahun Baru Masehi.",
@@ -85,107 +85,37 @@ const generatePrintableCalendarTableHtml = (
   const monthIndex = month.getMonth();
   const monthName = format(month, "MMMM yyyy", { locale: indonesianLocale });
 
-  let html = `<html><head><title>Kalender Pendidikan - ${monthName}</title><style>
-    body { font-family: 'Times New Roman', Times, serif; margin: 0.5in; font-size: 10pt; }
-    .kop-surat { 
-      display: flex; 
-      align-items: center; 
-      border-bottom: 3px solid black; /* Thicker single line */
-      padding-bottom: 8px; 
-      margin-bottom: 5px; /* Reduced margin */
-    }
-    .kop-surat::after { /* Second line for double border effect */
-      content: '';
-      display: block;
-      border-bottom: 1px solid black;
-      margin-top: 3px; /* Space between the two lines */
-    }
-    .logo-sekolah { 
-      max-height: 80px; /* Increased size */
-      max-width: 80px; /* Increased size */
-      margin-right: 20px; /* Increased margin */
-      object-fit: contain; 
-    }
-    .logo-placeholder { 
-      width: 80px; height: 80px; 
-      border: 1px dashed #999; 
-      display: flex; align-items: center; justify-content: center; 
-      text-align: center; font-size: 9pt; color: #666; margin-right: 20px;
-    }
-    .kop-text { text-align: center; flex-grow: 1; }
-    .kop-text h1 { /* School Name */
-      font-size: 18pt; /* Increased font size */
-      margin: 0 0 3px 0; 
-      font-weight: bold; 
-      text-transform: uppercase; 
-      letter-spacing: 0.5px;
-    }
-    .kop-text .school-level { /* Jenjang Pendidikan */
-      font-size: 11pt;
-      margin: 0 0 5px 0;
-      font-weight: normal;
-      text-transform: uppercase;
-    }
-    .kop-text p.address { /* Address */
-      font-size: 10pt; 
-      margin: 2px 0; 
-    }
-    .kop-text p.contact-info { /* NPSN, Telp, Email */
-      font-size: 9pt;
-      margin: 2px 0;
-    }
-    .contact-info span { margin: 0 5px; } /* Spacing for contact items */
-
-    h2 { text-align: center; font-size: 14pt; margin-bottom: 15px; text-transform: uppercase; font-weight: bold;}
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; table-layout: fixed; }
-    th, td { border: 1px solid black; padding: 4px; text-align: left; vertical-align: top; height: 70px; word-wrap: break-word; }
-    th { background-color: #e9e9e9; text-align: center; font-weight: bold; } /* Light gray background for th */
-    td div.day-number { font-weight: bold; margin-bottom: 3px; font-size: 9pt; }
-    td ul { margin: 0; padding-left: 12px; font-size: 8pt; list-style-type: none; }
-    td li { margin-bottom: 1px; white-space: normal; }
-    .event-holiday { color: red; font-weight: bold; }
-    .event-semester-holiday { color: darkorange; }
-    .event-active-semester-text { font-style: italic; color: #228B22; } /* ForestGreen */
-    td.event-active-semester-bg { background-color: #e8f5e9; } /* Light green background for cell */
-    .weekend { background-color: #f5f5f5; } /* Lighter weekend color */
-    .other-month { background-color: #fafafa; color: #ccc; } /* Lighter other month color */
-    .signature-section { margin-top: 30px; display: flex; justify-content: space-between; page-break-inside: avoid; }
-    .signature-block { width: 45%; text-align: center; }
-    .signature-name { font-weight: bold; text-decoration: underline; }
-    @media print { .print-button-container { display: none; } h1, h2, h3, h4, h5, table, ul, ol, p, div { page-break-inside: avoid; } }
-  </style></head><body>`;
-
+  let headerHtml = '';
   if (schoolProfile) {
-    html += `<div class="kop-surat">
-      ${schoolProfile.logoUrl ? `<img src="${schoolProfile.logoUrl}" alt="Logo Sekolah" class="logo-sekolah" data-ai-hint="school logo">` : '<div class="logo-placeholder">Logo Sekolah</div>'}
-      <div class="kop-text">
-        <h1>${schoolProfile.namaSekolah || 'Nama Sekolah Belum Diatur'}</h1>
-        ${schoolProfile.jenjangPendidikan ? `<p class="school-level">${schoolProfile.jenjangPendidikan}</p>` : ''}
-        <p class="address">${schoolProfile.alamat || 'Alamat Sekolah Belum Diatur'}</p>
-        <p class="contact-info">
-          ${schoolProfile.npsn ? `<span>NPSN: ${schoolProfile.npsn}</span>` : ''}
-          ${schoolProfile.nomorTelepon ? `<span>${schoolProfile.npsn ? ' | ' : ''}Telp: ${schoolProfile.nomorTelepon}</span>` : ''}
-          ${schoolProfile.emailSekolah ? `<span>${(schoolProfile.npsn || schoolProfile.nomorTelepon) ? ' | ' : ''}Email: ${schoolProfile.emailSekolah}</span>` : ''}
-        </p>
+    headerHtml = `
+      <div class="kop-surat">
+        ${schoolProfile.logoUrl ? `<img src="${schoolProfile.logoUrl}" alt="Logo Sekolah" class="logo-sekolah" data-ai-hint="school logo">` : '<div class="logo-placeholder">Logo Sekolah</div>'}
+        <div class="kop-text">
+          <h1>${schoolProfile.namaSekolah || 'Nama Sekolah Belum Diatur'}</h1>
+          ${schoolProfile.jenjangPendidikan ? `<p class="school-level">${schoolProfile.jenjangPendidikan}</p>` : ''}
+          <p class="address">${schoolProfile.alamat || 'Alamat Sekolah Belum Diatur'}</p>
+          <p class="contact-info">
+            ${schoolProfile.npsn ? `<span>NPSN: ${schoolProfile.npsn}</span>` : ''}
+            ${schoolProfile.nomorTelepon ? `<span>${schoolProfile.npsn ? ' | ' : ''}Telp: ${schoolProfile.nomorTelepon}</span>` : ''}
+            ${schoolProfile.emailSekolah ? `<span>${(schoolProfile.npsn || schoolProfile.nomorTelepon) ? ' | ' : ''}Email: ${schoolProfile.emailSekolah}</span>` : ''}
+          </p>
+        </div>
       </div>
-    </div>`;
+    `;
   }
 
-  html += `<h2>Kalender Pendidikan - ${monthName}</h2>`;
-  html += `<table><thead><tr><th>Sen</th><th>Sel</th><th>Rab</th><th>Kam</th><th>Jum</th><th>Sab</th><th>Min</th></tr></thead><tbody>`;
-
+  let tableBodyHtml = '';
   const firstOfMonth = startOfMonth(month);
   const daysInCurrentMonth = getDaysInMonth(month);
-  
   let dayOfWeekOfFirst = getDay(firstOfMonth); 
   let startingOffset = (dayOfWeekOfFirst === 0) ? 6 : dayOfWeekOfFirst - 1; 
 
   let dayCounter = 1;
   for (let i = 0; i < 6; i++) { 
-    html += `<tr>`;
+    tableBodyHtml += `<tr>`;
     for (let j = 0; j < 7; j++) { 
       if ((i === 0 && j < startingOffset) || dayCounter > daysInCurrentMonth) {
-        html += `<td class="other-month"></td>`;
+        tableBodyHtml += `<td class="other-month"></td>`;
       } else {
         const currentDate = new Date(year, monthIndex, dayCounter);
         const formattedCurrentDate = format(currentDate, "yyyy-MM-dd");
@@ -207,7 +137,6 @@ const generatePrintableCalendarTableHtml = (
           if (event.type === "Libur Nasional") eventClass = 'event-holiday';
           else if (event.type === "Libur Semester") eventClass = 'event-semester-holiday';
           else if (event.type === "Periode Semester Aktif") eventClass = 'event-active-semester-text';
-          
           eventHtml += `<li class="${eventClass}">${event.title}</li>`;
         });
         eventHtml += '</ul>';
@@ -216,36 +145,82 @@ const generatePrintableCalendarTableHtml = (
             cellClass += ' event-active-semester-bg';
         }
 
-        html += `<td class="${cellClass.trim()}">
-                    <div class="day-number">${dayCounter}</div>
-                    ${eventHtml}
-                  </td>`;
+        tableBodyHtml += `<td class="${cellClass.trim()}">
+                            <div class="day-number">${dayCounter}</div>
+                            ${eventHtml}
+                          </td>`;
         dayCounter++;
       }
     }
-    html += `</tr>`;
+    tableBodyHtml += `</tr>`;
     if (dayCounter > daysInCurrentMonth) break;
   }
-  html += `</tbody></table>`;
 
-  html += `<div class="signature-section">
-    <div class="signature-block">
-      <p>Mengetahui,</p>
-      <p>Kepala Sekolah</p>
-      <br><br><br>
-      <p class="signature-name">${(schoolProfile?.namaKepalaSekolah || '(.........................................)')}</p>
-      ${schoolProfile?.npsn ? `<p class="signature-nip">NIP/NPSN: ${schoolProfile.npsn}</p>` : ''}
+  const signatureHtml = `
+    <div class="signature-section">
+      <div class="signature-block">
+        <p>Mengetahui,</p>
+        <p>Kepala Sekolah</p>
+        <br><br><br>
+        <p class="signature-name">${(schoolProfile?.namaKepalaSekolah || '(.........................................)')}</p>
+        ${schoolProfile?.npsn ? `<p class="signature-nip">NIP/NPSN: ${schoolProfile.npsn}</p>` : ''}
+      </div>
+      <div class="signature-block">
+        <p>${schoolProfile?.kotaSekolah || "Kota"}, ${format(new Date(), "dd MMMM yyyy", { locale: indonesianLocale })}</p>
+        <p>${userName || 'Pembuat Laporan'}</p>
+        <br><br><br>
+        <p class="signature-name">${userName || '(.........................................)'}</p>
+      </div>
     </div>
-    <div class="signature-block">
-      <p>${schoolProfile?.kotaSekolah || "Kota"}, ${format(new Date(), "dd MMMM yyyy", { locale: indonesianLocale })}</p>
-      <p>${userName || 'Pembuat Laporan'}</p>
-      <br><br><br>
-      <p class="signature-name">${userName || '(.........................................)'}</p>
-    </div>
-  </div>`;
+  `;
 
-  html += `<div class="print-button-container"><button onclick="window.print()">Cetak</button></div></body></html>`;
-  return html;
+  return `
+    <html>
+      <head>
+        <title>Kalender Pendidikan - ${monthName}</title>
+        <style>
+          body { font-family: 'Times New Roman', Times, serif; margin: 0.5in; font-size: 10pt; }
+          .kop-surat { display: flex; align-items: center; border-bottom: 3px solid black; padding-bottom: 8px; margin-bottom: 5px; }
+          .kop-surat::after { content: ''; display: block; border-bottom: 1px solid black; margin-top: 3px; }
+          .logo-sekolah { max-height: 80px; max-width: 80px; margin-right: 20px; object-fit: contain; }
+          .logo-placeholder { width: 80px; height: 80px; border: 1px dashed #999; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 9pt; color: #666; margin-right: 20px;}
+          .kop-text { text-align: center; flex-grow: 1; }
+          .kop-text h1 { font-size: 18pt; margin: 0 0 3px 0; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+          .kop-text .school-level { font-size: 11pt; margin: 0 0 5px 0; font-weight: normal; text-transform: uppercase; }
+          .kop-text p.address { font-size: 10pt; margin: 2px 0; }
+          .kop-text p.contact-info { font-size: 9pt; margin: 2px 0; }
+          .contact-info span { margin: 0 5px; }
+          h2 { text-align: center; font-size: 14pt; margin-bottom: 15px; text-transform: uppercase; font-weight: bold;}
+          table { width: 100%; border-collapse: collapse; margin-top: 15px; table-layout: fixed; }
+          th, td { border: 1px solid black; padding: 4px; text-align: left; vertical-align: top; height: 70px; word-wrap: break-word; }
+          th { background-color: #e9e9e9; text-align: center; font-weight: bold; }
+          td div.day-number { font-weight: bold; margin-bottom: 3px; font-size: 9pt; }
+          td ul { margin: 0; padding-left: 12px; font-size: 8pt; list-style-type: none; }
+          td li { margin-bottom: 1px; white-space: normal; }
+          .event-holiday { color: red; font-weight: bold; }
+          .event-semester-holiday { color: darkorange; }
+          .event-active-semester-text { font-style: italic; color: #228B22; }
+          td.event-active-semester-bg { background-color: #e8f5e9; }
+          .weekend { background-color: #f5f5f5; }
+          .other-month { background-color: #fafafa; color: #ccc; }
+          .signature-section { margin-top: 30px; display: flex; justify-content: space-between; page-break-inside: avoid; }
+          .signature-block { width: 45%; text-align: center; }
+          .signature-name { font-weight: bold; text-decoration: underline; }
+          @media print { .print-button-container { display: none; } h1, h2, h3, h4, h5, table, ul, ol, p, div { page-break-inside: avoid; } }
+        </style>
+      </head>
+      <body>
+        ${headerHtml}
+        <h2>Kalender Pendidikan - ${monthName}</h2>
+        <table>
+          <thead><tr><th>Sen</th><th>Sel</th><th>Rab</th><th>Kam</th><th>Jum</th><th>Sab</th><th>Min</th></tr></thead>
+          <tbody>${tableBodyHtml}</tbody>
+        </table>
+        ${signatureHtml}
+        <div class="print-button-container"><button onclick="window.print()">Cetak</button></div>
+      </body>
+    </html>
+  `;
 };
 
 
@@ -256,7 +231,7 @@ export default function AcademicCalendarPage() {
 
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [events, setEvents] = useState<AcademicEvent[]>([]); // Initialized as empty, will load from localStorage or use defaults
+  const [events, setEvents] = useState<AcademicEvent[]>([]);
   const [isClient, setIsClient] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<AcademicEvent | null>(null);
@@ -284,16 +259,13 @@ export default function AcademicCalendarPage() {
         }));
       } catch (error) {
         console.error("Gagal memuat acara dari localStorage:", error);
-        // If parsing fails, consider falling back to initialAcademicEvents or an empty array
-        loadedEvents = [...initialAcademicEvents]; // Merge with predefined, could lead to duplicates if not handled
+        loadedEvents = [...initialAcademicEvents]; 
       }
     } else {
-       // If nothing in localStorage, use the predefined initial events
        loadedEvents = [...initialAcademicEvents];
        localStorage.setItem(ACADEMIC_EVENTS_STORAGE_KEY, JSON.stringify(loadedEvents));
     }
     
-    // Simple merge: add predefined if not already present by ID (or a more complex merge logic)
     const finalEvents = [...loadedEvents];
     initialAcademicEvents.forEach(initialEvent => {
         if (!finalEvents.some(e => e.id === initialEvent.id && e.createdByUserId === "system-generated")) {
@@ -301,7 +273,6 @@ export default function AcademicCalendarPage() {
         }
     });
     setEvents(finalEvents);
-
 
     const storedProfile = localStorage.getItem(SCHOOL_PROFILE_STORAGE_KEY);
     if (storedProfile) {
@@ -435,8 +406,8 @@ export default function AcademicCalendarPage() {
       fontWeight: 'bold',
     },
     semesterHoliday: {
-      backgroundColor: 'hsla(30, 90%, 60%, 1)', // A distinct orange color
-      color: 'hsl(var(--primary-foreground))', // White text
+      backgroundColor: 'hsla(30, 90%, 60%, 1)', 
+      color: 'hsl(var(--primary-foreground))', 
       borderRadius: '8px',
       fontWeight: 'bold',
     },
@@ -561,7 +532,7 @@ export default function AcademicCalendarPage() {
                             </p>
                              <Badge variant="outline" className="text-xs mt-1">{event.type}</Badge>
                           </div>
-                           {canManageEvents && event.createdByUserId !== "system-generated" && ( // Prevent editing/deleting system-generated holidays
+                           {canManageEvents && event.createdByUserId !== "system-generated" && ( 
                               <div className="flex gap-1 flex-shrink-0">
                                 <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditEventClick(event)}>
                                   <Edit2 className="h-3.5 w-3.5" />
@@ -599,7 +570,6 @@ export default function AcademicCalendarPage() {
         </CardContent>
       </Card>
 
-      {/* Form Dialog */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
@@ -662,5 +632,4 @@ export default function AcademicCalendarPage() {
     </div>
   );
 }
-
 

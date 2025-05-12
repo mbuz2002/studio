@@ -52,14 +52,13 @@ export default function SuperAdminSubscriptionsPage() {
       const storedSchools = localStorage.getItem(SCHOOLS_STORAGE_KEY);
       let parsedSchools: School[] = storedSchools ? JSON.parse(storedSchools) : [];
       
-      // Check and update subscription status (conceptual auto-update)
       const today = new Date();
       let schoolsUpdated = false;
       parsedSchools = parsedSchools.map(school => {
         let updatedSchool = { ...school, featureSettings: school.featureSettings || { ...DEFAULT_FEATURE_SETTINGS } };
         if (updatedSchool.subscriptionEndDate && isBefore(parseISO(updatedSchool.subscriptionEndDate), today) && updatedSchool.subscriptionStatus === 'active') {
-          updatedSchool.subscriptionStatus = 'inactive'; // Suspend if past end date and was active
-          updatedSchool.isActive = false; // Also deactivate the school
+          updatedSchool.subscriptionStatus = 'inactive'; 
+          updatedSchool.isActive = false; 
           schoolsUpdated = true;
           addLog("WARN", `Langganan sekolah "${school.name}" (ID: ${school.id}) otomatis diubah menjadi Tidak Aktif karena melewati batas akhir periode.`, "SuperAdminSubscriptionsPage-AutoUpdate");
         }
@@ -118,6 +117,7 @@ export default function SuperAdminSubscriptionsPage() {
       const start = format(parseISO(school.subscriptionStartDate), "dd MMM yyyy", { locale: indonesianLocale });
       const end = format(parseISO(school.subscriptionEndDate), "dd MMM yyyy", { locale: indonesianLocale });
       const daysRemaining = differenceInDays(parseISO(school.subscriptionEndDate), new Date());
+      
       let statusText = "";
       if (isAfter(new Date(), parseISO(school.subscriptionEndDate))) {
         statusText = `(Berakhir ${Math.abs(daysRemaining)} hari lalu)`;
@@ -133,19 +133,25 @@ export default function SuperAdminSubscriptionsPage() {
 
   const renderFeatureStatus = (settings?: SchoolFeatureSettings) => {
     if (!settings) return <span className="text-xs text-muted-foreground italic">Default</span>;
-    const enabledFeatures: string[] = [];
-    if (settings.aiToolsEnabled) enabledFeatures.push("AI");
-    if (settings.academicCalendarEnabled) enabledFeatures.push("Kalender");
-    if (settings.timetableManagementEnabled) enabledFeatures.push("Jadwal");
-    if (settings.masterDataManagementEnabled) enabledFeatures.push("Master");
     
-    if (enabledFeatures.length === 0) return <span className="text-xs text-destructive">Tidak Ada</span>;
+    const featuresToDisplay: {key: keyof SchoolFeatureSettings, label: string, icon: React.ElementType, color: string}[] = [
+      { key: "aiToolsEnabled", label: "AI", icon: Sparkles, color: "violet" },
+      { key: "academicCalendarEnabled", label: "Kalender", icon: CalendarCheck, color: "sky" },
+      { key: "timetableManagementEnabled", label: "Jadwal", icon: ListChecks, color: "amber" },
+      { key: "masterDataManagementEnabled", label: "Master", icon: BookOpen, color: "rose" },
+    ];
+
+    const enabledFeatures = featuresToDisplay.filter(f => settings[f.key]);
+
+    if (enabledFeatures.length === 0) return <span className="text-xs text-destructive">Tidak Ada Fitur Aktif</span>;
+    
     return (
-      <div className="flex flex-wrap gap-1">
-        {settings.aiToolsEnabled && <Badge variant="outline" className="text-xs border-violet-500/50 text-violet-600"><Sparkles size={12} className="mr-1"/>AI</Badge>}
-        {settings.academicCalendarEnabled && <Badge variant="outline" className="text-xs border-sky-500/50 text-sky-600"><CalendarCheck size={12} className="mr-1"/>Kalender</Badge>}
-        {settings.timetableManagementEnabled && <Badge variant="outline" className="text-xs border-amber-500/50 text-amber-600"><ListChecks size={12} className="mr-1"/>Jadwal</Badge>}
-        {settings.masterDataManagementEnabled && <Badge variant="outline" className="text-xs border-rose-500/50 text-rose-600"><BookOpen size={12} className="mr-1"/>Master</Badge>}
+      <div className="flex flex-wrap gap-1.5">
+        {enabledFeatures.map(feature => (
+          <Badge key={feature.key} variant="outline" className={`text-xs border-${feature.color}-500/50 text-${feature.color}-600 dark:text-${feature.color}-400`}>
+            <feature.icon size={12} className="mr-1"/>{feature.label}
+          </Badge>
+        ))}
       </div>
     );
   };

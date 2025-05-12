@@ -4,7 +4,7 @@
 import type { PropsWithChildren} from 'react';
 import { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
 
-export type LogLevel = "INFO" | "WARN" | "ERROR" | "CRITICAL"; // Added CRITICAL
+export type LogLevel = "INFO" | "WARN" | "ERROR" | "CRITICAL";
 
 export interface LogEntry {
   id: string;
@@ -33,7 +33,7 @@ export const LogProvider = ({ children }: PropsWithChildren) => {
   }, []);
 
   const addLog = useCallback((level: LogLevel, message: string, source?: string) => {
-    if (!isMounted) { // Prevent updates if not mounted, though less likely to be called then
+    if (!isMounted) { 
       console.warn("LogProvider: addLog called before component is mounted. Log was not added:", {level, message, source});
       return;
     }
@@ -51,13 +51,12 @@ export const LogProvider = ({ children }: PropsWithChildren) => {
       }
       return updatedLogs;
     });
-  }, [isMounted]); // isMounted ensures this callback is stable once mounted
+  }, [isMounted]);
 
   const clearLogs = useCallback(() => {
     if (!isMounted) return;
     setLogs([]);
-    // addLog("WARN", "Log sistem telah dibersihkan dari tampilan.", "LogContext"); // Use WARN for this type of action.
-  }, [isMounted]); // addLog removed from deps to avoid loop, clearLogs is stable post-mount
+  }, [isMounted]); 
   
   const contextValue = useMemo(() => ({
     logs,
