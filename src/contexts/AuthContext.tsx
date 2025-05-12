@@ -4,7 +4,7 @@
 import type { PropsWithChildren} from 'react';
 import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import type { User, UserRole, School } from '@/types';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation'; // Added usePathname
 import { useLog } from './LogContext';
 import { APP_USERS_STORAGE_KEY, SCHOOLS_STORAGE_KEY, DEFAULT_FEATURE_SETTINGS } from '@/types';
 import { initialSuperAdminUser } from '@/lib/initial-data';
@@ -76,6 +76,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   const [currentSchool, setCurrentSchool] = useState<School | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const pathname = usePathname(); // Get current pathname
   const { addLog } = useLog();
   const { toast } = useToast();
 
@@ -118,6 +119,21 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     attemptUserRestore();
     return () => { didCancel = true; };
   }, [addLog]);
+
+  // Effect for redirecting unauthenticated users
+  useEffect(() => {
+    if (!loading && !user) {
+      const isAuthPage = pathname === '/login' || pathname === '/signup' || pathname === '/superadmin-access' || pathname === '/login-by-school';
+      if (!isAuthPage && pathname !== '/') { // Also allow landing page
+        if (pathname.startsWith('/superadmin')) {
+          router.push('/superadmin-access');
+        } else {
+          router.push('/login-by-school');
+        }
+      }
+    }
+  }, [loading, user, pathname, router]);
+
 
   const login = useCallback((emailOrUsername: string, passwordAttempt: string, roleToAttempt: UserRole, schoolIdToLogin?: string) => {
     const storedUsers = localStorage.getItem(APP_USERS_STORAGE_KEY);
@@ -186,8 +202,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     if (userRole === "SuperAdmin") {
       router.push('/superadmin-access');
     } else {
-      // Redirect to a page that allows school selection for login
-      router.push('/login-by-school');
+      router.push('/login-by-school'); // Regular users redirect to school selection
     }
   }, [user, addLog, router]);
 

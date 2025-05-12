@@ -83,11 +83,11 @@ export default function AppLayout({ children }: PropsWithChildren) {
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
-      // If user is not authenticated, redirect to appropriate login page
+      // If user is not authenticated, redirect appropriately
       if (pathname.startsWith('/superadmin')) {
-        router.push('/superadmin/login');
-      } else {
-        router.push('/login');
+        router.push('/superadmin-access'); // SuperAdmin specific login
+      } else if (pathname !== '/' && !pathname.startsWith('/login') && !pathname.startsWith('/signup') && !pathname.startsWith('/login-by-school')) {
+        router.push('/login-by-school'); // Default to school selection for other app pages
       }
     }
   }, [loading, isAuthenticated, router, pathname]);
@@ -389,4 +389,3 @@ export default function AppLayout({ children }: PropsWithChildren) {
       </SidebarProvider>
   );
 }
-
