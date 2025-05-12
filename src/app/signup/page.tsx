@@ -29,7 +29,7 @@ const educationLevels: { value: EducationLevel; label: string }[] = [
 
 export default function SignupPage() {
   const router = useRouter();
-  const { login } = useAuth(); // Get login function from useAuth
+  const { login } = useAuth(); 
   const { toast } = useToast();
   const { addLog } = useLog();
 
@@ -76,7 +76,7 @@ export default function SignupPage() {
 
     const newSchoolId = `school-${Date.now()}`;
     const newAdminId = `user-${Date.now()}`;
-    const trialEndDate = addDays(new Date(), 30);
+    const trialEndDate = addDays(new Date(), 7); // Updated trial period to 7 days
 
     const newSchool: School = {
       id: newSchoolId,
@@ -111,7 +111,7 @@ export default function SignupPage() {
     
     existingSchools.push(newSchool);
     localStorage.setItem(SCHOOLS_STORAGE_KEY, JSON.stringify(existingSchools));
-    addLog("INFO", `Sekolah baru "${schoolName}" (ID: ${newSchoolId}) berhasil didaftarkan dengan status trial.`, "SignupPage");
+    addLog("INFO", `Sekolah baru "${schoolName}" (ID: ${newSchoolId}) berhasil didaftarkan dengan status trial 7 hari.`, "SignupPage");
 
     existingUsers.push(newAdmin);
     localStorage.setItem(APP_USERS_STORAGE_KEY, JSON.stringify(existingUsers));
@@ -122,10 +122,7 @@ export default function SignupPage() {
       description: `Sekolah "${schoolName}" dan akun admin Anda telah dibuat. Anda akan diarahkan ke dasbor.`,
     });
     
-    // Automatically log in the new admin user
-    // For the demo, using the provided password directly. In a real app, this would involve secure password handling.
     login(adminEmail, password, "Admin", newSchoolId);
-    // No need to setIsLoading(false) or router.push here, login will handle redirection.
   };
 
 
@@ -176,14 +173,14 @@ export default function SignupPage() {
             </div>
             <Button type="submit" className="w-full bg-gradient-to-r from-accent to-primary hover:from-accent/90 hover:to-primary/90 text-accent-foreground text-base py-3 h-12 rounded-md shadow-lg" disabled={isLoading}>
               {isLoading ? <GraduationCap className="mr-2.5 h-5 w-5 animate-pulse" /> : <UserPlus className="mr-2.5 h-5 w-5" />}
-              {isLoading ? "Memproses Pendaftaran..." : "Daftar Sekarang"}
+              {isLoading ? "Memproses Pendaftaran..." : "Daftar Sekarang (Uji Coba 7 Hari)"}
             </Button>
           </form>
         </CardContent>
         <CardFooter className="flex flex-col items-center space-y-2 pb-8 pt-4 bg-muted/30 border-t">
           <p className="text-sm text-muted-foreground">
             Sudah punya akun sekolah?{" "}
-            <Link href="/login-by-school" className="text-accent hover:underline font-medium">
+            <Link href="/login" className="text-accent hover:underline font-medium">
               Masuk di sini.
             </Link>
           </p>

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { BadgePercent, CheckCircle, XCircle, ShieldQuestion, MessageCircle, ArrowRight, Sparkles } from 'lucide-react'; // Added Sparkles
+import { BadgePercent, CheckCircle, XCircle, ShieldQuestion, MessageCircle, ArrowRight, Sparkles } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -14,7 +14,7 @@ const pricingTiers = [
   {
     name: "Paket Uji Coba",
     price: "Gratis",
-    duration: "/ 30 Hari",
+    duration: "/ 7 Hari", // Updated from 30 to 7 days
     features: [
       { text: "Akses fitur dasar perencanaan", included: true },
       { text: "Pembuatan RPP/ATP, PROTA, Promes terbatas", included: true },
@@ -157,4 +157,3 @@ export function PricingSection({ appName }: PricingSectionProps) {
     </section>
   );
 }
-

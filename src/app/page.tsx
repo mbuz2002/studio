@@ -281,7 +281,7 @@ export default function LandingPage() {
              <Star className="h-16 w-16 text-amber-400 mx-auto mb-6 drop-shadow-[0_0_20px_rgba(251,191,36,0.6)] animate-subtle-bob [animation-duration:1.5s]" />
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-6 text-slate-100 tracking-tight animate-fade-in-up">Siap Merevolusi Cara Anda Mengajar?</h2>
             <p className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto mb-12 leading-relaxed font-light animate-fade-in-up [animation-delay:0.1s]">
-              Bergabunglah dengan ribuan pendidik inovatif lainnya dan rasakan kemudahan serta kekuatan perencanaan kurikulum berbasis AI dengan {isClient ? appName : "GUMPLA AI"}. <br/>Daftar sekarang dan dapatkan masa uji coba gratis!
+              Bergabunglah dengan ribuan pendidik inovatif lainnya dan rasakan kemudahan serta kekuatan perencanaan kurikulum berbasis AI dengan {isClient ? appName : "GUMPLA AI"}. <br/>Daftar sekarang dan dapatkan masa uji coba gratis 7 hari!
             </p>
             <Button asChild size="lg" className="text-xl px-12 py-8 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold shadow-xl hover:shadow-amber-500/60 transition-all duration-300 transform hover:scale-105 rounded-xl animate-fade-in-up [animation-delay:0.2s]">
               <Link href="/signup">Mulai Uji Coba Gratis <ArrowRight className="ml-2.5 h-6 w-6" /></Link>
@@ -297,4 +297,3 @@ export default function LandingPage() {
     </div>
   );
 }
-
