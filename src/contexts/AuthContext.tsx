@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { PropsWithChildren} from 'react';
@@ -149,14 +150,14 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   // Effect for redirecting unauthenticated users
   useEffect(() => {
     if (!loading && !user) {
-      const isAuthPage = pathname.startsWith('/(auth)'); // Check if it's an auth group page
+      const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/login-by-school') || pathname.startsWith('/signup') || pathname.startsWith('/superadmin-access');
       const isPublicPage = pathname === '/' || pathname.startsWith('/legal') || pathname.startsWith('/about') || pathname.startsWith('/documentation') || pathname.startsWith('/faq') || pathname.startsWith('/terms-of-service');
       
       if (!isAuthPage && !isPublicPage) {
         if (pathname.startsWith('/superadmin')) {
-          router.push('/(auth)/superadmin-access');
+          router.push('/superadmin-access');
         } else {
-          router.push('/(auth)/login-by-school');
+          router.push('/login-by-school');
         }
       }
     }
@@ -232,18 +233,13 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
   const logout = useCallback(() => {
     const userEmail = user?.email;
-    const userRole = user?.role;
     if (userEmail) {
       addLog("INFO", `Pengguna ${userEmail} keluar.`, "AuthContext-Logout");
     }
     setUser(null);
     setCurrentSchool(null);
     localStorage.removeItem('currentUser');
-    if (userRole === "SuperAdmin") {
-      router.push('/(auth)/superadmin-access');
-    } else {
-      router.push('/(auth)/login-by-school');
-    }
+    router.push('/'); // Redirect to landing page on logout
   }, [user, addLog, router]);
 
   const updateUser = useCallback((updatedUserData: Partial<User>) => {
@@ -289,3 +285,4 @@ export const useAuth = () => {
   }
   return context;
 };
+
