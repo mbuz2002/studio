@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, type FormEvent } from "react";
@@ -14,7 +15,7 @@ import { SCHOOL_CLASSES_STORAGE_KEY, TEACHERS_STORAGE_KEY, SCHOOL_PROFILE_STORAG
 
 export default function NewSchoolClassPage() {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { user, currentSchool, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const { addLog } = useLog();
 
@@ -30,10 +31,14 @@ export default function NewSchoolClassPage() {
       router.push("/master-data/classes");
       return;
     }
-    
+
     const storedTeachers = localStorage.getItem(TEACHERS_STORAGE_KEY);
     if (storedTeachers) {
-      setAllTeachers(JSON.parse(storedTeachers));
+      const teachers: Teacher[] = JSON.parse(storedTeachers);
+      const schoolTeachers = user.role === "SuperAdmin"
+        ? teachers
+        : teachers.filter(t => t.schoolId === currentSchool?.id);
+      setAllTeachers(schoolTeachers);
     }
 
     const storedSchoolProfile = localStorage.getItem(SCHOOL_PROFILE_STORAGE_KEY);
@@ -47,7 +52,7 @@ export default function NewSchoolClassPage() {
     }
 
     addLog("INFO", `Pengguna ${user.email} mengakses halaman Tambah Kelas Baru.`, "NewSchoolClassPage");
-  }, [user, authLoading, router, toast, addLog]);
+  }, [user, currentSchool, authLoading, router, toast, addLog]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -76,13 +81,14 @@ export default function NewSchoolClassPage() {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       createdByUserId: user?.id,
+      schoolId: currentSchool?.id,
     };
 
     try {
       const existingClasses = JSON.parse(localStorage.getItem(SCHOOL_CLASSES_STORAGE_KEY) || "[]") as SchoolClass[];
       localStorage.setItem(SCHOOL_CLASSES_STORAGE_KEY, JSON.stringify([newClass, ...existingClasses]));
       toast({ title: "Kelas Ditambahkan", description: `Kelas "${newClass.name}" berhasil disimpan.` });
-      addLog("INFO", `Kelas baru "${newClass.name}" (Jenjang: ${newClass.gradeLevel}) ditambahkan oleh ${user?.email}.`, "NewSchoolClassPage");
+      addLog("INFO", `Kelas baru "${newClass.name}" (Jenjang: ${newClass.gradeLevel}) ditambahkan oleh ${user?.email} untuk sekolah ID ${currentSchool?.id}.`, "NewSchoolClassPage");
       router.push("/master-data/classes");
     } catch (error) {
       toast({ title: "Gagal Menyimpan", description: "Terjadi kesalahan saat menyimpan kelas.", variant: "destructive" });
@@ -116,9 +122,9 @@ export default function NewSchoolClassPage() {
         </CardHeader>
         <CardContent className="p-4 sm:p-6">
           <form onSubmit={handleSubmit} className="space-y-6">
-            <ClassFormFields 
-              formData={formData} 
-              handleChange={handleChange} 
+            <ClassFormFields
+              formData={formData}
+              handleChange={handleChange}
               handleSelectChange={handleSelectChange}
               allTeachers={allTeachers}
               schoolEducationLevel={schoolEducationLevel}
@@ -138,4 +144,3 @@ export default function NewSchoolClassPage() {
     </div>
   );
 }
-

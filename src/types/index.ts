@@ -1,5 +1,4 @@
 
-
 export type UserRole = "Admin" | "KepalaSekolah" | "WakaKurikulum" | "TataUsaha" | "Guru" | "SuperAdmin";
 export type CurriculumFramework = "Kurikulum Merdeka" | "K-13" | "KTSP 2006";
 export type EducationLevel = "PAUD" | "SD/MI" | "SMP/MTs" | "SMA/MA" | "SMK/MAK" | "SLB" | "PKBM/Kesetaraan";
@@ -12,8 +11,8 @@ export interface User {
   name: string;
   role: UserRole;
   avatarUrl?: string;
-  schoolId?: string; 
-  updatedAt?: string; 
+  schoolId?: string;
+  updatedAt?: string;
 }
 
 export interface SchoolFeatureSettings {
@@ -31,24 +30,24 @@ export const DEFAULT_FEATURE_SETTINGS: SchoolFeatureSettings = {
 };
 export interface School {
   id: string;
-  name: string; 
+  name: string;
   jenjangPendidikan: EducationLevel;
-  alamat?: string; 
-  nomorTelepon?: string; 
-  emailSekolah?: string; 
-  namaKepalaSekolah?: string; 
-  npsn?: string; 
-  logoUrl?: string; 
-  kotaSekolah?: string; 
-  adminEmail: string; 
+  alamat?: string;
+  nomorTelepon?: string;
+  emailSekolah?: string;
+  namaKepalaSekolah?: string;
+  npsn?: string;
+  logoUrl?: string;
+  kotaSekolah?: string;
+  adminEmail: string;
   subscriptionStatus: 'active' | 'inactive' | 'trial';
-  subscriptionStartDate?: string; 
-  subscriptionEndDate?: string;   
-  paymentDetails?: string; 
+  subscriptionStartDate?: string;
+  subscriptionEndDate?: string;
+  paymentDetails?: string;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
-  featureSettings: SchoolFeatureSettings; 
+  featureSettings: SchoolFeatureSettings;
   customDomain?: string;
   customDomainStatus?: CustomDomainStatus;
 }
@@ -61,77 +60,77 @@ export interface AppSettings {
 
 export interface CurriculumItem {
   id: string;
-  title: string; 
-  subject: string; 
-  gradeLevel: string; 
-  createdAt: string; 
-  updatedAt: string; 
-  createdByUserId?: string; 
-  curriculumType: CurriculumFramework; 
-  schoolId?: string; 
+  title: string;
+  subject: string;
+  gradeLevel: string;
+  createdAt: string;
+  updatedAt: string;
+  createdByUserId?: string;
+  curriculumType: CurriculumFramework;
+  schoolId?: string;
 }
 
 export interface LessonPlan extends CurriculumItem {
-  type: 'RPP'; 
-  topic: string; 
-  learningObjectives: string[]; 
+  type: 'RPP';
+  topic: string;
+  learningObjectives: string[];
   alokasiWaktuJP?: string;
-  
-  bidangKeahlian?: string; 
-  programKeahlian?: string; 
-  capaianPembelajaran?: string[]; 
-  pemahamanBermakna?: string[]; 
-  pertanyaanPemantik?: string[]; 
-  differentiationStrategies?: string[]; 
-  profilPelajarPancasilaFocus?: string[]; 
 
-  standarKompetensi?: string[]; 
-  kompetensiInti?: string[]; 
-  kompetensiDasar?: string[]; 
-  indikatorPencapaianKompetensi?: string[]; 
-  metodePembelajaran?: string[]; 
-  
-  langkahPembelajaran: { 
-    pendahuluan: string[]; 
-    kegiatanInti: string[]; 
-    penutup: string[]; 
+  bidangKeahlian?: string;
+  programKeahlian?: string;
+  capaianPembelajaran?: string[];
+  pemahamanBermakna?: string[];
+  pertanyaanPemantik?: string[];
+  differentiationStrategies?: string[];
+  profilPelajarPancasilaFocus?: string[];
+
+  standarKompetensi?: string[];
+  kompetensiInti?: string[];
+  kompetensiDasar?: string[];
+  indikatorPencapaianKompetensi?: string[];
+  metodePembelajaran?: string[];
+
+  langkahPembelajaran: {
+    pendahuluan: string[];
+    kegiatanInti: string[];
+    penutup: string[];
   };
-  assessment: string; 
-  materials?: string; 
+  assessment: string;
+  materials?: string;
 }
 
 export interface AnnualProgramComponent {
-  topic: string; 
-  elemenCapaianPembelajaran?: string[]; 
-  alokasiWaktu: string; 
+  topic: string;
+  elemenCapaianPembelajaran?: string[];
+  alokasiWaktu: string;
 }
 
 export interface AnnualProgram extends CurriculumItem {
-  type: 'PROTA'; 
-  year: string; 
-  capaianPembelajaran?: string[]; 
+  type: 'PROTA';
+  year: string;
+  capaianPembelajaran?: string[];
   semester1Components: AnnualProgramComponent[];
   semester2Components: AnnualProgramComponent[];
-  profilPelajarPancasilaFocus?: string[]; 
+  profilPelajarPancasilaFocus?: string[];
 }
 
 export interface WeeklyUnit {
   mingguKe: number;
-  bulan?: string; 
-  materiPokokAtauTujuanPembelajaran: string; 
-  alokasiWaktu: string; 
-  metodeStrategi?: string[]; 
-  sumberBelajar?: string[]; 
-  rencanaAsesmen?: string[]; 
+  bulan?: string;
+  materiPokokAtauTujuanPembelajaran: string;
+  alokasiWaktu: string;
+  metodeStrategi?: string[];
+  sumberBelajar?: string[];
+  rencanaAsesmen?: string[];
   catatanIntegrasiP5?: string;
 }
 
 export interface SemesterProgram extends CurriculumItem {
-  type: 'Promes'; 
-  semester: '1' | '2'; 
-  year: string; 
-  capaianPembelajaranUmum?: string; 
-  alokasiWaktuTotalSemester?: string; 
+  type: 'Promes';
+  semester: '1' | '2';
+  year: string;
+  capaianPembelajaranUmum?: string;
+  alokasiWaktuTotalSemester?: string;
   komponenMingguan: WeeklyUnit[];
 }
 
@@ -139,10 +138,10 @@ export interface ModulAjarIdentitas {
   namaPenyusun: string;
   institusi: string;
   tahunAjar: string;
-  jenjangSekolah: string; 
-  fase: string; 
-  kelasSemester: string; 
-  alokasiWaktu: string; 
+  jenjangSekolah: string;
+  fase: string;
+  kelasSemester: string;
+  alokasiWaktu: string;
   mataPelajaran: string;
   elemenCapaianPembelajaran?: string[];
 }
@@ -152,12 +151,12 @@ export interface ModulAjarKomponenInti {
   pemahamanBermakna: string[];
   pertanyaanPemantik: string[];
   kegiatanPembelajaran: {
-    pendahuluan: string[]; 
+    pendahuluan: string[];
     inti: {
-      langkah: string; 
+      langkah: string;
       detailAktivitas: string[];
     }[];
-    penutup: string[]; 
+    penutup: string[];
   };
   asesmen: {
     diagnostik?: string;
@@ -175,7 +174,7 @@ export interface ModulAjarKomponenInti {
 }
 
 export interface ModulAjarLampiran {
-  lembarKerjaPesertaDidik?: string; 
+  lembarKerjaPesertaDidik?: string;
   bahanBacaanGuruSiswa?: string[];
   glosarium?: { istilah: string; penjelasan: string }[];
   daftarPustaka?: string[];
@@ -185,10 +184,10 @@ export interface GenerateKurikulumMerdekaModuleOutput {
   judulModul: string;
   identitasModul: ModulAjarIdentitas;
   kompetensiAwal?: string[];
-  profilPelajarPancasila: string[]; 
+  profilPelajarPancasila: string[];
   saranaPrasarana: string[];
   targetPesertaDidik: string;
-  modelPembelajaran: string; 
+  modelPembelajaran: string;
   komponenInti: ModulAjarKomponenInti;
   lampiran?: ModulAjarLampiran;
 }
@@ -196,14 +195,14 @@ export interface GenerateKurikulumMerdekaModuleOutput {
 export interface ModulAjar extends GenerateKurikulumMerdekaModuleOutput, Omit<CurriculumItem, 'title' | 'subject' | 'gradeLevel' | 'curriculumType'> {
   id: string;
   type: 'ModulAjar';
-  title: string; 
-  subject: string; 
-  gradeLevel: string; 
+  title: string;
+  subject: string;
+  gradeLevel: string;
   curriculumType: "Kurikulum Merdeka";
   createdAt: string;
   updatedAt: string;
   createdByUserId?: string;
-  schoolId?: string; 
+  schoolId?: string;
 }
 
 
@@ -211,28 +210,28 @@ export type AnyCurriculumItem = LessonPlan | AnnualProgram | SemesterProgram | M
 
 export type { GenerateLessonPlanInput, GenerateLessonPlanOutput } from '@/ai/flows/generate-lesson-plan-from-topic';
 export type { SuggestLessonPlanImprovementsOutput } from '@/ai/flows/suggest-lesson-plan-improvements';
-export type { GenerateTeachingMaterialInput, GenerateTeachingMaterialOutput, SuggestedSourceSchema as AISuggestedSource } from '@/ai/flows/generate-teaching-material';
+export type { GenerateTeachingMaterialInput, GenerateTeachingMaterialOutput, AISuggestedSource } from '@/ai/flows/generate-teaching-material';
 
 
 export interface PrintOptions {
   showKopSurat: boolean;
-  
-  showRPPLearningObjectives: boolean; 
+
+  showRPPLearningObjectives: boolean;
   showRPPAlokasiWaktu?: boolean;
 
-  showRPPCapaianPembelajaran?: boolean; 
+  showRPPCapaianPembelajaran?: boolean;
   showRPPPemahamanBermakna: boolean;
   showRPPPertanyaanPemantik: boolean;
   showRPPDifferentiationStrategies: boolean;
   showRPPProfilPelajarPancasila?: boolean;
-  showRPPBidangKeahlian?: boolean; 
-  showRPPProgramKeahlian?: boolean; 
+  showRPPBidangKeahlian?: boolean;
+  showRPPProgramKeahlian?: boolean;
 
 
-  showRPPSK?: boolean; 
-  showRPPKI?: boolean; 
-  showRPPKD?: boolean; 
-  showRPPIPK?: boolean; 
+  showRPPSK?: boolean;
+  showRPPKI?: boolean;
+  showRPPKD?: boolean;
+  showRPPIPK?: boolean;
   showRPPMetodePembelajaran?: boolean;
 
   showRPPLangkahPendahuluan: boolean;
@@ -240,12 +239,12 @@ export interface PrintOptions {
   showRPPLangkahPenutup: boolean;
   showRPPAssessment: boolean;
   showRPPMaterials: boolean;
- 
-  showPROTACapaianPembelajaran?: boolean; 
-  showPROTAFokusP5: boolean; 
+
+  showPROTACapaianPembelajaran?: boolean;
+  showPROTAFokusP5: boolean;
   showPROTASemester1: boolean;
   showPROTASemester2: boolean;
-  
+
   showPromesCapaianUmum: boolean;
   showPromesAlokasiTotal: boolean;
   showPromesKomponenMingguan: boolean;
@@ -254,8 +253,8 @@ export interface PrintOptions {
 export const defaultPrintOptions: PrintOptions = {
   showKopSurat: true,
   showRPPLearningObjectives: true,
-  showRPPAlokasiWaktu: true, 
-  showRPPCapaianPembelajaran: true, 
+  showRPPAlokasiWaktu: true,
+  showRPPCapaianPembelajaran: true,
   showRPPLangkahPendahuluan: true,
   showRPPLangkahKegiatanInti: true,
   showRPPLangkahPenutup: true,
@@ -287,16 +286,16 @@ export interface ExportedCurriculumData {
   annualPrograms: AnnualProgram[];
   semesterPrograms: SemesterProgram[];
   modulAjar?: ModulAjar[];
-  schoolProfile: SchoolProfile | null; 
-  schools?: School[]; 
+  schoolProfile: SchoolProfile | null;
+  schools?: School[];
   appUsers: User[];
   subjects?: Subject[];
   teachers?: Teacher[];
   timetables?: TimetableEntry[];
-  schoolClasses?: SchoolClass[]; 
-  teachingPeriodSettings?: TeachingPeriodSettings | null; 
-  academicEvents?: AcademicEvent[]; 
-  appSettings?: AppSettings | null; 
+  schoolClasses?: SchoolClass[];
+  teachingPeriodSettings?: TeachingPeriodSettings | null;
+  academicEvents?: AcademicEvent[];
+  appSettings?: AppSettings | null;
 }
 
 
@@ -311,11 +310,11 @@ export interface PrintOptionsModulAjar {
   showMAKomponenInti_TujuanPembelajaran: boolean;
   showMAKomponenInti_PemahamanBermakna: boolean;
   showMAKomponenInti_PertanyaanPemantik: boolean;
-  showMAKomponenInti_KegiatanPembelajaran: boolean; 
+  showMAKomponenInti_KegiatanPembelajaran: boolean;
   showMAKomponenInti_Kegiatan_Pendahuluan: boolean;
   showMAKomponenInti_Kegiatan_Inti: boolean;
   showMAKomponenInti_Kegiatan_Penutup: boolean;
-  showMAKomponenInti_Asesmen: boolean; 
+  showMAKomponenInti_Asesmen: boolean;
   showMAKomponenInti_Asesmen_Diagnostik: boolean;
   showMAKomponenInti_Asesmen_Formatif: boolean;
   showMAKomponenInti_Asesmen_Sumatif: boolean;
@@ -357,61 +356,61 @@ export const defaultPrintOptionsModulAjar: PrintOptionsModulAjar = {
 export interface Subject {
   id: string;
   name: string;
-  code?: string; 
+  code?: string;
   createdAt: string;
   updatedAt: string;
   createdByUserId?: string;
-  schoolId?: string; 
+  schoolId?: string;
 }
 
 export interface Teacher {
   id: string;
   name: string;
-  nip?: string; 
-  subjectIds: string[]; 
-  userId?: string; 
+  nip?: string;
+  subjectIds: string[];
+  userId?: string;
   createdAt: string;
   updatedAt: string;
   createdByUserId?: string;
-  schoolId?: string; 
+  schoolId?: string;
 }
 
 export interface TimeSlot {
   id: string;
-  startTime: string; 
-  endTime: string; 
+  startTime: string;
+  endTime: string;
 }
 
 export interface TimetableEntry {
   id: string;
   dayOfWeek: 'Senin' | 'Selasa' | 'Rabu' | 'Kamis' | 'Jumat' | 'Sabtu' | 'Minggu';
-  timeSlotId?: string; 
-  startTime: string; 
-  endTime: string;   
+  timeSlotId?: string;
+  startTime: string;
+  endTime: string;
   subjectId: string;
   teacherId: string;
-  classOrGrade: string; 
+  classOrGrade: string;
   createdAt: string;
   updatedAt: string;
   createdByUserId?: string;
-  schoolId?: string; 
+  schoolId?: string;
 }
 
 export interface SchoolClass {
   id: string;
-  name: string; 
-  gradeLevel: string; 
-  homeroomTeacherId?: string; 
+  name: string;
+  gradeLevel: string;
+  homeroomTeacherId?: string;
   notes?: string;
   createdAt: string;
   updatedAt: string;
   createdByUserId?: string;
-  schoolId?: string; 
+  schoolId?: string;
 }
 
 
 export interface TeachingPeriodSettings {
-  jpDurationMinutes: number; 
+  jpDurationMinutes: number;
 }
 
 export type AcademicEventType = 'Libur Nasional' | 'Libur Semester' | 'Ujian Sekolah' | 'Kegiatan Sekolah' | 'Tanggal Penting' | 'Periode Semester Aktif' | 'Lainnya';
@@ -419,15 +418,15 @@ export type AcademicEventType = 'Libur Nasional' | 'Libur Semester' | 'Ujian Sek
 export interface AcademicEvent {
   id: string;
   title: string;
-  date: string; 
-  endDate?: string; 
+  date: string;
+  endDate?: string;
   description?: string;
   type: AcademicEventType;
-  isNationalHoliday?: boolean; 
+  isNationalHoliday?: boolean;
   createdAt: string;
   updatedAt: string;
   createdByUserId?: string;
-  schoolId?: string; 
+  schoolId?: string;
 }
 
 export interface SchoolProfile {
@@ -452,18 +451,15 @@ export const MODUL_AJAR_STORAGE_KEY = "appModulAjar";
 export const SUBJECTS_STORAGE_KEY = "appSubjects";
 export const TEACHERS_STORAGE_KEY = "appTeachers";
 export const TIMETABLES_STORAGE_KEY = "appTimetables";
-export const SCHOOL_CLASSES_STORAGE_KEY = "appSchoolClasses"; 
+export const SCHOOL_CLASSES_STORAGE_KEY = "appSchoolClasses";
 export const TEACHING_PERIOD_SETTINGS_KEY = "appTeachingPeriodSettings";
 export const LESSON_PLANS_STORAGE_KEY = "appLessonPlans";
 export const ANNUAL_PROGRAMS_STORAGE_KEY = "appAnnualPrograms";
 export const SEMESTER_PROGRAMS_STORAGE_KEY = "appSemesterPrograms";
-export const SCHOOL_PROFILE_STORAGE_KEY = "schoolProfile"; 
-export const SCHOOLS_STORAGE_KEY = "appSchools"; 
+export const SCHOOL_PROFILE_STORAGE_KEY = "schoolProfile";
+export const SCHOOLS_STORAGE_KEY = "appSchools";
 export const APP_USERS_STORAGE_KEY = "appUsers";
 export const CURRICULUM_STORAGE_KEY = "app-default-curriculum";
 export const THEME_STORAGE_KEY = "app-theme";
 export const ACADEMIC_EVENTS_STORAGE_KEY = "appAcademicEvents";
-export const SAAS_APP_SETTINGS_STORAGE_KEY = "appSaasSettings"; 
-
-
-
+export const SAAS_APP_SETTINGS_STORAGE_KEY = "appSaasSettings";

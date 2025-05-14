@@ -16,21 +16,16 @@ import { useLog } from "@/contexts/LogContext";
 import type { SchoolClass, Teacher } from "@/types";
 import { SCHOOL_CLASSES_STORAGE_KEY, TEACHERS_STORAGE_KEY } from "@/types";
 import { Badge } from "@/components/ui/badge";
-
-const initialClassesData: SchoolClass[] = [
-  { id: "class-1", name: "Kelas X IPA 1", gradeLevel: "X", homeroomTeacherId: "teacher-1", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), createdByUserId: "user-1" },
-  { id: "class-2", name: "Kelas XI IPS 2", gradeLevel: "XI", homeroomTeacherId: "teacher-2", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), createdByUserId: "user-1" },
-  { id: "class-3", name: "Fase A Kelompok Bermain Matahari", gradeLevel: "Fase A", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), createdByUserId: "user-3"},
-];
+import { initialClassesData } from '@/lib/initial-data';
 
 export default function SchoolClassesPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, currentSchool, loading: authLoading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const { addLog } = useLog();
 
   const [schoolClasses, setSchoolClasses] = useState<SchoolClass[]>([]);
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [teachers, setTeachersList] = useState<Teacher[]>([]); // Renamed to avoid conflict
   const [searchTerm, setSearchTerm] = useState("");
   const [isClient, setIsClient] = useState(false);
 
@@ -50,33 +45,46 @@ export default function SchoolClassesPage() {
       if (storedClasses) {
         setSchoolClasses(JSON.parse(storedClasses));
       } else {
-        setSchoolClasses(initialClassesData);
-        localStorage.setItem(SCHOOL_CLASSES_STORAGE_KEY, JSON.stringify(initialClassesData));
+        const demoDataWithSchoolId = initialClassesData.map(c => ({
+          ...c,
+          schoolId: currentSchool?.id || c.schoolId
+        }));
+        setSchoolClasses(demoDataWithSchoolId);
+        localStorage.setItem(SCHOOL_CLASSES_STORAGE_KEY, JSON.stringify(demoDataWithSchoolId));
       }
       const storedTeachers = localStorage.getItem(TEACHERS_STORAGE_KEY);
       if (storedTeachers) {
-        setTeachers(JSON.parse(storedTeachers));
+         const allTeachers: Teacher[] = JSON.parse(storedTeachers);
+        const schoolTeachers = user.role === "SuperAdmin"
+            ? allTeachers
+            : allTeachers.filter(t => t.schoolId === currentSchool?.id);
+        setTeachersList(schoolTeachers);
       }
     } catch (error) {
       console.error("Gagal memuat data kelas/guru:", error);
-      setSchoolClasses(initialClassesData);
+      const demoDataWithSchoolId = initialClassesData.map(c => ({
+          ...c,
+          schoolId: currentSchool?.id || c.schoolId
+        }));
+      setSchoolClasses(demoDataWithSchoolId);
       toast({ title: "Gagal Memuat Data", description: "Menggunakan data default.", variant: "destructive" });
     }
-  }, [user, authLoading, router, toast, addLog]);
+  }, [user, currentSchool, authLoading, router, toast, addLog]);
 
   const getTeacherName = useCallback((teacherId?: string) => {
     if (!teacherId) return "-";
-    return teachers.find(t => t.id === teacherId)?.name || "Guru Tidak Ditemukan";
-  }, [teachers]);
+    return teachersList.find(t => t.id === teacherId)?.name || "Guru Tidak Ditemukan";
+  }, [teachersList]);
 
   const filteredClasses = useMemo(() => {
-    if (!isClient) return [];
+    if (!isClient || !user) return [];
     return schoolClasses.filter(sc =>
-      sc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (sc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       sc.gradeLevel.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (sc.homeroomTeacherId && getTeacherName(sc.homeroomTeacherId).toLowerCase().includes(searchTerm.toLowerCase()))
+      (sc.homeroomTeacherId && getTeacherName(sc.homeroomTeacherId).toLowerCase().includes(searchTerm.toLowerCase()))) &&
+      (user.role === "SuperAdmin" || sc.schoolId === currentSchool?.id)
     );
-  }, [isClient, schoolClasses, searchTerm, getTeacherName]);
+  }, [isClient, schoolClasses, searchTerm, getTeacherName, user, currentSchool]);
 
   const handleDelete = useCallback((classId: string) => {
     const classToDelete = schoolClasses.find(sc => sc.id === classId);
@@ -100,7 +108,7 @@ export default function SchoolClassesPage() {
       </div>
     );
   }
-  
+
   const canManage = user && ["Admin", "KepalaSekolah", "WakaKurikulum", "TataUsaha"].includes(user.role);
 
   return (
@@ -112,7 +120,7 @@ export default function SchoolClassesPage() {
             <div>
               <CardTitle className="text-2xl md:text-3xl font-bold">Master Data Kelas</CardTitle>
               <CardDescription className="text-base md:text-lg text-primary-foreground/90 mt-1">
-                Kelola daftar kelas atau rombongan belajar di sekolah.
+                Kelola daftar kelas atau rombongan belajar di sekolah {currentSchool ? `(${currentSchool.name})` : ''}.
               </CardDescription>
             </div>
           </div>

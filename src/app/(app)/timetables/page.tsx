@@ -31,16 +31,16 @@ function parseTimeToMinutes(timeStr: string): number {
 }
 
 export default function TimetablesPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, currentSchool, loading: authLoading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const { addLog } = useLog();
   const [isClient, setIsClient] = useState(false);
 
   const [timetableEntries, setTimetableEntries] = useState<TimetableEntry[]>([]);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [schoolClasses, setSchoolClasses] = useState<SchoolClass[]>([]);
+  const [subjects, setSubjectsList] = useState<Subject[]>([]);
+  const [teachers, setTeachersList] = useState<Teacher[]>([]);
+  const [schoolClasses, setSchoolClassesList] = useState<SchoolClass[]>([]);
   const [schoolProfile, setSchoolProfile] = useState<SchoolProfile | null>(null);
   const [teachingPeriodSettings, setTeachingPeriodSettings] = useState<TeachingPeriodSettings | null>(null);
 
@@ -59,20 +59,25 @@ export default function TimetablesPage() {
     }
     addLog("INFO", `Pengguna ${user.email} mengakses halaman Jadwal Pelajaran.`, "TimetablesPage");
 
+    const schoolId = currentSchool?.id;
     const loadData = () => {
       try {
         const storedEntries = localStorage.getItem(TIMETABLES_STORAGE_KEY);
-        setTimetableEntries(storedEntries ? JSON.parse(storedEntries) : []);
-        
+        const allEntries: TimetableEntry[] = storedEntries ? JSON.parse(storedEntries) : [];
+        setTimetableEntries(user.role === "SuperAdmin" ? allEntries : allEntries.filter(e => e.schoolId === schoolId));
+
         const storedSubjects = localStorage.getItem(SUBJECTS_STORAGE_KEY);
-        setSubjects(storedSubjects ? JSON.parse(storedSubjects) : []);
-        
+        const allSubjects: Subject[] = storedSubjects ? JSON.parse(storedSubjects) : [];
+        setSubjectsList(user.role === "SuperAdmin" ? allSubjects : allSubjects.filter(s => s.schoolId === schoolId));
+
         const storedTeachers = localStorage.getItem(TEACHERS_STORAGE_KEY);
-        setTeachers(storedTeachers ? JSON.parse(storedTeachers) : []);
+        const allTeachers: Teacher[] = storedTeachers ? JSON.parse(storedTeachers) : [];
+        setTeachersList(user.role === "SuperAdmin" ? allTeachers : allTeachers.filter(t => t.schoolId === schoolId));
 
         const storedClasses = localStorage.getItem(SCHOOL_CLASSES_STORAGE_KEY);
-        setSchoolClasses(storedClasses ? JSON.parse(storedClasses) : []);
-        
+        const allClasses: SchoolClass[] = storedClasses ? JSON.parse(storedClasses) : [];
+        setSchoolClassesList(user.role === "SuperAdmin" ? allClasses : allClasses.filter(sc => sc.schoolId === schoolId));
+
         const storedProfile = localStorage.getItem(SCHOOL_PROFILE_STORAGE_KEY);
         if (storedProfile) setSchoolProfile(JSON.parse(storedProfile));
 
@@ -85,29 +90,31 @@ export default function TimetablesPage() {
       }
     };
     loadData();
-  }, [user, authLoading, router, toast, addLog]);
+  }, [user, currentSchool, authLoading, router, toast, addLog]);
 
-  const subjectMap = useMemo(() => new Map(subjects.map(s => [s.id, s.name])), [subjects]);
-  const teacherMap = useMemo(() => new Map(teachers.map(t => [t.id, t.name])), [teachers]);
+  const subjectMap = useMemo(() => new Map(subjectsList.map(s => [s.id, s.name])), [subjectsList]);
+  const teacherMap = useMemo(() => new Map(teachersList.map(t => [t.id, t.name])), [teachersList]);
 
   const filteredTimetable = useMemo(() => {
+    if (!user) return [];
     return timetableEntries
-      .filter(entry => 
-        (selectedClassId === "ALL" || entry.classOrGrade === schoolClasses.find(sc => sc.id === selectedClassId)?.name) &&
+      .filter(entry =>
+        (selectedClassId === "ALL" || entry.classOrGrade === schoolClassesList.find(sc => sc.id === selectedClassId)?.name) &&
         (selectedTeacherId === "ALL" || entry.teacherId === selectedTeacherId) &&
         (selectedDay === "ALL" || entry.dayOfWeek === selectedDay) &&
-        (searchTerm === "" || 
+        (searchTerm === "" ||
           (subjectMap.get(entry.subjectId) || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
           (teacherMap.get(entry.teacherId) || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
           (entry.classOrGrade || '').toLowerCase().includes(searchTerm.toLowerCase())
-        )
+        ) &&
+        (user.role === "SuperAdmin" || entry.schoolId === currentSchool?.id)
       )
       .sort((a, b) => {
         const dayComparison = daysOfWeekOrder.indexOf(a.dayOfWeek) - daysOfWeekOrder.indexOf(b.dayOfWeek);
         if (dayComparison !== 0) return dayComparison;
         return a.startTime.localeCompare(b.startTime);
       });
-  }, [timetableEntries, selectedClassId, selectedTeacherId, selectedDay, searchTerm, subjectMap, teacherMap, schoolClasses]);
+  }, [timetableEntries, selectedClassId, selectedTeacherId, selectedDay, searchTerm, subjectMap, teacherMap, schoolClassesList, user, currentSchool]);
 
   const groupedTimetable = useMemo(() => {
     return filteredTimetable.reduce((acc, entry) => {
@@ -135,7 +142,7 @@ export default function TimetablesPage() {
     const jpDuration = teachingPeriodSettings.jpDurationMinutes;
     let totalJP = 0;
     timetableEntries.forEach(entry => {
-      if (entry.teacherId === teacherId) {
+      if (entry.teacherId === teacherId && (user?.role === "SuperAdmin" || entry.schoolId === currentSchool?.id)) {
         const startMinutes = parseTimeToMinutes(entry.startTime);
         const endMinutes = parseTimeToMinutes(entry.endTime);
         const durationMinutes = endMinutes - startMinutes;
@@ -144,8 +151,8 @@ export default function TimetablesPage() {
         }
       }
     });
-    return Math.round(totalJP * 10) / 10; 
-  }, [timetableEntries, teachingPeriodSettings]);
+    return Math.round(totalJP * 10) / 10;
+  }, [timetableEntries, teachingPeriodSettings, user, currentSchool]);
 
   const selectedTeacherTotalJP = useMemo(() => {
     if (selectedTeacherId !== "ALL" && teachingPeriodSettings?.jpDurationMinutes) {
@@ -157,7 +164,7 @@ export default function TimetablesPage() {
 
   const handlePrint = () => {
     addLog("INFO", `Pengguna ${user?.email} mencetak jadwal pelajaran. Filter: Kelas=${selectedClassId}, Guru=${selectedTeacherId}, Hari=${selectedDay}.`, "TimetablesPage-Print");
-    
+
     let headerHtml = '';
     if (schoolProfile) {
         headerHtml = `
@@ -177,8 +184,8 @@ export default function TimetablesPage() {
     }
 
     let filterInfoHtml = `<div class="filter-info">`;
-    if (selectedClassId !== "ALL") filterInfoHtml += `Kelas/Rombel: ${schoolClasses.find(sc => sc.id === selectedClassId)?.name || selectedClassId}<br>`;
-    if (selectedTeacherId !== "ALL") filterInfoHtml += `Guru: ${teachers.find(t => t.id === selectedTeacherId)?.name || selectedTeacherId}<br>`;
+    if (selectedClassId !== "ALL") filterInfoHtml += `Kelas/Rombel: ${schoolClassesList.find(sc => sc.id === selectedClassId)?.name || selectedClassId}<br>`;
+    if (selectedTeacherId !== "ALL") filterInfoHtml += `Guru: ${teachersList.find(t => t.id === selectedTeacherId)?.name || selectedTeacherId}<br>`;
     if (selectedDay !== "ALL") filterInfoHtml += `Hari: ${selectedDay}<br>`;
     if (searchTerm) filterInfoHtml += `Pencarian: "${searchTerm}"<br>`;
     filterInfoHtml += `</div>`;
@@ -253,8 +260,8 @@ export default function TimetablesPage() {
             @media print {
                 .print-button-container { display: none; }
                  h1, h2, h3, h4, h5, table, ul, ol, p, div { page-break-inside: avoid; }
-                 .kop-surat { border-bottom: 3px solid black !important; } 
-                 .kop-surat::after { border-bottom: 1px solid black !important; } 
+                 .kop-surat { border-bottom: 3px solid black !important; }
+                 .kop-surat::after { border-bottom: 1px solid black !important; }
             }
           </style>
         </head>
@@ -273,7 +280,7 @@ export default function TimetablesPage() {
     printWindow?.document.write(printContent);
     printWindow?.document.close();
   };
-  
+
   const handleDeleteEntry = useCallback((entryId: string) => {
     const entryToDelete = timetableEntries.find(e => e.id === entryId);
     if (!entryToDelete) {
@@ -311,7 +318,7 @@ export default function TimetablesPage() {
             <div>
               <CardTitle className="text-2xl md:text-3xl font-bold">Jadwal Pelajaran Sekolah</CardTitle>
               <CardDescription className="text-base md:text-lg text-primary-foreground/90 mt-1">
-                Lihat dan kelola jadwal pelajaran untuk semua kelas dan guru.
+                Lihat dan kelola jadwal pelajaran untuk semua kelas dan guru {currentSchool ? `di ${currentSchool.name}` : ''}.
               </CardDescription>
             </div>
           </div>
@@ -390,7 +397,7 @@ export default function TimetablesPage() {
                         <SelectTrigger id="classFilter" className="h-10 text-sm"><SelectValue placeholder="Semua Kelas" /></SelectTrigger>
                         <SelectContent>
                             <SelectItem value="ALL">Semua Kelas/Rombel</SelectItem>
-                            {schoolClasses.map(sc => <SelectItem key={sc.id} value={sc.id}>{sc.name} ({sc.gradeLevel})</SelectItem>)}
+                            {schoolClassesList.map(sc => <SelectItem key={sc.id} value={sc.id}>{sc.name} ({sc.gradeLevel})</SelectItem>)}
                         </SelectContent>
                     </Select>
                 </div>
@@ -400,7 +407,7 @@ export default function TimetablesPage() {
                         <SelectTrigger id="teacherFilter" className="h-10 text-sm"><SelectValue placeholder="Semua Guru" /></SelectTrigger>
                         <SelectContent>
                             <SelectItem value="ALL">Semua Guru</SelectItem>
-                            {teachers.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                            {teachersList.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
                         </SelectContent>
                     </Select>
                 </div>
@@ -499,4 +506,3 @@ export default function TimetablesPage() {
     </div>
   );
 }
-

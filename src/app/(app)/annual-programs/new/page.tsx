@@ -18,17 +18,17 @@ import { SCHOOL_PROFILE_STORAGE_KEY } from "@/types";
 const ANNUAL_PROGRAMS_STORAGE_KEY = "appAnnualPrograms";
 
 type ProtaFormState = {
-  capaianPembelajaran_textarea?: string; 
+  capaianPembelajaran_textarea?: string;
   profilPelajarPancasilaFocus_textarea?: string;
   semester1_topics_textarea?: string;
-  semester1_elements_textarea?: string; 
+  semester1_elements_textarea?: string;
   semester1_allocations_textarea?: string;
   semester2_topics_textarea?: string;
-  semester2_elements_textarea?: string; 
+  semester2_elements_textarea?: string;
   semester2_allocations_textarea?: string;
 };
 
-const getInitialProtaData = (curriculum: CurriculumFramework): Partial<AnnualProgram & ProtaFormState> => {
+const getInitialProtaData = (curriculum: CurriculumFramework, schoolId?: string): Partial<AnnualProgram & ProtaFormState> => {
     const common = {
         type: 'PROTA' as const, title: '', subject: '', gradeLevel: '', year: '',
         semester1Components: [],
@@ -40,6 +40,7 @@ const getInitialProtaData = (curriculum: CurriculumFramework): Partial<AnnualPro
         semester2_topics_textarea: '',
         semester2_elements_textarea: '',
         semester2_allocations_textarea: '',
+        schoolId,
     };
     if (curriculum === "Kurikulum Merdeka") {
         return {
@@ -59,13 +60,13 @@ const getInitialProtaData = (curriculum: CurriculumFramework): Partial<AnnualPro
 
 export default function NewAnnualProgramPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, currentSchool } = useAuth();
   const { toast } = useToast();
   const { defaultCurriculum, availableCurriculums } = useCurriculum();
   const { addLog } = useLog();
 
   const [selectedCurriculum, setSelectedCurriculum] = useState<CurriculumFramework>(defaultCurriculum);
-  const [formData, setFormData] = useState<Partial<AnnualProgram & ProtaFormState>>(getInitialProtaData(defaultCurriculum));
+  const [formData, setFormData] = useState<Partial<AnnualProgram & ProtaFormState>>(getInitialProtaData(defaultCurriculum, currentSchool?.id));
   const [schoolEducationLevel, setSchoolEducationLevel] = useState<EducationLevel | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
@@ -74,9 +75,10 @@ export default function NewAnnualProgramPage() {
     if (!user || !["SuperAdmin", "Admin", "WakaKurikulum", "Guru"].includes(user.role)) {
       toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk membuat PROTA baru.", variant: "destructive" });
       router.push("/annual-programs");
+      return;
     }
     setSelectedCurriculum(defaultCurriculum);
-    setFormData(getInitialProtaData(defaultCurriculum));
+    setFormData(getInitialProtaData(defaultCurriculum, currentSchool?.id));
 
     const storedSchoolProfile = localStorage.getItem(SCHOOL_PROFILE_STORAGE_KEY);
     if (storedSchoolProfile) {
@@ -87,7 +89,7 @@ export default function NewAnnualProgramPage() {
         console.error("Failed to parse school profile for grade levels", e);
       }
     }
-  }, [user, router, toast, defaultCurriculum]);
+  }, [user, router, toast, defaultCurriculum, currentSchool]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -106,13 +108,13 @@ export default function NewAnnualProgramPage() {
           title: prev.title,
           subject: prev.subject,
           year: prev.year,
-          ...getInitialProtaData(newCurriculum),
+          ...getInitialProtaData(newCurriculum, currentSchool?.id),
       }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
   };
-  
+
   const parseProtaComponents = (topicsStr?: string, elementsStr?: string, allocationsStr?: string): AnnualProgramComponent[] => {
     if (!topicsStr || !allocationsStr) return [];
     const topics = topicsStr.split('\n').map(s => s.trim()).filter(s => s);
@@ -203,13 +205,14 @@ export default function NewAnnualProgramPage() {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       createdByUserId: user?.id,
+      schoolId: currentSchool?.id,
     };
 
     try {
       const existingPrograms = JSON.parse(localStorage.getItem(ANNUAL_PROGRAMS_STORAGE_KEY) || "[]") as AnnualProgram[];
       localStorage.setItem(ANNUAL_PROGRAMS_STORAGE_KEY, JSON.stringify([newAnnualProgram, ...existingPrograms]));
       toast({ title: "PROTA Dibuat", description: `"${newAnnualProgram.title}" telah berhasil disimpan.` });
-      addLog("INFO", `PROTA baru "${newAnnualProgram.title}" berhasil dibuat oleh ${user?.email}.`, "NewAnnualProgramPage");
+      addLog("INFO", `PROTA baru "${newAnnualProgram.title}" berhasil dibuat oleh ${user?.email} untuk sekolah ID ${currentSchool?.id}.`, "NewAnnualProgramPage");
       router.push("/annual-programs");
     } catch (error) {
       toast({ title: "Gagal Menyimpan", description: "Terjadi kesalahan saat menyimpan PROTA.", variant: "destructive" });
@@ -267,4 +270,8 @@ export default function NewAnnualProgramPage() {
               </Button>
             </div>
           </form>
-        
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

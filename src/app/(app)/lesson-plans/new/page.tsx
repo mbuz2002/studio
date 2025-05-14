@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -16,7 +17,7 @@ import { SCHOOL_PROFILE_STORAGE_KEY } from "@/types";
 
 const LESSON_PLANS_STORAGE_KEY = "appLessonPlans";
 
-const baseRppData: Omit<LessonPlan, 'id' | 'createdAt' | 'updatedAt' | 'createdByUserId' | 'curriculumType'> = {
+const baseRppData: Omit<LessonPlan, 'id' | 'createdAt' | 'updatedAt' | 'createdByUserId' | 'curriculumType' | 'schoolId'> = {
   type: 'RPP', title: '', subject: '', gradeLevel: '', topic: '',
   learningObjectives: [],
   alokasiWaktuJP: '',
@@ -37,8 +38,8 @@ const baseRppData: Omit<LessonPlan, 'id' | 'createdAt' | 'updatedAt' | 'createdB
   metodePembelajaran: [],
 };
 
-const getInitialFormData = (curriculum: CurriculumFramework): Partial<LessonPlan> => {
-  const common = { ...baseRppData, curriculumType: curriculum, gradeLevel: '' };
+const getInitialFormData = (curriculum: CurriculumFramework, schoolId?: string): Partial<LessonPlan> => {
+  const common = { ...baseRppData, curriculumType: curriculum, gradeLevel: '', schoolId };
   if (curriculum === "Kurikulum Merdeka") {
     return {
       ...common,
@@ -93,13 +94,13 @@ const getInitialFormData = (curriculum: CurriculumFramework): Partial<LessonPlan
 
 export default function NewLessonPlanPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, currentSchool } = useAuth();
   const { toast } = useToast();
   const { defaultCurriculum, availableCurriculums } = useCurriculum();
   const { addLog } = useLog();
 
   const [selectedCurriculum, setSelectedCurriculum] = useState<CurriculumFramework>(defaultCurriculum);
-  const [formData, setFormData] = useState<Partial<LessonPlan>>(getInitialFormData(defaultCurriculum));
+  const [formData, setFormData] = useState<Partial<LessonPlan>>(getInitialFormData(defaultCurriculum, currentSchool?.id));
   const [schoolEducationLevel, setSchoolEducationLevel] = useState<EducationLevel | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
@@ -108,10 +109,11 @@ export default function NewLessonPlanPage() {
     if (!user || !["SuperAdmin", "Admin", "WakaKurikulum", "Guru"].includes(user.role)) {
       toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk membuat item ini.", variant: "destructive" });
       router.push("/lesson-plans");
+      return;
     }
-    
+
     setSelectedCurriculum(defaultCurriculum);
-    setFormData(getInitialFormData(defaultCurriculum));
+    setFormData(getInitialFormData(defaultCurriculum, currentSchool?.id));
 
     const storedSchoolProfile = localStorage.getItem(SCHOOL_PROFILE_STORAGE_KEY);
     if (storedSchoolProfile) {
@@ -123,7 +125,7 @@ export default function NewLessonPlanPage() {
       }
     }
 
-  }, [user, router, toast, defaultCurriculum]);
+  }, [user, router, toast, defaultCurriculum, currentSchool]);
 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -139,13 +141,13 @@ export default function NewLessonPlanPage() {
       }
       const newCurriculum = value as CurriculumFramework;
       setSelectedCurriculum(newCurriculum);
-      
+
       setFormData(prev => ({
         title: prev.title,
         subject: prev.subject,
         topic: prev.topic,
         alokasiWaktuJP: prev.alokasiWaktuJP,
-        ...getInitialFormData(newCurriculum),
+        ...getInitialFormData(newCurriculum, currentSchool?.id),
       }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
@@ -158,7 +160,7 @@ export default function NewLessonPlanPage() {
   };
 
   const handleLangkahPembelajaranChange = (part: 'pendahuluan' | 'kegiatanInti' | 'penutup', value: string) => {
-    const valuesArray = value.split('\n').filter(s => s.trim().length > 0); 
+    const valuesArray = value.split('\n').filter(s => s.trim().length > 0);
     setFormData(prev => {
       const currentLangkah = prev.langkahPembelajaran || { pendahuluan: [], kegiatanInti: [], penutup: [] };
       return {
@@ -249,7 +251,7 @@ export default function NewLessonPlanPage() {
 
     const newLessonPlan: LessonPlan = {
       id: `rpp-${Date.now()}`,
-      type: 'RPP', 
+      type: 'RPP',
       title: formData.title || '',
       subject: formData.subject || '',
       gradeLevel: formData.gradeLevel || '',
@@ -257,7 +259,7 @@ export default function NewLessonPlanPage() {
       topic: formData.topic || '',
       learningObjectives: formData.learningObjectives || [],
       alokasiWaktuJP: formData.alokasiWaktuJP || '',
-      
+
       bidangKeahlian: selectedCurriculum === "Kurikulum Merdeka" ? formData.bidangKeahlian || undefined : undefined,
       programKeahlian: selectedCurriculum === "Kurikulum Merdeka" ? formData.programKeahlian || undefined : undefined,
       capaianPembelajaran: selectedCurriculum === "Kurikulum Merdeka" ? formData.capaianPembelajaran || [] : undefined,
@@ -265,19 +267,20 @@ export default function NewLessonPlanPage() {
       pertanyaanPemantik: selectedCurriculum === "Kurikulum Merdeka" ? formData.pertanyaanPemantik || [] : undefined,
       differentiationStrategies: selectedCurriculum === "Kurikulum Merdeka" ? formData.differentiationStrategies || [] : undefined,
       profilPelajarPancasilaFocus: selectedCurriculum === "Kurikulum Merdeka" ? formData.profilPelajarPancasilaFocus || [] : undefined,
-      
+
       standarKompetensi: selectedCurriculum === "KTSP 2006" ? formData.standarKompetensi || [] : undefined,
       kompetensiInti: selectedCurriculum === "K-13" ? formData.kompetensiInti || [] : undefined,
       kompetensiDasar: (selectedCurriculum === "K-13" || selectedCurriculum === "KTSP 2006") ? formData.kompetensiDasar || [] : undefined,
       indikatorPencapaianKompetensi: (selectedCurriculum === "K-13" || selectedCurriculum === "KTSP 2006") ? formData.indikatorPencapaianKompetensi || [] : undefined,
       metodePembelajaran: (selectedCurriculum === "K-13" || selectedCurriculum === "KTSP 2006") ? formData.metodePembelajaran || [] : undefined,
-      
+
       langkahPembelajaran: formData.langkahPembelajaran || { pendahuluan: [], kegiatanInti: [], penutup: [] },
       assessment: formData.assessment || '',
       materials: formData.materials || '',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       createdByUserId: user?.id,
+      schoolId: currentSchool?.id,
     };
 
     try {
@@ -285,7 +288,7 @@ export default function NewLessonPlanPage() {
       localStorage.setItem(LESSON_PLANS_STORAGE_KEY, JSON.stringify([newLessonPlan, ...existingPlans]));
       const docType = selectedCurriculum === "Kurikulum Merdeka" ? "ATP/Modul Ajar" : "RPP";
       toast({ title: `${docType} Dibuat`, description: `"${newLessonPlan.title}" telah berhasil disimpan.` });
-      addLog("INFO", `${docType} baru "${newLessonPlan.title}" berhasil dibuat oleh ${user?.email}.`, "NewLessonPlanPage");
+      addLog("INFO", `${docType} baru "${newLessonPlan.title}" berhasil dibuat oleh ${user?.email} untuk sekolah ID ${currentSchool?.id}.`, "NewLessonPlanPage");
       router.push("/lesson-plans");
     } catch (error) {
       const docType = selectedCurriculum === "Kurikulum Merdeka" ? "ATP/Modul Ajar" : "RPP";
@@ -294,7 +297,7 @@ export default function NewLessonPlanPage() {
       setIsSubmitting(false);
     }
   };
-  
+
   if (!user) {
     return (
       <div className="flex h-[calc(100vh-200px)] items-center justify-center">

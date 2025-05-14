@@ -15,7 +15,7 @@ import { SUBJECTS_STORAGE_KEY } from "@/types";
 
 export default function NewSubjectPage() {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { user, currentSchool, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const { addLog } = useLog();
 
@@ -50,13 +50,14 @@ export default function NewSubjectPage() {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       createdByUserId: user?.id,
+      schoolId: currentSchool?.id,
     };
 
     try {
       const existingSubjects = JSON.parse(localStorage.getItem(SUBJECTS_STORAGE_KEY) || "[]") as Subject[];
       localStorage.setItem(SUBJECTS_STORAGE_KEY, JSON.stringify([newSubject, ...existingSubjects]));
       toast({ title: "Mata Pelajaran Ditambahkan", description: `"${newSubject.name}" berhasil disimpan.` });
-      addLog("INFO", `Mata pelajaran baru "${newSubject.name}" (Kode: ${newSubject.code || '-'}) ditambahkan oleh ${user?.email}.`, "NewSubjectPage");
+      addLog("INFO", `Mata pelajaran baru "${newSubject.name}" (Kode: ${newSubject.code || '-'}) ditambahkan oleh ${user?.email} untuk sekolah ID ${currentSchool?.id}.`, "NewSubjectPage");
       router.push("/master-data/subjects");
     } catch (error) {
       toast({ title: "Gagal Menyimpan", description: "Terjadi kesalahan saat menyimpan mata pelajaran.", variant: "destructive" });

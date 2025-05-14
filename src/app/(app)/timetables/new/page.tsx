@@ -20,7 +20,7 @@ const daysOfWeek: TimetableEntry['dayOfWeek'][] = ['Senin', 'Selasa', 'Rabu', 'K
 
 export default function NewTimetableEntryPage() {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { user, currentSchool, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const { addLog } = useLog();
 
@@ -32,9 +32,9 @@ export default function NewTimetableEntryPage() {
     subjectId: '',
     teacherId: '',
   });
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [schoolClasses, setSchoolClasses] = useState<SchoolClass[]>([]);
+  const [subjects, setSubjectsList] = useState<Subject[]>([]);
+  const [teachers, setTeachersList] = useState<Teacher[]>([]);
+  const [schoolClasses, setSchoolClassesList] = useState<SchoolClass[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -44,19 +44,30 @@ export default function NewTimetableEntryPage() {
       router.push("/timetables");
       return;
     }
-    
+
+    const schoolId = currentSchool?.id;
+
     const storedSubjects = localStorage.getItem(SUBJECTS_STORAGE_KEY);
-    if (storedSubjects) setSubjects(JSON.parse(storedSubjects));
-    
+    if (storedSubjects) {
+        const allSubjects: Subject[] = JSON.parse(storedSubjects);
+        setSubjectsList(user.role === "SuperAdmin" ? allSubjects : allSubjects.filter(s => s.schoolId === schoolId));
+    }
+
     const storedTeachers = localStorage.getItem(TEACHERS_STORAGE_KEY);
-    if (storedTeachers) setTeachers(JSON.parse(storedTeachers));
+    if (storedTeachers) {
+        const allTeachers: Teacher[] = JSON.parse(storedTeachers);
+        setTeachersList(user.role === "SuperAdmin" ? allTeachers : allTeachers.filter(t => t.schoolId === schoolId));
+    }
 
     const storedClasses = localStorage.getItem(SCHOOL_CLASSES_STORAGE_KEY);
-    if (storedClasses) setSchoolClasses(JSON.parse(storedClasses));
-    
+    if (storedClasses) {
+        const allClasses: SchoolClass[] = JSON.parse(storedClasses);
+        setSchoolClassesList(user.role === "SuperAdmin" ? allClasses : allClasses.filter(sc => sc.schoolId === schoolId));
+    }
+
     addLog("INFO", `Pengguna ${user.email} mengakses halaman Tambah Entri Jadwal Baru.`, "NewTimetableEntryPage");
 
-  }, [user, authLoading, router, toast, addLog]);
+  }, [user, currentSchool, authLoading, router, toast, addLog]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -88,21 +99,22 @@ export default function NewTimetableEntryPage() {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       createdByUserId: user?.id,
+      schoolId: currentSchool?.id,
     };
 
     try {
       const existingEntries = JSON.parse(localStorage.getItem(TIMETABLES_STORAGE_KEY) || "[]") as TimetableEntry[];
       localStorage.setItem(TIMETABLES_STORAGE_KEY, JSON.stringify([...existingEntries, newEntry]));
       toast({ title: "Entri Jadwal Ditambahkan", description: `Entri baru untuk ${newEntry.classOrGrade} pada hari ${newEntry.dayOfWeek} berhasil disimpan.` });
-      addLog("INFO", `Entri jadwal baru untuk kelas ${newEntry.classOrGrade} ditambahkan oleh ${user?.email}.`, "NewTimetableEntryPage");
-      router.push("/timetables"); 
+      addLog("INFO", `Entri jadwal baru untuk kelas ${newEntry.classOrGrade} ditambahkan oleh ${user?.email} untuk sekolah ID ${currentSchool?.id}.`, "NewTimetableEntryPage");
+      router.push("/timetables");
     } catch (error) {
       toast({ title: "Gagal Menyimpan", description: "Terjadi kesalahan.", variant: "destructive" });
       addLog("ERROR", `Gagal menyimpan entri jadwal untuk ${newEntry.classOrGrade}. Kesalahan: ${error instanceof Error ? error.message : String(error)}`, "NewTimetableEntryPage");
       setIsSubmitting(false);
     }
   };
-  
+
   if (authLoading || !user) {
     return (
       <div className="flex h-[calc(100vh-200px)] items-center justify-center">
@@ -131,8 +143,8 @@ export default function NewTimetableEntryPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-1.5">
                 <Label htmlFor="classOrGrade">Kelas/Rombel</Label>
-                <Select 
-                  value={formData.classOrGrade || ""} 
+                <Select
+                  value={formData.classOrGrade || ""}
                   onValueChange={(value) => handleSelectChange('classOrGrade', value)}
                 >
                   <SelectTrigger id="classOrGrade">
@@ -140,8 +152,8 @@ export default function NewTimetableEntryPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="placeholder-classOrGrade" disabled>Pilih Kelas/Rombel</SelectItem>
-                    {schoolClasses.length === 0 && <SelectItem value="no-classes" disabled>Tidak ada data kelas</SelectItem>}
-                    {schoolClasses.map(sc => (
+                    {schoolClassesList.length === 0 && <SelectItem value="no-classes" disabled>Tidak ada data kelas</SelectItem>}
+                    {schoolClassesList.map(sc => (
                       <SelectItem key={sc.id} value={sc.name}>{sc.name} ({sc.gradeLevel})</SelectItem>
                     ))}
                   </SelectContent>
@@ -149,8 +161,8 @@ export default function NewTimetableEntryPage() {
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="dayOfWeek">Hari</Label>
-                <Select 
-                  value={formData.dayOfWeek || ""} 
+                <Select
+                  value={formData.dayOfWeek || ""}
                   onValueChange={(value) => handleSelectChange('dayOfWeek', value)}
                 >
                   <SelectTrigger id="dayOfWeek"><SelectValue placeholder="Pilih Hari" /></SelectTrigger>
@@ -173,29 +185,29 @@ export default function NewTimetableEntryPage() {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="subjectId">Mata Pelajaran</Label>
-              <Select 
-                value={formData.subjectId || ""} 
+              <Select
+                value={formData.subjectId || ""}
                 onValueChange={(value) => handleSelectChange('subjectId', value)}
               >
                 <SelectTrigger id="subjectId"><SelectValue placeholder="Pilih Mata Pelajaran" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="placeholder-subjectId" disabled>Pilih Mata Pelajaran</SelectItem>
-                  {subjects.length === 0 && <SelectItem value="no-subject" disabled>Tidak ada mapel</SelectItem>}
-                  {subjects.map(s => <SelectItem key={s.id} value={s.id}>{s.name} {s.code ? `(${s.code})` : ''}</SelectItem>)}
+                  {subjectsList.length === 0 && <SelectItem value="no-subject" disabled>Tidak ada mapel</SelectItem>}
+                  {subjectsList.map(s => <SelectItem key={s.id} value={s.id}>{s.name} {s.code ? `(${s.code})` : ''}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="teacherId">Guru Pengampu</Label>
-              <Select 
-                value={formData.teacherId || ""} 
+              <Select
+                value={formData.teacherId || ""}
                 onValueChange={(value) => handleSelectChange('teacherId', value)}
               >
                 <SelectTrigger id="teacherId"><SelectValue placeholder="Pilih Guru" /></SelectTrigger>
                 <SelectContent>
                    <SelectItem value="placeholder-teacherId" disabled>Pilih Guru</SelectItem>
-                  {teachers.length === 0 && <SelectItem value="no-teacher" disabled>Tidak ada guru</SelectItem>}
-                  {teachers.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                  {teachersList.length === 0 && <SelectItem value="no-teacher" disabled>Tidak ada guru</SelectItem>}
+                  {teachersList.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -214,4 +226,3 @@ export default function NewTimetableEntryPage() {
     </div>
   );
 }
-

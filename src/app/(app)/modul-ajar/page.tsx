@@ -23,7 +23,7 @@ import LoadingSpinner from "@/components/ui/loading-spinner";
 const initialModulAjarData: ModulAjar[] = [];
 
 export default function ModulAjarPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, currentSchool, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
   const { defaultCurriculum } = useCurriculum();
@@ -116,15 +116,16 @@ export default function ModulAjarPage() {
   }, [toast]);
 
   const filteredModulAjarItems = useMemo(() => {
+    if (!user) return [];
     return isClient ? modulAjarItems.filter(ma =>
       (ma.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       ma.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
       ma.gradeLevel.toLowerCase().includes(searchTerm.toLowerCase())
       ) &&
       (faseFilter === "ALL" || ma.identitasModul.fase === faseFilter) &&
-      (user?.role !== "Guru" || ma.createdByUserId === user?.id)
+      (user.role === "SuperAdmin" || ma.schoolId === currentSchool?.id)
     ) : [];
-  }, [isClient, modulAjarItems, searchTerm, faseFilter, user]);
+  }, [isClient, modulAjarItems, searchTerm, faseFilter, user, currentSchool]);
 
   const resetFilters = useCallback(() => {
     setSearchTerm("");
@@ -175,7 +176,7 @@ export default function ModulAjarPage() {
             <div>
                 <CardTitle className="text-2xl md:text-3xl font-bold">Modul Ajar (Kurikulum Merdeka)</CardTitle>
                 <CardDescription className="text-base md:text-lg text-primary-foreground/90 mt-1">
-                    Kelola Modul Ajar Kurikulum Merdeka Anda.
+                    Kelola Modul Ajar Kurikulum Merdeka Anda {currentSchool ? `di ${currentSchool.name}` : ''}.
                 </CardDescription>
             </div>
           </div>
@@ -262,4 +263,3 @@ export default function ModulAjarPage() {
     </div>
   );
 }
-

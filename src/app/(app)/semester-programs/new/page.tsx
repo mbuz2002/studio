@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -17,7 +18,13 @@ import { SCHOOL_PROFILE_STORAGE_KEY } from "@/types";
 
 const SEMESTER_PROGRAMS_STORAGE_KEY = "appSemesterPrograms";
 
-const getInitialPromesData = (curriculum: CurriculumFramework): Partial<SemesterProgram & PromesFormState> => {
+type PromesFormState = {
+  capaianPembelajaranUmum_textarea?: string;
+  alokasiWaktuTotalSemester_input?: string;
+  komponenMingguan_textarea?: string;
+};
+
+const getInitialPromesData = (curriculum: CurriculumFramework, schoolId?: string): Partial<SemesterProgram & PromesFormState> => {
     return {
         type: 'Promes' as const, title: '', subject: '', gradeLevel: '', semester: '1', year: '',
         capaianPembelajaranUmum: '',
@@ -27,18 +34,13 @@ const getInitialPromesData = (curriculum: CurriculumFramework): Partial<Semester
         capaianPembelajaranUmum_textarea: '',
         alokasiWaktuTotalSemester_input: '',
         komponenMingguan_textarea: '',
+        schoolId,
     };
 };
 
 
-type PromesFormState = {
-  capaianPembelajaranUmum_textarea?: string; 
-  alokasiWaktuTotalSemester_input?: string;
-  komponenMingguan_textarea?: string; 
-};
-
 const formatWeeklyUnitsToString = (units: WeeklyUnit[]): string => {
-    return units.map(w => 
+    return units.map(w =>
       `Minggu ke: ${w.mingguKe || ''}\nBulan: ${w.bulan || ''}\nMateri/TP: ${w.materiPokokAtauTujuanPembelajaran || ''}\nAlokasi: ${w.alokasiWaktu || ''}\nMetode: ${w.metodeStrategi?.join(', ') || ''}\nSumber: ${w.sumberBelajar?.join(', ') || ''}\nAsesmen: ${w.rencanaAsesmen?.join(', ') || ''}\nP5: ${w.catatanIntegrasiP5 || ''}`
     ).join('\n\n---\n\n');
 };
@@ -46,7 +48,7 @@ const formatWeeklyUnitsToString = (units: WeeklyUnit[]): string => {
 const parsePromesKomponenMingguan = (komponenStr?: string): WeeklyUnit[] => {
     if (!komponenStr) return [];
     const units: WeeklyUnit[] = [];
-    const unitBlocks = komponenStr.split(/\n\n---\n\n/); 
+    const unitBlocks = komponenStr.split(/\n\n---\n\n/);
 
     unitBlocks.forEach(block => {
       const lines = block.split('\n');
@@ -75,13 +77,13 @@ const parsePromesKomponenMingguan = (komponenStr?: string): WeeklyUnit[] => {
 
 export default function NewSemesterProgramPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, currentSchool } = useAuth();
   const { toast } = useToast();
   const { defaultCurriculum, availableCurriculums } = useCurriculum();
   const { addLog } = useLog();
 
   const [selectedCurriculum, setSelectedCurriculum] = useState<CurriculumFramework>(defaultCurriculum);
-  const [formData, setFormData] = useState<Partial<SemesterProgram & PromesFormState>>(getInitialPromesData(defaultCurriculum));
+  const [formData, setFormData] = useState<Partial<SemesterProgram & PromesFormState>>(getInitialPromesData(defaultCurriculum, currentSchool?.id));
   const [schoolEducationLevel, setSchoolEducationLevel] = useState<EducationLevel | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
@@ -90,9 +92,10 @@ export default function NewSemesterProgramPage() {
     if (!user || !["SuperAdmin", "Admin", "WakaKurikulum", "Guru"].includes(user.role)) {
       toast({ title: "Akses Ditolak", description: "Anda tidak memiliki izin untuk membuat Promes baru.", variant: "destructive" });
       router.push("/semester-programs");
+      return;
     }
     setSelectedCurriculum(defaultCurriculum);
-    setFormData(getInitialPromesData(defaultCurriculum));
+    setFormData(getInitialPromesData(defaultCurriculum, currentSchool?.id));
 
     const storedSchoolProfile = localStorage.getItem(SCHOOL_PROFILE_STORAGE_KEY);
     if (storedSchoolProfile) {
@@ -103,7 +106,7 @@ export default function NewSemesterProgramPage() {
         console.error("Failed to parse school profile for grade levels", e);
       }
     }
-  }, [user, router, toast, defaultCurriculum]);
+  }, [user, router, toast, defaultCurriculum, currentSchool]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -123,7 +126,7 @@ export default function NewSemesterProgramPage() {
         subject: prev.subject,
         year: prev.year,
         semester: prev.semester,
-        ...getInitialPromesData(newCurriculum),
+        ...getInitialPromesData(newCurriculum, currentSchool?.id),
       }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
@@ -157,7 +160,7 @@ export default function NewSemesterProgramPage() {
         setFormData(prev => ({
             ...prev,
             title: result.title || prev.title || `Promes ${formData.subject} ${formData.gradeLevel} Sem ${formData.semester} ${formData.year}`,
-            capaianPembelajaranUmum: result.capaianPembelajaranUmum || '', 
+            capaianPembelajaranUmum: result.capaianPembelajaranUmum || '',
             capaianPembelajaranUmum_textarea: result.capaianPembelajaranUmum || '',
             alokasiWaktuTotalSemester_input: result.alokasiWaktuTotalSemester || '',
             komponenMingguan_textarea: formatWeeklyUnitsToString(result.komponenMingguan || []),
@@ -171,7 +174,7 @@ export default function NewSemesterProgramPage() {
         description: "Tidak dapat menghasilkan konten. Silakan coba lagi.",
         variant: "destructive",
       });
-      addLog("ERROR", `Gagal menyimpan Promes baru "${formData.title || "Tanpa Judul"}". Kesalahan: ${error instanceof Error ? error.message : String(error)}`, source);
+      addLog("ERROR", `Gagal menyimpan Promes baru "${formData.title || "Tanpa Judul"}". Kesalahan: ${error instanceof Error ? error.message : String(error)}`, "NewSemesterProgramPage");
     } finally {
       setIsGeneratingAI(false);
     }
@@ -196,13 +199,14 @@ export default function NewSemesterProgramPage() {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       createdByUserId: user?.id,
+      schoolId: currentSchool?.id,
     };
 
     try {
       const existingPrograms = JSON.parse(localStorage.getItem(SEMESTER_PROGRAMS_STORAGE_KEY) || "[]") as SemesterProgram[];
       localStorage.setItem(SEMESTER_PROGRAMS_STORAGE_KEY, JSON.stringify([newSemesterProgram, ...existingPrograms]));
       toast({ title: "Promes Dibuat", description: `"${newSemesterProgram.title}" telah berhasil disimpan.` });
-      addLog("INFO", `Promes baru "${newSemesterProgram.title}" berhasil dibuat oleh ${user?.email}.`, "NewSemesterProgramPage");
+      addLog("INFO", `Promes baru "${newSemesterProgram.title}" berhasil dibuat oleh ${user?.email} untuk sekolah ID ${currentSchool?.id}.`, "NewSemesterProgramPage");
       router.push("/semester-programs");
     } catch (error) {
       toast({ title: "Gagal Menyimpan", description: "Terjadi kesalahan saat menyimpan Promes.", variant: "destructive" });

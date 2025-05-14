@@ -16,20 +16,16 @@ import { useLog } from "@/contexts/LogContext";
 import type { Teacher, Subject } from "@/types";
 import { TEACHERS_STORAGE_KEY, SUBJECTS_STORAGE_KEY } from "@/types";
 import { Badge } from "@/components/ui/badge";
-
-const initialTeachersData: Teacher[] = [
-  { id: "teacher-1", name: "Dr. Anisa Wulandari, S.Pd., M.Pd.", nip: "198001012005012001", subjectIds: ["subj-1", "subj-3"], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), createdByUserId: "user-1" },
-  { id: "teacher-2", name: "Budi Setiawan, S.Kom.", nip: "198503152008031002", subjectIds: ["subj-2"], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), createdByUserId: "user-1" },
-];
+import { initialTeachersData } from '@/lib/initial-data';
 
 export default function TeachersPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, currentSchool, loading: authLoading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const { addLog } = useLog();
 
   const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [subjects, setSubjectsList] = useState<Subject[]>([]); // Renamed to avoid conflict
   const [searchTerm, setSearchTerm] = useState("");
   const [isClient, setIsClient] = useState(false);
 
@@ -49,33 +45,47 @@ export default function TeachersPage() {
       if (storedTeachers) {
         setTeachers(JSON.parse(storedTeachers));
       } else {
-        setTeachers(initialTeachersData);
-        localStorage.setItem(TEACHERS_STORAGE_KEY, JSON.stringify(initialTeachersData));
+        const demoDataWithSchoolId = initialTeachersData.map(t => ({
+          ...t,
+          schoolId: currentSchool?.id || t.schoolId
+        }));
+        setTeachers(demoDataWithSchoolId);
+        localStorage.setItem(TEACHERS_STORAGE_KEY, JSON.stringify(demoDataWithSchoolId));
       }
       const storedSubjects = localStorage.getItem(SUBJECTS_STORAGE_KEY);
       if (storedSubjects) {
-        setSubjects(JSON.parse(storedSubjects));
+        const allSubjects: Subject[] = JSON.parse(storedSubjects);
+        // Filter subjects by current school if user is not SuperAdmin
+        const schoolSubjects = user.role === "SuperAdmin" 
+          ? allSubjects 
+          : allSubjects.filter(s => s.schoolId === currentSchool?.id);
+        setSubjectsList(schoolSubjects);
       }
     } catch (error) {
       console.error("Gagal memuat data guru/mapel:", error);
-      setTeachers(initialTeachersData);
+      const demoDataWithSchoolId = initialTeachersData.map(t => ({
+          ...t,
+          schoolId: currentSchool?.id || t.schoolId
+        }));
+      setTeachers(demoDataWithSchoolId);
       toast({ title: "Gagal Memuat Data", description: "Menggunakan data default.", variant: "destructive" });
     }
-  }, [user, authLoading, router, toast, addLog]);
+  }, [user, currentSchool, authLoading, router, toast, addLog]);
 
   const getSubjectNames = useCallback((subjectIds: string[]) => {
-    if (!subjects.length) return "Memuat mapel...";
-    return subjectIds.map(id => subjects.find(s => s.id === id)?.name || "Mapel Dihapus").join(", ") || "-";
-  }, [subjects]);
+    if (!subjectsList.length) return "Memuat mapel...";
+    return subjectIds.map(id => subjectsList.find(s => s.id === id)?.name || "Mapel Dihapus").join(", ") || "-";
+  }, [subjectsList]);
 
   const filteredTeachers = useMemo(() => {
-    if (!isClient) return [];
+    if (!isClient || !user) return [];
     return teachers.filter(teacher =>
-      teacher.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (teacher.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (teacher.nip && teacher.nip.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      getSubjectNames(teacher.subjectIds).toLowerCase().includes(searchTerm.toLowerCase())
+      getSubjectNames(teacher.subjectIds).toLowerCase().includes(searchTerm.toLowerCase())) &&
+      (user.role === "SuperAdmin" || teacher.schoolId === currentSchool?.id)
     );
-  }, [isClient, teachers, searchTerm, getSubjectNames]);
+  }, [isClient, teachers, searchTerm, getSubjectNames, user, currentSchool]);
 
   const handleDelete = useCallback((teacherId: string) => {
     const teacherToDelete = teachers.find(t => t.id === teacherId);
@@ -98,7 +108,7 @@ export default function TeachersPage() {
       </div>
     );
   }
-  
+
   const canManage = user && ["Admin", "KepalaSekolah", "WakaKurikulum"].includes(user.role);
 
   return (
@@ -110,7 +120,7 @@ export default function TeachersPage() {
             <div>
               <CardTitle className="text-2xl md:text-3xl font-bold">Master Data Guru</CardTitle>
               <CardDescription className="text-base md:text-lg text-primary-foreground/90 mt-1">
-                Kelola daftar guru dan mata pelajaran yang diampu.
+                Kelola daftar guru dan mata pelajaran yang diampu {currentSchool ? `di ${currentSchool.name}` : ''}.
               </CardDescription>
             </div>
           </div>
@@ -160,11 +170,11 @@ export default function TeachersPage() {
                       <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top text-sm hidden md:table-cell">{teacher.nip || "-"}</TableCell>
                       <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top text-sm">
                          <div className="flex flex-wrap gap-1">
-                           {teacher.subjectIds.map(id => {
-                             const subject = subjects.find(s => s.id === id);
+                           {(teacher.subjectIds || []).map(id => {
+                             const subject = subjectsList.find(s => s.id === id);
                              return subject ? <Badge key={id} variant="secondary" className="text-xs">{subject.name}</Badge> : null;
                            })}
-                           {teacher.subjectIds.length === 0 && "-"}
+                           {(!teacher.subjectIds || teacher.subjectIds.length === 0) && "-"}
                          </div>
                       </TableCell>
                       <TableCell className="text-right px-3 sm:px-4 py-2 sm:py-3 align-top">

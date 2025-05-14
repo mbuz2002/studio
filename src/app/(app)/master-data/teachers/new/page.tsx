@@ -15,12 +15,12 @@ import { TEACHERS_STORAGE_KEY, SUBJECTS_STORAGE_KEY, APP_USERS_STORAGE_KEY } fro
 
 interface TeacherFormData extends Partial<Teacher> {
   userEmail?: string;
-  password?: string; // Added password field
+  password?: string;
 }
 
 export default function NewTeacherPage() {
   const router = useRouter();
-  const { user: adminUser, loading: authLoading } = useAuth();
+  const { user: adminUser, currentSchool, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const { addLog } = useLog();
 
@@ -35,12 +35,17 @@ export default function NewTeacherPage() {
       router.push("/master-data/teachers");
       return;
     }
-    // Load subjects for the form
+    
     const storedSubjects = localStorage.getItem(SUBJECTS_STORAGE_KEY);
     if (storedSubjects) {
-      setAllSubjects(JSON.parse(storedSubjects));
+      const subjects: Subject[] = JSON.parse(storedSubjects);
+      // Filter subjects by current school if user is not SuperAdmin
+      const schoolSubjects = adminUser.role === "SuperAdmin" 
+        ? subjects 
+        : subjects.filter(s => s.schoolId === currentSchool?.id);
+      setAllSubjects(schoolSubjects);
     }
-  }, [adminUser, authLoading, router, toast]);
+  }, [adminUser, currentSchool, authLoading, router, toast]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -75,37 +80,33 @@ export default function NewTeacherPage() {
       name: formData.name!,
       nip: formData.nip,
       subjectIds: formData.subjectIds || [],
-      userId: userId, // Link to the new user
+      userId: userId, 
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       createdByUserId: adminUser?.id,
+      schoolId: currentSchool?.id,
     };
 
     const newUser: User = {
         id: userId,
         name: formData.name!,
         email: formData.userEmail!,
-        role: "Guru", // Automatically assign 'Guru' role
-        // In a real app, password should be hashed before storing or sending to backend
-        // For this localStorage demo, we'll omit storing it directly in the User object visible in storage
-        // but acknowledge it's captured for account creation.
+        role: "Guru", 
+        schoolId: currentSchool?.id, 
         avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.name!)}&background=random&color=fff`,
         updatedAt: new Date().toISOString(),
     };
 
     try {
-      // Save Teacher
+      
       const existingTeachers = JSON.parse(localStorage.getItem(TEACHERS_STORAGE_KEY) || "[]") as Teacher[];
       localStorage.setItem(TEACHERS_STORAGE_KEY, JSON.stringify([newTeacher, ...existingTeachers]));
-      addLog("INFO", `Data guru baru "${newTeacher.name}" (NIP: ${newTeacher.nip || '-'}) ditambahkan oleh ${adminUser?.email}.`, "NewTeacherPage-Teacher");
+      addLog("INFO", `Data guru baru "${newTeacher.name}" (NIP: ${newTeacher.nip || '-'}) ditambahkan oleh ${adminUser?.email} untuk sekolah ID ${currentSchool?.id}.`, "NewTeacherPage-Teacher");
 
-      // Save User
+      
       const existingUsers = JSON.parse(localStorage.getItem(APP_USERS_STORAGE_KEY) || "[]") as User[];
-      // IMPORTANT: Do not store raw password in localStorage for the User object.
-      // The password from formData.password would be used by an auth system to create the account.
-      // For this demo, we just create the user entry without the password field.
       localStorage.setItem(APP_USERS_STORAGE_KEY, JSON.stringify([newUser, ...existingUsers]));
-      addLog("INFO", `Akun pengguna baru untuk guru "${newUser.name}" (Email: ${newUser.email}) berhasil dibuat. Kata sandi telah di-set (simulasi).`, "NewTeacherPage-User");
+      addLog("INFO", `Akun pengguna baru untuk guru "${newUser.name}" (Email: ${newUser.email}) berhasil dibuat untuk sekolah ID ${currentSchool?.id}. Kata sandi telah di-set (simulasi).`, "NewTeacherPage-User");
       
       toast({ title: "Data Guru & Akun Ditambahkan", description: `Data untuk "${newTeacher.name}" dan akun pengguna terkait berhasil disimpan.` });
       router.push("/master-data/teachers");

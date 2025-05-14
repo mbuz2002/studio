@@ -23,6 +23,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { initialAcademicEventsData } from '@/lib/initial-data';
 
 const eventTypes: { value: AcademicEventType; label: string; color: string }[] = [
   { value: "Libur Nasional", label: "Libur Nasional", color: "bg-red-500" },
@@ -39,41 +40,17 @@ const getEventTypeColor = (type: AcademicEventType): string => {
 };
 
 const currentYear = new Date().getFullYear();
-const initialAcademicEvents: AcademicEvent[] = [
-  {
-    id: "holiday-1",
-    title: "Hari Kemerdekaan Republik Indonesia",
-    date: `${currentYear}-08-17`,
-    type: "Libur Nasional",
-    isNationalHoliday: true,
-    description: "Peringatan Proklamasi Kemerdekaan Indonesia.",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    createdByUserId: "system-generated",
-  },
-  {
-    id: "holiday-2",
-    title: "Hari Raya Natal",
-    date: `${currentYear}-12-25`,
-    type: "Libur Nasional",
-    isNationalHoliday: true,
-    description: "Peringatan Hari Kelahiran Yesus Kristus.",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    createdByUserId: "system-generated",
-  },
-  {
-    id: "holiday-3",
-    title: "Tahun Baru Masehi",
-    date: `${currentYear}-01-01`, 
-    type: "Libur Nasional",
-    isNationalHoliday: true,
-    description: "Pergantian Tahun Baru Masehi.",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    createdByUserId: "system-generated",
-  }
-];
+const initialAcademicEvents: AcademicEvent[] = initialAcademicEventsData.map(event => ({
+  ...event,
+  id: event.id || `event-initial-${Math.random().toString(36).substring(2, 9)}`,
+  date: event.date.startsWith(`${currentYear}`) ? event.date : `${currentYear}-${event.date.substring(5)}`,
+  endDate: event.endDate && event.endDate.startsWith(`${currentYear}`) ? event.endDate : (event.endDate ? `${currentYear}-${event.endDate.substring(5)}` : undefined),
+  createdAt: event.createdAt || new Date().toISOString(),
+  updatedAt: event.updatedAt || new Date().toISOString(),
+  createdByUserId: event.createdByUserId || "system-generated",
+  schoolId: event.schoolId, // Will be undefined if not set in initial data
+})) as AcademicEvent[];
+
 
 const generatePrintableCalendarTableHtml = (
   month: Date,
@@ -107,20 +84,20 @@ const generatePrintableCalendarTableHtml = (
   let tableBodyHtml = '';
   const firstOfMonth = startOfMonth(month);
   const daysInCurrentMonth = getDaysInMonth(month);
-  let dayOfWeekOfFirst = getDay(firstOfMonth); 
-  let startingOffset = (dayOfWeekOfFirst === 0) ? 6 : dayOfWeekOfFirst - 1; 
+  let dayOfWeekOfFirst = getDay(firstOfMonth);
+  let startingOffset = (dayOfWeekOfFirst === 0) ? 6 : dayOfWeekOfFirst - 1;
 
   let dayCounter = 1;
-  for (let i = 0; i < 6; i++) { 
+  for (let i = 0; i < 6; i++) {
     tableBodyHtml += `<tr>`;
-    for (let j = 0; j < 7; j++) { 
+    for (let j = 0; j < 7; j++) {
       if ((i === 0 && j < startingOffset) || dayCounter > daysInCurrentMonth) {
         tableBodyHtml += `<td class="other-month"></td>`;
       } else {
         const currentDate = new Date(year, monthIndex, dayCounter);
         const formattedCurrentDate = format(currentDate, "yyyy-MM-dd");
         let cellClass = '';
-        if (j === 5 || j === 6) cellClass += ' weekend'; 
+        if (j === 5 || j === 6) cellClass += ' weekend';
 
         const dayEvents = events.filter(event => {
           const eventStartDate = format(parseISO(event.date), "yyyy-MM-dd");
@@ -140,7 +117,7 @@ const generatePrintableCalendarTableHtml = (
           eventHtml += `<li class="${eventClass}">${event.title}</li>`;
         });
         eventHtml += '</ul>';
-        
+
         if (dayEvents.some(e => e.type === 'Periode Semester Aktif') && !cellClass.includes('event-active-semester-bg')) {
             cellClass += ' event-active-semester-bg';
         }
@@ -225,7 +202,7 @@ const generatePrintableCalendarTableHtml = (
 
 
 export default function AcademicCalendarPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, currentSchool, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const { addLog } = useLog();
 
@@ -235,7 +212,7 @@ export default function AcademicCalendarPage() {
   const [isClient, setIsClient] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<AcademicEvent | null>(null);
-  const [schoolProfile, setSchoolProfile] = useState<SchoolProfile | null>(null);
+  const [schoolProfile, setSchoolProfileState] = useState<SchoolProfile | null>(null);
   const [newEventData, setNewEventData] = useState<Partial<AcademicEvent>>({
     title: "",
     date: format(selectedDate || new Date(), "yyyy-MM-dd"),
@@ -253,23 +230,32 @@ export default function AcademicCalendarPage() {
     if (storedEventsString) {
       try {
         loadedEvents = JSON.parse(storedEventsString).map((e: AcademicEvent) => ({
-            ...e, 
+            ...e,
             date: e.date ? format(parseISO(e.date), 'yyyy-MM-dd') : '',
             endDate: e.endDate ? format(parseISO(e.endDate), 'yyyy-MM-dd') : undefined,
         }));
       } catch (error) {
         console.error("Gagal memuat acara dari localStorage:", error);
-        loadedEvents = [...initialAcademicEvents]; 
+        loadedEvents = [...initialAcademicEvents];
       }
     } else {
-       loadedEvents = [...initialAcademicEvents];
+       loadedEvents = [...initialAcademicEvents.map(e => ({...e, schoolId: currentSchool?.id}))]; // Assign schoolId to initial demo events
        localStorage.setItem(ACADEMIC_EVENTS_STORAGE_KEY, JSON.stringify(loadedEvents));
     }
-    
-    const finalEvents = [...loadedEvents];
+
+    // Filter events by current school ID if not SuperAdmin
+    const schoolSpecificEvents = user?.role === "SuperAdmin"
+        ? loadedEvents
+        : loadedEvents.filter(e => e.schoolId === currentSchool?.id || e.isNationalHoliday); // National holidays are global
+
+    const finalEvents = [...schoolSpecificEvents];
+    // Only add system-generated initial events if they don't exist for the current context or are national holidays
     initialAcademicEvents.forEach(initialEvent => {
-        if (!finalEvents.some(e => e.id === initialEvent.id && e.createdByUserId === "system-generated")) {
-            finalEvents.push(initialEvent);
+        if (initialEvent.isNationalHoliday && !finalEvents.some(e => e.id === initialEvent.id && e.createdByUserId === "system-generated")) {
+            finalEvents.push({...initialEvent, schoolId: undefined }); // National holidays are global
+        } else if (!initialEvent.isNationalHoliday && currentSchool && !finalEvents.some(e => e.id === initialEvent.id && e.schoolId === currentSchool.id && e.createdByUserId === "system-generated")) {
+            // This part is tricky - system generated school specific events should ideally be part of initial school data
+            // For now, we avoid re-adding them if they are not national holidays and a school context exists.
         }
     });
     setEvents(finalEvents);
@@ -277,12 +263,12 @@ export default function AcademicCalendarPage() {
     const storedProfile = localStorage.getItem(SCHOOL_PROFILE_STORAGE_KEY);
     if (storedProfile) {
         try {
-            setSchoolProfile(JSON.parse(storedProfile));
+            setSchoolProfileState(JSON.parse(storedProfile));
         } catch (error) {
             console.error("Gagal memuat profil sekolah dari localStorage:", error);
         }
     }
-  }, [user, authLoading, addLog]);
+  }, [user, currentSchool, authLoading, addLog]);
 
   const canManageEvents = user && (user.role === "Admin" || user.role === "KepalaSekolah" || user.role === "WakaKurikulum");
 
@@ -331,7 +317,13 @@ export default function AcademicCalendarPage() {
 
     let updatedEvents;
     if (editingEvent) {
-      const updatedEvent = { ...editingEvent, ...newEventData, updatedAt: new Date().toISOString() } as AcademicEvent;
+      const updatedEvent = {
+        ...editingEvent,
+        ...newEventData,
+        updatedAt: new Date().toISOString(),
+        schoolId: newEventData.type !== "Libur Nasional" ? currentSchool?.id : undefined, // National holidays are global
+        isNationalHoliday: newEventData.type === 'Libur Nasional' ? (newEventData.isNationalHoliday || false) : undefined,
+       } as AcademicEvent;
       updatedEvents = events.map((event) => (event.id === editingEvent.id ? updatedEvent : event));
       toast({ title: "Acara Diperbarui", description: `Acara "${updatedEvent.title}" telah diperbarui.` });
       addLog("INFO", `Acara "${updatedEvent.title}" (ID: ${updatedEvent.id}) diperbarui oleh ${user?.email}.`, "AcademicCalendarPage");
@@ -344,10 +336,11 @@ export default function AcademicCalendarPage() {
         endDate: newEventData.endDate ? format(parseISO(newEventData.endDate), "yyyy-MM-dd") : undefined,
         type: newEventData.type!,
         description: newEventData.description,
-        isNationalHoliday: newEventData.type === 'Libur Nasional' ? newEventData.isNationalHoliday : undefined,
+        isNationalHoliday: newEventData.type === 'Libur Nasional' ? (newEventData.isNationalHoliday || false) : undefined,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         createdByUserId: user?.id,
+        schoolId: newEventData.type !== "Libur Nasional" ? currentSchool?.id : undefined, // National holidays are global
       };
       updatedEvents = [...events, newCalendarEvent];
       toast({ title: "Acara Ditambahkan", description: `Acara "${newCalendarEvent.title}" telah ditambahkan.` });
@@ -358,13 +351,21 @@ export default function AcademicCalendarPage() {
     setIsFormOpen(false);
     setEditingEvent(null);
   };
-  
-  const eventDateStrings = useMemo(() => events.map(event => event.date), [events]);
-  const eventDatesForBorder = useMemo(() => eventDateStrings.map(dateStr => parseISO(dateStr)).filter(date => isValid(date)), [eventDateStrings]);
+
+  const eventDatesForBorder = useMemo(() =>
+    events
+        .filter(event => user?.role === "SuperAdmin" || event.schoolId === currentSchool?.id || event.isNationalHoliday) // Ensure filtering here as well for display
+        .map(event => event.date)
+        .map(dateStr => parseISO(dateStr))
+        .filter(date => isValid(date)),
+  [events, user, currentSchool]);
+
 
   const getDatesAndRangesForType = useCallback((eventType: AcademicEventType): (Date | DateRange)[] => {
     const datesAndRanges: (Date | DateRange)[] = [];
-    events.filter(event => event.type === eventType).forEach(event => {
+    events
+      .filter(event => event.type === eventType && (user?.role === "SuperAdmin" || event.schoolId === currentSchool?.id || event.isNationalHoliday))
+      .forEach(event => {
       const startDate = parseISO(event.date);
       if (isValid(startDate)) {
         if (event.endDate) {
@@ -372,7 +373,7 @@ export default function AcademicCalendarPage() {
           if (isValid(endDateValue) && endDateValue >= startDate) {
             datesAndRanges.push({ from: startDate, to: endDateValue });
           } else {
-            datesAndRanges.push(startDate); 
+            datesAndRanges.push(startDate);
           }
         } else {
           datesAndRanges.push(startDate);
@@ -380,7 +381,7 @@ export default function AcademicCalendarPage() {
       }
     });
     return datesAndRanges;
-  }, [events]);
+  }, [events, user, currentSchool]);
 
   const nationalHolidayDates = useMemo(() => getDatesAndRangesForType("Libur Nasional"), [getDatesAndRangesForType]);
   const semesterHolidayDates = useMemo(() => getDatesAndRangesForType("Libur Semester"), [getDatesAndRangesForType]);
@@ -388,32 +389,32 @@ export default function AcademicCalendarPage() {
 
 
   const modifiers: DayPickerProps['modifiers'] = {
-    eventDay: eventDatesForBorder, 
+    eventDay: eventDatesForBorder,
     nationalHoliday: nationalHolidayDates,
     semesterHoliday: semesterHolidayDates,
     activeSemesterPeriod: activeSemesterPeriodDates,
   };
 
   const modifiersStyles: DayPickerProps['modifiersStyles'] = {
-    eventDay: { 
+    eventDay: {
       border: `2px solid hsl(var(--primary))`,
       borderRadius: '8px',
     },
     nationalHoliday: {
-      backgroundColor: 'hsl(var(--destructive))', 
-      color: 'hsl(var(--destructive-foreground))', 
+      backgroundColor: 'hsl(var(--destructive))',
+      color: 'hsl(var(--destructive-foreground))',
       borderRadius: '8px',
       fontWeight: 'bold',
     },
     semesterHoliday: {
-      backgroundColor: 'hsla(30, 90%, 60%, 1)', 
-      color: 'hsl(var(--primary-foreground))', 
+      backgroundColor: 'hsla(30, 90%, 60%, 1)',
+      color: 'hsl(var(--primary-foreground))',
       borderRadius: '8px',
       fontWeight: 'bold',
     },
     activeSemesterPeriod: {
-      backgroundColor: 'hsla(var(--accent-hsl), 0.15)', 
-      borderRadius: '0px', 
+      backgroundColor: 'hsla(var(--accent-hsl), 0.15)',
+      borderRadius: '0px',
     }
   };
 
@@ -421,6 +422,7 @@ export default function AcademicCalendarPage() {
     if (!selectedDate) return [];
     const formattedSelectedDate = format(selectedDate, "yyyy-MM-dd");
     return events.filter(event => {
+      if (!(user?.role === "SuperAdmin" || event.schoolId === currentSchool?.id || event.isNationalHoliday)) return false;
       const eventStartDate = format(parseISO(event.date), "yyyy-MM-dd");
       if (event.endDate) {
         const eventEndDate = format(parseISO(event.endDate), "yyyy-MM-dd");
@@ -428,8 +430,8 @@ export default function AcademicCalendarPage() {
       }
       return eventStartDate === formattedSelectedDate;
     });
-  }, [selectedDate, events]);
-  
+  }, [selectedDate, events, user, currentSchool]);
+
    const handlePrintTable = () => {
     const userName = user?.name || user?.email || "Pengguna";
     const printableHtml = generatePrintableCalendarTableHtml(currentMonth, events, schoolProfile, userName);
@@ -467,7 +469,7 @@ export default function AcademicCalendarPage() {
               <div>
                 <CardTitle className="text-2xl md:text-3xl font-bold">Kalender Pendidikan</CardTitle>
                 <CardDescription className="text-base md:text-lg text-primary-foreground/90 mt-1">
-                  Lihat dan kelola jadwal kegiatan akademik dan hari libur sekolah.
+                  Lihat dan kelola jadwal kegiatan akademik dan hari libur sekolah {currentSchool ? ` (${currentSchool.name})` : ''}.
                 </CardDescription>
               </div>
             </div>
@@ -499,7 +501,7 @@ export default function AcademicCalendarPage() {
                   caption_label: "text-lg font-semibold",
                   head_cell: "text-muted-foreground w-10 sm:w-12 text-sm",
                   cell: "h-10 w-10 sm:h-12 sm:w-12 text-center text-sm p-0 relative",
-                  day: "h-10 w-10 sm:h-12 sm:w-12 p-0 font-normal rounded-md hover:bg-accent/50", 
+                  day: "h-10 w-10 sm:h-12 sm:w-12 p-0 font-normal rounded-md hover:bg-accent/50",
                   day_selected: "bg-primary text-primary-foreground hover:bg-primary focus:bg-primary rounded-md",
                   day_today: "bg-accent text-accent-foreground rounded-md",
               }}
@@ -526,13 +528,13 @@ export default function AcademicCalendarPage() {
                                 <h4 className="font-semibold text-sm text-primary break-words">{event.title}</h4>
                             </div>
                             <p className="text-xs text-muted-foreground">
-                                {event.endDate && event.date !== event.endDate 
-                                    ? `${format(parseISO(event.date), 'dd MMM', {locale: indonesianLocale})} - ${format(parseISO(event.endDate), 'dd MMM yyyy', {locale: indonesianLocale})}` 
+                                {event.endDate && event.date !== event.endDate
+                                    ? `${format(parseISO(event.date), 'dd MMM', {locale: indonesianLocale})} - ${format(parseISO(event.endDate), 'dd MMM yyyy', {locale: indonesianLocale})}`
                                     : format(parseISO(event.date), 'dd MMMM yyyy', {locale: indonesianLocale})}
                             </p>
                              <Badge variant="outline" className="text-xs mt-1">{event.type}</Badge>
                           </div>
-                           {canManageEvents && event.createdByUserId !== "system-generated" && ( 
+                           {canManageEvents && event.createdByUserId !== "system-generated" && (
                               <div className="flex gap-1 flex-shrink-0">
                                 <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditEventClick(event)}>
                                   <Edit2 className="h-3.5 w-3.5" />
@@ -608,9 +610,9 @@ export default function AcademicCalendarPage() {
             </div>
             {newEventData.type === 'Libur Nasional' && (
                 <div className="flex items-center space-x-2">
-                    <Checkbox 
-                        id="isNationalHoliday" 
-                        checked={newEventData.isNationalHoliday || false} 
+                    <Checkbox
+                        id="isNationalHoliday"
+                        checked={newEventData.isNationalHoliday || false}
                         onCheckedChange={(checked) => setNewEventData({...newEventData, isNationalHoliday: Boolean(checked)})}
                     />
                     <Label htmlFor="isNationalHoliday" className="text-sm font-normal">Ini adalah Libur Nasional Resmi</Label>
@@ -632,4 +634,3 @@ export default function AcademicCalendarPage() {
     </div>
   );
 }
-

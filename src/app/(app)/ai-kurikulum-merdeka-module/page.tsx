@@ -9,10 +9,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sparkles, BrainCircuit, Printer, FileText, Book, ListChecks, UserCheck, MessageSquareHeart, Lightbulb, AlertTriangle, Search, Save } from "lucide-react";
-import { 
-    generateKurikulumMerdekaModule, 
+import {
+    generateKurikulumMerdekaModule,
     type GenerateKurikulumMerdekaModuleInput,
-    type GenerateKurikulumMerdekaModuleOutput 
+    type GenerateKurikulumMerdekaModuleOutput
 } from "@/ai/flows/generate-kurikulum-merdeka-module";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -25,7 +25,7 @@ import { Separator } from "@/components/ui/separator";
 import { useCurriculum } from "@/contexts/CurriculumContext";
 import { Badge } from "@/components/ui/badge";
 import type { SchoolProfile, User, PrintOptionsModulAjar, ModulAjar, TeachingPeriodSettings } from "@/types";
-import { defaultPrintOptionsModulAjar, MODUL_AJAR_STORAGE_KEY, TEACHING_PERIOD_SETTINGS_KEY } from "@/types";
+import { defaultPrintOptionsModulAjar, MODUL_AJAR_STORAGE_KEY, TEACHING_PERIOD_SETTINGS_KEY, SCHOOL_PROFILE_STORAGE_KEY } from "@/types"; // Added SCHOOL_PROFILE_STORAGE_KEY
 import { PrintOptionsModulAjarDialog } from "@/components/curriculum/PrintOptionsModulAjarDialog";
 import { format } from "date-fns";
 import { id as indonesianLocale } from "date-fns/locale";
@@ -44,7 +44,7 @@ const merdekaGradeLevels = [
 
 export default function NewAIKurikulumMerdekaModulePage() {
   const { toast } = useToast();
-  const { user, loading: authLoading } = useAuth(); 
+  const { user, currentSchool, loading: authLoading } = useAuth();
   const { addLog } = useLog();
   const { defaultCurriculum } = useCurriculum();
   const router = useRouter();
@@ -54,13 +54,13 @@ export default function NewAIKurikulumMerdekaModulePage() {
   const [moduleGradeLevel, setModuleGradeLevel] = useState("");
   const [moduleCPElemen, setModuleCPElemen] = useState("");
   const [moduleAlokasiWaktu, setModuleAlokasiWaktu] = useState("");
-  
+
   const [generatedModule, setGeneratedModule] = useState<GenerateKurikulumMerdekaModuleOutput | null>(null);
   const [isGeneratingModule, setIsGeneratingModule] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   const [isClient, setIsClient] = useState(false);
-  const [schoolProfile, setSchoolProfile] = useState<SchoolProfile | null>(null);
+  const [schoolProfile, setSchoolProfileState] = useState<SchoolProfile | null>(null); // Renamed to avoid conflict
   const [isPrintOptionsOpen, setIsPrintOptionsOpen] = useState(false);
   const [currentPrintOptions, setCurrentPrintOptions] = useState<PrintOptionsModulAjar>(defaultPrintOptionsModulAjar);
   const [jpDuration, setJpDuration] = useState<number | null>(null);
@@ -69,7 +69,7 @@ export default function NewAIKurikulumMerdekaModulePage() {
   useEffect(() => {
     setIsClient(true);
     const pageSource = "NewAIKurikulumMerdekaModulePage";
-    if (user && !authLoading) { // Check authLoading
+    if (user && !authLoading) {
       addLog("INFO", `Pengguna ${user.email} mengakses halaman Pembuatan Modul Ajar AI Baru.`, pageSource);
     }
     if (defaultCurriculum !== "Kurikulum Merdeka" && user && !authLoading) {
@@ -79,14 +79,14 @@ export default function NewAIKurikulumMerdekaModulePage() {
             variant: "default",
         });
          addLog("WARN", `Pengguna ${user.email} mengakses halaman Modul Ajar AI, namun kurikulum default bukan Kurikulum Merdeka.`, pageSource);
-         router.push("/dashboard"); 
+         router.push("/dashboard");
          return;
     }
     if (typeof window !== 'undefined') {
-      const storedProfile = localStorage.getItem("schoolProfile");
+      const storedProfile = localStorage.getItem(SCHOOL_PROFILE_STORAGE_KEY); // Use correct key
       if (storedProfile) {
         try {
-            setSchoolProfile(JSON.parse(storedProfile));
+            setSchoolProfileState(JSON.parse(storedProfile));
         } catch (e) {
             console.error("Failed to parse school profile from localStorage", e);
              addLog("ERROR", `Gagal memuat profil sekolah dari penyimpanan lokal: ${e instanceof Error ? e.message : String(e)}`, pageSource);
@@ -104,7 +104,7 @@ export default function NewAIKurikulumMerdekaModulePage() {
         }
       }
     }
-  }, [user, addLog, defaultCurriculum, toast, router, authLoading]); // Add authLoading to dependency array
+  }, [user, addLog, defaultCurriculum, toast, router, authLoading]);
 
   const handleGenerateModule = async (e: FormEvent) => {
     e.preventDefault();
@@ -117,15 +117,15 @@ export default function NewAIKurikulumMerdekaModulePage() {
     setGeneratedModule(null);
     addLog("INFO", `Memulai pembuatan Modul Ajar dengan AI. Topik: "${moduleTopic}", Mapel: "${moduleSubject}", Jenjang: "${moduleGradeLevel}".`, "NewAIKurikulumMerdekaModulePage-AI");
     try {
-      const input: GenerateKurikulumMerdekaModuleInput = { 
-        topic: moduleTopic, 
+      const input: GenerateKurikulumMerdekaModuleInput = {
+        topic: moduleTopic,
         subject: moduleSubject,
         jenjangFaseKelas: moduleGradeLevel,
         capaianPembelajaranElemen: moduleCPElemen.split('\n').map(s => s.trim()).filter(s => s),
         alokasiWaktuTotal: moduleAlokasiWaktu,
-        namaPenyusun: user?.name || "Nama Guru Penyusun", 
-        institusi: schoolProfile?.namaSekolah || "Nama Sekolah/Institusi", 
-        tahunAjar: new Date().getFullYear() + "/" + (new Date().getFullYear() + 1), 
+        namaPenyusun: user?.name || "Nama Guru Penyusun",
+        institusi: schoolProfile?.namaSekolah || currentSchool?.name || "Nama Sekolah/Institusi",
+        tahunAjar: new Date().getFullYear() + "/" + (new Date().getFullYear() + 1),
       };
       const result = await generateKurikulumMerdekaModule(input);
       setGeneratedModule(result);
@@ -151,18 +151,19 @@ export default function NewAIKurikulumMerdekaModulePage() {
         type: 'ModulAjar',
         title: generatedModule.judulModul,
         subject: generatedModule.identitasModul.mataPelajaran,
-        gradeLevel: generatedModule.identitasModul.fase, 
+        gradeLevel: generatedModule.identitasModul.fase,
         curriculumType: "Kurikulum Merdeka",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         createdByUserId: user.id,
+        schoolId: currentSchool?.id,
     };
 
     try {
         const existingModules = JSON.parse(localStorage.getItem(MODUL_AJAR_STORAGE_KEY) || "[]") as ModulAjar[];
         localStorage.setItem(MODUL_AJAR_STORAGE_KEY, JSON.stringify([newModulAjar, ...existingModules]));
         toast({ title: "Modul Ajar Disimpan", description: `"${newModulAjar.title}" telah berhasil disimpan.` });
-        addLog("INFO", `Modul Ajar "${newModulAjar.title}" (ID: ${newModulAjar.id}) berhasil disimpan oleh ${user.email}.`, "NewAIKurikulumMerdekaModulePage-Save");
+        addLog("INFO", `Modul Ajar "${newModulAjar.title}" (ID: ${newModulAjar.id}) berhasil disimpan oleh ${user.email} untuk sekolah ID ${currentSchool?.id}.`, "NewAIKurikulumMerdekaModulePage-Save");
         router.push("/modul-ajar");
     } catch (error) {
         toast({ title: "Gagal Menyimpan", description: "Terjadi kesalahan saat menyimpan Modul Ajar.", variant: "destructive" });
@@ -182,7 +183,7 @@ export default function NewAIKurikulumMerdekaModulePage() {
     addLog("INFO", `Mempersiapkan pratinjau cetak untuk Modul Ajar "${modul.judulModul}" oleh ${user?.email}. Opsi: ${JSON.stringify(options)}`, logSource);
 
     let contentHtml = ``;
-    
+
     if (options.showKopSurat) {
       if (schoolProfile) {
           contentHtml += `
@@ -200,7 +201,7 @@ export default function NewAIKurikulumMerdekaModulePage() {
                 </div>
               </div>
           `;
-      } else { 
+      } else {
           addLog("WARN", `Kop surat diminta untuk Modul Ajar "${modul.judulModul}" tapi profil sekolah tidak lengkap/tidak ada.`, logSource);
           contentHtml += `
               <div class="kop-surat">
@@ -215,12 +216,12 @@ export default function NewAIKurikulumMerdekaModulePage() {
     }
 
     contentHtml += `<h2 class="modul-main-title">${modul.judulModul}</h2>`;
-    
+
     let sectionCounter = 0;
     const nextLetter = () => String.fromCharCode(65 + sectionCounter++);
 
     if (options.showMAIdentitas) {
-        sectionCounter = 0; 
+        sectionCounter = 0;
         contentHtml += `<h3>${nextLetter()}. INFORMASI UMUM</h3>`;
         contentHtml += `<table class="info-table">
             <tr><td>Nama Penyusun</td><td>: ${modul.identitasModul.namaPenyusun}</td></tr>
@@ -251,7 +252,7 @@ export default function NewAIKurikulumMerdekaModulePage() {
         contentHtml += `<h3>${nextLetter()}. MODEL PEMBELAJARAN</h3><p>${modul.modelPembelajaran}</p>`;
     }
 
-    sectionCounter = 0; 
+    sectionCounter = 0;
     contentHtml += `<hr class="content-hr"><h3>KOMPONEN INTI</h3>`;
     const ki = modul.komponenInti;
     if (options.showMAKomponenInti_TujuanPembelajaran && ki.tujuanPembelajaran.length > 0) {
@@ -278,8 +279,8 @@ export default function NewAIKurikulumMerdekaModulePage() {
     if (options.showMAKomponenInti_Asesmen) {
         contentHtml += `<h4>${nextLetter()}. Asesmen</h4>`;
         if (options.showMAKomponenInti_Asesmen_Diagnostik && ki.asesmen.diagnostik) contentHtml += `<p><strong>Diagnostik:</strong> ${ki.asesmen.diagnostik}</p>`;
-        if (options.showMAKomponenInti_Asesmen_Formatif) contentHtml += `<p><strong>Formatif:</strong> ${ki.asesmen.formatif}</p>`;
-        if (options.showMAKomponenInti_Asesmen_Sumatif) contentHtml += `<p><strong>Sumatif:</strong> ${ki.asesmen.sumatif}</p>`;
+        if (options.showMAKomponenInti_Asesmen_Formatif && ki.asesmen.formatif) contentHtml += `<p><strong>Formatif:</strong> ${ki.asesmen.formatif}</p>`;
+        if (options.showMAKomponenInti_Asesmen_Sumatif && ki.asesmen.sumatif) contentHtml += `<p><strong>Sumatif:</strong> ${ki.asesmen.sumatif}</p>`;
     }
     if (options.showMAKomponenInti_PengayaanRemedial && ki.pengayaanRemedial) {
         contentHtml += `<h4>${nextLetter()}. Pengayaan dan Remedial</h4><p><strong>Pengayaan:</strong> ${ki.pengayaanRemedial.pengayaan}</p><p><strong>Remedial:</strong> ${ki.pengayaanRemedial.remedial}</p>`;
@@ -289,7 +290,7 @@ export default function NewAIKurikulumMerdekaModulePage() {
     }
 
     if (modul.lampiran && (options.showMALampiran_LKPD || options.showMALampiran_BahanBacaan || options.showMALampiran_Glosarium || options.showMALampiran_DaftarPustaka)) {
-        sectionCounter = 0; 
+        sectionCounter = 0;
         contentHtml += `<hr class="content-hr"><h3>LAMPIRAN</h3>`;
         const lamp = modul.lampiran;
         if (options.showMALampiran_LKPD && lamp.lembarKerjaPesertaDidik) {
@@ -305,7 +306,7 @@ export default function NewAIKurikulumMerdekaModulePage() {
             contentHtml += `<h4>${nextLetter()}. Daftar Pustaka</h4><ul>${lamp.daftarPustaka.map(dp => `<li>${dp.includes('http') ? `<a href="${dp}" target="_blank" rel="noopener noreferrer">${dp}</a>` : dp}</li>`).join('')}</ul>`;
         }
     }
-    
+
     contentHtml += `
       <div class="signature-section">
         <div class="signature-block">
@@ -330,23 +331,23 @@ export default function NewAIKurikulumMerdekaModulePage() {
         <head>
           <title>Cetak Modul Ajar: ${modul.judulModul}</title>
           <style>
-            @page { 
-              size: 21cm 33cm; 
-              margin: 0.75in; 
+            @page {
+              size: 21cm 33cm;
+              margin: 0.75in;
             }
             body { font-family: 'Times New Roman', Times, serif; margin: 0; line-height: 1.4; font-size: 11pt; color: #333; }
-            .kop-surat { 
-              display: flex; 
-              align-items: center; 
-              border-bottom: 3px solid black; 
-              padding-bottom: 8px; 
-              margin-bottom: 5px; 
+            .kop-surat {
+              display: flex;
+              align-items: center;
+              border-bottom: 3px solid black;
+              padding-bottom: 8px;
+              margin-bottom: 5px;
             }
-            .kop-surat::after { 
+            .kop-surat::after {
               content: '';
               display: block;
               border-bottom: 1px solid black;
-              margin-top: 3px; 
+              margin-top: 3px;
             }
             .logo-sekolah { max-height: 80px; max-width: 80px; margin-right: 20px; object-fit: contain; }
             .logo-placeholder { width: 80px; height: 80px; border: 1px dashed #999; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 9pt; color: #666; margin-right: 20px;}
@@ -359,7 +360,7 @@ export default function NewAIKurikulumMerdekaModulePage() {
             .modul-main-title { font-size: 14pt; margin-top: 15px; margin-bottom: 15px; font-weight: bold; text-transform: uppercase; text-align: center; }
             .info-table { width: 100%; margin-bottom: 15px; font-size: 11pt; border-collapse: collapse;}
             .info-table td { padding: 3px 0px; vertical-align: top;}
-            .info-table td:first-child { font-weight: normal; width: 35%; } 
+            .info-table td:first-child { font-weight: normal; width: 35%; }
             .info-table td:nth-child(2) { font-weight: normal; }
             .content-hr { border: 0; border-top: 1.5px solid #888; margin: 20px 0; }
             h3 { font-size: 12pt; margin-top: 18px; margin-bottom: 8px; font-weight: bold; text-transform: uppercase; }
@@ -376,10 +377,10 @@ export default function NewAIKurikulumMerdekaModulePage() {
             .signature-nip { font-size: 10pt; }
             .print-button-container { text-align: center; margin-top: 30px; }
             @media print {
-              body { margin: 0.75in; font-size: 11pt; } 
+              body { margin: 0.75in; font-size: 11pt; }
               .print-button-container { display: none; }
-              .kop-surat { border-bottom: 3px solid black !important; } /* Ensure this is applied */
-              .kop-surat::after { border-bottom: 1px solid black !important; } /* Ensure this is applied */
+              .kop-surat { border-bottom: 3px solid black !important; }
+              .kop-surat::after { border-bottom: 1px solid black !important; }
               h1, h2, h3, h4, h5, table, ul, ol, p, div { page-break-inside: avoid; }
               h3, h4, h5 { page-break-after: avoid; }
             }
@@ -393,13 +394,13 @@ export default function NewAIKurikulumMerdekaModulePage() {
         </body>
       </html>
     `;
-  }, [isClient, schoolProfile, user, addLog]);
+  }, [isClient, schoolProfile, user, addLog, currentSchool]); // Added currentSchool dependency
 
   const handleFinalizePrintModulAjar = useCallback((options: PrintOptionsModulAjar) => {
     if (!generatedModule) return;
-    const logSource = `PrintModulAjar-${generatedModule.identitasModul.mataPelajaran}`; 
-    const printableHtml = generatePrintableHtmlModulAjar(generatedModule, options); 
-    
+    const logSource = `PrintModulAjar-${generatedModule.identitasModul.mataPelajaran}`;
+    const printableHtml = generatePrintableHtmlModulAjar(generatedModule, options);
+
     const printWindow = window.open('', '_blank', 'width=1000,height=700,scrollbars=yes,resizable=yes');
     if (printWindow) {
       printWindow.document.write(printableHtml);
@@ -413,7 +414,7 @@ export default function NewAIKurikulumMerdekaModulePage() {
   }, [generatedModule, generatePrintableHtmlModulAjar, addLog, toast]);
 
 
-  if (!isClient || authLoading) { 
+  if (!isClient || authLoading) {
     return (
       <div className="flex h-[calc(100vh-200px)] items-center justify-center">
          <div className="flex flex-col items-center text-center">
@@ -424,7 +425,7 @@ export default function NewAIKurikulumMerdekaModulePage() {
       </div>
     );
   }
-   if (!user) { 
+   if (!user) {
     return (
          <div className="flex h-[calc(100vh-150px)] items-center justify-center">
             <p className="text-lg text-muted-foreground">Silakan login untuk menggunakan fitur ini.</p>
@@ -538,9 +539,9 @@ export default function NewAIKurikulumMerdekaModulePage() {
               <CardHeader className="p-6 bg-muted/30 border-b rounded-t-lg">
                 <CardTitle className="text-2xl md:text-3xl text-primary font-bold tracking-tight">{generatedModule.judulModul}</CardTitle>
               </CardHeader>
-              <ScrollArea className="h-auto max-h-[calc(100vh-280px)] lg:max-h-[calc(100vh-240px)] rounded-b-md"> 
+              <ScrollArea className="h-auto max-h-[calc(100vh-280px)] lg:max-h-[calc(100vh-240px)] rounded-b-md">
               <CardContent className="p-6 space-y-6">
-                
+
                 <section>
                     <h3 className="text-xl font-semibold mb-3 text-foreground flex items-center"><FileText className="mr-2 h-5 w-5 text-accent"/>Identitas Modul</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm bg-secondary/30 p-4 rounded-md shadow-inner">
@@ -578,7 +579,7 @@ export default function NewAIKurikulumMerdekaModulePage() {
                     </div>
                 </section>
                 <Separator/>
-                
+
                 <section>
                     <h3 className="text-xl font-semibold mb-2 text-foreground">Sarana dan Prasarana</h3>
                     <ul className="list-disc pl-5 space-y-1 text-sm">
@@ -593,7 +594,7 @@ export default function NewAIKurikulumMerdekaModulePage() {
 
                 <section>
                     <h3 className="text-2xl font-bold mb-4 text-primary flex items-center"><ListChecks className="mr-2 h-6 w-6"/>Komponen Inti</h3>
-                    
+
                     <h4 className="text-lg font-semibold mt-3 mb-1">Tujuan Pembelajaran</h4>
                     <ol className="list-decimal pl-5 space-y-1 text-sm">
                         {generatedModule.komponenInti.tujuanPembelajaran.map((item, idx) => <li key={`tp-${idx}`}>{item}</li>)}
@@ -608,7 +609,7 @@ export default function NewAIKurikulumMerdekaModulePage() {
                     <ul className="list-disc pl-5 space-y-1 text-sm">
                         {generatedModule.komponenInti.pertanyaanPemantik.map((item, idx) => <li key={`pp-${idx}`}>{item}</li>)}
                     </ul>
-                    
+
                     <h4 className="text-lg font-semibold mt-4 mb-2">Kegiatan Pembelajaran</h4>
                     <div className="space-y-3 text-sm">
                         <div><strong>Pendahuluan:</strong>
@@ -723,7 +724,7 @@ export default function NewAIKurikulumMerdekaModulePage() {
               </CardFooter>
             </Card>
           )}
-          
+
           {!generatedModule && !isGeneratingModule && (
             <Card className="shadow-lg h-full flex flex-col items-center justify-center text-center p-8 md:p-12 bg-muted/30 border-2 border-dashed border-border/70 rounded-lg min-h-[400px]">
                 <BrainCircuit className="h-16 w-16 md:h-20 md:w-20 text-muted-foreground/40 mb-5 animate-pulse" />
@@ -749,10 +750,9 @@ export default function NewAIKurikulumMerdekaModulePage() {
             onOpenChange={setIsPrintOptionsOpen}
             defaultOptions={currentPrintOptions}
             onSubmit={handleFinalizePrintModulAjar}
-            hasSchoolProfile={!!schoolProfile} 
+            hasSchoolProfile={!!schoolProfile}
         />
       )}
     </div>
   );
 }
-

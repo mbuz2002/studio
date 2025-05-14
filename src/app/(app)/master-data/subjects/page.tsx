@@ -15,16 +15,10 @@ import { useToast } from "@/hooks/use-toast";
 import { useLog } from "@/contexts/LogContext";
 import type { Subject } from "@/types";
 import { SUBJECTS_STORAGE_KEY } from "@/types";
-
-const initialSubjectsData: Subject[] = [
-  { id: "subj-1", name: "Matematika Wajib", code: "MTK-WAJIB", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), createdByUserId: "user-1" },
-  { id: "subj-2", name: "Bahasa Indonesia", code: "IND", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), createdByUserId: "user-1" },
-  { id: "subj-3", name: "Ilmu Pengetahuan Alam (IPA)", code: "IPA", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), createdByUserId: "user-3" },
-  { id: "subj-4", name: "Pendidikan Agama Islam", code: "PAI", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), createdByUserId: "user-3" },
-];
+import { initialSubjectsData } from '@/lib/initial-data'; // Assuming initialSubjectsData is now typed correctly
 
 export default function SubjectsPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, currentSchool, loading: authLoading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const { addLog } = useLog();
@@ -49,23 +43,33 @@ export default function SubjectsPage() {
       if (storedSubjects) {
         setSubjects(JSON.parse(storedSubjects));
       } else {
-        setSubjects(initialSubjectsData);
-        localStorage.setItem(SUBJECTS_STORAGE_KEY, JSON.stringify(initialSubjectsData));
+        // Initialize with demo data if nothing is stored, associate with current school if possible
+        const demoDataWithSchoolId = initialSubjectsData.map(s => ({
+          ...s,
+          schoolId: currentSchool?.id || s.schoolId // Prioritize currentSchool.id
+        }));
+        setSubjects(demoDataWithSchoolId);
+        localStorage.setItem(SUBJECTS_STORAGE_KEY, JSON.stringify(demoDataWithSchoolId));
       }
     } catch (error) {
       console.error("Gagal memuat data mata pelajaran:", error);
-      setSubjects(initialSubjectsData);
+       const demoDataWithSchoolId = initialSubjectsData.map(s => ({
+          ...s,
+          schoolId: currentSchool?.id || s.schoolId
+        }));
+      setSubjects(demoDataWithSchoolId);
       toast({ title: "Gagal Memuat Data", description: "Menggunakan data default.", variant: "destructive" });
     }
-  }, [user, authLoading, router, toast, addLog]);
+  }, [user, currentSchool, authLoading, router, toast, addLog]);
 
   const filteredSubjects = useMemo(() => {
-    if (!isClient) return [];
+    if (!isClient || !user) return [];
     return subjects.filter(subject =>
-      subject.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (subject.code && subject.code.toLowerCase().includes(searchTerm.toLowerCase()))
+      (subject.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (subject.code && subject.code.toLowerCase().includes(searchTerm.toLowerCase()))) &&
+      (user.role === "SuperAdmin" || subject.schoolId === currentSchool?.id)
     );
-  }, [isClient, subjects, searchTerm]);
+  }, [isClient, subjects, searchTerm, user, currentSchool]);
 
   const handleDelete = useCallback((subjectId: string) => {
     const subjectToDelete = subjects.find(s => s.id === subjectId);
@@ -89,7 +93,7 @@ export default function SubjectsPage() {
       </div>
     );
   }
-  
+
   const canManage = user && ["Admin", "KepalaSekolah", "WakaKurikulum"].includes(user.role);
 
   return (
@@ -101,7 +105,7 @@ export default function SubjectsPage() {
             <div>
               <CardTitle className="text-2xl md:text-3xl font-bold">Master Data Mata Pelajaran</CardTitle>
               <CardDescription className="text-base md:text-lg text-primary-foreground/90 mt-1">
-                Kelola daftar mata pelajaran yang tersedia di sekolah.
+                Kelola daftar mata pelajaran yang tersedia di sekolah {currentSchool ? `(${currentSchool.name})` : ''}.
               </CardDescription>
             </div>
           </div>
