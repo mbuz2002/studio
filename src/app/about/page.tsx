@@ -48,12 +48,12 @@ export default function AboutPage() {
             </div>
             <div>
               <Image 
-                src="https://placehold.co/700x500.png" 
+                src="/about-tentang.png"
                 alt="Ilustrasi Misi dan Visi GUMPLA AI" 
                 width={700} 
                 height={500} 
                 className="rounded-xl shadow-2xl object-cover"
-                data-ai-hint="mission vision"
+                data-ai-hint="misi visi"
               />
             </div>
           </div>
