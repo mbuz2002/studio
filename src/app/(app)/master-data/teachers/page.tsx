@@ -47,7 +47,8 @@ export default function TeachersPage() {
       } else {
         const demoDataWithSchoolId = initialTeachersData.map(t => ({
           ...t,
-          schoolId: currentSchool?.id || t.schoolId
+          schoolId: currentSchool?.id || t.schoolId,
+          createdByUserId: t.createdByUserId || user?.id
         }));
         setTeachers(demoDataWithSchoolId);
         localStorage.setItem(TEACHERS_STORAGE_KEY, JSON.stringify(demoDataWithSchoolId));
@@ -65,7 +66,8 @@ export default function TeachersPage() {
       console.error("Gagal memuat data guru/mapel:", error);
       const demoDataWithSchoolId = initialTeachersData.map(t => ({
           ...t,
-          schoolId: currentSchool?.id || t.schoolId
+          schoolId: currentSchool?.id || t.schoolId,
+          createdByUserId: t.createdByUserId || user?.id
         }));
       setTeachers(demoDataWithSchoolId);
       toast({ title: "Gagal Memuat Data", description: "Menggunakan data default.", variant: "destructive" });
