@@ -48,12 +48,12 @@ export default function AboutPage() {
             </div>
             <div>
               <Image 
-                src="https://picsum.photos/seed/mission-vision/700/500" 
+                src="https://placehold.co/700x500.png" 
                 alt="Ilustrasi Misi dan Visi GUMPLA AI" 
                 width={700} 
                 height={500} 
                 className="rounded-xl shadow-2xl object-cover"
-                data-ai-hint="inspiration education"
+                data-ai-hint="mission vision"
               />
             </div>
           </div>
@@ -114,3 +114,4 @@ export default function AboutPage() {
     </div>
   );
 }
+
