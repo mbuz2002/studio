@@ -305,4 +305,5 @@ export default function EditSemesterProgramPage() {
         </CardContent>
       </Card>
     </div>
-  
+  );
+}

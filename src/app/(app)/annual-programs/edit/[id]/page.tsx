@@ -274,7 +274,6 @@ export default function EditAnnualProgramPage() {
     );
   }
 
-
   return (
     <div className="space-y-6 py-4 md:py-8">
       <Card className="shadow-xl rounded-lg overflow-hidden">
@@ -318,4 +317,7 @@ export default function EditAnnualProgramPage() {
             </div>
           </form>
         </CardContent>
-      </Card
+      </Card>
+    </div>
+  );
+}
