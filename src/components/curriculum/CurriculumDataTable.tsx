@@ -6,17 +6,17 @@ import { defaultPrintOptions, defaultPrintOptionsModulAjar } from "@/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Download, Eye, FilePenLine, MoreHorizontal, Trash2, Loader2, Printer, BookCopy, BrainCircuit, User as UserIcon } from "lucide-react"; // Removed Settings2
+import { Download, Eye, FilePenLine, MoreHorizontal, Trash2, Loader2, Printer, BookCopy, BrainCircuit, User as UserIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { id as indonesianLocale } from "date-fns/locale"; 
-import React, { useState, useEffect, useCallback, useMemo } from "react"; 
+import { id as indonesianLocale } from "date-fns/locale";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { exportRppToText, type ExportRppToTextInput } from "@/ai/flows/export-rpp-to-text";
 import { useToast } from "@/hooks/use-toast";
 import { PrintOptionsDialog } from "./PrintOptionsDialog";
 import { PrintOptionsModulAjarDialog } from "./PrintOptionsModulAjarDialog";
-import { useLog } from "@/contexts/LogContext"; 
-import { useAuth } from "@/contexts/AuthContext"; 
+import { useLog } from "@/contexts/LogContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface CurriculumDataTableProps {
@@ -24,9 +24,9 @@ interface CurriculumDataTableProps {
   onView: (item: AnyCurriculumItem) => void;
   onEdit?: (item: AnyCurriculumItem) => void;
   onDelete?: (item: AnyCurriculumItem) => void;
-  canEdit: (item: AnyCurriculumItem) => boolean; 
-  canDelete: (item: AnyCurriculumItem) => boolean; 
-  itemTypeForExport?: 'RPP' | 'PROTA' | 'Promes' | 'ModulAjar'; 
+  canEdit: (item: AnyCurriculumItem) => boolean;
+  canDelete: (item: AnyCurriculumItem) => boolean;
+  itemTypeForExport?: 'RPP' | 'PROTA' | 'Promes' | 'ModulAjar';
 }
 
 export const CurriculumDataTable = React.memo(function CurriculumDataTable({ items, onView, onEdit, onDelete, canEdit, canDelete, itemTypeForExport }: CurriculumDataTableProps) {
@@ -34,7 +34,7 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
   const [isExporting, setIsExporting] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
   const { addLog } = useLog();
-  const { user: currentUser } = useAuth(); 
+  const { user: currentUser } = useAuth();
   const [schoolProfile, setSchoolProfile] = useState<SchoolProfile | null>(null);
   const [appUsers, setAppUsers] = useState<User[]>([]);
 
@@ -54,7 +54,7 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
         } catch (e) {
             console.error("Failed to parse school profile from localStorage", e);
             addLog("ERROR", `Gagal memuat profil sekolah dari penyimpanan lokal untuk cetak: ${e instanceof Error ? e.message : String(e)}`, "CurriculumDataTable");
-            localStorage.removeItem("schoolProfile"); 
+            localStorage.removeItem("schoolProfile");
         }
       }
       const storedUsers = localStorage.getItem("appUsers");
@@ -64,11 +64,11 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
         } catch (e) {
             console.error("Failed to parse app users from localStorage", e);
             addLog("ERROR", `Gagal memuat data pengguna dari penyimpanan lokal: ${e instanceof Error ? e.message : String(e)}`, "CurriculumDataTable");
-            localStorage.removeItem("appUsers"); 
+            localStorage.removeItem("appUsers");
         }
       } else {
-        if (currentUser) { 
-          setAppUsers([currentUser]); 
+        if (currentUser) {
+          setAppUsers([currentUser]);
         }
       }
     }
@@ -77,7 +77,7 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
   const getCreatorName = useCallback((userId?: string): string => {
     if (!userId) return 'Tidak diketahui';
     const user = appUsers.find(u => u.id === userId);
-    return user ? user.name : userId; 
+    return user ? user.name : userId;
   }, [appUsers]);
 
   const getCreatorAvatar = useCallback((userId?: string): string | undefined => {
@@ -88,7 +88,7 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
     }
     return user?.avatarUrl;
   }, [appUsers]);
-  
+
    const getInitials = useCallback((name: string) => {
     if (!name || typeof name !== 'string') return '';
     return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
@@ -109,7 +109,7 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
     addLog("INFO", `Mempersiapkan pratinjau cetak untuk ${documentTypeDisplay} "${item.title}" (ID: ${item.id}) oleh ${currentUser?.email}. Opsi: ${JSON.stringify(options)}`, logSource);
 
     let contentHtml = ``;
-    
+
     if (options.showKopSurat) {
         if (schoolProfile) {
             contentHtml += `
@@ -127,7 +127,7 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
                   </div>
                 </div>
             `;
-        } else { 
+        } else {
             addLog("WARN", `Kop surat diminta untuk ${documentTypeDisplay} "${item.title}" tapi profil sekolah tidak lengkap/tidak ada.`, logSource);
             contentHtml += `
                 <div class="kop-surat">
@@ -140,17 +140,17 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
             `;
         }
     }
-    
+
     if (item.type === 'ModulAjar') {
         const ma = item as ModulAjar;
         const maOptions = options as PrintOptionsModulAjar;
         contentHtml += `<h2 class="modul-main-title">${ma.judulModul}</h2>`;
-        
+
         let sectionCounter = 0;
         const nextLetter = () => String.fromCharCode(65 + sectionCounter++);
 
         if (maOptions.showMAIdentitas) {
-            sectionCounter = 0; 
+            sectionCounter = 0;
             contentHtml += `<h3>${nextLetter()}. INFORMASI UMUM</h3>`;
             contentHtml += `<table class="info-table">
                 <tr><td>Nama Penyusun</td><td>: ${ma.identitasModul.namaPenyusun}</td></tr>
@@ -170,21 +170,21 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
         if (maOptions.showMATargetPesertaDidik) contentHtml += `<h3>${nextLetter()}. TARGET PESERTA DIDIK</h3><p>${ma.targetPesertaDidik}</p>`;
         if (maOptions.showMAModelPembelajaran) contentHtml += `<h3>${nextLetter()}. MODEL PEMBELAJARAN</h3><p>${ma.modelPembelajaran}</p>`;
 
-        sectionCounter = 0; 
+        sectionCounter = 0;
         contentHtml += `<hr class="content-hr"><h3>KOMPONEN INTI</h3>`;
         const ki = ma.komponenInti;
-        
+
         if (maOptions.showMAKomponenInti_TujuanPembelajaran && ki.tujuanPembelajaran.length > 0) contentHtml += `<h4>${nextLetter()}. Tujuan Pembelajaran</h4><ol>${ki.tujuanPembelajaran.map(tp => `<li>${tp}</li>`).join('')}</ol>`;
         if (maOptions.showMAKomponenInti_PemahamanBermakna && ki.pemahamanBermakna.length > 0) contentHtml += `<h4>${nextLetter()}. Pemahaman Bermakna</h4><ul>${ki.pemahamanBermakna.map(pb => `<li>${pb}</li>`).join('')}</ul>`;
         if (maOptions.showMAKomponenInti_PertanyaanPemantik && ki.pertanyaanPemantik.length > 0) contentHtml += `<h4>${nextLetter()}. Pertanyaan Pemantik</h4><ul>${ki.pertanyaanPemantik.map(pp => `<li>${pp}</li>`).join('')}</ul>`;
-        
+
         if (maOptions.showMAKomponenInti_KegiatanPembelajaran) {
             contentHtml += `<h4>${nextLetter()}. Kegiatan Pembelajaran</h4>`;
             if (maOptions.showMAKomponenInti_Kegiatan_Pendahuluan && ki.kegiatanPembelajaran.pendahuluan.length > 0) contentHtml += `<h5>1. Pendahuluan</h5><ul>${ki.kegiatanPembelajaran.pendahuluan.map(p => `<li>${p}</li>`).join('')}</ul>`;
             if (maOptions.showMAKomponenInti_Kegiatan_Inti && ki.kegiatanPembelajaran.inti.length > 0) contentHtml += `<h5>2. Kegiatan Inti</h5><ol class="kegiatan-inti-list">${ki.kegiatanPembelajaran.inti.map(k => `<li><strong>${k.langkah}</strong><ul>${k.detailAktivitas.map(d => `<li>${d}</li>`).join('')}</ul></li>`).join('')}</ol>`;
             if (maOptions.showMAKomponenInti_Kegiatan_Penutup && ki.kegiatanPembelajaran.penutup.length > 0) contentHtml += `<h5>3. Penutup</h5><ul>${ki.kegiatanPembelajaran.penutup.map(p => `<li>${p}</li>`).join('')}</ul>`;
         }
-        
+
         if (maOptions.showMAKomponenInti_Asesmen) {
             contentHtml += `<h4>${nextLetter()}. Asesmen</h4>`;
             if (maOptions.showMAKomponenInti_Asesmen_Diagnostik && ki.asesmen.diagnostik) contentHtml += `<p><strong>Diagnostik:</strong> ${ki.asesmen.diagnostik}</p>`;
@@ -250,7 +250,7 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
             contentHtml += `</ul>`;
         }
         if (rppOptions.showRPPLangkahPendahuluan || rppOptions.showRPPLangkahKegiatanInti || rppOptions.showRPPLangkahPenutup) {
-             if ((atp.langkahPembelajaran?.pendahuluan && atp.langkahPembelajaran.pendahuluan.length > 0) || 
+             if ((atp.langkahPembelajaran?.pendahuluan && atp.langkahPembelajaran.pendahuluan.length > 0) ||
                  (atp.langkahPembelajaran?.kegiatanInti && atp.langkahPembelajaran.kegiatanInti.length > 0) ||
                  (atp.langkahPembelajaran?.penutup && atp.langkahPembelajaran.penutup.length > 0)) {
                 contentHtml += `<h3>${nextLetter()}. LANGKAH-LANGKAH PEMBELAJARAN (MODUL AJAR)</h3>`;
@@ -279,7 +279,7 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
         }
         if (rppOptions.showRPPMaterials && atp.materials) contentHtml += `<h3>${nextLetter()}. MEDIA/SUMBER BELAJAR</h3><div>${atp.materials.replace(/\n/g, '<br>')}</div>`;
     }
-    else if (item.type === 'RPP') { 
+    else if (item.type === 'RPP') {
         const rpp = item as LessonPlan;
         const rppOptions = options as PrintOptions;
         contentHtml += `<div class="doc-info">
@@ -368,7 +368,7 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
         if (prota.curriculumType === "Kurikulum Merdeka" && protaOptions.showPROTAFokusP5 && prota.profilPelajarPancasilaFocus && prota.profilPelajarPancasilaFocus.length > 0) {
             contentHtml += `<h3>B. FOKUS PROFIL PELAJAR PANCASILA</h3><p>${prota.profilPelajarPancasilaFocus.join(', ')}</p>`;
         }
-        
+
         const elemenKdHeading = prota.curriculumType === "Kurikulum Merdeka" ? "ELEMEN CAPAIAN PEMBELAJARAN" : "KOMPETENSI DASAR";
         if (protaOptions.showPROTASemester1) {
             contentHtml += `<h3>${prota.curriculumType === "Kurikulum Merdeka" && (protaOptions.showPROTACapaianPembelajaran || protaOptions.showPROTAFokusP5) ? 'C' : 'A'}. ALOKASI WAKTU SEMESTER 1</h3>`;
@@ -382,7 +382,7 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
                 contentHtml += `<p>Tidak ada komponen untuk semester 1.</p>`;
             }
         }
-        
+
         if (protaOptions.showPROTASemester2) {
             contentHtml += `<h3>${prota.curriculumType === "Kurikulum Merdeka" && (protaOptions.showPROTACapaianPembelajaran || protaOptions.showPROTAFokusP5 || protaOptions.showPROTASemester1) ? 'D' : (protaOptions.showPROTASemester1 ? 'B' : 'A')}. ALOKASI WAKTU SEMESTER 2</h3>`;
             if (prota.semester2Components.length > 0) {
@@ -407,7 +407,7 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
                 <tr><td>Penyusun</td><td>: ${creatorName}</td></tr>
                 <tr><td>Terakhir Diperbarui</td><td>: ${isClient ? format(new Date(promes.updatedAt), "dd MMMM yyyy, HH:mm", { locale: indonesianLocale }) : promes.updatedAt}</td></tr>
         </table><hr class="content-hr">`;
-        
+
         const cpSkKdHeading = promes.curriculumType === "Kurikulum Merdeka" ? "CAPAIAN PEMBELAJARAN UMUM" : "RANGKUMAN SK/KD";
         if (promesOptions.showPromesCapaianUmum && promes.capaianPembelajaranUmum) {
             contentHtml += `<h3>A. ${cpSkKdHeading}</h3><p>${promes.capaianPembelajaranUmum}</p>`;
@@ -478,15 +478,16 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
         <head>
           <title>Cetak: ${item.title}</title>
           <style>
-            @page { 
+            @page {
               size: 21cm 33cm; /* F4 Paper Size */
-              margin: 0.75in; 
+              margin: 0.75in;
             }
-            body { 
-              font-family: 'Times New Roman', Times, serif; 
-              margin: 0; 
-              line-height: 1.4; 
-              font-size: 11pt; 
+            body {
+              font-family: 'Times New Roman', Times, serif;
+              margin: 0;
+              padding-top: 0.75in; /* Explicit top padding for all pages */
+              line-height: 1.4;
+              font-size: 11pt;
               color: #333;
             }
             .kop-surat { display: flex; align-items: center; border-bottom: 3px solid black; padding-bottom: 8px; margin-bottom: 5px; }
@@ -501,7 +502,7 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
             .kop-contact span { margin: 0 5px; }
             .doc-info { margin-top: 15px; margin-bottom: 10px; text-align: center; }
             .rpp-main-title, .atp-main-title, .modul-main-title { font-size: 14pt; margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
-            .atp-main-title, .modul-main-title { margin-bottom: 15px; } 
+            .atp-main-title, .modul-main-title { margin-bottom: 15px; }
             .doc-info .doc-subtitle { font-size: 12pt; margin-bottom: 15px; font-weight: bold; text-transform: uppercase; }
             .info-table { width: auto; margin: 0 auto 15px auto; font-size: 11pt; border-collapse: collapse;}
             .info-table td { padding: 3px 8px; vertical-align: top;}
@@ -520,23 +521,23 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
             ol.kegiatan-inti-list > li > ul { padding-left: 20px; list-style-type: disc; }
             li { margin-bottom: 5px; text-align: justify; }
             p { margin-bottom: 10px; text-align: justify; }
-            div > p { margin-bottom: 0; } 
-            div > ul > li, div > ol > li { margin-bottom: 3px; } 
+            div > p { margin-bottom: 0; }
+            div > ul > li, div > ol > li { margin-bottom: 3px; }
             .component-table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 15px; font-size: 10pt;}
             .component-table th, .component-table td { border: 1px solid #555; padding: 5px 8px; text-align: left; vertical-align: top; }
             .component-table th { background-color: #e9e9e9; font-weight: bold; text-align: center; }
-            .component-table td:first-child { text-align: center; width: 30px; } 
-            .weekly-table td, .weekly-table th { font-size: 9.5pt; } 
+            .component-table td:first-child { text-align: center; width: 30px; }
+            .weekly-table td, .weekly-table th { font-size: 9.5pt; }
             .signature-section { margin-top: 40px; display: flex; justify-content: space-between; page-break-inside: avoid; }
             .signature-block { width: 45%; text-align: center; }
             .signature-name { font-weight: bold; text-decoration: underline; }
             .signature-nip { font-size: 10pt; }
             .print-button-container { text-align: center; margin-top: 30px; }
             @media print {
-              body { margin: 0.75in; font-size: 11pt; } 
+              body { margin: 0; padding: 0.75in; font-size: 11pt; } /* Ensure body margin is 0, padding handles page content area */
               .print-button-container { display: none; }
-              .kop-surat { border-bottom: 3px solid black !important; } 
-              .kop-surat::after { border-bottom: 1px solid black !important; } 
+              .kop-surat { border-bottom: 3px solid black !important; }
+              .kop-surat::after { border-bottom: 1px solid black !important; }
               h1, h2, h3, h4, h5, table, ul, ol, p, div { page-break-inside: avoid; }
               h3, h4, h5 { page-break-after: avoid; }
             }
@@ -559,16 +560,16 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
         setCurrentModulAjarPrintOptions(defaultPrintOptionsModulAjar);
         setIsModulAjarPrintOptionsOpen(true);
     } else {
-        setCurrentPrintOptions(defaultPrintOptions); 
+        setCurrentPrintOptions(defaultPrintOptions);
         setIsPrintOptionsOpen(true);
     }
   }, [isClient]);
-  
+
   const handleFinalizePrint = useCallback((options: PrintOptions | PrintOptionsModulAjar) => {
     if (!itemToPrint) return;
-    const logSource = `CurriculumPrint-${itemToPrint.type}`; 
-    const printableHtml = generatePrintableHtml(itemToPrint, options); 
-    
+    const logSource = `CurriculumPrint-${itemToPrint.type}`;
+    const printableHtml = generatePrintableHtml(itemToPrint, options);
+
     const printWindow = window.open('', '_blank', 'width=1000,height=700,scrollbars=yes,resizable=yes');
     if (printWindow) {
       printWindow.document.write(printableHtml);
@@ -590,116 +591,145 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
     if (item.type === 'ModulAjar') docTypeDisplay = "ModulAjar";
 
     const logSource = `CurriculumExport-${docTypeDisplay}`;
-    addLog("INFO", `Memulai ekspor ke teks untuk ${docTypeDisplay} "${item.title}" (ID: ${item.id}) oleh ${currentUser?.email}.`, logSource);
-    
+    addLog("INFO", `Memulai ekspor ke DOCX untuk ${docTypeDisplay} "${item.title}" (ID: ${item.id}) oleh ${currentUser?.email}.`, logSource);
+
     setIsExporting(prev => ({ ...prev, [item.id]: true }));
 
     try {
       let documentContent = "";
-      let fileName = `${item.title.replace(/[\\/:*?"<>|]/g, '_').replace(/\s+/g, '_')}_${docTypeDisplay}.txt`;
+      let fileName = `${item.title.replace(/[\\/:*?"<>|]/g, '_').replace(/\s+/g, '_')}_${docTypeDisplay}.docx`;
 
-      if (item.type === 'RPP' && (itemTypeForExport === 'RPP' || itemTypeForExport === undefined)) { 
+      if (item.type === 'RPP' && (itemTypeForExport === 'RPP' || itemTypeForExport === undefined)) {
         const rppInput = item as LessonPlan;
         const inputForFlow: ExportRppToTextInput = { ...rppInput };
         addLog("INFO", `Memanggil alur Genkit 'exportRppToText' untuk ${docTypeDisplay} "${item.title}" (${item.curriculumType}).`, logSource);
-        const result = await exportRppToText(inputForFlow); 
+        const result = await exportRppToText(inputForFlow);
         documentContent = result.documentContent;
         addLog("INFO", `Konten teks berhasil dibuat oleh Genkit untuk ${docTypeDisplay} "${item.title}".`, logSource);
       } else if (item.type === 'ModulAjar' && itemTypeForExport === 'ModulAjar') {
         const ma = item as ModulAjar;
-        let maText = `**MODUL AJAR**\n\n`;
-        maText += `**Judul Modul:** ${ma.judulModul}\n\n`;
-        maText += `**A. INFORMASI UMUM**\n`;
-        maText += `   Nama Penyusun: ${ma.identitasModul.namaPenyusun}\n`;
-        maText += `   Institusi: ${ma.identitasModul.institusi}\n`;
-        // Simplified for brevity, expand as needed
-        maText += `\n\n*Dokumen ini terakhir diperbarui pada: ${isClient ? format(new Date(ma.updatedAt), "PPpp", { locale: indonesianLocale }) : ma.updatedAt}*`;
-        documentContent = maText;
+        let maText = `<h1>MODUL AJAR</h1>\n\n`;
+        maText += `<h2>${ma.judulModul}</h2>\n\n`;
+        maText += `<h3>A. INFORMASI UMUM</h3>\n`;
+        maText += `<p><strong>Nama Penyusun:</strong> ${ma.identitasModul.namaPenyusun}</p>\n`;
+        maText += `<p><strong>Institusi:</strong> ${ma.identitasModul.institusi}</p>\n`;
+        // ... (Simplified for brevity, expand this part for full ModulAjar structure)
+        maText += `\n\n<p><em>Dokumen ini terakhir diperbarui pada: ${isClient ? format(new Date(ma.updatedAt), "PPpp", { locale: indonesianLocale }) : ma.updatedAt}</em></p>`;
+        documentContent = maText.replace(/\n/g, '<br/>'); // Convert newlines to <br> for HTML
         addLog("INFO", `Konten teks berhasil dibuat secara manual untuk Modul Ajar "${item.title}".`, logSource);
       }
       else if (item.type === 'PROTA' && itemTypeForExport === 'PROTA') {
         const prota = item as AnnualProgram;
-        let protaText = `**PROGRAM TAHUNAN (PROTA)**\n\n`;
-        protaText += `**Judul:** ${prota.title}\n`;
-        protaText += `**Kurikulum:** ${prota.curriculumType}\n`;
-        protaText += `**Mata Pelajaran:** ${prota.subject}\n`;
-        protaText += `**Jenjang/Fase/Kelas:** ${prota.gradeLevel}\n`;
-        protaText += `**Tahun Ajaran:** ${prota.year}\n`;
+        let protaText = `<h1>PROGRAM TAHUNAN (PROTA)</h1>\n\n`;
+        protaText += `<h2>${prota.title}</h2>\n`;
+        protaText += `<p><strong>Kurikulum:</strong> ${prota.curriculumType}</p>\n`;
+        protaText += `<p><strong>Mata Pelajaran:</strong> ${prota.subject}</p>\n`;
+        protaText += `<p><strong>Jenjang/Fase/Kelas:</strong> ${prota.gradeLevel}</p>\n`;
+        protaText += `<p><strong>Tahun Ajaran:</strong> ${prota.year}</p>\n`;
         if (prota.curriculumType === "Kurikulum Merdeka" && prota.capaianPembelajaran && prota.capaianPembelajaran.length > 0) {
-            protaText += `**Capaian Pembelajaran Umum Tahunan:**\n`;
-            prota.capaianPembelajaran.forEach(cp => protaText += `- ${cp}\n`);
+            protaText += `<h3>Capaian Pembelajaran Umum Tahunan:</h3><ul>\n`;
+            prota.capaianPembelajaran.forEach(cp => protaText += `<li>${cp}</li>\n`);
+            protaText += `</ul>\n`;
         }
         if (prota.curriculumType === "Kurikulum Merdeka" && prota.profilPelajarPancasilaFocus && prota.profilPelajarPancasilaFocus.length > 0) {
-            protaText += `**Fokus Profil Pelajar Pancasila:** ${prota.profilPelajarPancasilaFocus.join(', ')}\n`;
+            protaText += `<p><strong>Fokus Profil Pelajar Pancasila:</strong> ${prota.profilPelajarPancasilaFocus.join(', ')}</p>\n`;
         }
-        protaText += `\n---\n\n**SEMESTER 1**\n\n`;
+        protaText += `<br/><hr/><br/><h3>SEMESTER 1</h3>\n\n`;
         prota.semester1Components.forEach((c, i) => {
-            protaText += `${i+1}. **Topik/Materi Pokok:** ${c.topic}\n`;
+            protaText += `<p><strong>${i+1}. Topik/Materi Pokok:</strong> ${c.topic}</p>\n`;
             if (c.elemenCapaianPembelajaran && c.elemenCapaianPembelajaran.length > 0) {
-                 protaText += `   - ${prota.curriculumType === "Kurikulum Merdeka" ? "Elemen Capaian Pembelajaran" : "Kompetensi Dasar"}: ${c.elemenCapaianPembelajaran.join(', ')}\n`;
+                 protaText += `<p>&nbsp;&nbsp;&nbsp;- ${prota.curriculumType === "Kurikulum Merdeka" ? "Elemen Capaian Pembelajaran" : "Kompetensi Dasar"}: ${c.elemenCapaianPembelajaran.join(', ')}</p>\n`;
             }
-            protaText += `   - Alokasi Waktu: ${c.alokasiWaktu}\n\n`;
+            protaText += `<p>&nbsp;&nbsp;&nbsp;- Alokasi Waktu: ${c.alokasiWaktu}</p>\n\n`;
         });
-        protaText += `\n**SEMESTER 2**\n\n`;
+        protaText += `<br/><h3>SEMESTER 2</h3>\n\n`;
         prota.semester2Components.forEach((c, i) => {
-            protaText += `${i+1}. **Topik/Materi Pokok:** ${c.topic}\n`;
+            protaText += `<p><strong>${i+1}. Topik/Materi Pokok:</strong> ${c.topic}</p>\n`;
              if (c.elemenCapaianPembelajaran && c.elemenCapaianPembelajaran.length > 0) {
-                protaText += `   - ${prota.curriculumType === "Kurikulum Merdeka" ? "Elemen Capaian Pembelajaran" : "Kompetensi Dasar"}: ${c.elemenCapaianPembelajaran.join(', ')}\n`;
+                protaText += `<p>&nbsp;&nbsp;&nbsp;- ${prota.curriculumType === "Kurikulum Merdeka" ? "Elemen Capaian Pembelajaran" : "Kompetensi Dasar"}: ${c.elemenCapaianPembelajaran.join(', ')}</p>\n`;
             }
-            protaText += `   - Alokasi Waktu: ${c.alokasiWaktu}\n\n`;
+            protaText += `<p>&nbsp;&nbsp;&nbsp;- Alokasi Waktu: ${c.alokasiWaktu}</p>\n\n`;
         });
-        protaText += `\n\n*Dokumen ini terakhir diperbarui pada: ${isClient ? format(new Date(prota.updatedAt), "PPpp", { locale: indonesianLocale }) : prota.updatedAt}*`;
-        documentContent = protaText;
+        protaText += `\n\n<p><em>Dokumen ini terakhir diperbarui pada: ${isClient ? format(new Date(prota.updatedAt), "PPpp", { locale: indonesianLocale }) : prota.updatedAt}</em></p>`;
+        documentContent = protaText.replace(/\n/g, '<br/>');
         addLog("INFO", `Konten teks berhasil dibuat secara manual untuk PROTA "${item.title}".`, logSource);
 
       } else if (item.type === 'Promes' && itemTypeForExport === 'Promes') {
         const promes = item as SemesterProgram;
-        let promesText = `**PROGRAM SEMESTER (PROMES)**\n\n`;
-        promesText += `**Judul:** ${promes.title}\n`;
-        promesText += `**Kurikulum:** ${promes.curriculumType}\n`;
-        promesText += `**Mata Pelajaran:** ${promes.subject}\n`;
-        promesText += `**Jenjang/Fase/Kelas:** ${promes.gradeLevel}\n`;
-        promesText += `**Semester:** ${promes.semester === '1' ? 'Ganjil' : 'Genap'}\n`;
-        promesText += `**Tahun Ajaran:** ${promes.year}\n`;
+        let promesText = `<h1>PROGRAM SEMESTER (PROMES)</h1>\n\n`;
+        promesText += `<h2>${promes.title}</h2>\n`;
+        promesText += `<p><strong>Kurikulum:</strong> ${promes.curriculumType}</p>\n`;
+        promesText += `<p><strong>Mata Pelajaran:</strong> ${promes.subject}</p>\n`;
+        promesText += `<p><strong>Jenjang/Fase/Kelas:</strong> ${promes.gradeLevel}</p>\n`;
+        promesText += `<p><strong>Semester:</strong> ${promes.semester === '1' ? 'Ganjil' : 'Genap'}</p>\n`;
+        promesText += `<p><strong>Tahun Ajaran:</strong> ${promes.year}</p>\n`;
         if (promes.capaianPembelajaranUmum) {
-             promesText += `**${promes.curriculumType === "Kurikulum Merdeka" ? "Capaian Pembelajaran Umum" : "Rangkuman SK/KD"}:** ${promes.capaianPembelajaranUmum}\n`;
+             promesText += `<p><strong>${promes.curriculumType === "Kurikulum Merdeka" ? "Capaian Pembelajaran Umum" : "Rangkuman SK/KD"}:</strong> ${promes.capaianPembelajaranUmum}</p>\n`;
         }
         if (promes.alokasiWaktuTotalSemester) {
-             promesText += `**Alokasi Waktu Total Semester:** ${promes.alokasiWaktuTotalSemester}\n`;
+             promesText += `<p><strong>Alokasi Waktu Total Semester:</strong> ${promes.alokasiWaktuTotalSemester}</p>\n`;
         }
-        promesText += `\n---\n\n**RINCIAN MINGGUAN**\n\n`;
+        promesText += `<br/><hr/><br/><h3>RINCIAN MINGGUAN</h3>\n\n`;
         promes.komponenMingguan.forEach(w => {
-            promesText += `**Minggu ke-${w.mingguKe} ${w.bulan ? `(${w.bulan})` : ''}**\n`;
-            promesText += `  - ${promes.curriculumType === "Kurikulum Merdeka" ? "Tujuan Pembelajaran" : "Materi Pokok/Tema"}: ${w.materiPokokAtauTujuanPembelajaran}\n`;
-            promesText += `  - Alokasi Waktu: ${w.alokasiWaktu}\n`;
+            promesText += `<p><strong>Minggu ke-${w.mingguKe} ${w.bulan ? `(${w.bulan})` : ''}</strong></p>\n`;
+            promesText += `<p>&nbsp;&nbsp;&nbsp;- ${promes.curriculumType === "Kurikulum Merdeka" ? "Tujuan Pembelajaran" : "Materi Pokok/Tema"}: ${w.materiPokokAtauTujuanPembelajaran}</p>\n`;
+            promesText += `<p>&nbsp;&nbsp;&nbsp;- Alokasi Waktu: ${w.alokasiWaktu}</p>\n`;
             if (w.metodeStrategi && w.metodeStrategi.length > 0) {
-                promesText += `  - Metode/Strategi: ${w.metodeStrategi.join(', ')}\n`;
+                promesText += `<p>&nbsp;&nbsp;&nbsp;- Metode/Strategi: ${w.metodeStrategi.join(', ')}</p>\n`;
             }
             if (w.sumberBelajar && w.sumberBelajar.length > 0) {
-                promesText += `  - Sumber Belajar: ${w.sumberBelajar.join(', ')}\n`;
+                promesText += `<p>&nbsp;&nbsp;&nbsp;- Sumber Belajar: ${w.sumberBelajar.join(', ')}</p>\n`;
             }
             if (w.rencanaAsesmen && w.rencanaAsesmen.length > 0) {
-                promesText += `  - Rencana Asesmen: ${w.rencanaAsesmen.join(', ')}\n`;
+                promesText += `<p>&nbsp;&nbsp;&nbsp;- Rencana Asesmen: ${w.rencanaAsesmen.join(', ')}</p>\n`;
             }
             if (w.catatanIntegrasiP5) {
-                promesText += `  - Catatan Integrasi P5/Karakter: ${w.catatanIntegrasiP5}\n`;
+                promesText += `<p>&nbsp;&nbsp;&nbsp;- Catatan Integrasi P5/Karakter: ${w.catatanIntegrasiP5}</p>\n`;
             }
             promesText += `\n`;
         });
-        promesText += `\n\n*Dokumen ini terakhir diperbarui pada: ${isClient ? format(new Date(promes.updatedAt), "PPpp", { locale: indonesianLocale }) : promes.updatedAt}*`;
-        documentContent = promesText;
+        promesText += `\n\n<p><em>Dokumen ini terakhir diperbarui pada: ${isClient ? format(new Date(promes.updatedAt), "PPpp", { locale: indonesianLocale }) : promes.updatedAt}</em></p>`;
+        documentContent = promesText.replace(/\n/g, '<br/>');
         addLog("INFO", `Konten teks berhasil dibuat secara manual untuk Promes "${item.title}".`, logSource);
       }
        else {
-        documentContent = `Rincian untuk ${docTypeDisplay}: ${item.title}\n\n(Fungsi ekspor detail untuk jenis ini belum diimplementasikan atau itemTypeForExport tidak cocok.)\n\n${JSON.stringify(item, null, 2)}`;
+        // Fallback for other types or if Genkit flow is not applicable
+        documentContent = `<h1>Detail untuk ${docTypeDisplay}: ${item.title}</h1>\n\n<pre>${JSON.stringify(item, null, 2)}</pre>`;
+        documentContent = documentContent.replace(/\n/g, '<br/>');
         toast({
           title: "Fitur Dalam Pengembangan/Kesalahan Tipe",
-          description: `Ekspor detail untuk ${docTypeDisplay} belum tersedia atau tipe item tidak cocok. Unduhan berisi data JSON dasar.`,
+          description: `Ekspor detail untuk ${docTypeDisplay} belum tersedia atau tipe item tidak cocok. Unduhan berisi data JSON dasar yang diformat sebagai HTML.`,
         });
-        addLog("WARN", `Ekspor detail untuk ${docTypeDisplay} "${item.title}" belum diimplementasikan atau itemTypeForExport (${itemTypeForExport}) tidak cocok dengan item.type (${item.type}). Mengekspor data JSON mentah.`, logSource);
+        addLog("WARN", `Ekspor detail untuk ${docTypeDisplay} "${item.title}" belum diimplementasikan atau itemTypeForExport (${itemTypeForExport}) tidak cocok dengan item.type (${item.type}). Mengekspor data JSON mentah sebagai HTML.`, logSource);
       }
 
-      const blob = new Blob([documentContent], { type: 'text/plain;charset=utf-8' });
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html lang="id">
+        <head>
+          <meta charset="UTF-8">
+          <title>${item.title}</title>
+          <style>
+            body { font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.5; margin: 1in; }
+            h1 { font-size: 16pt; font-weight: bold; text-align: center; margin-bottom: 1em; }
+            h2 { font-size: 14pt; font-weight: bold; margin-top: 1em; margin-bottom: 0.5em; }
+            h3 { font-size: 12pt; font-weight: bold; margin-top: 0.8em; margin-bottom: 0.3em; }
+            p { margin-bottom: 0.5em; }
+            ul, ol { margin-bottom: 0.5em; padding-left: 20px; }
+            li { margin-bottom: 0.2em; }
+            hr { margin: 1em 0; }
+            table { border-collapse: collapse; width: 100%; margin-bottom: 1em; }
+            th, td { border: 1px solid black; padding: 4px; text-align: left; }
+            th { background-color: #f0f0f0; }
+          </style>
+        </head>
+        <body>
+          ${documentContent}
+        </body>
+        </html>
+      `;
+
+      const blob = new Blob([htmlContent], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
       link.download = fileName;
@@ -716,8 +746,8 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
     } finally {
       setIsExporting(prev => ({ ...prev, [item.id]: false }));
     }
-  }, [isClient, itemTypeForExport, toast, addLog, currentUser]);
-  
+  }, [isClient, itemTypeForExport, toast, addLog, currentUser, schoolProfile, appUsers]);
+
   const handleViewDetails = useCallback((item: AnyCurriculumItem) => {
     const docTypeDisplay = item.type === 'RPP' ? (item.curriculumType === "Kurikulum Merdeka" ? "ATP/Modul Ajar" : "RPP") : item.type;
     addLog("INFO", `Pengguna ${currentUser?.email} melihat detail ${docTypeDisplay} "${item.title}" (ID: ${item.id}).`, `CurriculumView-${item.type}`);
@@ -762,13 +792,13 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
               </TableRow>
             )}
             {items.map((item) => {
-              let docTypeDisplay = item.type === 'RPP' 
-                ? (item.curriculumType === "Kurikulum Merdeka" ? "ATP/Modul Ajar (Umum)" : "RPP") 
+              let docTypeDisplay = item.type === 'RPP'
+                ? (item.curriculumType === "Kurikulum Merdeka" ? "ATP/Modul Ajar (Umum)" : "RPP")
                 : item.type;
               if (item.type === 'ModulAjar') {
                 docTypeDisplay = "Modul Ajar (KM)";
               }
-              
+
               let gradeLevelDisplay = item.gradeLevel;
               if (item.type === 'ModulAjar') {
                  const maItem = item as ModulAjar;
@@ -805,9 +835,9 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
                 <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top">
                   <div className="flex items-center gap-1.5 sm:gap-2">
                     <Avatar className="h-7 w-7 flex-shrink-0">
-                        <AvatarImage 
-                          src={getCreatorAvatar(item.createdByUserId)} 
-                          alt={getCreatorName(item.createdByUserId)} 
+                        <AvatarImage
+                          src={getCreatorAvatar(item.createdByUserId)}
+                          alt={getCreatorName(item.createdByUserId)}
                           data-ai-hint="user avatar"
                         />
                         <AvatarFallback className="text-xs bg-muted text-muted-foreground">
@@ -838,10 +868,10 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
                       <DropdownMenuItem onClick={() => handlePreparePrint(item)} disabled={!isClient} className="text-sm">
                         <Printer className="mr-2 h-4 w-4" /> Cetak / PDF
                       </DropdownMenuItem>
-                      {(item.type === 'RPP' || item.type === 'PROTA' || item.type === 'Promes' || item.type === 'ModulAjar') && ( 
+                      {(item.type === 'RPP' || item.type === 'PROTA' || item.type === 'Promes' || item.type === 'ModulAjar') && (
                         <DropdownMenuItem onClick={() => handleExportToText(item)} disabled={isExporting[item.id] || !isClient} className="text-sm">
-                            {isExporting[item.id] ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />} 
-                            Ekspor ke Teks
+                            {isExporting[item.id] ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                            Ekspor ke DOCX
                         </DropdownMenuItem>
                       )}
                       {canDelete(item) && onDelete && (
@@ -862,10 +892,10 @@ export const CurriculumDataTable = React.memo(function CurriculumDataTable({ ite
             isOpen={isPrintOptionsOpen}
             onOpenChange={setIsPrintOptionsOpen}
             itemType={itemToPrint.type}
-            itemCurriculumType={itemToPrint.curriculumType} 
+            itemCurriculumType={itemToPrint.curriculumType}
             defaultOptions={currentPrintOptions}
             onSubmit={handleFinalizePrint}
-            hasSchoolProfile={!!schoolProfile} 
+            hasSchoolProfile={!!schoolProfile}
         />
       )}
       {isModulAjarPrintOptionsOpen && itemToPrint && itemToPrint.type === 'ModulAjar' && (
