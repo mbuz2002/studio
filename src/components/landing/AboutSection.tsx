@@ -21,8 +21,8 @@ export function AboutSection() {
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div className="animate-fade-in-up [animation-delay:0.2s]">
             <Image 
-              src="https://picsum.photos/seed/about-team/600/400" 
-              alt="Tim GUMPLA AI" 
+              src="/about-tentang.png" 
+              alt="Tentang Tim GUMPLA AI" 
               width={600} 
               height={400} 
               className="rounded-xl shadow-2xl object-cover"
@@ -60,3 +60,4 @@ export function AboutSection() {
     </section>
   );
 }
+
