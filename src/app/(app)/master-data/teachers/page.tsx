@@ -25,7 +25,7 @@ export default function TeachersPage() {
   const { addLog } = useLog();
 
   const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [subjects, setSubjectsList] = useState<Subject[]>([]); // Renamed to avoid conflict
+  const [subjects, setSubjectsList] = useState<Subject[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isClient, setIsClient] = useState(false);
 
@@ -73,9 +73,9 @@ export default function TeachersPage() {
   }, [user, currentSchool, authLoading, router, toast, addLog]);
 
   const getSubjectNames = useCallback((subjectIds: string[]) => {
-    if (!subjectsList.length) return "Memuat mapel...";
-    return subjectIds.map(id => subjectsList.find(s => s.id === id)?.name || "Mapel Dihapus").join(", ") || "-";
-  }, [subjectsList]);
+    if (!subjects.length) return "Memuat mapel...";
+    return subjectIds.map(id => subjects.find(s => s.id === id)?.name || "Mapel Dihapus").join(", ") || "-";
+  }, [subjects]);
 
   const filteredTeachers = useMemo(() => {
     if (!isClient || !user) return [];
@@ -171,7 +171,7 @@ export default function TeachersPage() {
                       <TableCell className="px-3 sm:px-4 py-2 sm:py-3 align-top text-sm">
                          <div className="flex flex-wrap gap-1">
                            {(teacher.subjectIds || []).map(id => {
-                             const subject = subjectsList.find(s => s.id === id);
+                             const subject = subjects.find(s => s.id === id);
                              return subject ? <Badge key={id} variant="secondary" className="text-xs">{subject.name}</Badge> : null;
                            })}
                            {(!teacher.subjectIds || teacher.subjectIds.length === 0) && "-"}
