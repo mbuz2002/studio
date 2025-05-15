@@ -25,7 +25,7 @@ export default function TeachersPage() {
   const { addLog } = useLog();
 
   const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [subjects, setSubjectsList] = useState<Subject[]>([]);
+  const [subjects, setSubjects] = useState<Subject[]>([]); // Changed from setSubjectsList to setSubjects
   const [searchTerm, setSearchTerm] = useState("");
   const [isClient, setIsClient] = useState(false);
 
@@ -60,7 +60,7 @@ export default function TeachersPage() {
         const schoolSubjects = user.role === "SuperAdmin" 
           ? allSubjects 
           : allSubjects.filter(s => s.schoolId === currentSchool?.id);
-        setSubjectsList(schoolSubjects);
+        setSubjects(schoolSubjects); // Use setSubjects
       }
     } catch (error) {
       console.error("Gagal memuat data guru/mapel:", error);
@@ -75,9 +75,9 @@ export default function TeachersPage() {
   }, [user, currentSchool, authLoading, router, toast, addLog]);
 
   const getSubjectNames = useCallback((subjectIds: string[]) => {
-    if (!subjects.length) return "Memuat mapel...";
-    return subjectIds.map(id => subjects.find(s => s.id === id)?.name || "Mapel Dihapus").join(", ") || "-";
-  }, [subjects]);
+    if (!subjects.length) return "Memuat mapel..."; // Use subjects here
+    return subjectIds.map(id => subjects.find(s => s.id === id)?.name || "Mapel Dihapus").join(", ") || "-"; // Use subjects here
+  }, [subjects]); // Depend on subjects
 
   const filteredTeachers = useMemo(() => {
     if (!isClient || !user) return [];
