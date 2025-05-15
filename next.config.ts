@@ -46,6 +46,12 @@ const nextConfig: NextConfig = {
         hostname: 'placehold.co',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https', // Added for sdmuhla.sch.id
+        hostname: 'sdmuhla.sch.id',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
